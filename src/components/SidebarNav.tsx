@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
 import {
@@ -40,8 +41,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { OwnersManager } from "./OwnersManager";
-import { PermissionsManager } from "./PermissionsManager";
 
 type NavItem = {
   title: string;
@@ -115,14 +114,12 @@ export function SidebarNav({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [organizationName, setOrganizationName] = useState("Best Eventos Ltda");
-  const [ownersDialogOpen, setOwnersDialogOpen] = useState(false);
-  const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
   
   // Determine if we're in a venue section
   const isInVenue = location.pathname.startsWith('/venue');
   
-  // Determine if we're in an organization venues page
-  const isInOrgVenues = location.pathname.includes('/organization/') && location.pathname.includes('/venues');
+  // Determine if we're in an organization section
+  const isInOrg = location.pathname.includes('/organization/');
   
   // Get organization ID from URL params
   const organizationId = params.id;
@@ -184,20 +181,23 @@ export function SidebarNav({
       action: handleEditOrganization
     },
     {
+      title: "Espaços",
+      href: `/organization/${organizationId}/venues`,
+      icon: Building,
+    },
+    {
       title: "Permissões",
-      href: "#",
+      href: `/organization/${organizationId}/permissions`,
       icon: Users,
-      action: () => setPermissionsDialogOpen(true)
     },
     {
       title: "Proprietários",
-      href: "#",
+      href: `/organization/${organizationId}/owners`,
       icon: User,
-      action: () => setOwnersDialogOpen(true)
     },
     {
       title: "Contratos",
-      href: "#contracts",
+      href: `/organization/${organizationId}/contracts`,
       icon: FileText,
     },
     {
@@ -260,29 +260,33 @@ export function SidebarNav({
               {!isCollapsed && <span>Organizações</span>}
             </Link>
 
-            {isInOrgVenues && !isCollapsed && (
+            {isInOrg && !isCollapsed && (
               <div className="pt-3 pb-1">
                 <div className="px-3 mt-4 mb-2 text-sm font-semibold text-eventhub-primary">
                   {organizationName}
                 </div>
                 
                 {organizationActionItems.map((item) => (
-                  <button
+                  <Link
                     key={item.title}
+                    to={item.href}
                     onClick={(e) => {
-                      e.preventDefault();
-                      if (item.action) item.action();
-                      else if (item.href !== "#") navigate(item.href);
+                      if (item.action) {
+                        e.preventDefault();
+                        item.action();
+                      }
                       handleNavItemClick();
                     }}
                     className={cn(
                       "flex w-full items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
-                      "text-gray-700"
+                      location.pathname === item.href
+                        ? "bg-eventhub-tertiary/30 text-eventhub-primary"
+                        : "text-gray-700"
                     )}
                   >
                     <item.icon className="h-5 w-5 mr-2" />
                     <span>{item.title}</span>
-                  </button>
+                  </Link>
                 ))}
               </div>
             )}
@@ -357,20 +361,6 @@ export function SidebarNav({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
-      {/* Owners Manager */}
-      <OwnersManager
-        organizationId={organizationId || ""}
-        open={ownersDialogOpen}
-        onClose={() => setOwnersDialogOpen(false)}
-      />
-      
-      {/* Permissions Manager */}
-      <PermissionsManager
-        organizationId={organizationId || ""}
-        open={permissionsDialogOpen}
-        onClose={() => setPermissionsDialogOpen(false)}
-      />
     </>
   );
 }

@@ -9,6 +9,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import OrganizationVenues from "./pages/OrganizationVenues";
+import OrganizationOwners from "./pages/OrganizationOwners";
+import OrganizationPermissions from "./pages/OrganizationPermissions";
+import OrganizationContracts from "./pages/OrganizationContracts";
 import VenueDashboard from "./pages/VenueDashboard";
 import VenueBudgets from "./pages/VenueBudgets";
 import NotFound from "./pages/NotFound";
@@ -28,6 +31,9 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/organization/:id/venues" element={<OrganizationVenues />} />
+          <Route path="/organization/:id/owners" element={<OrganizationOwners />} />
+          <Route path="/organization/:id/permissions" element={<OrganizationPermissions />} />
+          <Route path="/organization/:id/contracts" element={<OrganizationContracts />} />
           <Route path="/venue" element={<VenueDashboard />} />
           <Route path="/venue/budgets" element={<VenueBudgets />} />
           <Route path="*" element={<NotFound />} />
