@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
@@ -67,9 +66,9 @@ const venueNavItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    title: "Proprietário",
+    title: "Proprietários",
     href: "/venue/owners",
-    icon: User,
+    icon: Users,
   },
   {
     title: "Metas/Preços",
