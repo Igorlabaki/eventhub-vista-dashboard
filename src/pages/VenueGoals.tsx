@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Target, Plus, TrendingUp, Calendar, DollarSign, Edit, Users, Search } from "lucide-react";
+import { Target, Plus, TrendingUp, Calendar, DollarSign, Edit, Users, Search, LayoutGrid, List } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -47,6 +46,7 @@ interface Goal {
 
 export default function VenueGoals() {
   const [activeTab, setActiveTab] = useState("metas");
+  const [viewMode, setViewMode] = useState<"card" | "panel">("card");
   
   const [goals, setGoals] = useState<any[]>([
     { 
@@ -56,7 +56,8 @@ export default function VenueGoals() {
       current: 32500, 
       unit: "R$", 
       period: "Mai/2025",
-      type: "revenue" 
+      type: "revenue",
+      percentage: 65
     },
     { 
       id: "2", 
@@ -65,7 +66,8 @@ export default function VenueGoals() {
       current: 5, 
       unit: "eventos", 
       period: "Mai/2025",
-      type: "events" 
+      type: "events",
+      percentage: 63
     },
     { 
       id: "3", 
@@ -74,7 +76,8 @@ export default function VenueGoals() {
       current: 180000, 
       unit: "R$", 
       period: "2025",
-      type: "revenue" 
+      type: "revenue",
+      percentage: 36
     },
   ]);
   
@@ -186,9 +189,10 @@ export default function VenueGoals() {
           {/* ADICIONAIS TAB */}
           <TabsContent value="adicionais" className="space-y-4">
             <div className="flex justify-between items-center mb-4">
+              <div></div>
               <Dialog open={feeDialogOpen} onOpenChange={setFeeDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                  <Button className="bg-primary hover:bg-primary/90 text-white">
                     <Plus className="h-4 w-4 mr-2" />
                     Novo Adicional
                   </Button>
@@ -200,6 +204,7 @@ export default function VenueGoals() {
                       Crie um novo adicional para o seu espaço.
                     </DialogDescription>
                   </DialogHeader>
+                  
                   <form className="space-y-4">
                     <div className="space-y-2">
                       <Label>Tipo da Taxa:</Label>
@@ -270,7 +275,7 @@ export default function VenueGoals() {
                       <Button type="button" variant="outline" onClick={() => setFeeDialogOpen(false)}>
                         Cancelar
                       </Button>
-                      <Button type="submit" className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                      <Button type="submit" className="bg-primary hover:bg-primary/90 text-white">
                         Cadastrar
                       </Button>
                     </DialogFooter>
@@ -318,9 +323,10 @@ export default function VenueGoals() {
           {/* DESCONTOS TAB */}
           <TabsContent value="descontos" className="space-y-4">
             <div className="flex justify-between items-center mb-4">
+              <div></div>
               <Dialog open={discountDialogOpen} onOpenChange={setDiscountDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                  <Button className="bg-primary hover:bg-primary/90 text-white">
                     <Plus className="h-4 w-4 mr-2" />
                     Novo Desconto
                   </Button>
@@ -332,6 +338,7 @@ export default function VenueGoals() {
                       Crie um novo desconto para o seu espaço.
                     </DialogDescription>
                   </DialogHeader>
+                  
                   <form className="space-y-4">
                     <div className="space-y-2">
                       <Label>Tipo do Desconto:</Label>
@@ -402,7 +409,7 @@ export default function VenueGoals() {
                       <Button type="button" variant="outline" onClick={() => setDiscountDialogOpen(false)}>
                         Cancelar
                       </Button>
-                      <Button type="submit" className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                      <Button type="submit" className="bg-primary hover:bg-primary/90 text-white">
                         Cadastrar
                       </Button>
                     </DialogFooter>
@@ -450,9 +457,31 @@ export default function VenueGoals() {
           {/* METAS TAB */}
           <TabsContent value="metas" className="space-y-4">
             <div className="flex justify-between items-center mb-4">
+              {/* View toggle */}
+              <div className="flex items-center space-x-2 bg-gray-100 p-1 rounded-md">
+                <Button 
+                  variant={viewMode === "card" ? "default" : "ghost"} 
+                  size="sm"
+                  className={viewMode === "card" ? "bg-primary text-white" : "bg-transparent text-gray-600"}
+                  onClick={() => setViewMode("card")}
+                >
+                  <LayoutGrid className="h-4 w-4 mr-1" /> 
+                  Cards
+                </Button>
+                <Button 
+                  variant={viewMode === "panel" ? "default" : "ghost"} 
+                  size="sm"
+                  className={viewMode === "panel" ? "bg-primary text-white" : "bg-transparent text-gray-600"}
+                  onClick={() => setViewMode("panel")}
+                >
+                  <List className="h-4 w-4 mr-1" /> 
+                  Painel
+                </Button>
+              </div>
+              
               <Dialog open={goalDialogOpen} onOpenChange={setGoalDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                  <Button className="bg-primary hover:bg-primary/90 text-white">
                     <Plus className="h-4 w-4 mr-2" />
                     Nova Meta
                   </Button>
@@ -494,7 +523,7 @@ export default function VenueGoals() {
                       <Button type="button" variant="outline" onClick={() => setGoalDialogOpen(false)}>
                         Cancelar
                       </Button>
-                      <Button type="submit" className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                      <Button type="submit" className="bg-primary hover:bg-primary/90 text-white">
                         Cadastrar
                       </Button>
                     </DialogFooter>
@@ -503,33 +532,190 @@ export default function VenueGoals() {
               </Dialog>
             </div>
             
-            <div className="mb-4">
-              <Input
-                placeholder="Filtrar..."
-                className="max-w-sm bg-white"
-              />
-            </div>
+            {viewMode === "card" ? (
+              <>
+                <div className="mb-4">
+                  <Input
+                    placeholder="Filtrar..."
+                    className="max-w-sm bg-white"
+                  />
+                </div>
 
-            <Card className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
-              <CardContent className="pt-6">
-                <div className="space-y-3">
-                  <div className="text-sm text-gray-600">Período:</div>
-                  <div className="flex flex-wrap gap-2">
-                    {months.map(month => (
-                      <span key={month} className="text-sm text-gray-800">{month}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {goals.map((goal) => (
+                    <Card key={goal.id} className="bg-white border shadow-sm">
+                      <CardContent className="pt-6">
+                        <div className="flex justify-between items-center mb-2">
+                          <h3 className="font-medium text-lg text-gray-800">{goal.title}</h3>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            <span>{goal.period}</span>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <Progress value={getPercentage(goal.current, goal.target)} className="h-2" />
+                          <div className="flex justify-between mt-2 text-sm">
+                            <span>Progresso: {getPercentage(goal.current, goal.target)}%</span>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center mt-4">
+                          <div>
+                            <div className="text-sm text-gray-600">Atual:</div>
+                            <div className="font-medium">
+                              {goal.type === "revenue" 
+                                ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(goal.current)
+                                : `${goal.current} ${goal.unit}`
+                              }
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-gray-600">Meta:</div>
+                            <div className="font-medium">
+                              {goal.type === "revenue" 
+                                ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(goal.target)
+                                : `${goal.target} ${goal.unit}`
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </>
+            ) : (
+              // Panel view based on the image reference
+              <div className="space-y-6">
+                {/* Pricing Model Section */}
+                <section className="bg-gray-50 p-6 rounded-lg">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-medium text-gray-800">Modelo de Preços</h2>
+                    <Button className="bg-primary hover:bg-primary/90 text-white">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar Preços
+                    </Button>
+                  </div>
+                  
+                  <Card className="border shadow-sm">
+                    <CardHeader>
+                      <CardTitle>Modelo de Precificação</CardTitle>
+                      <CardDescription>O modelo de preço atual para o espaço.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="w-full md:w-1/3">
+                        <div className="p-6 border rounded-lg bg-white">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                              <Calendar className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium">Preço por Diária</h3>
+                              <p className="text-2xl font-bold text-primary mt-1">
+                                {pricingModel.pricePerDay.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="mt-4 text-sm text-gray-500">
+                            <p className="flex items-center mt-2">
+                              <DollarSign className="h-4 w-4 mr-1" />
+                              Hora extra: {pricingModel.extraHourPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </section>
+                
+                {/* Goals Section */}
+                <section className="bg-gray-50 p-6 rounded-lg">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-medium text-gray-800">Metas</h2>
+                    <Button className="bg-primary hover:bg-primary/90 text-white">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nova Meta
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {goals.map((goal) => (
+                      <Card key={goal.id} className="bg-white border shadow-sm">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium text-lg">{goal.title}</h3>
+                              <p className="text-sm text-gray-600 mt-1">{goal.period}</p>
+                            </div>
+                            <div className="bg-gray-100 p-1 rounded">
+                              {goal.type === "revenue" ? (
+                                <TrendingUp className="h-5 w-5 text-primary" />
+                              ) : (
+                                <Calendar className="h-5 w-5 text-primary" />
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3">
+                            <div className="text-xs text-gray-600 mb-1">Progresso</div>
+                            <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+                              <div 
+                                className="bg-primary h-2 rounded-full" 
+                                style={{ width: `${goal.percentage}%` }}
+                              ></div>
+                            </div>
+                            <div className="text-right text-sm font-medium">{goal.percentage}%</div>
+                          </div>
+                          
+                          <div className="flex justify-between items-center mt-4 text-sm">
+                            <div>
+                              <div className="text-gray-600">Atual:</div>
+                              <div className="font-medium">
+                                {goal.type === "revenue" 
+                                  ? `R$ ${goal.current.toLocaleString('pt-BR')}`
+                                  : `${goal.current} ${goal.unit}`
+                                }
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-gray-600">Meta:</div>
+                              <div className="font-medium">
+                                {goal.type === "revenue" 
+                                  ? `R$ ${goal.target.toLocaleString('pt-BR')}`
+                                  : `${goal.target} ${goal.unit}`
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
-                  <div className="flex justify-between items-center">
-                    <div className="text-gray-800">
-                      <div>Meta: R$ 10.000 /</div>
+                </section>
+              </div>
+            )}
+            
+            {viewMode === "card" && (
+              <Card className="bg-white border shadow-sm mt-4">
+                <CardContent className="pt-6">
+                  <div className="space-y-3">
+                    <div className="text-sm text-gray-600">Período:</div>
+                    <div className="flex flex-wrap gap-2">
+                      {months.map(month => (
+                        <span key={month} className="text-sm text-gray-800">{month}</span>
+                      ))}
                     </div>
-                    <div className="text-green-500">
-                      Acréscimo: 10 %
+                    <div className="flex justify-between items-center">
+                      <div className="text-gray-800">
+                        <div>Meta: R$ 10.000 /</div>
+                      </div>
+                      <div className="text-green-500">
+                        Acréscimo: 10 %
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
         
