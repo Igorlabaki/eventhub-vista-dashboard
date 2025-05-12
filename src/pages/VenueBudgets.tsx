@@ -152,7 +152,7 @@ export default function VenueBudgets() {
 
       {/* Budget details dialog */}
       {selectedBudget && <Dialog open={!!selectedBudget} onOpenChange={handleCloseBudgetDetails}>
-          <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden overflow-y-scroll">
             <DialogHeader>
               <DialogTitle>Detalhes do Orçamento</DialogTitle>
             </DialogHeader>
