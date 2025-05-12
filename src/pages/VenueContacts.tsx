@@ -3,7 +3,7 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Contact, Plus, Phone, Mail, Instagram, Facebook } from "lucide-react";
+import { Contact, Plus, Phone, Mail, Instagram, Facebook, Globe, Edit } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function VenueContacts() {

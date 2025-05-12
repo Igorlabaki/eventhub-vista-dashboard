@@ -3,7 +3,7 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Target, Plus, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Target, Plus, TrendingUp, Calendar, DollarSign, Edit, Users } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export default function VenueGoals() {
