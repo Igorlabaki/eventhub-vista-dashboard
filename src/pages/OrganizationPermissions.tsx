@@ -5,7 +5,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Search, Check, X, ArrowLeft } from "lucide-react";
+import { Search, Check, X, ArrowLeft, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -18,7 +18,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Permissions, userViewPermissions, userEditPermissions, userProposalPermissions } from "@/types/permissions";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 // Mock users data
 const mockUsers = [
@@ -55,6 +66,13 @@ type UserPermissionState = {
   }
 }
 
+// Schema for adding a new user
+const addUserSchema = z.object({
+  email: z.string().email("Email inválido")
+});
+
+type AddUserFormValues = z.infer<typeof addUserSchema>;
+
 export default function OrganizationPermissions() {
   const { id: organizationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -66,6 +84,15 @@ export default function OrganizationPermissions() {
   const [selectedVenue, setSelectedVenue] = useState<typeof mockVenues[0] | null>(null);
   const [userPermissions, setUserPermissions] = useState<UserPermissionState>(mockUserPermissions);
   const [view, setView] = useState<"users" | "venues" | "permissions">("users");
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+
+  // Form for adding new user
+  const addUserForm = useForm<AddUserFormValues>({
+    resolver: zodResolver(addUserSchema),
+    defaultValues: {
+      email: ""
+    }
+  });
 
   const filteredUsers = mockUsers.filter((user) => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -130,6 +157,35 @@ export default function OrganizationPermissions() {
     setView("venues");
   };
 
+  const handleAddUser = (data: AddUserFormValues) => {
+    // In a real application, this would connect to your backend
+    // For now, we'll simulate adding a new user with a mock
+    
+    const newUserId = `${mockUsers.length + 1}`;
+    const newUser = {
+      id: newUserId,
+      name: `Novo Usuário (${data.email})`,
+      email: data.email
+    };
+    
+    // Add the new user to our mock data
+    mockUsers.push(newUser);
+    
+    // Initialize empty permissions for this user
+    setUserPermissions(prev => ({
+      ...prev,
+      [newUserId]: {}
+    }));
+    
+    toast({
+      title: "Usuário adicionado",
+      description: `${data.email} foi adicionado à sua organização.`
+    });
+    
+    setAddUserDialogOpen(false);
+    addUserForm.reset();
+  };
+
   const goBack = () => {
     if (view === "venues") {
       setView("users");
@@ -150,6 +206,13 @@ export default function OrganizationPermissions() {
             <h2 className="text-xl font-semibold text-gray-800">
               Usuários com permissões
             </h2>
+            <Button 
+              onClick={() => setAddUserDialogOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <UserPlus size={18} />
+              Adicionar Usuário
+            </Button>
           </div>
           
           <div className="relative mb-6">
@@ -388,11 +451,49 @@ export default function OrganizationPermissions() {
   };
 
   return (
-    <DashboardLayout
-      title="Permissões"
-      subtitle="Gerencie as permissões dos usuários"
-    >
-      {renderContent()}
-    </DashboardLayout>
+    <>
+      <DashboardLayout
+        title="Permissões"
+        subtitle="Gerencie as permissões dos usuários"
+      >
+        {renderContent()}
+      </DashboardLayout>
+
+      {/* Add User Dialog */}
+      <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Adicionar Usuário</DialogTitle>
+          </DialogHeader>
+          <Form {...addUserForm}>
+            <form onSubmit={addUserForm.handleSubmit(handleAddUser)} className="space-y-4">
+              <FormField
+                control={addUserForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email do Usuário</FormLabel>
+                    <FormControl>
+                      <Input placeholder="usuario@exemplo.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  type="button" 
+                  onClick={() => setAddUserDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit">Adicionar</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
