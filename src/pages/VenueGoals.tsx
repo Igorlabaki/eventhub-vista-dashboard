@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,19 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter,
-  DialogTrigger 
-} from "@/components/ui/dialog";
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 type SeasonalFeeType = "SEASONAL" | "WEEKDAY";
 type ViewModeType = "card" | "panel";
-
 interface SeasonalFee {
   id: string;
   type: SeasonalFeeType;
@@ -34,7 +23,6 @@ interface SeasonalFee {
   venueId: string;
   affectedDays?: string;
 }
-
 interface Goal {
   id: string;
   minValue: number;
@@ -45,85 +33,70 @@ interface Goal {
   createdAt: Date;
   updatedAt: Date;
 }
-
 export default function VenueGoals() {
   // Define viewMode with the correct type
   const [viewMode, setViewMode] = useState<ViewModeType>("panel");
   const [activeTab, setActiveTab] = useState("metas");
-  
+
   // Auto-select the panel view on first load
   useEffect(() => {
     setViewMode("panel");
   }, []);
-  
-  const [goals, setGoals] = useState<any[]>([
-    { 
-      id: "1", 
-      title: "Meta Mensal", 
-      target: 50000, 
-      current: 32500, 
-      unit: "R$", 
-      period: "Mai/2025",
-      type: "revenue",
-      percentage: 65
-    },
-    { 
-      id: "2", 
-      title: "Eventos no Mês", 
-      target: 8, 
-      current: 5, 
-      unit: "eventos", 
-      period: "Mai/2025",
-      type: "events",
-      percentage: 63
-    },
-    { 
-      id: "3", 
-      title: "Meta Anual", 
-      target: 500000, 
-      current: 180000, 
-      unit: "R$", 
-      period: "2025",
-      type: "revenue",
-      percentage: 36
-    },
-  ]);
-  
-  const [seasonalFees, setSeasonalFees] = useState<SeasonalFee[]>([
-    {
-      id: "1",
-      type: "SEASONAL",
-      title: "Fim de ano",
-      startDay: "01/12",
-      endDay: "31/12",
-      fee: 30,
-      venueId: "1"
-    },
-    {
-      id: "2",
-      type: "WEEKDAY",
-      title: "Fim de Semana",
-      affectedDays: "Sábado,Domingo",
-      fee: 6,
-      venueId: "1"
-    }
-  ]);
-
-  const [discounts, setDiscounts] = useState<SeasonalFee[]>([
-    {
-      id: "3",
-      type: "WEEKDAY",
-      title: "Dias de Semana",
-      affectedDays: "Segunda-feira,Terça-feira,Quarta-feira,Quinta-feira",
-      fee: -15,
-      venueId: "1"
-    }
-  ]);
-
+  const [goals, setGoals] = useState<any[]>([{
+    id: "1",
+    title: "Meta Mensal",
+    target: 50000,
+    current: 32500,
+    unit: "R$",
+    period: "Mai/2025",
+    type: "revenue",
+    percentage: 65
+  }, {
+    id: "2",
+    title: "Eventos no Mês",
+    target: 8,
+    current: 5,
+    unit: "eventos",
+    period: "Mai/2025",
+    type: "events",
+    percentage: 63
+  }, {
+    id: "3",
+    title: "Meta Anual",
+    target: 500000,
+    current: 180000,
+    unit: "R$",
+    period: "2025",
+    type: "revenue",
+    percentage: 36
+  }]);
+  const [seasonalFees, setSeasonalFees] = useState<SeasonalFee[]>([{
+    id: "1",
+    type: "SEASONAL",
+    title: "Fim de ano",
+    startDay: "01/12",
+    endDay: "31/12",
+    fee: 30,
+    venueId: "1"
+  }, {
+    id: "2",
+    type: "WEEKDAY",
+    title: "Fim de Semana",
+    affectedDays: "Sábado,Domingo",
+    fee: 6,
+    venueId: "1"
+  }]);
+  const [discounts, setDiscounts] = useState<SeasonalFee[]>([{
+    id: "3",
+    type: "WEEKDAY",
+    title: "Dias de Semana",
+    affectedDays: "Segunda-feira,Terça-feira,Quarta-feira,Quinta-feira",
+    fee: -15,
+    venueId: "1"
+  }]);
   const [feeDialogOpen, setFeeDialogOpen] = useState(false);
   const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
-  
   const [pricingModel, setPricingModel] = useState({
     model: "pricePerDay",
     pricePerDay: 15000,
@@ -135,9 +108,8 @@ export default function VenueGoals() {
 
   // Calculate percentage for progress bars
   const getPercentage = (current: number, target: number) => {
-    return Math.min(Math.round((current / target) * 100), 100);
+    return Math.min(Math.round(current / target * 100), 100);
   };
-
   const feeForm = useForm({
     defaultValues: {
       type: "SEASONAL" as SeasonalFeeType,
@@ -148,7 +120,6 @@ export default function VenueGoals() {
       affectedDays: [] as string[]
     }
   });
-
   const discountForm = useForm({
     defaultValues: {
       type: "WEEKDAY" as SeasonalFeeType,
@@ -159,7 +130,6 @@ export default function VenueGoals() {
       affectedDays: [] as string[]
     }
   });
-
   const goalForm = useForm({
     defaultValues: {
       minValue: 0,
@@ -168,30 +138,23 @@ export default function VenueGoals() {
       months: [] as string[]
     }
   });
+  const weekdays = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"];
+  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-  const weekdays = [
-    "Segunda-feira",
-    "Terça-feira",
-    "Quarta-feira",
-    "Quinta-feira",
-    "Sexta-feira",
-    "Sábado",
-    "Domingo"
-  ];
-
-  const months = [
-    "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-    "Jul", "Ago", "Set", "Out", "Nov", "Dez"
-  ];
-  
   // Add a navigation tab for direct panel access
-  const navigationTabs = [
-    { id: "panel", label: "Painel" },
-    { id: "adicionais", label: "Adicionais" },
-    { id: "descontos", label: "Descontos" },
-    { id: "metas", label: "Metas" },
-  ];
-  
+  const navigationTabs = [{
+    id: "panel",
+    label: "Painel"
+  }, {
+    id: "adicionais",
+    label: "Adicionais"
+  }, {
+    id: "descontos",
+    label: "Descontos"
+  }, {
+    id: "metas",
+    label: "Metas"
+  }];
   const handleTabChange = (value: string) => {
     if (value === "panel") {
       setViewMode("panel");
@@ -200,40 +163,20 @@ export default function VenueGoals() {
       setViewMode("card");
     }
   };
-
-  return (
-    <DashboardLayout title="Metas e Preços" subtitle="Gerencie as metas e preços do espaço">
+  return <DashboardLayout title="Metas e Preços" subtitle="Gerencie as metas e preços do espaço">
       <div className="space-y-8">
         {/* Navigation tabs with panel option first */}
         <div className="bg-gray-100 p-1 rounded-lg">
           <div className="grid grid-cols-4 gap-1">
-            {navigationTabs.map((tab) => (
-              <Button 
-                key={tab.id}
-                variant={
-                  (tab.id === "panel" && viewMode === "panel") || 
-                  (tab.id === activeTab && viewMode === "card") 
-                    ? "default" 
-                    : "ghost"
-                }
-                className={
-                  (tab.id === "panel" && viewMode === "panel") || 
-                  (tab.id === activeTab && viewMode === "card")
-                    ? "bg-primary text-white" 
-                    : "bg-transparent text-gray-600"
-                }
-                onClick={() => handleTabChange(tab.id)}
-              >
+            {navigationTabs.map(tab => <Button key={tab.id} variant={tab.id === "panel" && viewMode === "panel" || tab.id === activeTab && viewMode === "card" ? "default" : "ghost"} className={tab.id === "panel" && viewMode === "panel" || tab.id === activeTab && viewMode === "card" ? "bg-primary text-white" : "bg-transparent text-gray-600"} onClick={() => handleTabChange(tab.id)}>
                 {tab.id === "panel" ? <LayoutGrid className="h-4 w-4 mr-1" /> : null}
                 {tab.label}
-              </Button>
-            ))}
+              </Button>)}
           </div>
         </div>
         
         {/* Panel View */}
-        {viewMode === "panel" && (
-          <div className="space-y-6">
+        {viewMode === "panel" && <div className="space-y-6">
             {/* Pricing Model Section */}
             <section className="bg-gray-50 p-6 rounded-lg">
               <div className="flex justify-between items-center mb-4">
@@ -259,14 +202,20 @@ export default function VenueGoals() {
                         <div>
                           <h3 className="font-medium">Preço por Diária</h3>
                           <p className="text-2xl font-bold text-primary mt-1">
-                            {pricingModel.pricePerDay.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            {pricingModel.pricePerDay.toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL'
+                        })}
                           </p>
                         </div>
                       </div>
                       <div className="mt-4 text-sm text-gray-500">
                         <p className="flex items-center mt-2">
                           <DollarSign className="h-4 w-4 mr-1" />
-                          Hora extra: {pricingModel.extraHourPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          Hora extra: {pricingModel.extraHourPrice.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                      })}
                         </p>
                       </div>
                     </div>
@@ -310,12 +259,10 @@ export default function VenueGoals() {
                       <div className="space-y-3">
                         <Label>Selecione os Meses:</Label>
                         <div className="grid grid-cols-3 gap-3">
-                          {months.map((month) => (
-                            <div key={month} className="flex items-center space-x-2">
+                          {months.map(month => <div key={month} className="flex items-center space-x-2">
                               <Checkbox id={`month-${month}`} value={month} />
                               <Label htmlFor={`month-${month}`} className="text-sm">{month}</Label>
-                            </div>
-                          ))}
+                            </div>)}
                         </div>
                       </div>
                       
@@ -333,8 +280,7 @@ export default function VenueGoals() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {goals.map((goal) => (
-                  <Card key={goal.id} className="bg-white border shadow-sm">
+                {goals.map(goal => <Card key={goal.id} className="bg-white border shadow-sm">
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start">
                         <div>
@@ -342,21 +288,16 @@ export default function VenueGoals() {
                           <p className="text-sm text-gray-600 mt-1">{goal.period}</p>
                         </div>
                         <div className="bg-gray-100 p-1 rounded">
-                          {goal.type === "revenue" ? (
-                            <TrendingUp className="h-5 w-5 text-primary" />
-                          ) : (
-                            <Calendar className="h-5 w-5 text-primary" />
-                          )}
+                          {goal.type === "revenue" ? <TrendingUp className="h-5 w-5 text-primary" /> : <Calendar className="h-5 w-5 text-primary" />}
                         </div>
                       </div>
                       
                       <div className="mt-3">
                         <div className="text-xs text-gray-600 mb-1">Progresso</div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                          <div 
-                            className="bg-primary h-2 rounded-full" 
-                            style={{ width: `${goal.percentage}%` }}
-                          ></div>
+                          <div className="bg-primary h-2 rounded-full" style={{
+                      width: `${goal.percentage}%`
+                    }}></div>
                         </div>
                         <div className="text-right text-sm font-medium">{goal.percentage}%</div>
                       </div>
@@ -365,25 +306,18 @@ export default function VenueGoals() {
                         <div>
                           <div className="text-gray-600">Atual:</div>
                           <div className="font-medium">
-                            {goal.type === "revenue" 
-                              ? `R$ ${goal.current.toLocaleString('pt-BR')}`
-                              : `${goal.current} ${goal.unit}`
-                            }
+                            {goal.type === "revenue" ? `R$ ${goal.current.toLocaleString('pt-BR')}` : `${goal.current} ${goal.unit}`}
                           </div>
                         </div>
                         <div>
                           <div className="text-gray-600">Meta:</div>
                           <div className="font-medium">
-                            {goal.type === "revenue" 
-                              ? `R$ ${goal.target.toLocaleString('pt-BR')}`
-                              : `${goal.target} ${goal.unit}`
-                            }
+                            {goal.type === "revenue" ? `R$ ${goal.target.toLocaleString('pt-BR')}` : `${goal.target} ${goal.unit}`}
                           </div>
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
             </section>
             
@@ -411,17 +345,11 @@ export default function VenueGoals() {
                         <Label>Tipo da Taxa:</Label>
                         <div className="flex space-x-4">
                           <div className="flex items-center space-x-2">
-                            <Checkbox id="temporada" 
-                              checked={feeForm.watch("type") === "SEASONAL"}
-                              onCheckedChange={() => feeForm.setValue("type", "SEASONAL")}
-                            />
+                            <Checkbox id="temporada" checked={feeForm.watch("type") === "SEASONAL"} onCheckedChange={() => feeForm.setValue("type", "SEASONAL")} />
                             <label htmlFor="temporada" className="text-sm">Temporada</label>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Checkbox id="diasSemana" 
-                              checked={feeForm.watch("type") === "WEEKDAY"}
-                              onCheckedChange={() => feeForm.setValue("type", "WEEKDAY")}
-                            />
+                            <Checkbox id="diasSemana" checked={feeForm.watch("type") === "WEEKDAY"} onCheckedChange={() => feeForm.setValue("type", "WEEKDAY")} />
                             <label htmlFor="diasSemana" className="text-sm">Dias da semana</label>
                           </div>
                         </div>
@@ -437,40 +365,26 @@ export default function VenueGoals() {
                         <Input id="fee" type="number" defaultValue={0} className="bg-white border" />
                       </div>
                       
-                      {feeForm.watch("type") === "SEASONAL" && (
-                        <>
+                      {feeForm.watch("type") === "SEASONAL" && <>
                           <div>
                             <Label htmlFor="startDate">Data do Início da Temporada:</Label>
-                            <Input
-                              id="startDate"
-                              placeholder="Escolha a data de início da temporada"
-                              className="bg-white border"
-                            />
+                            <Input id="startDate" placeholder="Escolha a data de início da temporada" className="bg-white border" />
                           </div>
                           <div>
                             <Label htmlFor="endDate">Data do Fim da Temporada:</Label>
-                            <Input
-                              id="endDate"
-                              placeholder="Escolha a data de fim da temporada"
-                              className="bg-white border"
-                            />
+                            <Input id="endDate" placeholder="Escolha a data de fim da temporada" className="bg-white border" />
                           </div>
-                        </>
-                      )}
+                        </>}
                       
-                      {feeForm.watch("type") === "WEEKDAY" && (
-                        <div className="space-y-3">
+                      {feeForm.watch("type") === "WEEKDAY" && <div className="space-y-3">
                           <Label>Selecione os Dias:</Label>
                           <div className="grid grid-cols-2 gap-2">
-                            {weekdays.map((day) => (
-                              <div key={day} className="flex items-center space-x-2">
+                            {weekdays.map(day => <div key={day} className="flex items-center space-x-2">
                                 <Checkbox id={day} value={day} />
                                 <Label htmlFor={day} className="text-sm">{day}</Label>
-                              </div>
-                            ))}
+                              </div>)}
                           </div>
-                        </div>
-                      )}
+                        </div>}
                       
                       <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => setFeeDialogOpen(false)}>
@@ -486,31 +400,25 @@ export default function VenueGoals() {
               </div>
               
               <div className="space-y-4">
-                {seasonalFees.map((fee) => (
-                  <Card key={fee.id} className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
+                {seasonalFees.map(fee => <Card key={fee.id} className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
                     <CardContent className="pt-6">
                       <div className="flex justify-between items-center">
                         <div>
                           <h3 className="font-medium text-lg text-gray-800">{fee.title}</h3>
-                          {fee.type === "SEASONAL" && (
-                            <div className="flex items-center text-sm text-gray-600 mt-1">
+                          {fee.type === "SEASONAL" && <div className="flex items-center text-sm text-gray-600 mt-1">
                               <Calendar className="h-4 w-4 mr-2" />
                               <span>{fee.startDay} até {fee.endDay}</span>
-                            </div>
-                          )}
-                          {fee.type === "WEEKDAY" && (
-                            <div className="text-sm text-gray-600 mt-1">
+                            </div>}
+                          {fee.type === "WEEKDAY" && <div className="text-sm text-gray-600 mt-1">
                               {fee.affectedDays?.split(',').join(', ')}
-                            </div>
-                          )}
+                            </div>}
                         </div>
                         <div className="text-lg font-bold text-green-500">
                           + {fee.fee} %
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
             </section>
             
@@ -538,17 +446,11 @@ export default function VenueGoals() {
                         <Label>Tipo do Desconto:</Label>
                         <div className="flex space-x-4">
                           <div className="flex items-center space-x-2">
-                            <Checkbox id="temporada-discount" 
-                              checked={discountForm.watch("type") === "SEASONAL"}
-                              onCheckedChange={() => discountForm.setValue("type", "SEASONAL")}
-                            />
+                            <Checkbox id="temporada-discount" checked={discountForm.watch("type") === "SEASONAL"} onCheckedChange={() => discountForm.setValue("type", "SEASONAL")} />
                             <label htmlFor="temporada-discount" className="text-sm">Temporada</label>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Checkbox id="diasSemana-discount" 
-                              checked={discountForm.watch("type") === "WEEKDAY"}
-                              onCheckedChange={() => discountForm.setValue("type", "WEEKDAY")}
-                            />
+                            <Checkbox id="diasSemana-discount" checked={discountForm.watch("type") === "WEEKDAY"} onCheckedChange={() => discountForm.setValue("type", "WEEKDAY")} />
                             <label htmlFor="diasSemana-discount" className="text-sm">Dias da semana</label>
                           </div>
                         </div>
@@ -564,40 +466,26 @@ export default function VenueGoals() {
                         <Input id="fee-discount" type="number" defaultValue={0} className="bg-white border" />
                       </div>
                       
-                      {discountForm.watch("type") === "SEASONAL" && (
-                        <>
+                      {discountForm.watch("type") === "SEASONAL" && <>
                           <div>
                             <Label htmlFor="startDate-discount">Data do Início da Temporada:</Label>
-                            <Input
-                              id="startDate-discount"
-                              placeholder="Escolha a data de início da temporada"
-                              className="bg-white border"
-                            />
+                            <Input id="startDate-discount" placeholder="Escolha a data de início da temporada" className="bg-white border" />
                           </div>
                           <div>
                             <Label htmlFor="endDate-discount">Data do Fim da Temporada:</Label>
-                            <Input
-                              id="endDate-discount"
-                              placeholder="Escolha a data de fim da temporada"
-                              className="bg-white border"
-                            />
+                            <Input id="endDate-discount" placeholder="Escolha a data de fim da temporada" className="bg-white border" />
                           </div>
-                        </>
-                      )}
+                        </>}
                       
-                      {discountForm.watch("type") === "WEEKDAY" && (
-                        <div className="space-y-3">
+                      {discountForm.watch("type") === "WEEKDAY" && <div className="space-y-3">
                           <Label>Selecione os Dias:</Label>
                           <div className="grid grid-cols-2 gap-2">
-                            {weekdays.map((day) => (
-                              <div key={`discount-${day}`} className="flex items-center space-x-2">
+                            {weekdays.map(day => <div key={`discount-${day}`} className="flex items-center space-x-2">
                                 <Checkbox id={`discount-${day}`} value={day} />
                                 <Label htmlFor={`discount-${day}`} className="text-sm">{day}</Label>
-                              </div>
-                            ))}
+                              </div>)}
                           </div>
-                        </div>
-                      )}
+                        </div>}
                       
                       <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => setDiscountDialogOpen(false)}>
@@ -613,44 +501,32 @@ export default function VenueGoals() {
               </div>
               
               <div className="space-y-4">
-                {discounts.map((discount) => (
-                  <Card key={discount.id} className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
+                {discounts.map(discount => <Card key={discount.id} className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
                     <CardContent className="pt-6">
                       <div className="flex justify-between items-center">
                         <div>
                           <h3 className="font-medium text-lg text-gray-800">{discount.title}</h3>
-                          {discount.type === "SEASONAL" && (
-                            <div className="flex items-center text-sm text-gray-600 mt-1">
+                          {discount.type === "SEASONAL" && <div className="flex items-center text-sm text-gray-600 mt-1">
                               <Calendar className="h-4 w-4 mr-2" />
                               <span>{discount.startDay} até {discount.endDay}</span>
-                            </div>
-                          )}
-                          {discount.type === "WEEKDAY" && (
-                            <div className="text-sm text-gray-600 mt-1">
+                            </div>}
+                          {discount.type === "WEEKDAY" && <div className="text-sm text-gray-600 mt-1">
                               {discount.affectedDays?.split(',').join(', ')}
-                            </div>
-                          )}
+                            </div>}
                         </div>
                         <div className="text-lg font-bold text-red-500">
                           {discount.fee} %
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
             </section>
-          </div>
-        )}
+          </div>}
         
         {/* Card View with Tabs */}
-        {viewMode === "card" && (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="adicionais" className="text-sm">ADICIONAIS</TabsTrigger>
-              <TabsTrigger value="descontos" className="text-sm">DESCONTOS</TabsTrigger>
-              <TabsTrigger value="metas" className="text-sm">METAS</TabsTrigger>
-            </TabsList>
+        {viewMode === "card" && <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            
             
             {/* ADICIONAIS TAB */}
             <TabsContent value="adicionais" className="space-y-4">
@@ -676,17 +552,11 @@ export default function VenueGoals() {
                         <Label>Tipo da Taxa:</Label>
                         <div className="flex space-x-4">
                           <div className="flex items-center space-x-2">
-                            <Checkbox id="temporada" 
-                              checked={feeForm.watch("type") === "SEASONAL"}
-                              onCheckedChange={() => feeForm.setValue("type", "SEASONAL")}
-                            />
+                            <Checkbox id="temporada" checked={feeForm.watch("type") === "SEASONAL"} onCheckedChange={() => feeForm.setValue("type", "SEASONAL")} />
                             <label htmlFor="temporada" className="text-sm">Temporada</label>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Checkbox id="diasSemana" 
-                              checked={feeForm.watch("type") === "WEEKDAY"}
-                              onCheckedChange={() => feeForm.setValue("type", "WEEKDAY")}
-                            />
+                            <Checkbox id="diasSemana" checked={feeForm.watch("type") === "WEEKDAY"} onCheckedChange={() => feeForm.setValue("type", "WEEKDAY")} />
                             <label htmlFor="diasSemana" className="text-sm">Dias da semana</label>
                           </div>
                         </div>
@@ -702,40 +572,26 @@ export default function VenueGoals() {
                         <Input id="fee" type="number" defaultValue={0} className="bg-white border" />
                       </div>
                       
-                      {feeForm.watch("type") === "SEASONAL" && (
-                        <>
+                      {feeForm.watch("type") === "SEASONAL" && <>
                           <div>
                             <Label htmlFor="startDate">Data do Início da Temporada:</Label>
-                            <Input
-                              id="startDate"
-                              placeholder="Escolha a data de início da temporada"
-                              className="bg-white border"
-                            />
+                            <Input id="startDate" placeholder="Escolha a data de início da temporada" className="bg-white border" />
                           </div>
                           <div>
                             <Label htmlFor="endDate">Data do Fim da Temporada:</Label>
-                            <Input
-                              id="endDate"
-                              placeholder="Escolha a data de fim da temporada"
-                              className="bg-white border"
-                            />
+                            <Input id="endDate" placeholder="Escolha a data de fim da temporada" className="bg-white border" />
                           </div>
-                        </>
-                      )}
+                        </>}
                       
-                      {feeForm.watch("type") === "WEEKDAY" && (
-                        <div className="space-y-3">
+                      {feeForm.watch("type") === "WEEKDAY" && <div className="space-y-3">
                           <Label>Selecione os Dias:</Label>
                           <div className="grid grid-cols-2 gap-2">
-                            {weekdays.map((day) => (
-                              <div key={day} className="flex items-center space-x-2">
+                            {weekdays.map(day => <div key={day} className="flex items-center space-x-2">
                                 <Checkbox id={day} value={day} />
                                 <Label htmlFor={day} className="text-sm">{day}</Label>
-                              </div>
-                            ))}
+                              </div>)}
                           </div>
-                        </div>
-                      )}
+                        </div>}
                       
                       <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => setFeeDialogOpen(false)}>
@@ -751,38 +607,29 @@ export default function VenueGoals() {
               </div>
               
               <div className="mb-4">
-                <Input
-                  placeholder="Filtrar..."
-                  className="max-w-sm bg-white"
-                />
+                <Input placeholder="Filtrar..." className="max-w-sm bg-white" />
               </div>
 
               <div className="space-y-4">
-                {seasonalFees.map((fee) => (
-                  <Card key={fee.id} className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
+                {seasonalFees.map(fee => <Card key={fee.id} className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
                     <CardContent className="pt-6">
                       <div className="flex justify-between items-center">
                         <div>
                           <h3 className="font-medium text-lg text-gray-800">{fee.title}</h3>
-                          {fee.type === "SEASONAL" && (
-                            <div className="flex items-center text-sm text-gray-600 mt-1">
+                          {fee.type === "SEASONAL" && <div className="flex items-center text-sm text-gray-600 mt-1">
                               <Calendar className="h-4 w-4 mr-2" />
                               <span>{fee.startDay} até {fee.endDay}</span>
-                            </div>
-                          )}
-                          {fee.type === "WEEKDAY" && (
-                            <div className="text-sm text-gray-600 mt-1">
+                            </div>}
+                          {fee.type === "WEEKDAY" && <div className="text-sm text-gray-600 mt-1">
                               {fee.affectedDays?.split(',').join(', ')}
-                            </div>
-                          )}
+                            </div>}
                         </div>
                         <div className="text-lg font-bold text-green-500">
                           + {fee.fee} %
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
             </TabsContent>
             
@@ -810,17 +657,11 @@ export default function VenueGoals() {
                         <Label>Tipo do Desconto:</Label>
                         <div className="flex space-x-4">
                           <div className="flex items-center space-x-2">
-                            <Checkbox id="temporada-discount" 
-                              checked={discountForm.watch("type") === "SEASONAL"}
-                              onCheckedChange={() => discountForm.setValue("type", "SEASONAL")}
-                            />
+                            <Checkbox id="temporada-discount" checked={discountForm.watch("type") === "SEASONAL"} onCheckedChange={() => discountForm.setValue("type", "SEASONAL")} />
                             <label htmlFor="temporada-discount" className="text-sm">Temporada</label>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Checkbox id="diasSemana-discount" 
-                              checked={discountForm.watch("type") === "WEEKDAY"}
-                              onCheckedChange={() => discountForm.setValue("type", "WEEKDAY")}
-                            />
+                            <Checkbox id="diasSemana-discount" checked={discountForm.watch("type") === "WEEKDAY"} onCheckedChange={() => discountForm.setValue("type", "WEEKDAY")} />
                             <label htmlFor="diasSemana-discount" className="text-sm">Dias da semana</label>
                           </div>
                         </div>
@@ -836,40 +677,26 @@ export default function VenueGoals() {
                         <Input id="fee-discount" type="number" defaultValue={0} className="bg-white border" />
                       </div>
                       
-                      {discountForm.watch("type") === "SEASONAL" && (
-                        <>
+                      {discountForm.watch("type") === "SEASONAL" && <>
                           <div>
                             <Label htmlFor="startDate-discount">Data do Início da Temporada:</Label>
-                            <Input
-                              id="startDate-discount"
-                              placeholder="Escolha a data de início da temporada"
-                              className="bg-white border"
-                            />
+                            <Input id="startDate-discount" placeholder="Escolha a data de início da temporada" className="bg-white border" />
                           </div>
                           <div>
                             <Label htmlFor="endDate-discount">Data do Fim da Temporada:</Label>
-                            <Input
-                              id="endDate-discount"
-                              placeholder="Escolha a data de fim da temporada"
-                              className="bg-white border"
-                            />
+                            <Input id="endDate-discount" placeholder="Escolha a data de fim da temporada" className="bg-white border" />
                           </div>
-                        </>
-                      )}
+                        </>}
                       
-                      {discountForm.watch("type") === "WEEKDAY" && (
-                        <div className="space-y-3">
+                      {discountForm.watch("type") === "WEEKDAY" && <div className="space-y-3">
                           <Label>Selecione os Dias:</Label>
                           <div className="grid grid-cols-2 gap-2">
-                            {weekdays.map((day) => (
-                              <div key={`discount-${day}`} className="flex items-center space-x-2">
+                            {weekdays.map(day => <div key={`discount-${day}`} className="flex items-center space-x-2">
                                 <Checkbox id={`discount-${day}`} value={day} />
                                 <Label htmlFor={`discount-${day}`} className="text-sm">{day}</Label>
-                              </div>
-                            ))}
+                              </div>)}
                           </div>
-                        </div>
-                      )}
+                        </div>}
                       
                       <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => setDiscountDialogOpen(false)}>
@@ -885,38 +712,29 @@ export default function VenueGoals() {
               </div>
               
               <div className="mb-4">
-                <Input
-                  placeholder="Filtrar..."
-                  className="max-w-sm bg-white"
-                />
+                <Input placeholder="Filtrar..." className="max-w-sm bg-white" />
               </div>
 
               <div className="space-y-4">
-                {discounts.map((discount) => (
-                  <Card key={discount.id} className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
+                {discounts.map(discount => <Card key={discount.id} className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
                     <CardContent className="pt-6">
                       <div className="flex justify-between items-center">
                         <div>
                           <h3 className="font-medium text-lg text-gray-800">{discount.title}</h3>
-                          {discount.type === "SEASONAL" && (
-                            <div className="flex items-center text-sm text-gray-600 mt-1">
+                          {discount.type === "SEASONAL" && <div className="flex items-center text-sm text-gray-600 mt-1">
                               <Calendar className="h-4 w-4 mr-2" />
                               <span>{discount.startDay} até {discount.endDay}</span>
-                            </div>
-                          )}
-                          {discount.type === "WEEKDAY" && (
-                            <div className="text-sm text-gray-600 mt-1">
+                            </div>}
+                          {discount.type === "WEEKDAY" && <div className="text-sm text-gray-600 mt-1">
                               {discount.affectedDays?.split(',').join(', ')}
-                            </div>
-                          )}
+                            </div>}
                         </div>
                         <div className="text-lg font-bold text-red-500">
                           {discount.fee} %
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
             </TabsContent>
             
@@ -955,12 +773,10 @@ export default function VenueGoals() {
                       <div className="space-y-3">
                         <Label>Selecione os Meses:</Label>
                         <div className="grid grid-cols-3 gap-3">
-                          {months.map((month) => (
-                            <div key={`goal-${month}`} className="flex items-center space-x-2">
+                          {months.map(month => <div key={`goal-${month}`} className="flex items-center space-x-2">
                               <Checkbox id={`goal-month-${month}`} value={month} />
                               <Label htmlFor={`goal-month-${month}`} className="text-sm">{month}</Label>
-                            </div>
-                          ))}
+                            </div>)}
                         </div>
                       </div>
                       
@@ -978,15 +794,11 @@ export default function VenueGoals() {
               </div>
               
               <div className="mb-4">
-                <Input
-                  placeholder="Filtrar..."
-                  className="max-w-sm bg-white"
-                />
+                <Input placeholder="Filtrar..." className="max-w-sm bg-white" />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {goals.map((goal) => (
-                  <Card key={goal.id} className="bg-white border shadow-sm">
+                {goals.map(goal => <Card key={goal.id} className="bg-white border shadow-sm">
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start">
                         <div>
@@ -994,21 +806,16 @@ export default function VenueGoals() {
                           <p className="text-sm text-gray-600 mt-1">{goal.period}</p>
                         </div>
                         <div className="bg-gray-100 p-1 rounded">
-                          {goal.type === "revenue" ? (
-                            <TrendingUp className="h-5 w-5 text-primary" />
-                          ) : (
-                            <Calendar className="h-5 w-5 text-primary" />
-                          )}
+                          {goal.type === "revenue" ? <TrendingUp className="h-5 w-5 text-primary" /> : <Calendar className="h-5 w-5 text-primary" />}
                         </div>
                       </div>
                       
                       <div className="mt-3">
                         <div className="text-xs text-gray-600 mb-1">Progresso</div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                          <div 
-                            className="bg-primary h-2 rounded-full" 
-                            style={{ width: `${goal.percentage}%` }}
-                          ></div>
+                          <div className="bg-primary h-2 rounded-full" style={{
+                      width: `${goal.percentage}%`
+                    }}></div>
                         </div>
                         <div className="text-right text-sm font-medium">{goal.percentage}%</div>
                       </div>
@@ -1017,30 +824,21 @@ export default function VenueGoals() {
                         <div>
                           <div className="text-gray-600">Atual:</div>
                           <div className="font-medium">
-                            {goal.type === "revenue" 
-                              ? `R$ ${goal.current.toLocaleString('pt-BR')}`
-                              : `${goal.current} ${goal.unit}`
-                            }
+                            {goal.type === "revenue" ? `R$ ${goal.current.toLocaleString('pt-BR')}` : `${goal.current} ${goal.unit}`}
                           </div>
                         </div>
                         <div>
                           <div className="text-gray-600">Meta:</div>
                           <div className="font-medium">
-                            {goal.type === "revenue" 
-                              ? `R$ ${goal.target.toLocaleString('pt-BR')}`
-                              : `${goal.target} ${goal.unit}`
-                            }
+                            {goal.type === "revenue" ? `R$ ${goal.target.toLocaleString('pt-BR')}` : `${goal.target} ${goal.unit}`}
                           </div>
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
             </TabsContent>
-          </Tabs>
-        )}
+          </Tabs>}
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 }
