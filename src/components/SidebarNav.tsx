@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,10 @@ import {
   Edit,
   Trash2,
   ShieldCheck,
-  KeyRound
+  KeyRound,
+  Globe,
+  CalendarDays,
+  MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -60,9 +64,24 @@ const venueNavItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
+    title: "Notificações",
+    href: "/venue/notifications",
+    icon: Bell,
+  },
+  {
+    title: "Site",
+    href: "/venue/website",
+    icon: Globe,
+  },
+  {
     title: "Orçamentos",
     href: "/venue/budgets",
     icon: ClipboardList,
+  },
+  {
+    title: "Visitas",
+    href: "/venue/visits",
+    icon: MapPin,
   },
   {
     title: "Eventos",
@@ -70,29 +89,14 @@ const venueNavItems: NavItem[] = [
     icon: Calendar,
   },
   {
-    title: "Visitas",
-    href: "/venue/visits",
-    icon: Users,
-  },
-  {
-    title: "Contratos",
-    href: "/venue/contracts",
-    icon: FileText,
-  },
-  {
-    title: "Pagamentos",
-    href: "/venue/payments",
-    icon: CreditCard,
-  },
-  {
-    title: "Notificações",
-    href: "/venue/notifications",
-    icon: Bell,
-  },
-  {
     title: "Relatórios",
     href: "/venue/reports",
     icon: BarChart,
+  },
+  {
+    title: "Agenda",
+    href: "/venue/schedule",
+    icon: CalendarDays,
   },
   {
     title: "Configurações",
@@ -330,8 +334,6 @@ export function SidebarNav({
                     )}
                   </div>
                 ))}
-                
-                {/* We'll hide this section as we now have a dedicated "Espaços" nav item */}
               </div>
             )}
 

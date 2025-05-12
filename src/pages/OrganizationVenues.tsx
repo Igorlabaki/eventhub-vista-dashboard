@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OwnersManager } from "@/components/OwnersManager";
 import { PermissionsManager } from "@/components/PermissionsManager";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Dados mock realistas baseados no schema do banco de dados
 const organizations = [
@@ -34,12 +36,34 @@ const organizations = [
   },
 ];
 
+// Enums para pricing model
+const pricingModels = [
+  { value: "PER_PERSON", label: "Por pessoa" },
+  { value: "PER_DAY", label: "Por dia" },
+  { value: "PER_PERSON_DAY", label: "Por pessoa/dia" },
+  { value: "PER_PERSON_HOUR", label: "Por pessoa/hora" },
+];
+
 // Dados mock realistas para venues (espaços)
 const mockVenues = [
   {
     id: "venue-1",
     organizationId: "1",
     name: "Espaço Villa Verde",
+    email: "contato@villaverde.com",
+    street: "Rua das Palmeiras",
+    streetNumber: "1500",
+    complement: "Próximo ao Shopping",
+    neighborhood: "Jardim Paulista",
+    city: "São Paulo",
+    state: "SP",
+    cep: "01452-001",
+    checkIn: "14:00",
+    checkOut: "12:00",
+    hasOvernightStay: true,
+    pricingModel: "PER_PERSON",
+    pricePerPerson: 150.00,
+    maxGuest: 350,
     capacity: 350,
     upcomingEvents: 3,
     description: "Espaço sofisticado com área verde e salão climatizado",
@@ -53,6 +77,20 @@ const mockVenues = [
     id: "venue-2",
     organizationId: "1",
     name: "Casa de Festas Diamante",
+    email: "eventos@diamante.com",
+    street: "Av. Brasil",
+    streetNumber: "789",
+    complement: null,
+    neighborhood: "Jardins",
+    city: "São Paulo",
+    state: "SP",
+    cep: "01431-000",
+    checkIn: "12:00",
+    checkOut: "10:00",
+    hasOvernightStay: false,
+    pricingModel: "PER_DAY",
+    pricePerDay: 5000.00,
+    maxGuest: 200,
     capacity: 200,
     upcomingEvents: 1,
     description: "Espaço elegante e intimista para eventos exclusivos",
@@ -66,6 +104,20 @@ const mockVenues = [
     id: "venue-3",
     organizationId: "1",
     name: "Salão Nobre Eventos",
+    email: "comercial@salaonobre.com",
+    street: "Rua dos Ipês",
+    streetNumber: "350",
+    complement: "Pavilhão A",
+    neighborhood: "Alto de Pinheiros",
+    city: "São Paulo",
+    state: "SP",
+    cep: "05463-000",
+    checkIn: "15:00",
+    checkOut: "14:00",
+    hasOvernightStay: true,
+    pricingModel: "PER_PERSON_DAY",
+    pricePerPersonDay: 200.00,
+    maxGuest: 500,
     capacity: 500,
     upcomingEvents: 5,
     description: "Grande salão com pé direito alto e decoração clássica",
@@ -79,6 +131,20 @@ const mockVenues = [
     id: "venue-4",
     organizationId: "2",
     name: "Buffet Sonhos",
+    email: "contato@buffetsonhos.com.br",
+    street: "Alameda Santos",
+    streetNumber: "450",
+    complement: "Andar 2",
+    neighborhood: "Cerqueira César",
+    city: "São Paulo",
+    state: "SP",
+    cep: "01419-000",
+    checkIn: "10:00",
+    checkOut: "22:00",
+    hasOvernightStay: false,
+    pricingModel: "PER_PERSON",
+    pricePerPerson: 120.00,
+    maxGuest: 150,
     capacity: 150,
     upcomingEvents: 2,
     description: "Espaço aconchegante com buffet próprio",
@@ -92,6 +158,20 @@ const mockVenues = [
     id: "venue-5",
     organizationId: "2",
     name: "Pavilhão das Flores",
+    email: "eventos@pavilhaodasflores.com",
+    street: "Estrada das Flores",
+    streetNumber: "KM 5",
+    complement: null,
+    neighborhood: "Granja Viana",
+    city: "Cotia",
+    state: "SP",
+    cep: "06713-100",
+    checkIn: "08:00",
+    checkOut: "18:00",
+    hasOvernightStay: false,
+    pricingModel: "PER_DAY",
+    pricePerDay: 8000.00,
+    maxGuest: 400,
     capacity: 400,
     upcomingEvents: 0,
     description: "Ambiente ao ar livre com muito verde e flores",
@@ -116,9 +196,24 @@ export default function OrganizationVenues() {
   const [organizationName, setOrganizationName] = useState("");
   const [newVenue, setNewVenue] = useState({
     name: "",
-    capacity: "",
+    email: "",
+    street: "",
+    streetNumber: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    cep: "",
+    checkIn: "12:00",
+    checkOut: "12:00",
+    hasOvernightStay: false,
+    pricingModel: "PER_PERSON",
+    pricePerPerson: "",
+    pricePerDay: "",
+    pricePerPersonDay: "",
+    pricePerPersonHour: "",
+    maxGuest: "",
     description: "",
-    address: "",
   });
   
   const organization = organizations.find((org) => org.id === organizationId);
@@ -150,22 +245,51 @@ export default function OrganizationVenues() {
     
     setEditDialogOpen(false);
   };
+
+  const handlePricingModelChange = (value: string) => {
+    setNewVenue(prev => ({ ...prev, pricingModel: value }));
+  };
   
   const handleCreateVenue = () => {
-    if (!newVenue.name.trim() || !newVenue.capacity.trim()) {
+    if (!newVenue.name.trim() || !newVenue.street.trim() || !newVenue.cep.trim()) {
       toast({
         title: "Erro",
-        description: "Nome e capacidade são obrigatórios",
+        description: "Campos obrigatórios não preenchidos",
         variant: "destructive",
       });
       return;
     }
 
-    const capacity = parseInt(newVenue.capacity);
-    if (isNaN(capacity) || capacity <= 0) {
+    const maxGuests = parseInt(newVenue.maxGuest);
+    if (isNaN(maxGuests) || maxGuests <= 0) {
       toast({
         title: "Erro",
-        description: "Capacidade deve ser um número positivo",
+        description: "Capacidade máxima deve ser um número positivo",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let price: number | null = null;
+    switch (newVenue.pricingModel) {
+      case 'PER_PERSON':
+        price = parseFloat(newVenue.pricePerPerson);
+        break;
+      case 'PER_DAY':
+        price = parseFloat(newVenue.pricePerDay);
+        break;
+      case 'PER_PERSON_DAY':
+        price = parseFloat(newVenue.pricePerPersonDay);
+        break;
+      case 'PER_PERSON_HOUR':
+        price = parseFloat(newVenue.pricePerPersonHour);
+        break;
+    }
+
+    if (isNaN(price) || price <= 0) {
+      toast({
+        title: "Erro",
+        description: "Valor do preço deve ser válido",
         variant: "destructive",
       });
       return;
@@ -175,18 +299,55 @@ export default function OrganizationVenues() {
       id: `venue-${Date.now()}`,
       organizationId: organizationId || "1",
       name: newVenue.name,
-      capacity: capacity,
+      email: newVenue.email,
+      street: newVenue.street,
+      streetNumber: newVenue.streetNumber,
+      complement: newVenue.complement || null,
+      neighborhood: newVenue.neighborhood,
+      city: newVenue.city,
+      state: newVenue.state,
+      cep: newVenue.cep,
+      checkIn: newVenue.checkIn,
+      checkOut: newVenue.checkOut,
+      hasOvernightStay: newVenue.hasOvernightStay,
+      pricingModel: newVenue.pricingModel,
+      pricePerPerson: newVenue.pricingModel === 'PER_PERSON' ? parseFloat(newVenue.pricePerPerson) : null,
+      pricePerDay: newVenue.pricingModel === 'PER_DAY' ? parseFloat(newVenue.pricePerDay) : null,
+      pricePerPersonDay: newVenue.pricingModel === 'PER_PERSON_DAY' ? parseFloat(newVenue.pricePerPersonDay) : null,
+      pricePerPersonHour: newVenue.pricingModel === 'PER_PERSON_HOUR' ? parseFloat(newVenue.pricePerPersonHour) : null,
+      maxGuest: maxGuests,
+      capacity: maxGuests, // For UI compatibility
       upcomingEvents: 0,
-      description: newVenue.description || "Sem descrição disponível",
-      address: newVenue.address || "Endereço não informado",
+      description: newVenue.description,
+      address: `${newVenue.street}, ${newVenue.streetNumber}, ${newVenue.city}`,
       photos: [],
       amenities: [],
-      contactEmail: "",
+      contactEmail: newVenue.email,
       contactPhone: "",
     };
 
     setVenues([...venues, newVenueObj]);
-    setNewVenue({ name: "", capacity: "", description: "", address: "" });
+    setNewVenue({
+      name: "",
+      email: "",
+      street: "",
+      streetNumber: "",
+      complement: "",
+      neighborhood: "",
+      city: "",
+      state: "",
+      cep: "",
+      checkIn: "12:00",
+      checkOut: "12:00",
+      hasOvernightStay: false,
+      pricingModel: "PER_PERSON",
+      pricePerPerson: "",
+      pricePerDay: "",
+      pricePerPersonDay: "",
+      pricePerPersonHour: "",
+      maxGuest: "",
+      description: "",
+    });
     setDialogOpen(false);
 
     toast({
@@ -242,53 +403,270 @@ export default function OrganizationVenues() {
 
       {/* Dialog para criar novo espaço */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Novo Espaço</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Nome do Espaço</Label>
-              <Input
-                id="name"
-                placeholder="Digite o nome do espaço"
-                value={newVenue.name}
-                onChange={(e) =>
-                  setNewVenue({ ...newVenue, name: e.target.value })
-                }
-              />
+          <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Nome do Espaço*</Label>
+                <Input
+                  id="name"
+                  placeholder="Digite o nome do espaço"
+                  value={newVenue.name}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, name: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@espaco.com"
+                  value={newVenue.email}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, email: e.target.value })
+                  }
+                />
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="capacity">Capacidade (pessoas)</Label>
-              <Input
-                id="capacity"
-                type="number"
-                placeholder="Ex: 200"
-                value={newVenue.capacity}
-                onChange={(e) =>
-                  setNewVenue({ ...newVenue, capacity: e.target.value })
-                }
-              />
+
+            {/* Endereço */}
+            <h3 className="font-semibold text-md mt-2">Endereço</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="street">Rua/Avenida*</Label>
+                <Input
+                  id="street"
+                  placeholder="Nome da rua"
+                  value={newVenue.street}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, street: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="streetNumber">Número*</Label>
+                <Input
+                  id="streetNumber"
+                  placeholder="123"
+                  value={newVenue.streetNumber}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, streetNumber: e.target.value })
+                  }
+                />
+              </div>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="complement">Complemento</Label>
+                <Input
+                  id="complement"
+                  placeholder="Apto, sala, etc"
+                  value={newVenue.complement}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, complement: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="neighborhood">Bairro*</Label>
+                <Input
+                  id="neighborhood"
+                  placeholder="Nome do bairro"
+                  value={newVenue.neighborhood}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, neighborhood: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="city">Cidade*</Label>
+                <Input
+                  id="city"
+                  placeholder="Nome da cidade"
+                  value={newVenue.city}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, city: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="state">Estado*</Label>
+                <Input
+                  id="state"
+                  placeholder="UF"
+                  value={newVenue.state}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, state: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="cep">CEP*</Label>
+                <Input
+                  id="cep"
+                  placeholder="00000-000"
+                  value={newVenue.cep}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, cep: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            
+            {/* Check-in/Check-out */}
+            <h3 className="font-semibold text-md mt-2">Horários</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="checkIn">Check-in</Label>
+                <Input
+                  id="checkIn"
+                  type="time"
+                  value={newVenue.checkIn}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, checkIn: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="checkOut">Check-out</Label>
+                <Input
+                  id="checkOut"
+                  type="time"
+                  value={newVenue.checkOut}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, checkOut: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-2 items-center">
+                <div className="flex items-center space-x-2 mt-6">
+                  <Checkbox 
+                    id="hasOvernightStay" 
+                    checked={newVenue.hasOvernightStay}
+                    onCheckedChange={(checked) =>
+                      setNewVenue({ ...newVenue, hasOvernightStay: !!checked })
+                    }
+                  />
+                  <Label htmlFor="hasOvernightStay" className="mt-0">Permite pernoite</Label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Preços */}
+            <h3 className="font-semibold text-md mt-2">Preços</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="pricingModel">Modelo de precificação*</Label>
+                <Select 
+                  value={newVenue.pricingModel} 
+                  onValueChange={handlePricingModelChange}
+                >
+                  <SelectTrigger id="pricingModel">
+                    <SelectValue placeholder="Selecione um modelo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pricingModels.map(model => (
+                      <SelectItem key={model.value} value={model.value}>
+                        {model.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {newVenue.pricingModel === 'PER_PERSON' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="pricePerPerson">Preço por pessoa (R$)*</Label>
+                  <Input
+                    id="pricePerPerson"
+                    type="number"
+                    placeholder="0.00"
+                    value={newVenue.pricePerPerson}
+                    onChange={(e) =>
+                      setNewVenue({ ...newVenue, pricePerPerson: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+              
+              {newVenue.pricingModel === 'PER_DAY' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="pricePerDay">Preço por dia (R$)*</Label>
+                  <Input
+                    id="pricePerDay"
+                    type="number"
+                    placeholder="0.00"
+                    value={newVenue.pricePerDay}
+                    onChange={(e) =>
+                      setNewVenue({ ...newVenue, pricePerDay: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+              
+              {newVenue.pricingModel === 'PER_PERSON_DAY' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="pricePerPersonDay">Preço por pessoa/dia (R$)*</Label>
+                  <Input
+                    id="pricePerPersonDay"
+                    type="number"
+                    placeholder="0.00"
+                    value={newVenue.pricePerPersonDay}
+                    onChange={(e) =>
+                      setNewVenue({ ...newVenue, pricePerPersonDay: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+              
+              {newVenue.pricingModel === 'PER_PERSON_HOUR' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="pricePerPersonHour">Preço por pessoa/hora (R$)*</Label>
+                  <Input
+                    id="pricePerPersonHour"
+                    type="number"
+                    placeholder="0.00"
+                    value={newVenue.pricePerPersonHour}
+                    onChange={(e) =>
+                      setNewVenue({ ...newVenue, pricePerPersonHour: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+            </div>
+            
+            {/* Capacidade */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="maxGuest">Capacidade máxima (pessoas)*</Label>
+                <Input
+                  id="maxGuest"
+                  type="number"
+                  placeholder="Ex: 200"
+                  value={newVenue.maxGuest}
+                  onChange={(e) =>
+                    setNewVenue({ ...newVenue, maxGuest: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            
+            {/* Descrição */}
             <div className="grid gap-2">
               <Label htmlFor="description">Descrição</Label>
               <Input
                 id="description"
                 placeholder="Descrição do espaço"
-                value={newVenue.description || ""}
+                value={newVenue.description}
                 onChange={(e) =>
                   setNewVenue({ ...newVenue, description: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="address">Endereço</Label>
-              <Input
-                id="address"
-                placeholder="Endereço completo"
-                value={newVenue.address || ""}
-                onChange={(e) =>
-                  setNewVenue({ ...newVenue, address: e.target.value })
                 }
               />
             </div>

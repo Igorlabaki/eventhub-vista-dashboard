@@ -14,6 +14,13 @@ import OrganizationPermissions from "./pages/OrganizationPermissions";
 import OrganizationContracts from "./pages/OrganizationContracts";
 import VenueDashboard from "./pages/VenueDashboard";
 import VenueBudgets from "./pages/VenueBudgets";
+import VenueNotifications from "./pages/VenueNotifications";
+import VenueWebsite from "./pages/VenueWebsite";
+import VenueVisits from "./pages/VenueVisits";
+import VenueEvents from "./pages/VenueEvents";
+import VenueReports from "./pages/VenueReports";
+import VenueSchedule from "./pages/VenueSchedule";
+import VenueSettings from "./pages/VenueSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,7 +42,14 @@ const App = () => (
           <Route path="/organization/:id/permissions" element={<OrganizationPermissions />} />
           <Route path="/organization/:id/contracts" element={<OrganizationContracts />} />
           <Route path="/venue" element={<VenueDashboard />} />
+          <Route path="/venue/notifications" element={<VenueNotifications />} />
+          <Route path="/venue/website" element={<VenueWebsite />} />
           <Route path="/venue/budgets" element={<VenueBudgets />} />
+          <Route path="/venue/visits" element={<VenueVisits />} />
+          <Route path="/venue/events" element={<VenueEvents />} />
+          <Route path="/venue/reports" element={<VenueReports />} />
+          <Route path="/venue/schedule" element={<VenueSchedule />} />
+          <Route path="/venue/settings" element={<VenueSettings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
