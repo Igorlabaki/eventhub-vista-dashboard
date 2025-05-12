@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus } from "lucide-react";
-import { format } from "date-fns";
+import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { format, getMonth, getYear } from "date-fns";
 import { pt } from "date-fns/locale";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { BudgetDetails } from "@/components/BudgetDetails";
@@ -79,19 +79,131 @@ const mockBudgets = [{
       referralSource: "Indicação"
     }
   }
+}, {
+  id: "4",
+  clientName: "Igor Augusto Labaki",
+  eventDate: new Date(2025, 4, 16), // May 16, 2025
+  eventType: "Casamento",
+  totalValue: 6133,
+  guestCount: 80,
+  eventTime: "16:00/01:00",
+  details: {
+    baseValue: 4000,
+    extraHour: 1000,
+    cleaning: 300,
+    receptionist: 300,
+    security: 533,
+    valuePerPerson: 76.66,
+    contactInfo: {
+      email: "igor.labaki@gmail.com",
+      whatsapp: "(11) 97777-1111",
+      hasVisitedVenue: true,
+      referralSource: "Indicação"
+    }
+  }
+}, {
+  id: "5",
+  clientName: "Thiago",
+  eventDate: new Date(2025, 4, 11), // May 11, 2025
+  eventType: "Aniversário",
+  totalValue: 4628,
+  guestCount: 50,
+  eventTime: "19:00/00:00",
+  details: {
+    baseValue: 3500,
+    extraHour: 0,
+    cleaning: 250,
+    receptionist: 250,
+    security: 250,
+    valuePerPerson: 92.56,
+    contactInfo: {
+      email: "thiago@gmail.com",
+      whatsapp: "(11) 96666-2222",
+      hasVisitedVenue: false,
+      referralSource: "Instagram"
+    }
+  }
+}, {
+  id: "6",
+  clientName: "Emily",
+  eventDate: new Date(2025, 4, 24), // May 24, 2025
+  eventType: "Confraternização",
+  totalValue: 4540,
+  guestCount: 35,
+  eventTime: "18:00/23:00",
+  details: {
+    baseValue: 3000,
+    extraHour: 0,
+    cleaning: 250,
+    receptionist: 250,
+    security: 250,
+    valuePerPerson: 129.71,
+    contactInfo: {
+      email: "emily@gmail.com",
+      whatsapp: "(11) 95555-3333",
+      hasVisitedVenue: true,
+      referralSource: "Site"
+    }
+  }
+}, {
+  id: "7",
+  clientName: "Igor Augusto Labaki",
+  eventDate: new Date(2025, 4, 1), // May 1, 2025
+  eventType: "Formatura",
+  totalValue: 5258,
+  guestCount: 70,
+  eventTime: "19:00/02:00",
+  details: {
+    baseValue: 3500,
+    extraHour: 1000,
+    cleaning: 250,
+    receptionist: 250,
+    security: 258,
+    valuePerPerson: 75.11,
+    contactInfo: {
+      email: "igor.labaki@gmail.com",
+      whatsapp: "(11) 97777-1111",
+      hasVisitedVenue: false,
+      referralSource: "Indicação"
+    }
+  }
 }];
+
+// Month names in Portuguese
+const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 export default function VenueBudgets() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBudget, setSelectedBudget] = useState<typeof mockBudgets[0] | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  
+  // Filter by month and year
+  const currentDate = new Date();
+  const [selectedYear, setSelectedYear] = useState(2025);
+  const [selectedMonth, setSelectedMonth] = useState(4); // May (0-indexed)
 
-  // Filter budgets based on search term
-  const filteredBudgets = mockBudgets.filter(budget => 
-    budget.clientName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    budget.eventType.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Get all available years from budgets
+  const availableYears = useMemo(() => {
+    const years = mockBudgets.map(budget => getYear(budget.eventDate));
+    return [...new Set(years)].sort((a, b) => b - a); // Sort descending
+  }, []);
+
+  // Filter budgets based on search term, month, and year
+  const filteredBudgets = useMemo(() => {
+    return mockBudgets.filter(budget => {
+      const matchesSearch = 
+        budget.clientName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        budget.eventType.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const budgetMonth = getMonth(budget.eventDate);
+      const budgetYear = getYear(budget.eventDate);
+      
+      const matchesMonthAndYear = budgetMonth === selectedMonth && budgetYear === selectedYear;
+      
+      return matchesSearch && matchesMonthAndYear;
+    });
+  }, [searchTerm, selectedMonth, selectedYear]);
 
   // Handle opening budget details
   const handleOpenBudgetDetails = (budget: typeof mockBudgets[0]) => {
@@ -108,6 +220,26 @@ export default function VenueBudgets() {
   // Create a new budget
   const handleCreateNewBudget = () => {
     navigate('/venue/new-budget');
+  };
+
+  // Navigate to previous month
+  const handlePreviousMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(selectedYear - 1);
+    } else {
+      setSelectedMonth(selectedMonth - 1);
+    }
+  };
+
+  // Navigate to next month
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(selectedYear + 1);
+    } else {
+      setSelectedMonth(selectedMonth + 1);
+    }
   };
 
   // Effect to handle URL parameters
@@ -145,6 +277,58 @@ export default function VenueBudgets() {
             </Button>
           </div>
 
+          {/* Year and Month Navigation */}
+          <div className="mb-6">
+            <div className="flex items-center justify-center mb-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSelectedYear(selectedYear - 1)}
+                className="px-2"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="mx-2 font-medium text-lg">{selectedYear}</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSelectedYear(selectedYear + 1)}
+                className="px-2"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-2">
+              {monthNames.map((month, index) => (
+                <Button
+                  key={month}
+                  variant={selectedMonth === index ? "default" : "outline"}
+                  className={`${selectedMonth === index ? "bg-primary text-white" : "bg-background"} py-1 px-2 text-sm`}
+                  onClick={() => setSelectedMonth(index)}
+                >
+                  {month}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Month Navigation for Mobile */}
+          <div className="md:hidden flex items-center justify-between mb-4">
+            <Button variant="ghost" onClick={handlePreviousMonth}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="font-medium">{monthNames[selectedMonth]} {selectedYear}</span>
+            <Button variant="ghost" onClick={handleNextMonth}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Budget Count */}
+          <div className="mb-4 text-sm text-gray-500">
+            {filteredBudgets.length} orçamentos
+          </div>
+
           <div className="rounded-md border bg-white">
             <Table>
               <TableHeader>
@@ -177,7 +361,7 @@ export default function VenueBudgets() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={4} className="h-24 text-center">
-                      Nenhum orçamento encontrado.
+                      Nenhum orçamento encontrado para {monthNames[selectedMonth]}/{selectedYear}.
                     </TableCell>
                   </TableRow>
                 )}
