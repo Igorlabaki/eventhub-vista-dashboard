@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -188,7 +189,7 @@ export default function VenueGoals() {
           {/* ADICIONAIS TAB */}
           <TabsContent value="adicionais" className="space-y-4">
             <div className="flex justify-between items-center mb-4">
-              <Button className="bg-green-600 hover:bg-green-700" onClick={handleAddFee}>
+              <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white" onClick={handleAddFee}>
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Adicional
               </Button>
@@ -203,19 +204,19 @@ export default function VenueGoals() {
 
             <div className="space-y-4">
               {seasonalFees.map((fee) => (
-                <Card key={fee.id} className="bg-gray-800 text-white border-none hover:bg-gray-700">
+                <Card key={fee.id} className="bg-white border hover:bg-secondary/50 transition-colors cursor-pointer shadow-sm">
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="font-medium text-lg">{fee.title}</h3>
+                        <h3 className="font-medium text-lg text-gray-800">{fee.title}</h3>
                         {fee.type === "SEASONAL" && (
-                          <div className="flex items-center text-sm text-gray-400 mt-1">
+                          <div className="flex items-center text-sm text-gray-600 mt-1">
                             <Calendar className="h-4 w-4 mr-2" />
                             <span>{fee.startDay} até {fee.endDay}</span>
                           </div>
                         )}
                         {fee.type === "WEEKDAY" && (
-                          <div className="text-sm text-gray-400 mt-1">
+                          <div className="text-sm text-gray-600 mt-1">
                             {fee.affectedDays?.split(',').join(', ')}
                           </div>
                         )}
@@ -230,14 +231,14 @@ export default function VenueGoals() {
             </div>
 
             {newFeeFormOpen && (
-              <Card className="border border-gray-700 bg-gray-900 text-white">
+              <Card className="border bg-white shadow-sm">
                 <CardHeader>
                   <CardTitle>Novo Adicional</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-white">Tipo do Taxa:</Label>
+                      <Label>Tipo do Taxa:</Label>
                       <div className="flex space-x-4">
                         <div className="flex items-center space-x-2">
                           <Checkbox id="temporada" 
@@ -258,12 +259,12 @@ export default function VenueGoals() {
                     
                     <div>
                       <Label htmlFor="title">Título</Label>
-                      <Input id="title" placeholder="Required" className="bg-gray-800 text-white border-gray-700" />
+                      <Input id="title" placeholder="Required" className="bg-white border" />
                     </div>
                     
                     <div>
                       <Label htmlFor="fee">Taxa de Aumento (%):</Label>
-                      <Input id="fee" type="number" defaultValue={0} className="bg-gray-800 text-white border-gray-700" />
+                      <Input id="fee" type="number" defaultValue={0} className="bg-white border" />
                     </div>
                     
                     {feeForm.watch("type") === "SEASONAL" && (
@@ -273,7 +274,7 @@ export default function VenueGoals() {
                           <Input
                             id="startDate"
                             placeholder="Escolha a data de início da temporada"
-                            className="bg-gray-800 text-white border-gray-700"
+                            className="bg-white border"
                           />
                         </div>
                         <div>
@@ -281,7 +282,7 @@ export default function VenueGoals() {
                           <Input
                             id="endDate"
                             placeholder="Escolha a data de início da temporada"
-                            className="bg-gray-800 text-white border-gray-700"
+                            className="bg-white border"
                           />
                         </div>
                       </>
@@ -301,7 +302,7 @@ export default function VenueGoals() {
                       </div>
                     )}
                     
-                    <Button className="w-full bg-green-600 hover:bg-green-700">
+                    <Button className="w-full bg-eventhub-primary hover:bg-indigo-600 text-white">
                       Cadastrar
                     </Button>
                   </form>
@@ -313,7 +314,7 @@ export default function VenueGoals() {
           {/* DESCONTOS TAB */}
           <TabsContent value="descontos" className="space-y-4">
             <div className="flex justify-between items-center mb-4">
-              <Button className="bg-green-600 hover:bg-green-700" onClick={handleAddDiscount}>
+              <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white" onClick={handleAddDiscount}>
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Desconto
               </Button>
@@ -328,19 +329,19 @@ export default function VenueGoals() {
 
             <div className="space-y-4">
               {discounts.map((discount) => (
-                <Card key={discount.id} className="bg-gray-800 text-white border-none hover:bg-gray-700">
+                <Card key={discount.id} className="bg-white border hover:bg-secondary/50 transition-colors cursor-pointer shadow-sm">
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="font-medium text-lg">{discount.title}</h3>
+                        <h3 className="font-medium text-lg text-gray-800">{discount.title}</h3>
                         {discount.type === "SEASONAL" && (
-                          <div className="flex items-center text-sm text-gray-400 mt-1">
+                          <div className="flex items-center text-sm text-gray-600 mt-1">
                             <Calendar className="h-4 w-4 mr-2" />
                             <span>{discount.startDay} até {discount.endDay}</span>
                           </div>
                         )}
                         {discount.type === "WEEKDAY" && (
-                          <div className="text-sm text-gray-400 mt-1">
+                          <div className="text-sm text-gray-600 mt-1">
                             {discount.affectedDays?.split(',').join(', ')}
                           </div>
                         )}
@@ -355,14 +356,14 @@ export default function VenueGoals() {
             </div>
 
             {newDiscountFormOpen && (
-              <Card className="border border-gray-700 bg-gray-900 text-white">
+              <Card className="border bg-white shadow-sm">
                 <CardHeader>
                   <CardTitle>Novo Desconto</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-white">Tipo do Taxa:</Label>
+                      <Label>Tipo do Taxa:</Label>
                       <div className="flex space-x-4">
                         <div className="flex items-center space-x-2">
                           <Checkbox id="temporada-discount" 
@@ -383,12 +384,12 @@ export default function VenueGoals() {
                     
                     <div>
                       <Label htmlFor="title-discount">Título</Label>
-                      <Input id="title-discount" placeholder="Required" className="bg-gray-800 text-white border-gray-700" />
+                      <Input id="title-discount" placeholder="Required" className="bg-white border" />
                     </div>
                     
                     <div>
                       <Label htmlFor="fee-discount">Taxa de Desconto (%):</Label>
-                      <Input id="fee-discount" type="number" defaultValue={0} className="bg-gray-800 text-white border-gray-700" />
+                      <Input id="fee-discount" type="number" defaultValue={0} className="bg-white border" />
                     </div>
                     
                     {discountForm.watch("type") === "SEASONAL" && (
@@ -398,7 +399,7 @@ export default function VenueGoals() {
                           <Input
                             id="startDate-discount"
                             placeholder="Escolha a data de início da temporada"
-                            className="bg-gray-800 text-white border-gray-700"
+                            className="bg-white border"
                           />
                         </div>
                         <div>
@@ -406,7 +407,7 @@ export default function VenueGoals() {
                           <Input
                             id="endDate-discount"
                             placeholder="Escolha a data de início da temporada"
-                            className="bg-gray-800 text-white border-gray-700"
+                            className="bg-white border"
                           />
                         </div>
                       </>
@@ -426,7 +427,7 @@ export default function VenueGoals() {
                       </div>
                     )}
                     
-                    <Button className="w-full bg-green-600 hover:bg-green-700">
+                    <Button className="w-full bg-eventhub-primary hover:bg-indigo-600 text-white">
                       Cadastrar
                     </Button>
                   </form>
@@ -439,7 +440,7 @@ export default function VenueGoals() {
           <TabsContent value="metas" className="space-y-4">
             {/* Standard Goals UI with cards */}
             <div className="flex justify-between items-center mb-4">
-              <Button className="bg-green-600 hover:bg-green-700" onClick={handleAddGoal}>
+              <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white" onClick={handleAddGoal}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Meta
               </Button>
@@ -452,17 +453,17 @@ export default function VenueGoals() {
               />
             </div>
 
-            <Card className="bg-gray-800 text-white border-none hover:bg-gray-700">
+            <Card className="bg-white border hover:bg-secondary/50 transition-colors cursor-pointer shadow-sm">
               <CardContent className="pt-6">
                 <div className="space-y-3">
-                  <div className="text-sm text-gray-400">Período:</div>
+                  <div className="text-sm text-gray-600">Período:</div>
                   <div className="flex flex-wrap gap-2">
                     {months.map(month => (
-                      <span key={month} className="text-sm">{month}</span>
+                      <span key={month} className="text-sm text-gray-800">{month}</span>
                     ))}
                   </div>
                   <div className="flex justify-between items-center">
-                    <div>
+                    <div className="text-gray-800">
                       <div>Meta: R$ 10.000 /</div>
                     </div>
                     <div className="text-green-500">
@@ -474,7 +475,7 @@ export default function VenueGoals() {
             </Card>
 
             {newGoalFormOpen && (
-              <Card className="border border-gray-700 bg-gray-900 text-white">
+              <Card className="border bg-white shadow-sm">
                 <CardHeader>
                   <CardTitle>Nova Meta</CardTitle>
                 </CardHeader>
@@ -482,15 +483,15 @@ export default function VenueGoals() {
                   <form className="space-y-4">
                     <div>
                       <Label htmlFor="minValue">Mínimo</Label>
-                      <Input id="minValue" placeholder="R$0.00" className="bg-gray-800 text-white border-gray-700" />
+                      <Input id="minValue" placeholder="R$0.00" className="bg-white border" />
                     </div>
                     <div>
                       <Label htmlFor="maxValue">Máximo</Label>
-                      <Input id="maxValue" placeholder="R$0.00" className="bg-gray-800 text-white border-gray-700" />
+                      <Input id="maxValue" placeholder="R$0.00" className="bg-white border" />
                     </div>
                     <div>
                       <Label htmlFor="increasePercent">Taxa de Aumento (%):</Label>
-                      <Input id="increasePercent" placeholder="Required" className="bg-gray-800 text-white border-gray-700" />
+                      <Input id="increasePercent" placeholder="Required" className="bg-white border" />
                     </div>
                     
                     <div className="space-y-3">
@@ -505,7 +506,7 @@ export default function VenueGoals() {
                       </div>
                     </div>
                     
-                    <Button className="w-full bg-green-600 hover:bg-green-700">
+                    <Button className="w-full bg-eventhub-primary hover:bg-indigo-600 text-white">
                       Cadastrar
                     </Button>
                   </form>

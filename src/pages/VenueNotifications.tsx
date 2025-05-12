@@ -47,18 +47,18 @@ export default function VenueNotifications() {
     <DashboardLayout title="Notificações" subtitle="Mantenha-se atualizado">
       <div className="space-y-4">
         {notifications.map((notification) => (
-          <Card key={notification.id} className="bg-gray-900 text-white hover:bg-gray-800 transition-colors cursor-pointer">
+          <Card key={notification.id} className="bg-white hover:bg-secondary/50 transition-colors cursor-pointer border shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <div className="bg-gray-800 p-2 rounded-full mt-1">
+                <div className="bg-eventhub-tertiary/30 p-2 rounded-full mt-1">
                   <Bell className="h-5 w-5 text-eventhub-primary" />
                 </div>
                 <div className="flex-grow">
-                  <p className="font-medium">{notification.title}</p>
-                  <div className="flex justify-between text-sm text-gray-300 mt-1">
+                  <p className="font-medium text-gray-800">{notification.title}</p>
+                  <div className="flex justify-between text-sm text-gray-600 mt-1">
                     <span>no valor de {notification.value}, para {notification.date}</span>
                     {!notification.read && (
-                      <span className="bg-eventhub-primary text-black text-xs px-2 py-0.5 rounded-full">
+                      <span className="bg-eventhub-primary text-white text-xs px-2 py-0.5 rounded-full">
                         Novo
                       </span>
                     )}
