@@ -14,6 +14,7 @@ import {
   BarChart,
   Bell,
   FileText,
+  Building,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -81,6 +82,9 @@ export function SidebarNav({
 }) {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  
+  // Determine if we're in a venue section
+  const isInVenue = location.pathname.startsWith('/venue');
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -139,34 +143,36 @@ export function SidebarNav({
             )}
             onClick={handleNavItemClick}
           >
-            <Home className="h-5 w-5 mr-2" />
+            <Building className="h-5 w-5 mr-2" />
             {!isCollapsed && <span>Organizações</span>}
           </Link>
 
-          <div className="pt-3 pb-1">
-            {!isCollapsed && (
-              <div className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Venue atual
-              </div>
-            )}
+          {isInVenue && (
+            <div className="pt-3 pb-1">
+              {!isCollapsed && (
+                <div className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Espaço atual
+                </div>
+              )}
 
-            {venueNavItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={cn(
-                  "flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
-                  location.pathname === item.href
-                    ? "bg-eventhub-tertiary/30 text-eventhub-primary"
-                    : "text-gray-700"
-                )}
-                onClick={handleNavItemClick}
-              >
-                <item.icon className="h-5 w-5 mr-2" />
-                {!isCollapsed && <span>{item.title}</span>}
-              </Link>
-            ))}
-          </div>
+              {venueNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={cn(
+                    "flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
+                    location.pathname === item.href
+                      ? "bg-eventhub-tertiary/30 text-eventhub-primary"
+                      : "text-gray-700"
+                  )}
+                  onClick={handleNavItemClick}
+                >
+                  <item.icon className="h-5 w-5 mr-2" />
+                  {!isCollapsed && <span>{item.title}</span>}
+                </Link>
+              ))}
+            </div>
+          )}
         </nav>
       </div>
     </div>

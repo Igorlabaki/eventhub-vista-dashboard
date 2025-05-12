@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { OrganizationCard } from "@/components/OrganizationCard";
-import { Plus } from "lucide-react";
+import { Plus, Building } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,7 @@ const mockOrganizations = [
     id: "1",
     name: "Best Eventos Ltda",
     venueCount: 3,
+    newBudgetsCount: 5,
     nextEvent: {
       name: "Casamento Silva",
       date: "2023-06-15",
@@ -30,6 +32,7 @@ const mockOrganizations = [
     id: "2",
     name: "Festa & Cia",
     venueCount: 2,
+    newBudgetsCount: 2,
     nextEvent: {
       name: "Aniversário 15 anos",
       date: "2023-06-20",
@@ -39,6 +42,7 @@ const mockOrganizations = [
     id: "3",
     name: "Central de Eventos",
     venueCount: 5,
+    newBudgetsCount: 0,
     nextEvent: {
       name: "Congresso de Medicina",
       date: "2023-07-01",
@@ -68,6 +72,11 @@ export default function Dashboard() {
       id: `org-${Date.now()}`,
       name: newOrganization.name,
       venueCount: 0,
+      newBudgetsCount: 0,
+      nextEvent: {
+        name: "",
+        date: "",
+      }
     };
 
     setOrganizations([...organizations, newOrg]);
@@ -83,10 +92,11 @@ export default function Dashboard() {
   return (
     <DashboardLayout title="Organizações" subtitle="Gerencie suas organizações">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">
+        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <Building className="h-5 w-5 text-eventhub-primary" />
           Suas Organizações ({organizations.length})
         </h2>
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button onClick={() => setDialogOpen(true)} className="bg-eventhub-primary hover:bg-indigo-600">
           <Plus className="h-4 w-4 mr-2" />
           Nova Organização
         </Button>
@@ -99,7 +109,7 @@ export default function Dashboard() {
             id={org.id}
             name={org.name}
             venueCount={org.venueCount}
-            nextEvent={org.nextEvent}
+            newBudgetsCount={org.newBudgetsCount}
           />
         ))}
       </div>
@@ -109,6 +119,9 @@ export default function Dashboard() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nova Organização</DialogTitle>
+            <DialogDescription>
+              Crie uma nova organização para gerenciar seus espaços de eventos
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -127,7 +140,9 @@ export default function Dashboard() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleCreateOrganization}>Criar</Button>
+            <Button onClick={handleCreateOrganization} className="bg-eventhub-primary hover:bg-indigo-600">
+              Criar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, MoreVertical } from "lucide-react";
+import { Building, MoreVertical, FileText } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,7 @@ export interface OrganizationCardProps {
   id: string;
   name: string;
   venueCount: number;
+  newBudgetsCount?: number;
   nextEvent?: {
     name: string;
     date: string;
@@ -24,7 +25,7 @@ export function OrganizationCard({
   id,
   name,
   venueCount,
-  nextEvent,
+  newBudgetsCount = 0,
 }: OrganizationCardProps) {
   const navigate = useNavigate();
 
@@ -33,14 +34,17 @@ export function OrganizationCard({
   };
 
   return (
-    <Card className="eventhub-card">
+    <Card className="eventhub-card hover:shadow-lg transition-all duration-300 border-l-4 border-l-eventhub-primary">
       <CardHeader className="eventhub-card-header pb-2">
-        <h3 className="eventhub-subheading">{name}</h3>
+        <div className="flex items-center">
+          <Building className="h-5 w-5 text-eventhub-primary mr-2" />
+          <h3 className="eventhub-subheading">{name}</h3>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
               <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">Abrir menu</span>
+              <span className="sr-only">Menu</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -52,29 +56,25 @@ export function OrganizationCard({
       <CardContent>
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-2">
-            <div className="eventhub-stat">
-              <span className="text-xs text-gray-500">Venues</span>
+            <div className="eventhub-stat bg-indigo-50 rounded-lg">
+              <span className="text-xs text-gray-500">Espaços</span>
               <span className="text-lg font-bold">{venueCount}</span>
             </div>
             
-            <div className="eventhub-stat">
+            <div className="eventhub-stat bg-indigo-50 rounded-lg">
               <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3 text-gray-500" />
-                <span className="text-xs text-gray-500">Próximo Evento</span>
+                <FileText className="h-3 w-3 text-gray-500" />
+                <span className="text-xs text-gray-500">Orçamentos novos</span>
               </div>
-              {nextEvent ? (
-                <div className="text-sm font-medium line-clamp-1">{nextEvent.name}</div>
-              ) : (
-                <div className="text-sm text-gray-500">Nenhum evento</div>
-              )}
+              <span className="text-lg font-bold">{newBudgetsCount}</span>
             </div>
           </div>
           
           <Button
-            className="w-full bg-eventhub-primary hover:bg-indigo-600"
+            className="w-full bg-eventhub-primary hover:bg-indigo-600 transition-all"
             onClick={handleViewVenues}
           >
-            Ver Venues
+            Ver Espaços
           </Button>
         </div>
       </CardContent>
