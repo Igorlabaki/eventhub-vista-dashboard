@@ -50,7 +50,7 @@ export function OrganizationCard({
               <span className="text-lg font-bold">{venueCount}</span>
             </div>
             
-            <div className="eventhub-stat bg-indigo-50 rounded-lg">
+            <div className="eventhub-stat bg-indigo-50 rounded-lg flex justify-center items-center">
               <div className="flex items-center gap-1">
                 <FileText className="h-3 w-3 text-gray-500" />
                 <span className="text-xs text-gray-500">Orçamentos novos</span>
