@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,7 +91,7 @@ export default function VenueEvents() {
     
   // Calculando a porcentagem máxima para a barra de ocupação
   const maxPercentage = 100;
-  const getOccupancyPercentage = (count) => {
+  const getOccupancyPercentage = (count: number): number => {
     const max = Math.max(...monthlyEventCounts);
     return max > 0 ? (count / max) * maxPercentage : 0;
   };
@@ -169,7 +168,7 @@ export default function VenueEvents() {
       <div className="space-y-4">
         {events
           .filter(event => event.date > new Date())
-          .sort((a, b) => a.date - b.date)
+          .sort((a, b) => a.date.getTime() - b.date.getTime())
           .slice(0, 5)
           .map(event => (
             <Card key={event.id} className="hover:shadow-md transition-shadow">

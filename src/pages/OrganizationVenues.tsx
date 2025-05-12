@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,70 @@ import { OwnersManager } from "@/components/OwnersManager";
 import { PermissionsManager } from "@/components/PermissionsManager";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Type definitions matching the Prisma schema
+type PricingModel = "PER_PERSON" | "PER_DAY" | "PER_PERSON_DAY" | "PER_PERSON_HOUR";
+
+interface VenueBase {
+  id: string;
+  organizationId: string;
+  name: string;
+  email: string;
+  street: string;
+  streetNumber: string;
+  complement: string | null;
+  neighborhood: string;
+  city: string;
+  state: string;
+  cep: string;
+  checkIn: string;
+  checkOut: string;
+  hasOvernightStay: boolean;
+  pricingModel: PricingModel;
+  maxGuest: number;
+  capacity: number;
+  upcomingEvents: number;
+  description: string;
+  address: string;
+  photos: string[];
+  amenities: string[];
+  contactEmail: string;
+  contactPhone: string;
+}
+
+interface PerPersonVenue extends VenueBase {
+  pricingModel: "PER_PERSON";
+  pricePerPerson: number;
+  pricePerDay?: null;
+  pricePerPersonDay?: null;
+  pricePerPersonHour?: null;
+}
+
+interface PerDayVenue extends VenueBase {
+  pricingModel: "PER_DAY";
+  pricePerPerson?: null;
+  pricePerDay: number;
+  pricePerPersonDay?: null;
+  pricePerPersonHour?: null;
+}
+
+interface PerPersonDayVenue extends VenueBase {
+  pricingModel: "PER_PERSON_DAY";
+  pricePerPerson?: null;
+  pricePerDay?: null;
+  pricePerPersonDay: number;
+  pricePerPersonHour?: null;
+}
+
+interface PerPersonHourVenue extends VenueBase {
+  pricingModel: "PER_PERSON_HOUR";
+  pricePerPerson?: null;
+  pricePerDay?: null;
+  pricePerPersonDay?: null;
+  pricePerPersonHour: number;
+}
+
+type Venue = PerPersonVenue | PerDayVenue | PerPersonDayVenue | PerPersonHourVenue;
 
 // Dados mock realistas baseados no schema do banco de dados
 const organizations = [
@@ -45,7 +108,7 @@ const pricingModels = [
 ];
 
 // Dados mock realistas para venues (espaços)
-const mockVenues = [
+const mockVenues: Venue[] = [
   {
     id: "venue-1",
     organizationId: "1",
@@ -207,7 +270,7 @@ export default function OrganizationVenues() {
     checkIn: "12:00",
     checkOut: "12:00",
     hasOvernightStay: false,
-    pricingModel: "PER_PERSON",
+    pricingModel: "PER_PERSON" as PricingModel,
     pricePerPerson: "",
     pricePerDay: "",
     pricePerPersonDay: "",
@@ -217,7 +280,7 @@ export default function OrganizationVenues() {
   });
   
   const organization = organizations.find((org) => org.id === organizationId);
-  const [venues, setVenues] = useState(
+  const [venues, setVenues] = useState<Venue[]>(
     mockVenues.filter((venue) => venue.organizationId === organizationId)
   );
   
@@ -246,7 +309,7 @@ export default function OrganizationVenues() {
     setEditDialogOpen(false);
   };
 
-  const handlePricingModelChange = (value: string) => {
+  const handlePricingModelChange = (value: PricingModel) => {
     setNewVenue(prev => ({ ...prev, pricingModel: value }));
   };
   
@@ -295,7 +358,7 @@ export default function OrganizationVenues() {
       return;
     }
 
-    const newVenueObj = {
+    const baseVenueData = {
       id: `venue-${Date.now()}`,
       organizationId: organizationId || "1",
       name: newVenue.name,
@@ -310,11 +373,6 @@ export default function OrganizationVenues() {
       checkIn: newVenue.checkIn,
       checkOut: newVenue.checkOut,
       hasOvernightStay: newVenue.hasOvernightStay,
-      pricingModel: newVenue.pricingModel,
-      pricePerPerson: newVenue.pricingModel === 'PER_PERSON' ? parseFloat(newVenue.pricePerPerson) : null,
-      pricePerDay: newVenue.pricingModel === 'PER_DAY' ? parseFloat(newVenue.pricePerDay) : null,
-      pricePerPersonDay: newVenue.pricingModel === 'PER_PERSON_DAY' ? parseFloat(newVenue.pricePerPersonDay) : null,
-      pricePerPersonHour: newVenue.pricingModel === 'PER_PERSON_HOUR' ? parseFloat(newVenue.pricePerPersonHour) : null,
       maxGuest: maxGuests,
       capacity: maxGuests, // For UI compatibility
       upcomingEvents: 0,
@@ -325,6 +383,46 @@ export default function OrganizationVenues() {
       contactEmail: newVenue.email,
       contactPhone: "",
     };
+
+    let newVenueObj: Venue;
+    
+    switch (newVenue.pricingModel) {
+      case 'PER_PERSON':
+        newVenueObj = {
+          ...baseVenueData,
+          pricingModel: 'PER_PERSON',
+          pricePerPerson: parseFloat(newVenue.pricePerPerson),
+        } as PerPersonVenue;
+        break;
+      case 'PER_DAY':
+        newVenueObj = {
+          ...baseVenueData,
+          pricingModel: 'PER_DAY',
+          pricePerDay: parseFloat(newVenue.pricePerDay),
+        } as PerDayVenue;
+        break;
+      case 'PER_PERSON_DAY':
+        newVenueObj = {
+          ...baseVenueData,
+          pricingModel: 'PER_PERSON_DAY',
+          pricePerPersonDay: parseFloat(newVenue.pricePerPersonDay),
+        } as PerPersonDayVenue;
+        break;
+      case 'PER_PERSON_HOUR':
+        newVenueObj = {
+          ...baseVenueData,
+          pricingModel: 'PER_PERSON_HOUR',
+          pricePerPersonHour: parseFloat(newVenue.pricePerPersonHour),
+        } as PerPersonHourVenue;
+        break;
+      default:
+        // Default case to make TypeScript happy
+        newVenueObj = {
+          ...baseVenueData,
+          pricingModel: 'PER_PERSON',
+          pricePerPerson: parseFloat(newVenue.pricePerPerson) || 0,
+        } as PerPersonVenue;
+    }
 
     setVenues([...venues, newVenueObj]);
     setNewVenue({

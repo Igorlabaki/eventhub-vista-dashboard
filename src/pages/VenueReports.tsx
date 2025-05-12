@@ -60,7 +60,7 @@ export default function VenueReports() {
     ],
   };
   
-  const renderSourceData = (data) => {
+  const renderSourceData = (data: Array<{ source: string; count: number; percentage: number }>) => {
     return (
       <div className="space-y-3 mt-4">
         {data.map((item) => (
@@ -80,7 +80,7 @@ export default function VenueReports() {
     );
   };
   
-  const getBarColor = (source) => {
+  const getBarColor = (source: string) => {
     switch(source) {
       case "Instagram": return "bg-red-400";
       case "TikTok": return "bg-teal-400";
@@ -92,7 +92,8 @@ export default function VenueReports() {
     }
   };
   
-  const renderExpenseList = (expenses, total) => {
+  const renderExpenseList = (expenses: Array<{ name: string; value: number; percentage: number }>) => {
+    const total = calculateTotal(expenses);
     return (
       <div className="space-y-3 mt-4">
         {expenses.map((expense) => (
@@ -110,14 +111,14 @@ export default function VenueReports() {
         ))}
         <div className="pt-2 border-t">
           <div className="flex justify-end text-sm font-medium">
-            R$ {calculateTotal(expenses)}
+            R$ {total}
           </div>
         </div>
       </div>
     );
   };
   
-  const calculateTotal = (expenses) => {
+  const calculateTotal = (expenses: Array<{ value: number }>): string => {
     return expenses.reduce((total, expense) => total + expense.value, 0).toLocaleString('pt-BR');
   };
   
