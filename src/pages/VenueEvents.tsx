@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,9 +9,14 @@ import { format, getMonth, getYear } from "date-fns";
 import { pt } from "date-fns/locale";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EventDetails } from "@/components/EventDetails";
+import { EventSidebar } from "@/components/EventSidebar";
 
 export default function VenueEvents() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedEvent, setSelectedEvent] = useState<null | any>(null);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   // Current date
   const currentDate = new Date();
@@ -118,122 +124,168 @@ export default function VenueEvents() {
       setSelectedMonth(selectedMonth + 1);
     }
   };
+
+  // Handle opening event details
+  const handleOpenEventDetails = (event: any) => {
+    setSelectedEvent(event);
+    navigate(`/venue/events?id=${event.id}&action=view`);
+  };
+
+  // Close event details
+  const handleCloseEventDetails = () => {
+    setSelectedEvent(null);
+    navigate('/venue/events');
+  };
+
+  // Create a new event
+  const handleCreateNewEvent = () => {
+    // This would navigate to a new event form in a real app
+    alert("Criar novo evento - Funcionalidade em desenvolvimento");
+  };
+
+  // Effect to handle URL parameters
+  useEffect(() => {
+    const eventId = searchParams.get('id');
+    const action = searchParams.get('action');
+    
+    if (eventId && action === 'view') {
+      // Find the event with the matching ID
+      const eventToShow = events.find(event => event.id === eventId);
+      if (eventToShow) {
+        setSelectedEvent(eventToShow);
+      }
+    }
+  }, [searchParams, events]);
   
   return (
     <DashboardLayout title="Eventos" subtitle="Gerencie seus eventos">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input 
-            placeholder="Buscar eventos..." 
-            className="pl-9" 
-            value={searchTerm} 
-            onChange={e => setSearchTerm(e.target.value)} 
-          />
-        </div>
-        <Button className="ml-4">
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Evento
-        </Button>
-      </div>
-
-      {/* Year and Month Navigation */}
-      <div className="mb-6">
-        <div className="flex items-center justify-center mb-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setSelectedYear(selectedYear - 1)}
-            className="px-2"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="mx-2 font-medium text-lg">{selectedYear}</span>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setSelectedYear(selectedYear + 1)}
-            className="px-2"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-6 md:grid-cols-12 gap-2">
-          {monthNames.map((month, index) => (
-            <Button
-              key={month}
-              variant={selectedMonth === index ? "default" : "outline"}
-              className={`${selectedMonth === index ? "bg-primary text-white" : "bg-background"} py-1 px-2 text-sm`}
-              onClick={() => setSelectedMonth(index)}
-            >
-              {month}
+      {!selectedEvent ? (
+        // Show event list when no event is selected
+        <>
+          <div className="mb-6 flex items-center justify-between">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input 
+                placeholder="Buscar eventos..." 
+                className="pl-9" 
+                value={searchTerm} 
+                onChange={e => setSearchTerm(e.target.value)} 
+              />
+            </div>
+            <Button className="ml-4" onClick={handleCreateNewEvent}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Evento
             </Button>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      {/* Month Navigation for Mobile */}
-      <div className="md:hidden flex items-center justify-between mb-4">
-        <Button variant="ghost" onClick={handlePreviousMonth}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <span className="font-medium">{monthNames[selectedMonth]} {selectedYear}</span>
-        <Button variant="ghost" onClick={handleNextMonth}>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
+          {/* Year and Month Navigation */}
+          <div className="mb-6">
+            <div className="flex items-center justify-center mb-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSelectedYear(selectedYear - 1)}
+                className="px-2"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="mx-2 font-medium text-lg">{selectedYear}</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSelectedYear(selectedYear + 1)}
+                className="px-2"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-2">
+              {monthNames.map((month, index) => (
+                <Button
+                  key={month}
+                  variant={selectedMonth === index ? "default" : "outline"}
+                  className={`${selectedMonth === index ? "bg-primary text-white" : "bg-background"} py-1 px-2 text-sm`}
+                  onClick={() => setSelectedMonth(index)}
+                >
+                  {month}
+                </Button>
+              ))}
+            </div>
+          </div>
 
-      {/* Event Count */}
-      <div className="mb-4 text-sm text-gray-500">
-        {filteredEvents.length} eventos
-      </div>
+          {/* Month Navigation for Mobile */}
+          <div className="md:hidden flex items-center justify-between mb-4">
+            <Button variant="ghost" onClick={handlePreviousMonth}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="font-medium">{monthNames[selectedMonth]} {selectedYear}</span>
+            <Button variant="ghost" onClick={handleNextMonth}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
 
-      {/* Events Table */}
-      <div className="rounded-md border bg-white">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Convidados</TableHead>
-              <TableHead className="text-right">Valor Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredEvents.length > 0 ? (
-              filteredEvents.map(event => (
-                <TableRow key={event.id} className="cursor-pointer hover:bg-gray-50">
-                  <TableCell className="font-medium">{event.title}</TableCell>
-                  <TableCell>
-                    {format(event.date, "dd/MM/yyyy", {
-                      locale: pt
-                    })}
-                  </TableCell>
-                  <TableCell>{event.type}</TableCell>
-                  <TableCell>{event.guests}</TableCell>
-                  <TableCell className="text-right">
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL'
-                    }).format(event.value)}
-                  </TableCell>
+          {/* Event Count */}
+          <div className="mb-4 text-sm text-gray-500">
+            {filteredEvents.length} eventos
+          </div>
+
+          {/* Events Table */}
+          <div className="rounded-md border bg-white">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Convidados</TableHead>
+                  <TableHead className="text-right">Valor Total</TableHead>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  Nenhum evento encontrado para {monthNames[selectedMonth]}/{selectedYear}.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      {/* We're removing the additional cards showing events and occupation metrics 
-         since we're making this more like the budgets page */}
+              </TableHeader>
+              <TableBody>
+                {filteredEvents.length > 0 ? (
+                  filteredEvents.map(event => (
+                    <TableRow 
+                      key={event.id} 
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleOpenEventDetails(event)}
+                    >
+                      <TableCell className="font-medium">{event.title}</TableCell>
+                      <TableCell>
+                        {format(event.date, "dd/MM/yyyy", {
+                          locale: pt
+                        })}
+                      </TableCell>
+                      <TableCell>{event.type}</TableCell>
+                      <TableCell>{event.guests}</TableCell>
+                      <TableCell className="text-right">
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL'
+                        }).format(event.value)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      Nenhum evento encontrado para {monthNames[selectedMonth]}/{selectedYear}.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      ) : (
+        // Show event details with sidebar when an event is selected
+        <div className="flex w-full">
+          <EventSidebar onBack={handleCloseEventDetails} event={selectedEvent} />
+          <div className="flex-1 p-6">
+            <EventDetails event={selectedEvent} onClose={handleCloseEventDetails} />
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
