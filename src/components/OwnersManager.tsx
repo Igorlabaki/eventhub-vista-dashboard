@@ -114,9 +114,10 @@ interface OwnersManagerProps {
   organizationId: string;
   open: boolean;
   onClose: () => void;
+  showInPage?: boolean; // Add the showInPage prop to the interface
 }
 
-export function OwnersManager({ organizationId, open, onClose }: OwnersManagerProps) {
+export function OwnersManager({ organizationId, open, onClose, showInPage = false }: OwnersManagerProps) {
   const { toast } = useToast();
   const [owners, setOwners] = useState<Owner[]>(mockOwners);
   const [searchTerm, setSearchTerm] = useState("");
@@ -268,8 +269,354 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
     });
   };
   
+  // If showInPage is true, render directly in the page instead of in a dialog
+  if (showInPage) {
+    return (
+      <div className="p-6 bg-white rounded-lg shadow">
+        {/* Owner List View */}
+        {!isCreating && !isEditing && (
+          <>
+            <div className="flex justify-between items-center">
+              <div className="relative w-full max-w-xs">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input 
+                  placeholder="Buscar proprietários..." 
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Button onClick={() => setIsCreating(true)} className="flex items-center gap-1">
+                <Plus className="h-4 w-4" />
+                Novo Proprietário
+              </Button>
+            </div>
+            
+            {/* Owner List */}
+            <div className="mt-4">
+              {filteredOwners.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Nenhum proprietário encontrado
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>CPF</TableHead>
+                      <TableHead>Espaços</TableHead>
+                      <TableHead className="w-[100px]">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredOwners.map((owner) => {
+                      const ownerVenueCount = owner.venues?.length || 0;
+                      
+                      return (
+                        <TableRow key={owner.id}>
+                          <TableCell className="font-medium">{owner.completeName}</TableCell>
+                          <TableCell>{owner.cpf}</TableCell>
+                          <TableCell>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEditVenues(owner)}
+                            >
+                              {ownerVenueCount} {ownerVenueCount === 1 ? 'espaço' : 'espaços'}
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleEdit(owner)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="text-red-600 hover:text-red-700"
+                                onClick={() => handleDelete(owner.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </>
+        )}
+        
+        {/* Owner Form */}
+        {(isCreating || isEditing) && (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="completeName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome Completo</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="cpf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CPF</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="rg"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>RG</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="pix"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>PIX</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="street"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rua</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="streetNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="complement"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Complemento</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="neighborhood"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bairro</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cidade</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estado</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="cep"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CEP</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="bankName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Banco</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="bankAgency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Agência</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="bankAccountNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número da Conta</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={resetForm}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  {isEditing ? 'Salvar' : 'Cadastrar'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
+        
+        {/* Venue Selection Dialog */}
+        <Dialog open={venueEditDialogOpen} onOpenChange={setVenueEditDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>
+                Selecionar Espaços
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 my-4">
+              <p className="text-sm text-gray-500">
+                Selecione os espaços para este proprietário:
+              </p>
+              
+              {mockVenues.map((venue) => {
+                const isSelected = currentVenues.includes(venue.id);
+                
+                return (
+                  <div 
+                    key={venue.id}
+                    className={`flex items-center justify-between p-3 border rounded-md cursor-pointer ${isSelected ? 'bg-blue-50 border-blue-200' : ''}`}
+                    onClick={() => handleToggleVenue(venue.id)}
+                  >
+                    <span>{venue.name}</span>
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
+                      {isSelected && <Check className="h-3 w-3 text-white" />}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setVenueEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveVenues}>
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+  
   if (!open) return null;
 
+  // Standard dialog view (for modal)
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
