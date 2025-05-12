@@ -198,8 +198,6 @@ export default function VenueGoals() {
               <Input
                 placeholder="Filtrar..."
                 className="max-w-sm bg-white"
-                icon={<Search className="h-4 w-4" />}
-                prefix={<Search className="h-4 w-4" />}
               />
             </div>
 
@@ -325,7 +323,6 @@ export default function VenueGoals() {
               <Input
                 placeholder="Filtrar..."
                 className="max-w-sm bg-white"
-                prefix={<Search className="h-4 w-4" />}
               />
             </div>
 
@@ -452,7 +449,6 @@ export default function VenueGoals() {
               <Input
                 placeholder="Filtrar..."
                 className="max-w-sm bg-white"
-                prefix={<Search className="h-4 w-4" />}
               />
             </div>
 
