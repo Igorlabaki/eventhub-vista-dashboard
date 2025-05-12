@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,6 +85,7 @@ export default function VenueBudgets() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBudget, setSelectedBudget] = useState<typeof mockBudgets[0] | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Filter budgets based on search term
   const filteredBudgets = mockBudgets.filter(budget => 
@@ -100,12 +101,28 @@ export default function VenueBudgets() {
   // Close budget details
   const handleCloseBudgetDetails = () => {
     setSelectedBudget(null);
+    // Clear the URL parameters when closing
+    navigate('/venue/budgets');
   };
 
   // Create a new budget
   const handleCreateNewBudget = () => {
     navigate('/venue/new-budget');
   };
+
+  // Effect to handle URL parameters
+  useEffect(() => {
+    const budgetId = searchParams.get('id');
+    const action = searchParams.get('action');
+    
+    if (budgetId && action === 'view') {
+      // Find the budget with the matching ID
+      const budgetToShow = mockBudgets.find(budget => budget.id === budgetId);
+      if (budgetToShow) {
+        setSelectedBudget(budgetToShow);
+      }
+    }
+  }, [searchParams]);
 
   return (
     <DashboardLayout title="Orçamentos" subtitle="Gerencie seus orçamentos">

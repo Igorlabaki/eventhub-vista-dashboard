@@ -2,10 +2,12 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bell } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function VenueNotifications() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   // Mock data for notifications
   const notifications = [
@@ -51,8 +53,20 @@ export default function VenueNotifications() {
     },
   ];
 
+  useEffect(() => {
+    // Check if there's a notification ID in the URL that should be opened
+    const notificationId = searchParams.get('notification');
+    if (notificationId) {
+      const notification = notifications.find(n => n.id === notificationId);
+      if (notification) {
+        handleNotificationClick(notification.budgetId);
+      }
+    }
+  }, [searchParams]);
+
   const handleNotificationClick = (budgetId: string) => {
-    navigate(`/venue/budgets?id=${budgetId}`);
+    // Navigate to the budgets page and auto-select the specific budget
+    navigate(`/venue/budgets?id=${budgetId}&action=view`);
   };
 
   return (
