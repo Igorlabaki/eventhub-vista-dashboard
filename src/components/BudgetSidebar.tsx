@@ -41,7 +41,7 @@ interface BudgetSidebarProps {
 
 export function BudgetSidebar({ onBack, budget }: BudgetSidebarProps) {
   return (
-    <div className="w-64 bg-gray-900 text-white flex flex-col h-full min-h-[calc(100vh-64px)]">
+    <div className="w-64 bg-gray-900 text-white flex flex-col h-screen sticky top-0">
       <div className="p-4 border-b border-gray-700">
         <Button 
           variant="ghost" 
