@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,6 +18,8 @@ import {
   Edit,
   Trash2,
   User,
+  ShieldCheck,
+  KeyRound
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -46,6 +48,11 @@ type NavItem = {
   href: string;
   icon: React.ElementType;
   action?: () => void;
+};
+
+type Venue = {
+  id: string;
+  name: string;
 };
 
 const venueNavItems: NavItem[] = [
@@ -96,6 +103,14 @@ const venueNavItems: NavItem[] = [
   },
 ];
 
+// Mock data for spaces (venues)
+const mockVenues: Venue[] = [
+  { id: "1", name: "Guacá House" },
+  { id: "2", name: "AR756" },
+  { id: "3", name: "Casa Jardim" },
+  { id: "4", name: "Villa Espaço" },
+];
+
 export function SidebarNav({
   showOnMobile = false,
   onClose,
@@ -113,6 +128,7 @@ export function SidebarNav({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [orgName, setOrgName] = useState("Best Eventos Ltda");
+  const [venues, setVenues] = useState<Venue[]>(mockVenues);
   
   // Determine if we're in a venue section
   const isInVenue = location.pathname.startsWith('/venue');
@@ -171,6 +187,14 @@ export function SidebarNav({
     setEditDialogOpen(false);
   };
   
+  const handleVenueClick = (venue: Venue) => {
+    // Navigate to the venue page
+    navigate(`/venue/${venue.id}`);
+    if (showOnMobile && onClose) {
+      onClose();
+    }
+  };
+  
   // Create organization action items dynamically
   const organizationActionItems: NavItem[] = [
     {
@@ -182,12 +206,12 @@ export function SidebarNav({
     {
       title: "Permissões",
       href: `/organization/${organizationId}/permissions`,
-      icon: Users,
+      icon: ShieldCheck, // Changed from Users to ShieldCheck
     },
     {
       title: "Proprietários",
       href: `/organization/${organizationId}/owners`,
-      icon: User,
+      icon: KeyRound, // Changed from User to KeyRound
     },
     {
       title: "Contratos",
@@ -296,6 +320,27 @@ export function SidebarNav({
                     )}
                   </div>
                 ))}
+                
+                {/* Add the list of spaces (venues) here */}
+                {venues.length > 0 && (
+                  <div className="mt-6">
+                    <div className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Espaços
+                    </div>
+                    <div className="space-y-1">
+                      {venues.map(venue => (
+                        <button
+                          key={venue.id}
+                          onClick={() => handleVenueClick(venue)}
+                          className="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary text-gray-700"
+                        >
+                          <Building className="h-4 w-4 mr-2" />
+                          <span>{venue.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

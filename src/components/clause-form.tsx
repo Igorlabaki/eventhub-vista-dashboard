@@ -70,7 +70,7 @@ export function ClauseForm({ onSubmit, initialData, isEditing = false }: ClauseF
     })
   }
   
-  // Previnir o fechamento do modal ao clicar dentro do formulário
+  // Prevent modal from closing when clicking inside the form
   const handleFormClick = (e: React.MouseEvent) => {
     e.stopPropagation()
   }
@@ -126,7 +126,6 @@ export function ClauseForm({ onSubmit, initialData, isEditing = false }: ClauseF
           <DynamicFieldSelector 
             onSelectField={(field) => {
               handleInsertDynamicField(field)
-              // Prevenindo que o evento de clique propague para o formulário pai e cause o fechamento do modal
               return false
             }}
           />

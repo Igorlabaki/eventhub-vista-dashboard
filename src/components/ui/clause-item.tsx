@@ -16,7 +16,9 @@ export function ClauseItem({ clause, onClick, isSelected, index }: ClauseItemPro
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    onClick?.(clause)
+    if (onClick) {
+      onClick(clause)
+    }
   }
 
   return (

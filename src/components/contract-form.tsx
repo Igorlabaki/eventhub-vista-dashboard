@@ -89,7 +89,7 @@ export function ContractForm({
     })
   }
 
-  // Prevenir o fechamento do modal ao clicar dentro do formulário
+  // Prevent modal from closing when clicking inside the form
   const handleFormClick = (e: React.MouseEvent) => {
     e.stopPropagation()
   }
@@ -136,7 +136,7 @@ export function ContractForm({
         </div>
         
         <div onClick={(e) => e.stopPropagation()}>
-          <h3 className="text-lg font-medium mb-3">Selecione as Locações</h3>
+          <h3 className="text-lg font-medium mb-3">Selecione os Espaços</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {venues.map(venue => (
               <div 

@@ -78,18 +78,35 @@ interface DynamicFieldSelectorProps {
 }
 
 export function DynamicFieldSelector({ onSelectField }: DynamicFieldSelectorProps) {
+  // Add stop propagation to prevent modal from closing
+  const handleButtonClick = (field: DynamicField) => (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onSelectField(field)
+  }
+
   return (
     <Tabs defaultValue={fieldGroups[0].name} className="w-full">
-      <TabsList className="grid grid-cols-5 mb-4">
+      <TabsList className="grid grid-cols-5 mb-4" onClick={(e) => e.stopPropagation()}>
         {fieldGroups.map((group) => (
-          <TabsTrigger key={group.name} value={group.name} className="text-xs">
+          <TabsTrigger 
+            key={group.name} 
+            value={group.name} 
+            className="text-xs"
+            onClick={(e) => e.stopPropagation()}
+          >
             {group.name}
           </TabsTrigger>
         ))}
       </TabsList>
       
       {fieldGroups.map((group) => (
-        <TabsContent key={group.name} value={group.name} className="mt-0">
+        <TabsContent 
+          key={group.name} 
+          value={group.name} 
+          className="mt-0"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex flex-wrap gap-2">
             {group.fields.map((field) => (
               <Button
@@ -97,7 +114,7 @@ export function DynamicFieldSelector({ onSelectField }: DynamicFieldSelectorProp
                 variant="outline"
                 size="sm"
                 className="text-xs"
-                onClick={() => onSelectField(field.id)}
+                onClick={handleButtonClick(field.id)}
               >
                 {field.label}
               </Button>

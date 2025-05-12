@@ -71,7 +71,7 @@ export function AttachmentForm({
     })
   }
   
-  // Previnir o fechamento do modal ao clicar em um checkbox
+  // Prevenir o fechamento do modal ao clicar em um checkbox
   const handleFormClick = (e: React.MouseEvent) => {
     e.stopPropagation()
   }
@@ -116,7 +116,7 @@ export function AttachmentForm({
         />
         
         <div>
-          <h3 className="text-lg font-medium mb-3">Selecione as Locações:</h3>
+          <h3 className="text-lg font-medium mb-3">Selecione os Espaços:</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {venues.map(venue => (
               <div 
