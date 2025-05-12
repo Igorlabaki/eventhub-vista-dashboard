@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +20,9 @@ import VenueEvents from "./pages/VenueEvents";
 import VenueReports from "./pages/VenueReports";
 import VenueSchedule from "./pages/VenueSchedule";
 import VenueSettings from "./pages/VenueSettings";
+import VenueOwners from "./pages/VenueOwners";
+import VenueGoals from "./pages/VenueGoals";
+import VenueContacts from "./pages/VenueContacts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +52,9 @@ const App = () => (
           <Route path="/venue/reports" element={<VenueReports />} />
           <Route path="/venue/schedule" element={<VenueSchedule />} />
           <Route path="/venue/settings" element={<VenueSettings />} />
+          <Route path="/venue/owners" element={<VenueOwners />} />
+          <Route path="/venue/goals" element={<VenueGoals />} />
+          <Route path="/venue/contacts" element={<VenueContacts />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

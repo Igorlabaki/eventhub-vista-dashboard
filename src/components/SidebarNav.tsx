@@ -21,7 +21,10 @@ import {
   KeyRound,
   Globe,
   CalendarDays,
-  MapPin
+  MapPin,
+  User,
+  Target,
+  Contact
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -62,6 +65,21 @@ const venueNavItems: NavItem[] = [
     title: "Visão Geral",
     href: "/venue",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Proprietário",
+    href: "/venue/owners",
+    icon: User,
+  },
+  {
+    title: "Metas/Preços",
+    href: "/venue/goals",
+    icon: Target,
+  },
+  {
+    title: "Contatos",
+    href: "/venue/contacts",
+    icon: Contact,
   },
   {
     title: "Notificações",
