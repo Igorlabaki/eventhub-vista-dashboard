@@ -52,8 +52,8 @@ export function OrganizationCard({
             
             <div className="eventhub-stat bg-indigo-50 rounded-lg flex justify-center items-center">
               <div className="flex items-center gap-1">
-                <FileText className="h-3 w-3 text-gray-500" />
-                <span className="text-xs text-gray-500">Orçamentos novos</span>
+                
+                <span className="text-xs text-gray-500">Notificacoes</span>
               </div>
               <span className="text-lg font-bold">{newBudgetsCount}</span>
             </div>
