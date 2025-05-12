@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +24,7 @@ import VenueSettings from "./pages/VenueSettings";
 import VenueOwners from "./pages/VenueOwners";
 import VenueGoals from "./pages/VenueGoals";
 import VenueContacts from "./pages/VenueContacts";
+import NewBudget from "./pages/NewBudget";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +49,7 @@ const App = () => (
           <Route path="/venue/notifications" element={<VenueNotifications />} />
           <Route path="/venue/website" element={<VenueWebsite />} />
           <Route path="/venue/budgets" element={<VenueBudgets />} />
+          <Route path="/venue/new-budget" element={<NewBudget />} />
           <Route path="/venue/visits" element={<VenueVisits />} />
           <Route path="/venue/events" element={<VenueEvents />} />
           <Route path="/venue/reports" element={<VenueReports />} />
