@@ -1,12 +1,12 @@
 
 import { useState } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
+import { Label } from "@/components/ui/label";
 import {
   Calendar,
   ChevronRight,
   ClipboardList,
   CreditCard,
-  Home,
   LayoutDashboard,
   Menu,
   Settings,
@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -113,7 +112,7 @@ export function SidebarNav({
   // State for dialogs
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [organizationName, setOrganizationName] = useState("Best Eventos Ltda");
+  const [orgName, setOrgName] = useState("Best Eventos Ltda");
   
   // Determine if we're in a venue section
   const isInVenue = location.pathname.startsWith('/venue');
@@ -156,7 +155,7 @@ export function SidebarNav({
   };
   
   const handleSaveEdit = () => {
-    if (!organizationName.trim()) {
+    if (!orgName.trim()) {
       toast({
         title: "Erro",
         description: "O nome da organização não pode estar vazio."
@@ -179,11 +178,6 @@ export function SidebarNav({
       href: "#",
       icon: Edit,
       action: handleEditOrganization
-    },
-    {
-      title: "Espaços",
-      href: `/organization/${organizationId}/venues`,
-      icon: Building,
     },
     {
       title: "Permissões",
@@ -263,30 +257,44 @@ export function SidebarNav({
             {isInOrg && !isCollapsed && (
               <div className="pt-3 pb-1">
                 <div className="px-3 mt-4 mb-2 text-sm font-semibold text-eventhub-primary">
-                  {organizationName}
+                  {orgName}
                 </div>
                 
                 {organizationActionItems.map((item) => (
-                  <Link
-                    key={item.title}
-                    to={item.href}
-                    onClick={(e) => {
-                      if (item.action) {
-                        e.preventDefault();
-                        item.action();
-                      }
-                      handleNavItemClick();
-                    }}
-                    className={cn(
-                      "flex w-full items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
-                      location.pathname === item.href
-                        ? "bg-eventhub-tertiary/30 text-eventhub-primary"
-                        : "text-gray-700"
+                  <div key={item.title}>
+                    {item.action ? (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          item.action?.();
+                          handleNavItemClick();
+                        }}
+                        className={cn(
+                          "flex w-full items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
+                          location.pathname.includes(item.href) && item.href !== "#"
+                            ? "bg-eventhub-tertiary/30 text-eventhub-primary"
+                            : "text-gray-700"
+                        )}
+                      >
+                        <item.icon className="h-5 w-5 mr-2" />
+                        <span>{item.title}</span>
+                      </button>
+                    ) : (
+                      <Link
+                        to={item.href}
+                        className={cn(
+                          "flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
+                          location.pathname.includes(item.href)
+                            ? "bg-eventhub-tertiary/30 text-eventhub-primary"
+                            : "text-gray-700"
+                        )}
+                        onClick={handleNavItemClick}
+                      >
+                        <item.icon className="h-5 w-5 mr-2" />
+                        <span>{item.title}</span>
+                      </Link>
                     )}
-                  >
-                    <item.icon className="h-5 w-5 mr-2" />
-                    <span>{item.title}</span>
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}
@@ -332,8 +340,8 @@ export function SidebarNav({
               <Label htmlFor="name">Nome da Organização</Label>
               <Input
                 id="name"
-                value={organizationName}
-                onChange={(e) => setOrganizationName(e.target.value)}
+                value={orgName}
+                onChange={(e) => setOrgName(e.target.value)}
               />
             </div>
           </div>
@@ -350,7 +358,7 @@ export function SidebarNav({
           <AlertDialogHeader>
             <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
-              Essa ação não pode ser desfeita. Esta operação irá excluir permanentemente a organização "{organizationName}" e todos os seus dados associados.
+              Essa ação não pode ser desfeita. Esta operação irá excluir permanentemente a organização "{orgName}" e todos os seus dados associados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

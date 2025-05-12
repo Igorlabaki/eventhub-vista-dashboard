@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { User, Edit, Trash2, Plus } from "lucide-react";
+import { Users, Search, Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,16 +9,24 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -26,101 +35,81 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Owner } from "@/types/owner";
 
-// Define the owner type to ensure consistency
-type Owner = {
-  id: string;
-  completeName: string;
-  rg: string;
-  cpf: string;
-  pix: string;
-  street: string;
-  streetNumber: string;
-  complement: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-  bankName: string;
-  bankAgency: string;
-  cep: string;
-  bankAccountNumber: string;
-  organizationId: string;
-  venues: string[];
-};
+// Mock data for venues
+const mockVenues = [
+  { id: "1", name: "Espaço Villa Verde" },
+  { id: "2", name: "Casa de Festas Diamante" },
+  { id: "3", name: "Salão Nobre" },
+  { id: "4", name: "Ar756" }
+];
 
 // Mock data for owners
 const mockOwners: Owner[] = [
   {
     id: "1",
-    completeName: "João da Silva",
-    rg: "12.345.678-9",
+    completeName: "Carlos Alberto Silva",
     cpf: "123.456.789-00",
-    pix: "joao@example.com",
+    rg: "12.345.678-9",
+    pix: "carlos@email.com",
     street: "Rua das Flores",
     streetNumber: "123",
     complement: "Apto 101",
     neighborhood: "Centro",
     city: "São Paulo",
     state: "SP",
-    bankName: "Banco do Brasil",
-    bankAgency: "1234-5",
     cep: "01234-567",
+    bankName: "Banco do Brasil",
+    bankAgency: "1234",
     bankAccountNumber: "12345-6",
-    organizationId: "1",
-    venues: ["1", "2"]
+    organizationId: "2",
+    venues: ["1", "3"],
   },
   {
     id: "2",
-    completeName: "Maria Oliveira",
-    rg: "98.765.432-1",
+    completeName: "Ana Maria Santos",
     cpf: "987.654.321-00",
-    pix: "maria@example.com",
+    rg: "98.765.432-1",
+    pix: "ana@email.com",
     street: "Avenida Brasil",
     streetNumber: "456",
-    complement: "",
+    complement: null,
     neighborhood: "Jardins",
     city: "São Paulo",
     state: "SP",
+    cep: "04567-890",
     bankName: "Itaú",
-    bankAgency: "5678-9",
-    cep: "05678-901",
-    bankAccountNumber: "67890-1",
-    organizationId: "1",
-    venues: ["1"]
+    bankAgency: "5678",
+    bankAccountNumber: "56789-0",
+    organizationId: "2",
+    venues: ["2"],
   }
 ];
 
-// Mock data for venues
-const mockVenues = [
-  { id: "1", name: "Espaço Villa Verde", organizationId: "1" },
-  { id: "2", name: "Casa de Festas Diamante", organizationId: "1" },
-  { id: "3", name: "Salão Nobre", organizationId: "1" }
-];
-
-const ownerFormSchema = z.object({
-  completeName: z.string().min(1, { message: "Nome completo é obrigatório" }),
-  rg: z.string().optional(),
-  cpf: z.string().min(11, { message: "CPF é obrigatório" }),
-  pix: z.string().min(1, { message: "PIX é obrigatório" }),
-  street: z.string().min(1, { message: "Rua é obrigatória" }),
-  streetNumber: z.string().min(1, { message: "Número é obrigatório" }),
-  complement: z.string().optional(),
-  neighborhood: z.string().min(1, { message: "Bairro é obrigatório" }),
-  city: z.string().min(1, { message: "Cidade é obrigatória" }),
-  state: z.string().min(1, { message: "Estado é obrigatório" }),
-  bankName: z.string().min(1, { message: "Nome do banco é obrigatório" }),
-  bankAgency: z.string().min(1, { message: "Agência bancária é obrigatória" }),
-  cep: z.string().min(1, { message: "CEP é obrigatório" }),
-  bankAccountNumber: z.string().min(1, { message: "Número da conta é obrigatório" }),
-  venues: z.array(z.string())
+// Form schema for owner
+const ownerSchema = z.object({
+  completeName: z.string().min(1, "Nome completo é obrigatório"),
+  cpf: z.string().min(1, "CPF é obrigatório"),
+  rg: z.string().optional().nullable(),
+  pix: z.string().min(1, "PIX é obrigatório"),
+  street: z.string().min(1, "Rua é obrigatória"),
+  streetNumber: z.string().min(1, "Número é obrigatório"),
+  complement: z.string().optional().nullable(),
+  neighborhood: z.string().min(1, "Bairro é obrigatório"),
+  city: z.string().min(1, "Cidade é obrigatória"),
+  state: z.string().min(1, "Estado é obrigatório"),
+  cep: z.string().min(1, "CEP é obrigatório"),
+  bankName: z.string().min(1, "Nome do banco é obrigatório"),
+  bankAgency: z.string().min(1, "Agência é obrigatória"),
+  bankAccountNumber: z.string().min(1, "Número da conta é obrigatório"),
+  venues: z.array(z.string()).optional(),
 });
 
-type OwnerFormValues = z.infer<typeof ownerFormSchema>;
+type OwnerFormValues = z.infer<typeof ownerSchema>;
 
 interface OwnersManagerProps {
   organizationId: string;
@@ -131,17 +120,26 @@ interface OwnersManagerProps {
 export function OwnersManager({ organizationId, open, onClose }: OwnersManagerProps) {
   const { toast } = useToast();
   const [owners, setOwners] = useState<Owner[]>(mockOwners);
-  const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
-  const [isAddNewOpen, setIsAddNewOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentOwner, setCurrentOwner] = useState<Owner | null>(null);
+  const [venueEditDialogOpen, setVenueEditDialogOpen] = useState(false);
+  const [currentVenues, setCurrentVenues] = useState<string[]>([]);
+  
+  // Filter owners by search term
+  const filteredOwners = owners.filter(owner => 
+    owner.completeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    owner.cpf.includes(searchTerm)
+  );
+  
+  // Form for creating/editing owners
   const form = useForm<OwnerFormValues>({
-    resolver: zodResolver(ownerFormSchema),
+    resolver: zodResolver(ownerSchema),
     defaultValues: {
       completeName: "",
-      rg: "",
       cpf: "",
+      rg: "",
       pix: "",
       street: "",
       streetNumber: "",
@@ -149,173 +147,225 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
       neighborhood: "",
       city: "",
       state: "",
+      cep: "",
       bankName: "",
       bankAgency: "",
-      cep: "",
       bankAccountNumber: "",
-      venues: []
+      venues: [],
     }
   });
-
-  const handleEditOwner = (owner: Owner) => {
-    setSelectedOwner(owner);
-    form.reset({
-      ...owner,
-      venues: owner.venues
-    });
-    setIsEditOpen(true);
-  };
-
-  const handleDeleteOwner = (owner: Owner) => {
-    setSelectedOwner(owner);
-    setIsDeleteOpen(true);
-  };
-
-  const handleAddNew = () => {
-    form.reset({
-      completeName: "",
-      rg: "",
-      cpf: "",
-      pix: "",
-      street: "",
-      streetNumber: "",
-      complement: "",
-      neighborhood: "",
-      city: "",
-      state: "",
-      bankName: "",
-      bankAgency: "",
-      cep: "",
-      bankAccountNumber: "",
-      venues: []
-    });
-    setIsAddNewOpen(true);
-  };
-
+  
   const onSubmit = (data: OwnerFormValues) => {
-    if (isAddNewOpen) {
-      // Add new owner logic
+    if (isEditing && currentOwner) {
+      // Update existing owner
+      const updatedOwners = owners.map(owner => 
+        owner.id === currentOwner.id ? { ...owner, ...data } : owner
+      );
+      
+      setOwners(updatedOwners);
+      toast({
+        title: "Proprietário atualizado",
+        description: "Os dados do proprietário foram atualizados com sucesso.",
+      });
+    } else {
+      // Create new owner
       const newOwner: Owner = {
-        ...data,
-        id: `owner-${Date.now()}`,
+        id: Date.now().toString(),
         organizationId,
-        rg: data.rg || "",
-        complement: data.complement || ""
+        completeName: data.completeName,
+        cpf: data.cpf,
+        rg: data.rg || null,
+        pix: data.pix,
+        street: data.street,
+        streetNumber: data.streetNumber,
+        complement: data.complement || null,
+        neighborhood: data.neighborhood,
+        city: data.city,
+        state: data.state,
+        cep: data.cep,
+        bankName: data.bankName,
+        bankAgency: data.bankAgency,
+        bankAccountNumber: data.bankAccountNumber,
+        venues: data.venues || [],
       };
+      
       setOwners([...owners, newOwner]);
       toast({
-        title: "Sucesso",
-        description: "Proprietário adicionado com sucesso!"
+        title: "Proprietário adicionado",
+        description: "O novo proprietário foi adicionado com sucesso.",
       });
-      setIsAddNewOpen(false);
-    } else if (isEditOpen && selectedOwner) {
-      // Update owner logic
-      const updatedOwners = owners.map(owner => 
-        owner.id === selectedOwner.id ? { 
-          ...owner, 
-          ...data, 
-          rg: data.rg || "",
-          complement: data.complement || ""
-        } : owner
-      );
-      setOwners(updatedOwners);
-      toast({
-        title: "Sucesso",
-        description: "Proprietário atualizado com sucesso!"
-      });
-      setIsEditOpen(false);
     }
+    
+    resetForm();
   };
-
-  const handleConfirmDelete = () => {
-    if (selectedOwner) {
-      const updatedOwners = owners.filter(owner => owner.id !== selectedOwner.id);
-      setOwners(updatedOwners);
-      toast({
-        title: "Sucesso",
-        description: "Proprietário removido com sucesso!"
-      });
-      setIsDeleteOpen(false);
-    }
+  
+  const handleEdit = (owner: Owner) => {
+    setCurrentOwner(owner);
+    setIsEditing(true);
+    
+    form.reset({
+      completeName: owner.completeName,
+      cpf: owner.cpf,
+      rg: owner.rg || "",
+      pix: owner.pix,
+      street: owner.street,
+      streetNumber: owner.streetNumber,
+      complement: owner.complement || "",
+      neighborhood: owner.neighborhood,
+      city: owner.city,
+      state: owner.state,
+      cep: owner.cep,
+      bankName: owner.bankName,
+      bankAgency: owner.bankAgency,
+      bankAccountNumber: owner.bankAccountNumber,
+      venues: owner.venues || [],
+    });
   };
-
+  
+  const handleDelete = (ownerId: string) => {
+    setOwners(owners.filter(owner => owner.id !== ownerId));
+    toast({
+      title: "Proprietário removido",
+      description: "O proprietário foi removido com sucesso.",
+    });
+  };
+  
+  const resetForm = () => {
+    setIsCreating(false);
+    setIsEditing(false);
+    setCurrentOwner(null);
+    form.reset();
+  };
+  
+  const handleEditVenues = (owner: Owner) => {
+    setCurrentOwner(owner);
+    setCurrentVenues(owner.venues || []);
+    setVenueEditDialogOpen(true);
+  };
+  
+  const handleToggleVenue = (venueId: string) => {
+    setCurrentVenues(prev => {
+      if (prev.includes(venueId)) {
+        return prev.filter(id => id !== venueId);
+      } else {
+        return [...prev, venueId];
+      }
+    });
+  };
+  
+  const handleSaveVenues = () => {
+    if (!currentOwner) return;
+    
+    const updatedOwners = owners.map(owner => 
+      owner.id === currentOwner.id ? { ...owner, venues: currentVenues } : owner
+    );
+    
+    setOwners(updatedOwners);
+    setVenueEditDialogOpen(false);
+    
+    toast({
+      title: "Espaços atualizados",
+      description: "Os espaços do proprietário foram atualizados com sucesso.",
+    });
+  };
+  
   if (!open) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Proprietários
+            <Users className="h-5 w-5" />
+            Gerenciar Proprietários
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex justify-end mb-4">
-          <Button onClick={handleAddNew}>
-            <Plus className="h-4 w-4 mr-2" /> Novo Proprietário
-          </Button>
-        </div>
-
-        {owners.length === 0 ? (
-          <div className="text-center py-8 border border-dashed rounded-md">
-            <p className="text-gray-500">Nenhum proprietário cadastrado</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {owners.map((owner) => (
-              <div key={owner.id} className="p-4 border rounded-md shadow-sm">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium text-lg">{owner.completeName}</h4>
-                    <p className="text-sm text-gray-500">CPF: {owner.cpf}</p>
-                    <p className="text-sm text-gray-500">PIX: {owner.pix}</p>
-                    <div className="mt-2">
-                      <h5 className="text-sm font-medium">Espaços associados:</h5>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {owner.venues.map(venueId => {
-                          const venue = mockVenues.find(v => v.id === venueId);
-                          return venue ? (
-                            <span key={venueId} className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
-                              {venue.name}
-                            </span>
-                          ) : null;
-                        })}
-                        {owner.venues.length === 0 && (
-                          <span className="text-xs text-gray-500">Nenhum espaço associado</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleEditOwner(owner)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteOwner(owner)}>
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
-                </div>
+        {/* Owner List View */}
+        {!isCreating && !isEditing && (
+          <>
+            <div className="flex justify-between items-center">
+              <div className="relative w-full max-w-xs">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input 
+                  placeholder="Buscar proprietários..." 
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-            ))}
-          </div>
+              <Button onClick={() => setIsCreating(true)} className="flex items-center gap-1">
+                <Plus className="h-4 w-4" />
+                Novo Proprietário
+              </Button>
+            </div>
+            
+            {/* Owner List */}
+            <div className="mt-4">
+              {filteredOwners.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Nenhum proprietário encontrado
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>CPF</TableHead>
+                      <TableHead>Espaços</TableHead>
+                      <TableHead className="w-[100px]">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredOwners.map((owner) => {
+                      const ownerVenueCount = owner.venues?.length || 0;
+                      
+                      return (
+                        <TableRow key={owner.id}>
+                          <TableCell className="font-medium">{owner.completeName}</TableCell>
+                          <TableCell>{owner.cpf}</TableCell>
+                          <TableCell>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEditVenues(owner)}
+                            >
+                              {ownerVenueCount} {ownerVenueCount === 1 ? 'espaço' : 'espaços'}
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleEdit(owner)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="text-red-600 hover:text-red-700"
+                                onClick={() => handleDelete(owner.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </>
         )}
-      </DialogContent>
-
-      {/* Form Dialog (Add/Edit) */}
-      <Dialog open={isAddNewOpen || isEditOpen} onOpenChange={() => {
-        if (isAddNewOpen) setIsAddNewOpen(false);
-        if (isEditOpen) setIsEditOpen(false);
-      }}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {isAddNewOpen ? "Novo Proprietário" : "Editar Proprietário"}
-            </DialogTitle>
-          </DialogHeader>
-          
+        
+        {/* Owner Form */}
+        {(isCreating || isEditing) && (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -333,20 +383,6 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                 
                 <FormField
                   control={form.control}
-                  name="rg"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>RG</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="cpf"
                   render={({ field }) => (
                     <FormItem>
@@ -358,7 +394,21 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                     </FormItem>
                   )}
                 />
-
+                
+                <FormField
+                  control={form.control}
+                  name="rg"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>RG</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 <FormField
                   control={form.control}
                   name="pix"
@@ -372,21 +422,7 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="cep"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CEP</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+                
                 <FormField
                   control={form.control}
                   name="street"
@@ -400,7 +436,7 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                     </FormItem>
                   )}
                 />
-
+                
                 <FormField
                   control={form.control}
                   name="streetNumber"
@@ -414,7 +450,7 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                     </FormItem>
                   )}
                 />
-
+                
                 <FormField
                   control={form.control}
                   name="complement"
@@ -422,13 +458,13 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                     <FormItem>
                       <FormLabel>Complemento</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
+                
                 <FormField
                   control={form.control}
                   name="neighborhood"
@@ -442,7 +478,7 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                     </FormItem>
                   )}
                 />
-
+                
                 <FormField
                   control={form.control}
                   name="city"
@@ -456,7 +492,7 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                     </FormItem>
                   )}
                 />
-
+                
                 <FormField
                   control={form.control}
                   name="state"
@@ -470,13 +506,13 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                     </FormItem>
                   )}
                 />
-
+                
                 <FormField
                   control={form.control}
-                  name="bankName"
+                  name="cep"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nome do Banco</FormLabel>
+                      <FormLabel>CEP</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -484,7 +520,21 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                     </FormItem>
                   )}
                 />
-
+                
+                <FormField
+                  control={form.control}
+                  name="bankName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Banco</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 <FormField
                   control={form.control}
                   name="bankAgency"
@@ -498,7 +548,7 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                     </FormItem>
                   )}
                 />
-
+                
                 <FormField
                   control={form.control}
                   name="bankAccountNumber"
@@ -512,43 +562,63 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
                     </FormItem>
                   )}
                 />
-                
-                {/* Venues selection would go here - simplified for now */}
               </div>
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => {
-                  if (isAddNewOpen) setIsAddNewOpen(false);
-                  if (isEditOpen) setIsEditOpen(false);
-                }}>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={resetForm}>
                   Cancelar
                 </Button>
                 <Button type="submit">
-                  {isAddNewOpen ? "Criar" : "Salvar"}
+                  {isEditing ? 'Salvar' : 'Cadastrar'}
                 </Button>
-              </DialogFooter>
+              </div>
             </form>
           </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir proprietário</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir {selectedOwner?.completeName}? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        )}
+        
+        {/* Venue Selection Dialog */}
+        <Dialog open={venueEditDialogOpen} onOpenChange={setVenueEditDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>
+                Selecionar Espaços
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 my-4">
+              <p className="text-sm text-gray-500">
+                Selecione os espaços para este proprietário:
+              </p>
+              
+              {mockVenues.map((venue) => {
+                const isSelected = currentVenues.includes(venue.id);
+                
+                return (
+                  <div 
+                    key={venue.id}
+                    className={`flex items-center justify-between p-3 border rounded-md cursor-pointer ${isSelected ? 'bg-blue-50 border-blue-200' : ''}`}
+                    onClick={() => handleToggleVenue(venue.id)}
+                  >
+                    <span>{venue.name}</span>
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
+                      {isSelected && <Check className="h-3 w-3 text-white" />}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setVenueEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveVenues}>
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </DialogContent>
     </Dialog>
   );
 }
