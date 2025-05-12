@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
 import {
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -114,7 +114,7 @@ export function SidebarNav({
   // State for dialogs
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [organizationName, setOrganizationName] = useState("");
+  const [organizationName, setOrganizationName] = useState("Best Eventos Ltda");
   const [ownersDialogOpen, setOwnersDialogOpen] = useState(false);
   const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
   
@@ -126,9 +126,6 @@ export function SidebarNav({
   
   // Get organization ID from URL params
   const organizationId = params.id;
-  
-  // Mock data for organization name (replace with actual API call)
-  const organizationName = "Best Eventos Ltda";
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -158,7 +155,6 @@ export function SidebarNav({
   };
   
   const handleEditOrganization = () => {
-    setOrganizationName(organizationName);
     setEditDialogOpen(true);
   };
   

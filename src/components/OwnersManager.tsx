@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { User, Edit, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,8 +32,29 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+// Define the owner type to ensure consistency
+type Owner = {
+  id: string;
+  completeName: string;
+  rg: string;
+  cpf: string;
+  pix: string;
+  street: string;
+  streetNumber: string;
+  complement: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  bankName: string;
+  bankAgency: string;
+  cep: string;
+  bankAccountNumber: string;
+  organizationId: string;
+  venues: string[];
+};
+
 // Mock data for owners
-const mockOwners = [
+const mockOwners: Owner[] = [
   {
     id: "1",
     completeName: "João da Silva",
@@ -110,8 +130,8 @@ interface OwnersManagerProps {
 
 export function OwnersManager({ organizationId, open, onClose }: OwnersManagerProps) {
   const { toast } = useToast();
-  const [owners, setOwners] = useState(mockOwners);
-  const [selectedOwner, setSelectedOwner] = useState<typeof mockOwners[0] | null>(null);
+  const [owners, setOwners] = useState<Owner[]>(mockOwners);
+  const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
   const [isAddNewOpen, setIsAddNewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -137,7 +157,7 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
     }
   });
 
-  const handleEditOwner = (owner: typeof mockOwners[0]) => {
+  const handleEditOwner = (owner: Owner) => {
     setSelectedOwner(owner);
     form.reset({
       ...owner,
@@ -146,7 +166,7 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
     setIsEditOpen(true);
   };
 
-  const handleDeleteOwner = (owner: typeof mockOwners[0]) => {
+  const handleDeleteOwner = (owner: Owner) => {
     setSelectedOwner(owner);
     setIsDeleteOpen(true);
   };
@@ -175,10 +195,12 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
   const onSubmit = (data: OwnerFormValues) => {
     if (isAddNewOpen) {
       // Add new owner logic
-      const newOwner = {
+      const newOwner: Owner = {
         ...data,
         id: `owner-${Date.now()}`,
-        organizationId
+        organizationId,
+        rg: data.rg || "",
+        complement: data.complement || ""
       };
       setOwners([...owners, newOwner]);
       toast({
@@ -189,7 +211,12 @@ export function OwnersManager({ organizationId, open, onClose }: OwnersManagerPr
     } else if (isEditOpen && selectedOwner) {
       // Update owner logic
       const updatedOwners = owners.map(owner => 
-        owner.id === selectedOwner.id ? { ...owner, ...data } : owner
+        owner.id === selectedOwner.id ? { 
+          ...owner, 
+          ...data, 
+          rg: data.rg || "",
+          complement: data.complement || ""
+        } : owner
       );
       setOwners(updatedOwners);
       toast({
