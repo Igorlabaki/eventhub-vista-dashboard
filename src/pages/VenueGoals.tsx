@@ -11,6 +11,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter,
+  DialogTrigger 
+} from "@/components/ui/dialog";
 
 type SeasonalFeeType = "SEASONAL" | "WEEKDAY";
 
@@ -100,9 +109,9 @@ export default function VenueGoals() {
     }
   ]);
 
-  const [newGoalFormOpen, setNewGoalFormOpen] = useState(false);
-  const [newFeeFormOpen, setNewFeeFormOpen] = useState(false);
-  const [newDiscountFormOpen, setNewDiscountFormOpen] = useState(false);
+  const [feeDialogOpen, setFeeDialogOpen] = useState(false);
+  const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
+  const [goalDialogOpen, setGoalDialogOpen] = useState(false);
   
   const [pricingModel, setPricingModel] = useState({
     model: "pricePerDay",
@@ -164,18 +173,6 @@ export default function VenueGoals() {
     "Jul", "Ago", "Set", "Out", "Nov", "Dez"
   ];
 
-  const handleAddFee = () => {
-    setNewFeeFormOpen(true);
-  };
-
-  const handleAddDiscount = () => {
-    setNewDiscountFormOpen(true);
-  };
-
-  const handleAddGoal = () => {
-    setNewGoalFormOpen(true);
-  };
-
   return (
     <DashboardLayout title="Metas e Preços" subtitle="Gerencie as metas e preços do espaço">
       <div className="space-y-8">
@@ -189,10 +186,97 @@ export default function VenueGoals() {
           {/* ADICIONAIS TAB */}
           <TabsContent value="adicionais" className="space-y-4">
             <div className="flex justify-between items-center mb-4">
-              <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white" onClick={handleAddFee}>
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Adicional
-              </Button>
+              <Dialog open={feeDialogOpen} onOpenChange={setFeeDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Adicional
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Novo Adicional</DialogTitle>
+                    <DialogDescription>
+                      Crie um novo adicional para o seu espaço.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Tipo da Taxa:</Label>
+                      <div className="flex space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="temporada" 
+                            checked={feeForm.watch("type") === "SEASONAL"}
+                            onCheckedChange={() => feeForm.setValue("type", "SEASONAL")}
+                          />
+                          <label htmlFor="temporada" className="text-sm">Temporada</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="diasSemana" 
+                            checked={feeForm.watch("type") === "WEEKDAY"}
+                            onCheckedChange={() => feeForm.setValue("type", "WEEKDAY")}
+                          />
+                          <label htmlFor="diasSemana" className="text-sm">Dias da semana</label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="title">Título</Label>
+                      <Input id="title" placeholder="Título do adicional" className="bg-white border" />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="fee">Taxa de Aumento (%):</Label>
+                      <Input id="fee" type="number" defaultValue={0} className="bg-white border" />
+                    </div>
+                    
+                    {feeForm.watch("type") === "SEASONAL" && (
+                      <>
+                        <div>
+                          <Label htmlFor="startDate">Data do Início da Temporada:</Label>
+                          <Input
+                            id="startDate"
+                            placeholder="Escolha a data de início da temporada"
+                            className="bg-white border"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="endDate">Data do Fim da Temporada:</Label>
+                          <Input
+                            id="endDate"
+                            placeholder="Escolha a data de fim da temporada"
+                            className="bg-white border"
+                          />
+                        </div>
+                      </>
+                    )}
+                    
+                    {feeForm.watch("type") === "WEEKDAY" && (
+                      <div className="space-y-3">
+                        <Label>Selecione os Dias:</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {weekdays.map((day) => (
+                            <div key={day} className="flex items-center space-x-2">
+                              <Checkbox id={day} value={day} />
+                              <Label htmlFor={day} className="text-sm">{day}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setFeeDialogOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button type="submit" className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                        Cadastrar
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
             
             <div className="mb-4">
@@ -204,7 +288,7 @@ export default function VenueGoals() {
 
             <div className="space-y-4">
               {seasonalFees.map((fee) => (
-                <Card key={fee.id} className="bg-white border hover:bg-secondary/50 transition-colors cursor-pointer shadow-sm">
+                <Card key={fee.id} className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-center">
                       <div>
@@ -229,95 +313,102 @@ export default function VenueGoals() {
                 </Card>
               ))}
             </div>
-
-            {newFeeFormOpen && (
-              <Card className="border bg-white shadow-sm">
-                <CardHeader>
-                  <CardTitle>Novo Adicional</CardTitle>
-                </CardHeader>
-                <CardContent>
+          </TabsContent>
+          
+          {/* DESCONTOS TAB */}
+          <TabsContent value="descontos" className="space-y-4">
+            <div className="flex justify-between items-center mb-4">
+              <Dialog open={discountDialogOpen} onOpenChange={setDiscountDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Desconto
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Novo Desconto</DialogTitle>
+                    <DialogDescription>
+                      Crie um novo desconto para o seu espaço.
+                    </DialogDescription>
+                  </DialogHeader>
                   <form className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Tipo do Taxa:</Label>
+                      <Label>Tipo do Desconto:</Label>
                       <div className="flex space-x-4">
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="temporada" 
-                            checked={feeForm.watch("type") === "SEASONAL"}
-                            onCheckedChange={() => feeForm.setValue("type", "SEASONAL")}
+                          <Checkbox id="temporada-discount" 
+                            checked={discountForm.watch("type") === "SEASONAL"}
+                            onCheckedChange={() => discountForm.setValue("type", "SEASONAL")}
                           />
-                          <label htmlFor="temporada" className="text-sm">Temporada</label>
+                          <label htmlFor="temporada-discount" className="text-sm">Temporada</label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="diasSemana" 
-                            checked={feeForm.watch("type") === "WEEKDAY"}
-                            onCheckedChange={() => feeForm.setValue("type", "WEEKDAY")}
+                          <Checkbox id="diasSemana-discount" 
+                            checked={discountForm.watch("type") === "WEEKDAY"}
+                            onCheckedChange={() => discountForm.setValue("type", "WEEKDAY")}
                           />
-                          <label htmlFor="diasSemana" className="text-sm">Dias da semana</label>
+                          <label htmlFor="diasSemana-discount" className="text-sm">Dias da semana</label>
                         </div>
                       </div>
                     </div>
                     
                     <div>
-                      <Label htmlFor="title">Título</Label>
-                      <Input id="title" placeholder="Required" className="bg-white border" />
+                      <Label htmlFor="title-discount">Título</Label>
+                      <Input id="title-discount" placeholder="Título do desconto" className="bg-white border" />
                     </div>
                     
                     <div>
-                      <Label htmlFor="fee">Taxa de Aumento (%):</Label>
-                      <Input id="fee" type="number" defaultValue={0} className="bg-white border" />
+                      <Label htmlFor="fee-discount">Taxa de Desconto (%):</Label>
+                      <Input id="fee-discount" type="number" defaultValue={0} className="bg-white border" />
                     </div>
                     
-                    {feeForm.watch("type") === "SEASONAL" && (
+                    {discountForm.watch("type") === "SEASONAL" && (
                       <>
                         <div>
-                          <Label htmlFor="startDate">Data do Início da Temporada:</Label>
+                          <Label htmlFor="startDate-discount">Data do Início da Temporada:</Label>
                           <Input
-                            id="startDate"
+                            id="startDate-discount"
                             placeholder="Escolha a data de início da temporada"
                             className="bg-white border"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="endDate">Data do Fim da Temporada:</Label>
+                          <Label htmlFor="endDate-discount">Data do Fim da Temporada:</Label>
                           <Input
-                            id="endDate"
-                            placeholder="Escolha a data de início da temporada"
+                            id="endDate-discount"
+                            placeholder="Escolha a data de fim da temporada"
                             className="bg-white border"
                           />
                         </div>
                       </>
                     )}
                     
-                    {feeForm.watch("type") === "WEEKDAY" && (
+                    {discountForm.watch("type") === "WEEKDAY" && (
                       <div className="space-y-3">
                         <Label>Selecione os Dias:</Label>
                         <div className="grid grid-cols-2 gap-2">
                           {weekdays.map((day) => (
-                            <div key={day} className="flex items-center space-x-2">
-                              <Checkbox id={day} value={day} />
-                              <Label htmlFor={day} className="text-sm">{day}</Label>
+                            <div key={`discount-${day}`} className="flex items-center space-x-2">
+                              <Checkbox id={`discount-${day}`} value={day} />
+                              <Label htmlFor={`discount-${day}`} className="text-sm">{day}</Label>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
                     
-                    <Button className="w-full bg-eventhub-primary hover:bg-indigo-600 text-white">
-                      Cadastrar
-                    </Button>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setDiscountDialogOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button type="submit" className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                        Cadastrar
+                      </Button>
+                    </DialogFooter>
                   </form>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-          
-          {/* DESCONTOS TAB */}
-          <TabsContent value="descontos" className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white" onClick={handleAddDiscount}>
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Desconto
-              </Button>
+                </DialogContent>
+              </Dialog>
             </div>
             
             <div className="mb-4">
@@ -329,7 +420,7 @@ export default function VenueGoals() {
 
             <div className="space-y-4">
               {discounts.map((discount) => (
-                <Card key={discount.id} className="bg-white border hover:bg-secondary/50 transition-colors cursor-pointer shadow-sm">
+                <Card key={discount.id} className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-center">
                       <div>
@@ -354,96 +445,62 @@ export default function VenueGoals() {
                 </Card>
               ))}
             </div>
-
-            {newDiscountFormOpen && (
-              <Card className="border bg-white shadow-sm">
-                <CardHeader>
-                  <CardTitle>Novo Desconto</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Tipo do Taxa:</Label>
-                      <div className="flex space-x-4">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="temporada-discount" 
-                            checked={discountForm.watch("type") === "SEASONAL"}
-                            onCheckedChange={() => discountForm.setValue("type", "SEASONAL")}
-                          />
-                          <label htmlFor="temporada-discount" className="text-sm">Temporada</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="diasSemana-discount" 
-                            checked={discountForm.watch("type") === "WEEKDAY"}
-                            onCheckedChange={() => discountForm.setValue("type", "WEEKDAY")}
-                          />
-                          <label htmlFor="diasSemana-discount" className="text-sm">Dias da semana</label>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="title-discount">Título</Label>
-                      <Input id="title-discount" placeholder="Required" className="bg-white border" />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="fee-discount">Taxa de Desconto (%):</Label>
-                      <Input id="fee-discount" type="number" defaultValue={0} className="bg-white border" />
-                    </div>
-                    
-                    {discountForm.watch("type") === "SEASONAL" && (
-                      <>
-                        <div>
-                          <Label htmlFor="startDate-discount">Data do Início da Temporada:</Label>
-                          <Input
-                            id="startDate-discount"
-                            placeholder="Escolha a data de início da temporada"
-                            className="bg-white border"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="endDate-discount">Data do Fim da Temporada:</Label>
-                          <Input
-                            id="endDate-discount"
-                            placeholder="Escolha a data de início da temporada"
-                            className="bg-white border"
-                          />
-                        </div>
-                      </>
-                    )}
-                    
-                    {discountForm.watch("type") === "WEEKDAY" && (
-                      <div className="space-y-3">
-                        <Label>Selecione os Dias:</Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {weekdays.map((day) => (
-                            <div key={`discount-${day}`} className="flex items-center space-x-2">
-                              <Checkbox id={`discount-${day}`} value={day} />
-                              <Label htmlFor={`discount-${day}`} className="text-sm">{day}</Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <Button className="w-full bg-eventhub-primary hover:bg-indigo-600 text-white">
-                      Cadastrar
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
           
           {/* METAS TAB */}
           <TabsContent value="metas" className="space-y-4">
-            {/* Standard Goals UI with cards */}
             <div className="flex justify-between items-center mb-4">
-              <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white" onClick={handleAddGoal}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Meta
-              </Button>
+              <Dialog open={goalDialogOpen} onOpenChange={setGoalDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nova Meta
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Nova Meta</DialogTitle>
+                    <DialogDescription>
+                      Crie uma nova meta para o seu espaço.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form className="space-y-4">
+                    <div>
+                      <Label htmlFor="minValue">Mínimo</Label>
+                      <Input id="minValue" placeholder="R$0.00" className="bg-white border" />
+                    </div>
+                    <div>
+                      <Label htmlFor="maxValue">Máximo</Label>
+                      <Input id="maxValue" placeholder="R$0.00" className="bg-white border" />
+                    </div>
+                    <div>
+                      <Label htmlFor="increasePercent">Taxa de Aumento (%):</Label>
+                      <Input id="increasePercent" placeholder="0%" className="bg-white border" />
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <Label>Selecione os Meses:</Label>
+                      <div className="grid grid-cols-3 gap-3">
+                        {months.map((month) => (
+                          <div key={month} className="flex items-center space-x-2">
+                            <Checkbox id={`month-${month}`} value={month} />
+                            <Label htmlFor={`month-${month}`} className="text-sm">{month}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setGoalDialogOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button type="submit" className="bg-eventhub-primary hover:bg-indigo-600 text-white">
+                        Cadastrar
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
             
             <div className="mb-4">
@@ -453,7 +510,7 @@ export default function VenueGoals() {
               />
             </div>
 
-            <Card className="bg-white border hover:bg-secondary/50 transition-colors cursor-pointer shadow-sm">
+            <Card className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
               <CardContent className="pt-6">
                 <div className="space-y-3">
                   <div className="text-sm text-gray-600">Período:</div>
@@ -473,47 +530,6 @@ export default function VenueGoals() {
                 </div>
               </CardContent>
             </Card>
-
-            {newGoalFormOpen && (
-              <Card className="border bg-white shadow-sm">
-                <CardHeader>
-                  <CardTitle>Nova Meta</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form className="space-y-4">
-                    <div>
-                      <Label htmlFor="minValue">Mínimo</Label>
-                      <Input id="minValue" placeholder="R$0.00" className="bg-white border" />
-                    </div>
-                    <div>
-                      <Label htmlFor="maxValue">Máximo</Label>
-                      <Input id="maxValue" placeholder="R$0.00" className="bg-white border" />
-                    </div>
-                    <div>
-                      <Label htmlFor="increasePercent">Taxa de Aumento (%):</Label>
-                      <Input id="increasePercent" placeholder="Required" className="bg-white border" />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <Label>Selecione os Meses:</Label>
-                      <div className="grid grid-cols-3 gap-3">
-                        {months.map((month) => (
-                          <div key={month} className="flex items-center space-x-2">
-                            <Checkbox id={`month-${month}`} value={month} />
-                            <Label htmlFor={`month-${month}`} className="text-sm">{month}</Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <Button className="w-full bg-eventhub-primary hover:bg-indigo-600 text-white">
-                      Cadastrar
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
-
           </TabsContent>
         </Tabs>
         

@@ -2,8 +2,11 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function VenueNotifications() {
+  const navigate = useNavigate();
+  
   // Mock data for notifications
   const notifications = [
     {
@@ -12,6 +15,7 @@ export default function VenueNotifications() {
       value: "R$ 16.767",
       date: "20/12/2025",
       read: false,
+      budgetId: "1" // Added budgetId to link to specific budget
     },
     {
       id: "2",
@@ -19,6 +23,7 @@ export default function VenueNotifications() {
       value: "R$ 5.247",
       date: "17/05/2025",
       read: false,
+      budgetId: "2" 
     },
     {
       id: "3",
@@ -26,6 +31,7 @@ export default function VenueNotifications() {
       value: "R$ 4.540",
       date: "19/07/2025",
       read: false,
+      budgetId: "3"
     },
     {
       id: "4",
@@ -33,6 +39,7 @@ export default function VenueNotifications() {
       value: "R$ 11.500",
       date: "18/10/2025",
       read: false,
+      budgetId: "1"
     },
     {
       id: "5",
@@ -40,14 +47,23 @@ export default function VenueNotifications() {
       value: "R$ 1.590",
       date: "08/06/2025",
       read: false,
+      budgetId: "2"
     },
   ];
+
+  const handleNotificationClick = (budgetId: string) => {
+    navigate(`/venue/budgets?id=${budgetId}`);
+  };
 
   return (
     <DashboardLayout title="Notificações" subtitle="Mantenha-se atualizado">
       <div className="space-y-4">
         {notifications.map((notification) => (
-          <Card key={notification.id} className="bg-white hover:bg-secondary/50 transition-colors cursor-pointer border shadow-sm">
+          <Card 
+            key={notification.id} 
+            className="bg-white hover:bg-gray-100 transition-colors cursor-pointer border shadow-sm"
+            onClick={() => handleNotificationClick(notification.budgetId)}
+          >
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
                 <div className="bg-eventhub-tertiary/30 p-2 rounded-full mt-1">
