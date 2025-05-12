@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -859,4 +860,187 @@ export default function VenueGoals() {
                       {discountForm.watch("type") === "WEEKDAY" && (
                         <div className="space-y-3">
                           <Label>Selecione os Dias:</Label>
-                          <div className="grid grid-cols
+                          <div className="grid grid-cols-2 gap-2">
+                            {weekdays.map((day) => (
+                              <div key={`discount-${day}`} className="flex items-center space-x-2">
+                                <Checkbox id={`discount-${day}`} value={day} />
+                                <Label htmlFor={`discount-${day}`} className="text-sm">{day}</Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setDiscountDialogOpen(false)}>
+                          Cancelar
+                        </Button>
+                        <Button type="submit" className="bg-primary hover:bg-primary/90 text-white">
+                          Cadastrar
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              <div className="mb-4">
+                <Input
+                  placeholder="Filtrar..."
+                  className="max-w-sm bg-white"
+                />
+              </div>
+
+              <div className="space-y-4">
+                {discounts.map((discount) => (
+                  <Card key={discount.id} className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm">
+                    <CardContent className="pt-6">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="font-medium text-lg text-gray-800">{discount.title}</h3>
+                          {discount.type === "SEASONAL" && (
+                            <div className="flex items-center text-sm text-gray-600 mt-1">
+                              <Calendar className="h-4 w-4 mr-2" />
+                              <span>{discount.startDay} até {discount.endDay}</span>
+                            </div>
+                          )}
+                          {discount.type === "WEEKDAY" && (
+                            <div className="text-sm text-gray-600 mt-1">
+                              {discount.affectedDays?.split(',').join(', ')}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-lg font-bold text-red-500">
+                          {discount.fee} %
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+            
+            {/* METAS TAB */}
+            <TabsContent value="metas" className="space-y-4">
+              <div className="flex justify-between items-center mb-4">
+                <div></div>
+                <Dialog open={goalDialogOpen} onOpenChange={setGoalDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-primary hover:bg-primary/90 text-white">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nova Meta
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Nova Meta</DialogTitle>
+                      <DialogDescription>
+                        Crie uma nova meta para o seu espaço.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form className="space-y-4">
+                      <div>
+                        <Label htmlFor="minValue">Mínimo</Label>
+                        <Input id="minValue" placeholder="R$0.00" className="bg-white border" />
+                      </div>
+                      <div>
+                        <Label htmlFor="maxValue">Máximo</Label>
+                        <Input id="maxValue" placeholder="R$0.00" className="bg-white border" />
+                      </div>
+                      <div>
+                        <Label htmlFor="increasePercent">Taxa de Aumento (%):</Label>
+                        <Input id="increasePercent" placeholder="0%" className="bg-white border" />
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <Label>Selecione os Meses:</Label>
+                        <div className="grid grid-cols-3 gap-3">
+                          {months.map((month) => (
+                            <div key={`goal-${month}`} className="flex items-center space-x-2">
+                              <Checkbox id={`goal-month-${month}`} value={month} />
+                              <Label htmlFor={`goal-month-${month}`} className="text-sm">{month}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setGoalDialogOpen(false)}>
+                          Cancelar
+                        </Button>
+                        <Button type="submit" className="bg-primary hover:bg-primary/90 text-white">
+                          Cadastrar
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              <div className="mb-4">
+                <Input
+                  placeholder="Filtrar..."
+                  className="max-w-sm bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {goals.map((goal) => (
+                  <Card key={goal.id} className="bg-white border shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-lg">{goal.title}</h3>
+                          <p className="text-sm text-gray-600 mt-1">{goal.period}</p>
+                        </div>
+                        <div className="bg-gray-100 p-1 rounded">
+                          {goal.type === "revenue" ? (
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                          ) : (
+                            <Calendar className="h-5 w-5 text-primary" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3">
+                        <div className="text-xs text-gray-600 mb-1">Progresso</div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+                          <div 
+                            className="bg-primary h-2 rounded-full" 
+                            style={{ width: `${goal.percentage}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-right text-sm font-medium">{goal.percentage}%</div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mt-4 text-sm">
+                        <div>
+                          <div className="text-gray-600">Atual:</div>
+                          <div className="font-medium">
+                            {goal.type === "revenue" 
+                              ? `R$ ${goal.current.toLocaleString('pt-BR')}`
+                              : `${goal.current} ${goal.unit}`
+                            }
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-600">Meta:</div>
+                          <div className="font-medium">
+                            {goal.type === "revenue" 
+                              ? `R$ ${goal.target.toLocaleString('pt-BR')}`
+                              : `${goal.target} ${goal.unit}`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
