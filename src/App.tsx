@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import OrganizationVenues from "./pages/OrganizationVenues";
 import VenueDashboard from "./pages/VenueDashboard";
+import VenueBudgets from "./pages/VenueBudgets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,7 +28,8 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/organization/:id/venues" element={<OrganizationVenues />} />
-          <Route path="/venue/*" element={<VenueDashboard />} />
+          <Route path="/venue" element={<VenueDashboard />} />
+          <Route path="/venue/budgets" element={<VenueBudgets />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
