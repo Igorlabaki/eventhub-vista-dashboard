@@ -3,7 +3,7 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Clause } from "@/types/contract"
+import { Attachment } from "@/types/contract"
 import { 
   Form, 
   FormControl, 
@@ -15,20 +15,31 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { DynamicFieldSelector } from "@/components/ui/dynamic-field-selector"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const formSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   content: z.string().min(1, "Conteúdo é obrigatório"),
 })
 
-interface ClauseFormProps {
-  onSubmit: (data: Partial<Clause>) => void;
-  initialData?: Partial<Clause>;
-  isEditing?: boolean;
+interface VenueOption {
+  id: string;
+  name: string;
 }
 
-export function ClauseForm({ onSubmit, initialData, isEditing = false }: ClauseFormProps) {
+interface AttachmentFormProps {
+  onSubmit: (data: Partial<Attachment>) => void;
+  initialData?: Partial<Attachment>;
+  isEditing?: boolean;
+  venues: VenueOption[];
+}
+
+export function AttachmentForm({ 
+  onSubmit, 
+  initialData, 
+  isEditing = false,
+  venues 
+}: AttachmentFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,29 +48,18 @@ export function ClauseForm({ onSubmit, initialData, isEditing = false }: ClauseF
     },
   })
   
-  const contentRef = React.useRef<HTMLTextAreaElement>(null)
+  const [selectedVenueIds, setSelectedVenueIds] = React.useState<string[]>(
+    initialData?.venueIds || []
+  )
   
-  const handleInsertDynamicField = (field: string) => {
-    if (!contentRef.current) return
-    
-    const textarea = contentRef.current
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    
-    const currentContent = form.getValues("content")
-    const newContent = 
-      currentContent.substring(0, start) + 
-      `{{${field}}}` + 
-      currentContent.substring(end)
-    
-    form.setValue("content", newContent)
-    
-    // Set cursor position after the inserted field
-    setTimeout(() => {
-      textarea.focus()
-      const newPosition = start + field.length + 4 // +4 for the {{ and }}
-      textarea.setSelectionRange(newPosition, newPosition)
-    }, 0)
+  const handleVenueToggle = (venueId: string) => {
+    setSelectedVenueIds(prev => {
+      if (prev.includes(venueId)) {
+        return prev.filter(id => id !== venueId)
+      } else {
+        return [...prev, venueId]
+      }
+    })
   }
   
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
@@ -67,10 +67,11 @@ export function ClauseForm({ onSubmit, initialData, isEditing = false }: ClauseF
       ...initialData,
       title: values.title,
       content: values.content,
+      venueIds: selectedVenueIds,
     })
   }
   
-  // Previnir o fechamento do modal ao clicar dentro do formulário
+  // Previnir o fechamento do modal ao clicar em um checkbox
   const handleFormClick = (e: React.MouseEvent) => {
     e.stopPropagation()
   }
@@ -79,7 +80,7 @@ export function ClauseForm({ onSubmit, initialData, isEditing = false }: ClauseF
     <Form {...form}>
       <form 
         onSubmit={form.handleSubmit(handleSubmit)} 
-        className="space-y-4"
+        className="space-y-4" 
         onClick={handleFormClick}
       >
         <FormField
@@ -89,7 +90,7 @@ export function ClauseForm({ onSubmit, initialData, isEditing = false }: ClauseF
             <FormItem>
               <FormLabel>Título</FormLabel>
               <FormControl>
-                <Input placeholder="Título da cláusula" {...field} />
+                <Input placeholder="Título do anexo" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -104,13 +105,9 @@ export function ClauseForm({ onSubmit, initialData, isEditing = false }: ClauseF
               <FormLabel>Texto</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="Digite o conteúdo da cláusula" 
+                  placeholder="Digite o conteúdo do anexo" 
                   className="min-h-[200px]" 
-                  {...field} 
-                  ref={(e) => {
-                    field.ref(e)
-                    contentRef.current = e as HTMLTextAreaElement
-                  }}
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -118,18 +115,30 @@ export function ClauseForm({ onSubmit, initialData, isEditing = false }: ClauseF
           )}
         />
         
-        <div 
-          className="bg-muted p-3 rounded-md"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <h4 className="text-sm font-medium mb-2">Inserir campos dinâmicos</h4>
-          <DynamicFieldSelector 
-            onSelectField={(field) => {
-              handleInsertDynamicField(field)
-              // Prevenindo que o evento de clique propague para o formulário pai e cause o fechamento do modal
-              return false
-            }}
-          />
+        <div>
+          <h3 className="text-lg font-medium mb-3">Selecione as Locações:</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {venues.map(venue => (
+              <div 
+                key={venue.id} 
+                className="flex items-center space-x-2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Checkbox 
+                  id={`venue-${venue.id}`} 
+                  checked={selectedVenueIds.includes(venue.id)}
+                  onCheckedChange={() => handleVenueToggle(venue.id)}
+                />
+                <label 
+                  htmlFor={`venue-${venue.id}`}
+                  className="text-sm cursor-pointer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {venue.name}
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
         
         <div className="flex justify-end">

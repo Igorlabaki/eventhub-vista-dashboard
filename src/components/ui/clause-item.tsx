@@ -13,13 +13,19 @@ interface ClauseItemProps {
 }
 
 export function ClauseItem({ clause, onClick, isSelected, index }: ClauseItemProps) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onClick?.(clause)
+  }
+
   return (
     <Card 
       className={cn(
         "cursor-pointer hover:shadow-md transition-shadow",
         isSelected && "border-primary"
       )}
-      onClick={() => onClick?.(clause)}
+      onClick={handleClick}
     >
       <CardContent className="flex items-center justify-between p-4">
         <span className="font-medium">{clause.title}</span>

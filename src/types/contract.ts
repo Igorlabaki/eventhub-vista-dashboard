@@ -7,6 +7,15 @@ export interface Clause {
   createdAt: Date;
 }
 
+export interface Attachment {
+  id: string;
+  title: string;
+  content: string;
+  venueIds: string[];
+  createdAt: Date;
+  organizationId?: string;
+}
+
 export interface Contract {
   id: string;
   name: string;

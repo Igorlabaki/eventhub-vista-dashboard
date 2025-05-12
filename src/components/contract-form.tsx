@@ -88,10 +88,19 @@ export function ContractForm({
       venueIds: selectedVenueIds,
     })
   }
+
+  // Prevenir o fechamento do modal ao clicar dentro do formulário
+  const handleFormClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+  }
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form 
+        onSubmit={form.handleSubmit(handleSubmit)} 
+        className="space-y-6"
+        onClick={handleFormClick}
+      >
         <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}
@@ -126,11 +135,15 @@ export function ContractForm({
           />
         </div>
         
-        <div>
+        <div onClick={(e) => e.stopPropagation()}>
           <h3 className="text-lg font-medium mb-3">Selecione as Locações</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {venues.map(venue => (
-              <div key={venue.id} className="flex items-center space-x-2">
+              <div 
+                key={venue.id} 
+                className="flex items-center space-x-2"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Checkbox 
                   id={`venue-${venue.id}`} 
                   checked={selectedVenueIds.includes(venue.id)}
@@ -139,6 +152,7 @@ export function ContractForm({
                 <label 
                   htmlFor={`venue-${venue.id}`}
                   className="text-sm cursor-pointer"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {venue.name}
                 </label>
@@ -147,7 +161,7 @@ export function ContractForm({
           </div>
         </div>
         
-        <div>
+        <div onClick={(e) => e.stopPropagation()}>
           <h3 className="text-lg font-medium mb-3">Selecione as cláusulas</h3>
           <ClauseList 
             clauses={clauses} 
