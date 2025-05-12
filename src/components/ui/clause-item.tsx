@@ -29,7 +29,7 @@ export function ClauseItem({ clause, onClick, isSelected, index }: ClauseItemPro
       )}
       onClick={handleClick}
     >
-      <CardContent className="flex items-center justify-between p-4">
+      <CardContent className="flex items-center justify-between p-4" onClick={(e) => e.stopPropagation()}>
         <span className="font-medium">{clause.title}</span>
         {index !== undefined && (
           <Badge variant="secondary" className="ml-2 text-xs">

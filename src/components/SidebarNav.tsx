@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
@@ -17,7 +16,6 @@ import {
   Building,
   Edit,
   Trash2,
-  User,
   ShieldCheck,
   KeyRound
 } from "lucide-react";
@@ -194,6 +192,13 @@ export function SidebarNav({
       onClose();
     }
   };
+
+  const handleViewAllVenues = () => {
+    navigate(`/organization/${organizationId}/venues`);
+    if (showOnMobile && onClose) {
+      onClose();
+    }
+  };
   
   // Create organization action items dynamically
   const organizationActionItems: NavItem[] = [
@@ -206,17 +211,22 @@ export function SidebarNav({
     {
       title: "Permissões",
       href: `/organization/${organizationId}/permissions`,
-      icon: ShieldCheck, // Changed from Users to ShieldCheck
+      icon: ShieldCheck,
     },
     {
       title: "Proprietários",
       href: `/organization/${organizationId}/owners`,
-      icon: KeyRound, // Changed from User to KeyRound
+      icon: KeyRound,
     },
     {
       title: "Contratos",
       href: `/organization/${organizationId}/contracts`,
       icon: FileText,
+    },
+    {
+      title: "Espaços",
+      href: `/organization/${organizationId}/venues`,
+      icon: Building,
     },
     {
       title: "Deletar Organização",
@@ -321,26 +331,7 @@ export function SidebarNav({
                   </div>
                 ))}
                 
-                {/* Add the list of spaces (venues) here */}
-                {venues.length > 0 && (
-                  <div className="mt-6">
-                    <div className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Espaços
-                    </div>
-                    <div className="space-y-1">
-                      {venues.map(venue => (
-                        <button
-                          key={venue.id}
-                          onClick={() => handleVenueClick(venue)}
-                          className="flex w-full items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary text-gray-700"
-                        >
-                          <Building className="h-4 w-4 mr-2" />
-                          <span>{venue.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* We'll hide this section as we now have a dedicated "Espaços" nav item */}
               </div>
             )}
 
