@@ -1,65 +1,49 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus } from "lucide-react";
-import { UserList, User } from "@/components/ui/user-list";
-import { VenueList, Venue } from "@/components/ui/venue-list";
+import { Venue } from "@/components/ui/venue-list";
 import { PermissionManager } from "@/components/ui/permission-manager";
+import { PageHeader } from "@/components/PageHeader";
+import { UserOrganizationList } from "@/components/permissions/UserOrganizationList";
+import { VenuePermissionsList } from "@/components/permissions/VenuePermissionsList";
+import { PermissionForm } from "@/components/permissions/PermissionForm";
+import { User } from "@/components/ui/user-list";
+import { UserOrganization } from "@/types/userOrganization";
+import {
+  userViewPermissions,
+  userEditPermissions,
+  userProposalPermissions,
+} from "@/types/permissions";
+import { useGetUserOrganizationOwnersList } from "@/hooks/user-organization/queries/list";
+import { useGetVenuesList } from "@/hooks/venue/queries/list";
+import * as z from "zod";
+import { cn } from "@/lib/utils";
+import { showSuccessToast } from "@/components/ui/success-toast";
+import { useUserByEmail } from "@/hooks/user/queries/byEmail";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { userService } from "@/services/user.service";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { userViewPermissions, userEditPermissions, userProposalPermissions } from "@/types/permissions";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-
-// Mock users data
-const mockUsers = [
-  { id: "1", name: "Lucas (Segurança)", email: "lucas@example.com" },
-  { id: "2", name: "Maria (Administração)", email: "maria@example.com" },
-  { id: "3", name: "João (Manutenção)", email: "joao@example.com" }
-];
-
-// Mock venues data
-const mockVenues = [
-  { id: "1", name: "Espaço Villa Verde" },
-  { id: "2", name: "Casa de Festas Diamante" },
-  { id: "3", name: "Salão Nobre" },
-  { id: "4", name: "Ar756" }
-];
-
-// Mock user permissions
-const mockUserPermissions = {
-  "1": {
-    "4": ["VIEW_CALENDAR", "EDIT_ATTENDANCE_LIST", "EDIT_SCHEDULE"] // Lucas has these permissions in venue 4 (Ar756)
-  },
-  "2": {
-    "1": ["VIEW_EVENTS", "VIEW_INFO", "EDIT_TEXTS"],
-    "2": ["VIEW_EVENTS", "VIEW_INFO", "VIEW_PROPOSALS", "EDIT_PROPOSALS"]
-  },
-  "3": {
-    "3": ["VIEW_EVENTS"]
-  }
-};
+import { Loader2 } from "lucide-react";
 
 type UserPermissionState = {
   [userId: string]: {
-    [venueId: string]: string[];
-  }
-}
+    [venueId: string]: {
+      id: string;
+      permissions: string[] | string;
+    };
+  };
+};
 
 // Schema for adding a new user
 const addUserSchema = z.object({
-  email: z.string().email("Email inválido")
+  email: z.string().email("Email inválido"),
 });
 
 type AddUserFormValues = z.infer<typeof addUserSchema>;
@@ -69,23 +53,54 @@ export default function OrganizationPermissions() {
   const { toast } = useToast();
 
   // State
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserOrganization, setSelectedUserOrganization] =
+    useState<UserOrganization | null>(null);
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
-  const [userPermissions, setUserPermissions] = useState<UserPermissionState>(mockUserPermissions);
+  const [userPermissions, setUserPermissions] = useState<UserPermissionState>(
+    {}
+  );
   const [view, setView] = useState<"users" | "venues" | "permissions">("users");
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [searchEmail, setSearchEmail] = useState("");
+  const [debouncedEmail, setDebouncedEmail] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
 
-  // Form for adding new user
-  const addUserForm = useForm<AddUserFormValues>({
-    resolver: zodResolver(addUserSchema),
-    defaultValues: {
-      email: ""
+  // Debounce para busca de e-mail
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedEmail(searchEmail);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [searchEmail]);
+
+  // Queries
+  const { data: userOrganizations, isLoading: isLoadingUsers } =
+    useGetUserOrganizationOwnersList(organizationId || "");
+  const { data: venues = [], isLoading: isLoadingVenues } = useGetVenuesList(
+    organizationId || ""
+  );
+  const { data: user, isLoading: isUserLoading } = useUserByEmail(debouncedEmail);
+
+  // Transformar as permissões da API para o formato esperado pelo componente
+  useEffect(() => {
+    if (userOrganizations) {
+      const permissions: UserPermissionState = {};
+
+      userOrganizations.forEach((org) => {
+        permissions[org.user.id] = {};
+        org.userPermissions.forEach((permission) => {
+          permissions[org.user.id][permission.venueId || ""] = {
+            id: permission.id,
+            permissions: permission.permissions,
+          };
+        });
+      });
+      setUserPermissions(permissions);
     }
-  });
+  }, [userOrganizations]);
 
-  const handleUserClick = (user: User) => {
-    setSelectedUser(user);
+  const handleUserClick = (userOrganization: UserOrganization) => {
+    setSelectedUserOrganization(userOrganization);
     setView("venues");
   };
 
@@ -95,58 +110,31 @@ export default function OrganizationPermissions() {
   };
 
   const handleSavePermissions = (newPermissions: string[]) => {
-    if (!selectedUser || !selectedVenue) return;
-    
-    setUserPermissions(prev => {
+    if (!selectedUserOrganization || !selectedVenue) return;
+
+    setUserPermissions((prev) => {
       const updated = { ...prev };
-      
-      // Initialize if needed
-      if (!updated[selectedUser.id]) {
-        updated[selectedUser.id] = {};
+
+      if (!updated[selectedUserOrganization.user.id]) {
+        updated[selectedUserOrganization.user.id] = {};
       }
-      
-      // Update permissions
-      updated[selectedUser.id][selectedVenue.id] = newPermissions;
-      
+
+      updated[selectedUserOrganization.user.id][selectedVenue.id] = {
+        id:
+          updated[selectedUserOrganization.user.id][selectedVenue.id]?.id || "",
+        permissions: newPermissions,
+      };
+
       return updated;
     });
-    
-    setView("venues");
-  };
 
-  const handleAddUser = (data: AddUserFormValues) => {
-    // In a real application, this would connect to your backend
-    // For now, we'll simulate adding a new user with a mock
-    
-    const newUserId = `${users.length + 1}`;
-    const newUser = {
-      id: newUserId,
-      name: `Novo Usuário (${data.email})`,
-      email: data.email
-    };
-    
-    // Add the new user to our mock data
-    setUsers(prev => [...prev, newUser]);
-    
-    // Initialize empty permissions for this user
-    setUserPermissions(prev => ({
-      ...prev,
-      [newUserId]: {}
-    }));
-    
-    toast({
-      title: "Usuário adicionado",
-      description: `${data.email} foi adicionado à sua organização.`
-    });
-    
-    setAddUserDialogOpen(false);
-    addUserForm.reset();
+    setView("venues");
   };
 
   const goBack = () => {
     if (view === "venues") {
       setView("users");
-      setSelectedUser(null);
+      setSelectedUserOrganization(null);
     } else if (view === "permissions") {
       setView("venues");
       setSelectedVenue(null);
@@ -159,78 +147,128 @@ export default function OrganizationPermissions() {
     if (view === "users") {
       return (
         <>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">
-              Usuários com permissões
-            </h2>
-            <Button 
-              onClick={() => setAddUserDialogOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <UserPlus size={18} />
-              Adicionar Usuário
-            </Button>
-          </div>
-          
-          <UserList 
-            users={users}
-            onUserClick={handleUserClick}
-            renderBadge={(user) => {
-              const hasAnyPermission = Object.keys(userPermissions).includes(user.id) && 
-                                     Object.keys(userPermissions[user.id] || {}).length > 0;
-              
-              return hasAnyPermission ? (
-                <span className="text-xs font-medium bg-green-100 text-green-800 rounded-full px-2 py-1">
-                  COM PERMISSÕES
-                </span>
-              ) : null;
-            }}
+          <PageHeader
+            title="Permissões"
+            count={userOrganizations?.length || 0}
+            onCreateClick={() => setAddUserDialogOpen(true)}
+            createButtonText="Adicionar Usuário"
           />
+
+          <UserOrganizationList
+            userOrganizations={userOrganizations || []}
+            onUserClick={handleUserClick}
+            isLoading={isLoadingUsers}
+            onCreateClick={() => setAddUserDialogOpen(true)}
+          />
+          {/* Modal de adicionar usuário */}
+          {addUserDialogOpen && (
+            <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
+              <DialogContent className="w-[90%] md:w-[50%] rounded-md">
+                <DialogHeader>
+                  <DialogTitle>Buscar usuário por e-mail</DialogTitle>
+                </DialogHeader>
+                <Input
+                  value={searchEmail}
+                  onChange={e => setSearchEmail(e.target.value)}
+                  placeholder="Digite o e-mail do usuário"
+                  className="mb-2"
+                />
+                {isUserLoading && (
+                  <div className="flex items-center gap-2 text-sm text-gray-500 transition-opacity duration-300 opacity-100">
+                    <Loader2 className="animate-spin" size={18} />
+                    Buscando...
+                  </div>
+                )}
+                {user && !selectedUser && (
+                  <div className="border rounded p-3 flex flex-col gap-2 mt-2 bg-gray-50 transition-all duration-300 animate-fade-in">
+                    <div>
+                      <strong>{user.username}</strong> ({user.email})
+                    </div>
+                    <Button
+                      onClick={() => {
+                        setSearchEmail("");
+                        setDebouncedEmail("");
+                        setAddUserDialogOpen(false);
+                        handleUserClick({
+                          id: "",
+                          user: user,
+                          userId: user.id,
+                          organizationId: organizationId || "",
+                          joinedAt: new Date(),
+                          organization: {
+                            id: organizationId || "",
+                            name: "",
+                            createdAt: "",
+                            venues: []
+                          },
+                          userPermissions: []
+                        });
+                      }}
+                    >
+                      Selecionar este usuário
+                    </Button>
+                  </div>
+                )}
+                {!isUserLoading && !user && searchEmail && (
+                  <div className="text-sm text-red-500 mt-2">
+                    Usuário não encontrado.
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
+          )}
         </>
       );
     }
-    
+
     // Venues list view
-    if (view === "venues" && selectedUser) {
+    if (view === "venues" && selectedUserOrganization) {
       return (
-        <VenueList
-          venues={mockVenues}
+        <VenuePermissionsList
+          venues={venues}
           onVenueClick={handleVenueClick}
-          title={`Permissões para ${selectedUser.name}`}
+          onBackClick={goBack}
+          userPermissions={Object.fromEntries(
+            Object.entries(
+              userPermissions[selectedUserOrganization.user.id] || {}
+            ).map(([venueId, obj]) => [
+              venueId,
+              Array.isArray(obj.permissions)
+                ? obj.permissions
+                : typeof obj.permissions === "string"
+                ? obj.permissions.replace(/\s+/g, "").split(",")
+                : [],
+            ])
+          )}
+          title={`Permissões para ${selectedUserOrganization.user.username}`}
           subtitle="Selecione um espaço para gerenciar as permissões:"
-          renderBadge={(venue) => {
-            const hasAnyPermissions = userPermissions[selectedUser.id] && 
-                                      userPermissions[selectedUser.id][venue.id] &&
-                                      userPermissions[selectedUser.id][venue.id].length > 0;
-            
-            return hasAnyPermissions ? (
-              <span className="text-xs font-medium bg-green-100 text-green-800 rounded-full px-2 py-1">
-                COM PERMISSÕES
-              </span>
-            ) : null;
-          }}
         />
       );
     }
-    
+
     // Permissions management view
-    if (view === "permissions" && selectedUser && selectedVenue) {
+    if (view === "permissions" && selectedUserOrganization && selectedVenue) {
+      const userPermissionObj =
+        userPermissions[selectedUserOrganization.user.id]?.[selectedVenue.id];
       return (
         <PermissionManager
-          userId={selectedUser.id}
-          userName={selectedUser.name}
+          userId={selectedUserOrganization.user.id}
+          userName={selectedUserOrganization.user.username}
           venueId={selectedVenue.id}
+          userOrganizationId={selectedUserOrganization.id}
+          organizationId={organizationId || ""}
           venueName={selectedVenue.name}
           viewPermissions={userViewPermissions}
           editPermissions={userEditPermissions}
           proposalPermissions={userProposalPermissions}
           userPermissions={userPermissions}
+          userPermissionId={userPermissionObj?.id}
           onGoBack={goBack}
           onSavePermissions={handleSavePermissions}
         />
       );
     }
-    
+
     return null;
   };
 
@@ -242,42 +280,6 @@ export default function OrganizationPermissions() {
       >
         {renderContent()}
       </DashboardLayout>
-
-      {/* Add User Dialog */}
-      <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Adicionar Usuário</DialogTitle>
-          </DialogHeader>
-          <Form {...addUserForm}>
-            <form onSubmit={addUserForm.handleSubmit(handleAddUser)} className="space-y-4">
-              <FormField
-                control={addUserForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email do Usuário</FormLabel>
-                    <FormControl>
-                      <Input placeholder="usuario@exemplo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button 
-                  variant="outline" 
-                  type="button" 
-                  onClick={() => setAddUserDialogOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit">Adicionar</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

@@ -32,8 +32,8 @@ export function VenueCard({
   };
 
   return (
-    <Card className="eventhub-card">
-      <CardHeader className="eventhub-card-header pb-2">
+    <Card className="eventhub-card border-l-4 border-l-eventhub-primary">
+      <CardHeader className="flex flex-row items-center justify-between mb-4 pb-2">
         <h3 className="eventhub-subheading">{name}</h3>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

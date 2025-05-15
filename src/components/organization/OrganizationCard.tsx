@@ -1,8 +1,12 @@
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building, MoreVertical, FileText } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
@@ -25,6 +29,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@/hooks/user/queries/byId";
+import { useDeleteOrganizationMutations } from "@/hooks/organization/mutations/delete";
+import { showSuccessToast } from "../ui/success-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useUpdateOrganizationMutations } from "@/hooks/organization/mutations/update";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { EditOrganizationForm } from "./EditOrganizationForm";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 
 export interface OrganizationCardProps {
   id: string;
@@ -33,17 +54,31 @@ export interface OrganizationCardProps {
   newBudgetsCount?: number;
 }
 
+const updateOrganizationSchema = z.object({
+  name: z.string().min(2, "Nome obrigatório"),
+});
+type UpdateOrganizationFormValues = z.infer<typeof updateOrganizationSchema>;
+
 export function OrganizationCard({
   id,
   name,
   venueCount,
-  newBudgetsCount = 0
+  newBudgetsCount = 0,
 }: OrganizationCardProps) {
   const navigate = useNavigate();
-  const { toast } = useToast();
+
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [organizationName, setOrganizationName] = useState(name);
+
+  const { data: user } = useUser();
+
+  const { deleteOrganization } = useDeleteOrganizationMutations(user?.id);
+  const { updateOrganization } = useUpdateOrganizationMutations(user?.id);
+
+  const editForm = useForm<UpdateOrganizationFormValues>({
+    resolver: zodResolver(updateOrganizationSchema),
+    defaultValues: { name },
+  });
 
   const handleViewVenues = () => {
     navigate(`/organization/${id}/venues`);
@@ -59,31 +94,31 @@ export function OrganizationCard({
     setDeleteDialogOpen(true);
   };
 
-  const handleSaveEdit = () => {
-    if (!organizationName.trim()) {
-      toast({
-        title: "Erro",
-        description: "O nome da organização não pode estar vazio.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Here we would call an API to update the organization name
-    toast({
-      title: "Sucesso",
-      description: "Nome da organização atualizado com sucesso.",
+  const handleConfirmDelete = () => {
+    deleteOrganization.mutate(id, {
+      onSuccess: () => {
+        showSuccessToast({
+          title: "Sucesso",
+          description: "Organização excluída com sucesso.",
+        });
+        setDeleteDialogOpen(false);
+      },
     });
-    setEditDialogOpen(false);
   };
 
-  const handleConfirmDelete = () => {
-    // Here we would call an API to delete the organization
-    toast({
-      title: "Sucesso",
-      description: "Organização excluída com sucesso.",
-    });
-    setDeleteDialogOpen(false);
+  const handleUpdateOrganization = (values: UpdateOrganizationFormValues) => {
+    updateOrganization.mutate(
+      { organizationId: id, data: { name: values.name } },
+      {
+        onSuccess: () => {
+          showSuccessToast({
+            title: "Sucesso",
+            description: "Nome da organização atualizado com sucesso.",
+          });
+          setEditDialogOpen(false);
+        },
+      }
+    );
   };
 
   return (
@@ -103,8 +138,13 @@ export function OrganizationCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleEditOrganization}>Editar</DropdownMenuItem>
-                <DropdownMenuItem className="text-red-600" onClick={handleDeleteOrganization}>
+                <DropdownMenuItem onClick={handleEditOrganization}>
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={handleDeleteOrganization}
+                >
                   Excluir
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -118,7 +158,7 @@ export function OrganizationCard({
                 <span className="text-xs text-gray-500">Espaços</span>
                 <span className="text-lg font-bold">{venueCount}</span>
               </div>
-              
+
               <div className="eventhub-stat bg-indigo-50 rounded-lg flex justify-center items-center">
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-500">Orçamentos</span>
@@ -126,8 +166,11 @@ export function OrganizationCard({
                 <span className="text-lg font-bold">{newBudgetsCount}</span>
               </div>
             </div>
-            
-            <Button className="w-full bg-eventhub-primary hover:bg-indigo-600 transition-all" onClick={handleViewVenues}>
+
+            <Button
+              className="w-full bg-eventhub-primary hover:bg-indigo-600 transition-all"
+              onClick={handleViewVenues}
+            >
               Ver Espaços
             </Button>
           </div>
@@ -140,40 +183,24 @@ export function OrganizationCard({
           <DialogHeader>
             <DialogTitle>Editar Organização</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Nome da Organização</Label>
-              <Input
-                id="name"
-                value={organizationName}
-                onChange={(e) => setOrganizationName(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSaveEdit}>Salvar</Button>
-          </DialogFooter>
+          <EditOrganizationForm
+            initialName={name || ""}
+            onSubmit={handleUpdateOrganization}
+            onCancel={() => setEditDialogOpen(false)}
+            isPending={updateOrganization.isPending}
+          />
         </DialogContent>
       </Dialog>
 
       {/* Delete Organization Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Essa ação não pode ser desfeita. Esta operação irá excluir permanentemente a organização "{name}" e todos os seus dados associados.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
-              Deletar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        entityName={name}
+        entityType="organização"
+        isPending={deleteOrganization.isPending}
+      />
     </>
   );
 }

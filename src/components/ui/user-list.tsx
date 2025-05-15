@@ -6,7 +6,7 @@ import { SearchInput } from "@/components/ui/search-input"
 
 export interface User {
   id: string
-  name: string
+  username: string
   email: string
 }
 
@@ -24,7 +24,7 @@ export function UserItem({ user, onClick, badge }: UserItemProps) {
     >
       <CardContent className="flex items-center justify-between p-4">
         <div>
-          <div className="font-medium">{user.name}</div>
+          <div className="font-medium">{user.username}</div>
           <div className="text-sm text-gray-500">{user.email}</div>
         </div>
         {badge}
@@ -54,7 +54,7 @@ export function UserList({
 
   const filteredUsers = React.useMemo(() => {
     return users.filter((user) => 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
     )
   }, [users, searchTerm])

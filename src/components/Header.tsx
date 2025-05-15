@@ -1,6 +1,5 @@
-
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, Bell, User, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarNav } from "./SidebarNav";
+import { useUser } from "@/hooks/user/queries/byId";
+import { useGetOrganizationById } from "@/hooks/organization/queries/getById";
+import { useGetVenueById } from "@/hooks/venue/queries/getById";
+import { authService } from "@/services/auth.service";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface HeaderProps {
   title?: string;
@@ -19,10 +23,36 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
+  const { data: user } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
+  const queryClient = useQueryClient();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Verifica se está em uma rota de organização ou venue
+  const isOrganizationRoute = location.pathname.includes('/organization/');
+  const isVenueRoute = location.pathname.includes('/venue/');
+
+  // Obtém o ID da organização ou venue dos parâmetros
+  const organizationId = isOrganizationRoute ? params.id : undefined;
+  const venueId = isVenueRoute ? params.id : undefined;
+
+  // Busca os dados da organização ou venue
+  const { data: organization } = useGetOrganizationById(organizationId || '');
+  const { data: venue } = useGetVenueById(venueId || '');
+
+  // Define o título dinâmico baseado na rota
+  const dynamicTitle = isOrganizationRoute 
+    ? organization?.name 
+    : isVenueRoute 
+      ? venue?.name 
+      : title;
+
   const logout = () => {
+    authService.logout();
+    queryClient.invalidateQueries({ queryKey: ['user'] });
+    queryClient.invalidateQueries({ queryKey: ['organizations'] });
     navigate("/login");
   };
 
@@ -41,24 +71,24 @@ export function Header({ title, subtitle }: HeaderProps) {
           </Button>
 
           <div className="ml-4">
-            {title && <h1 className="text-xl font-bold text-gray-800">{title}</h1>}
-            {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+            {dynamicTitle && <h1 className="text-xl font-bold text-gray-800">{dynamicTitle}</h1>}
+            {subtitle && <p className="text-sm text-gray-500 hidden md:block">{subtitle}</p>}
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2  md:gap-4">
+          {user && <p className="text-sm text-gray-500 hidden md:block">Bem vindo, {user.username}</p>}
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
             <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
           </Button>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="" alt="Usuário" />
+                <Avatar className="h-10 w- 10">
+                  <AvatarImage src={user?.avatarUrl} alt="Usuário" />
                   <AvatarFallback className="bg-eventhub-primary text-white">
-                    AU
+                    {user?.username?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -66,12 +96,12 @@ export function Header({ title, subtitle }: HeaderProps) {
             <DropdownMenuContent align="end">
               <div className="flex items-center justify-start p-2">
                 <div className="flex flex-col space-y-1">
-                  <p className="font-medium text-sm">Administrador</p>
-                  <p className="text-xs text-gray-500">admin@eventhub.com</p>
+                  <p className="font-medium text-sm">{user?.username}</p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Meu Perfil</span>
               </DropdownMenuItem>

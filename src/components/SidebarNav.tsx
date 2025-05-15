@@ -1,134 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
-import { Label } from "@/components/ui/label";
-import {
-  Calendar,
-  ChevronRight,
-  ClipboardList,
-  CreditCard,
-  LayoutDashboard,
-  Menu,
-  Settings,
-  Users,
-  BarChart,
-  Bell,
-  FileText,
-  Building,
-  Edit,
-  Trash2,
-  ShieldCheck,
-  KeyRound,
-  Globe,
-  CalendarDays,
-  MapPin,
-  User,
-  Target,
-  Contact
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Building, ChevronRight, Menu } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useGetOrganizationById } from "@/hooks/organization/queries/getById";
+import { useUpdateOrganizationMutations } from "@/hooks/organization/mutations/update";
+import { useDeleteOrganizationMutations } from "@/hooks/organization/mutations/delete";
+import { EditOrganizationForm } from "@/components/organization/EditOrganizationForm";
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
+import { OrganizationNav } from "@/components/organization/OrganizationNav";
+import { VenueNav } from "@/components/venue/VenueNav";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-
-type NavItem = {
-  title: string;
-  href: string;
-  icon: React.ElementType;
-  action?: () => void;
-};
-
-type Venue = {
-  id: string;
-  name: string;
-};
-
-const venueNavItems: NavItem[] = [
-  {
-    title: "Visão Geral",
-    href: "/venue",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Proprietários",
-    href: "/venue/owners",
-    icon: Users,
-  },
-  {
-    title: "Metas/Preços",
-    href: "/venue/goals",
-    icon: Target,
-  },
-  {
-    title: "Contatos",
-    href: "/venue/contacts",
-    icon: Contact,
-  },
-  {
-    title: "Notificações",
-    href: "/venue/notifications",
-    icon: Bell,
-  },
-  {
-    title: "Site",
-    href: "/venue/website",
-    icon: Globe,
-  },
-  {
-    title: "Orçamentos",
-    href: "/venue/budgets",
-    icon: ClipboardList,
-  },
-  {
-    title: "Visitas",
-    href: "/venue/visits",
-    icon: MapPin,
-  },
-  {
-    title: "Eventos",
-    href: "/venue/events",
-    icon: Calendar,
-  },
-  {
-    title: "Relatórios",
-    href: "/venue/reports",
-    icon: BarChart,
-  },
-  {
-    title: "Agenda",
-    href: "/venue/schedule",
-    icon: CalendarDays,
-  },
-  {
-    title: "Configurações",
-    href: "/venue/settings",
-    icon: Settings,
-  },
-];
-
-// Mock data for spaces (venues)
-const mockVenues: Venue[] = [
-  { id: "1", name: "Guacá House" },
-  { id: "2", name: "AR756" },
-  { id: "3", name: "Casa Jardim" },
-  { id: "4", name: "Villa Espaço" },
-];
 
 export function SidebarNav({
   showOnMobile = false,
@@ -142,21 +30,20 @@ export function SidebarNav({
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  
+
   // State for dialogs
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [orgName, setOrgName] = useState("Best Eventos Ltda");
-  const [venues, setVenues] = useState<Venue[]>(mockVenues);
+  
+  const { data: organization } = useGetOrganizationById(params.id || "");
+  const { updateOrganization } = useUpdateOrganizationMutations(params.id || "");
+  const { deleteOrganization } = useDeleteOrganizationMutations(params.id || "");
   
   // Determine if we're in a venue section
   const isInVenue = location.pathname.startsWith('/venue');
   
   // Determine if we're in an organization section
   const isInOrg = location.pathname.includes('/organization/');
-  
-  // Get organization ID from URL params
-  const organizationId = params.id;
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -169,93 +56,40 @@ export function SidebarNav({
   };
   
   const handleDeleteOrganization = () => {
-    // Open delete confirmation dialog
     setDeleteDialogOpen(true);
   };
   
   const handleConfirmDelete = () => {
-    // Here we would call an API to delete the organization
+    deleteOrganization.mutate(undefined, {
+      onSuccess: () => {
     toast({
       title: "Sucesso",
       description: "Organização excluída com sucesso."
     });
     setDeleteDialogOpen(false);
-    
-    // Navigate back to dashboard
     navigate('/dashboard');
+      }
+    });
   };
   
   const handleEditOrganization = () => {
     setEditDialogOpen(true);
   };
   
-  const handleSaveEdit = () => {
-    if (!orgName.trim()) {
-      toast({
-        title: "Erro",
-        description: "O nome da organização não pode estar vazio."
-      });
-      return;
-    }
-    
-    // Here we would call an API to update the organization name
+  const handleUpdateOrganization = (values: { name: string }) => {
+    updateOrganization.mutate(
+      { organizationId: params.id || "", data: { name: values.name } },
+      {
+        onSuccess: () => {
     toast({
       title: "Sucesso",
       description: "Nome da organização atualizado com sucesso!"
     });
     setEditDialogOpen(false);
+        }
+      }
+    );
   };
-  
-  const handleVenueClick = (venue: Venue) => {
-    // Navigate to the venue page
-    navigate(`/venue/${venue.id}`);
-    if (showOnMobile && onClose) {
-      onClose();
-    }
-  };
-
-  const handleViewAllVenues = () => {
-    navigate(`/organization/${organizationId}/venues`);
-    if (showOnMobile && onClose) {
-      onClose();
-    }
-  };
-  
-  // Create organization action items dynamically
-  const organizationActionItems: NavItem[] = [
-    {
-      title: "Editar Organização",
-      href: "#",
-      icon: Edit,
-      action: handleEditOrganization
-    },
-    {
-      title: "Permissões",
-      href: `/organization/${organizationId}/permissions`,
-      icon: ShieldCheck,
-    },
-    {
-      title: "Proprietários",
-      href: `/organization/${organizationId}/owners`,
-      icon: KeyRound,
-    },
-    {
-      title: "Contratos",
-      href: `/organization/${organizationId}/contracts`,
-      icon: FileText,
-    },
-    {
-      title: "Espaços",
-      href: `/organization/${organizationId}/venues`,
-      icon: Building,
-    },
-    {
-      title: "Deletar Organização",
-      href: "#",
-      icon: Trash2,
-      action: handleDeleteOrganization
-    },
-  ];
 
   return (
     <>
@@ -268,7 +102,7 @@ export function SidebarNav({
       >
         <div className="flex items-center justify-between h-16 px-4 border-b">
           <div className="flex items-center">
-            <Calendar className="h-6 w-6 text-eventhub-primary" />
+            <Building className="h-6 w-6 text-eventhub-primary" />
             {!isCollapsed && (
               <span className="ml-2 font-bold text-eventhub-primary">EventHub</span>
             )}
@@ -310,75 +144,20 @@ export function SidebarNav({
             </Link>
 
             {isInOrg && !isCollapsed && (
-              <div className="pt-3 pb-1">
-                <div className="px-3 mt-4 mb-2 text-sm font-semibold text-eventhub-primary">
-                  {orgName}
-                </div>
-                
-                {organizationActionItems.map((item) => (
-                  <div key={item.title}>
-                    {item.action ? (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          item.action?.();
-                          handleNavItemClick();
-                        }}
-                        className={cn(
-                          "flex w-full items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
-                          location.pathname.includes(item.href) && item.href !== "#"
-                            ? "bg-eventhub-tertiary/30 text-eventhub-primary"
-                            : "text-gray-700"
-                        )}
-                      >
-                        <item.icon className="h-5 w-5 mr-2" />
-                        <span>{item.title}</span>
-                      </button>
-                    ) : (
-                      <Link
-                        to={item.href}
-                        className={cn(
-                          "flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
-                          location.pathname.includes(item.href)
-                            ? "bg-eventhub-tertiary/30 text-eventhub-primary"
-                            : "text-gray-700"
-                        )}
-                        onClick={handleNavItemClick}
-                      >
-                        <item.icon className="h-5 w-5 mr-2" />
-                        <span>{item.title}</span>
-                      </Link>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <OrganizationNav
+                organizationName={organization?.name || ""}
+                isCollapsed={isCollapsed}
+                onEditClick={handleEditOrganization}
+                onDeleteClick={handleDeleteOrganization}
+                onNavItemClick={handleNavItemClick}
+              />
             )}
 
             {isInVenue && (
-              <div className="pt-3 pb-1">
-                {!isCollapsed && (
-                  <div className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Espaço atual
-                  </div>
-                )}
-
-                {venueNavItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className={cn(
-                      "flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
-                      location.pathname === item.href
-                        ? "bg-eventhub-tertiary/30 text-eventhub-primary"
-                        : "text-gray-700"
-                    )}
-                    onClick={handleNavItemClick}
-                  >
-                    <item.icon className="h-5 w-5 mr-2" />
-                    {!isCollapsed && <span>{item.title}</span>}
-                  </Link>
-                ))}
-              </div>
+              <VenueNav
+                isCollapsed={isCollapsed}
+                onNavItemClick={handleNavItemClick}
+              />
             )}
           </nav>
         </div>
@@ -386,44 +165,28 @@ export function SidebarNav({
       
       {/* Edit Organization Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-full max-w-full md:w-[50%] md:max-w-[50%] rounded-md z-[9999]">
           <DialogHeader>
             <DialogTitle>Editar Organização</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Nome da Organização</Label>
-              <Input
-                id="name"
-                value={orgName}
-                onChange={(e) => setOrgName(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSaveEdit}>Salvar</Button>
-          </DialogFooter>
+          <EditOrganizationForm
+            initialName={organization?.name || ""}
+            onSubmit={handleUpdateOrganization}
+            onCancel={() => setEditDialogOpen(false)}
+            isPending={updateOrganization.isPending}
+          />
         </DialogContent>
       </Dialog>
 
       {/* Delete Organization Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Essa ação não pode ser desfeita. Esta operação irá excluir permanentemente a organização "{orgName}" e todos os seus dados associados.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
-              Deletar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        entityName={organization?.name || ""}
+        entityType="organização"
+        isPending={deleteOrganization.isPending}
+      />
     </>
   );
 }

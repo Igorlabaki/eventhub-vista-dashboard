@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -6,8 +5,12 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect to dashboard page
-    navigate('/dashboard');
+    const token = localStorage.getItem("@EventHub:token");
+    if (token) {
+      navigate("/dashboard", { replace: true });
+    } else {
+      navigate('/login', { replace: true });
+    }
   }, [navigate]);
 
   return (

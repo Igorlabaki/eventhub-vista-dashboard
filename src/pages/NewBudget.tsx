@@ -73,8 +73,6 @@ export default function NewBudget() {
   });
 
   const onSubmit = (data: FormValues) => {
-    console.log("Form submitted:", data);
-    
     toast({
       title: "Orçamento criado com sucesso!",
       description: `Orçamento para ${data.completeClientName} enviado.`,

@@ -1,4 +1,3 @@
-
 export enum Permissions {
     VIEW_INFO = "VIEW_INFO",
     VIEW_IMAGES = "VIEW_IMAGES",
@@ -64,3 +63,4 @@ export const userProposalPermissions: PermissionItem[] = [
     { enum: Permissions.SEND_CLIENT, display: "Enviar (orc,contratos,msg)" },
     { enum: Permissions.EDIT_ATTENDANCE_LIST, display: "Lista de presenca" },
 ];
+

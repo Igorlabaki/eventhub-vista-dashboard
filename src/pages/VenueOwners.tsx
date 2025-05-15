@@ -1,7 +1,7 @@
 
 import { useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { OwnersManager } from "@/components/OwnersManager";
+import { OwnersManager } from "@/components/owner/OwnersManager";
 
 export default function VenueOwners() {
   const { id } = useParams<{ id: string }>();
