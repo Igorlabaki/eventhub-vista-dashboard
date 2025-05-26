@@ -1,20 +1,28 @@
 import { Venue } from "@/components/ui/venue-list";
+import { Clause } from "./clause";
+import { Owner } from "./owner";
+import { Contract } from "./contract";
+import { Attachment } from "./attachment";
 
 export interface Organization {
     id: string;
     name: string;
     createdAt: string;
     venues: Venue[];
-    /*owners: Owner[];
-    userOrganizations: UserOrganization[];
+    owners: Owner[];
     clauses: Clause[];
     contracts: Contract[];
-    attachments: Attachment[]; */
+    attachments: Attachment[];
 }
-
 export interface CreateOrganizationDTO {
     name: string;
     userId: string;
+}
+
+export type OrganizationWithVenueCount = Organization & {
+    _count?: {
+        venues: number
+    }
 }
 
 export interface OrganizationByIdResponse {
@@ -31,7 +39,7 @@ export interface OrganizationListResponse {
     success: true,
     message: string,
     data: {
-        organizationList: Organization[]
+        organizationList: OrganizationWithVenueCount[]
     },
     count: number,
     type: string

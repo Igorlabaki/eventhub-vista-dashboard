@@ -1,9 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -13,18 +11,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { SubmitButton } from "@/components/ui/submit-button";
-import { venueService } from "@/services/venue.service";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 import type { CreateVenueDTO } from "@/types/venue";
+import { useVenueStore } from "@/store/venueStore";
+import { FormLayout } from "@/components/ui/form-layout";
+import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
+import { showSuccessToast } from "@/components/ui/success-toast";
+import { useState } from "react";
+import InputMask from 'react-input-mask';
+import { NumericFormat } from 'react-number-format';
 
 const pricingModels = [
   { value: "PER_PERSON", label: "Por pessoa" },
@@ -95,12 +96,14 @@ interface CreateVenueFormProps {
   organizationId: string;
   userId: string;
   onSuccess?: () => void;
+  venueId?: string;
+  isEditing?: boolean;
 }
 
-export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVenueFormProps) {
+export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, isEditing }: CreateVenueFormProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { createVenue, deleteVenue } = useVenueStore();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-
   const form = useForm<CreateVenueFormValues>({
     resolver: zodResolver(createVenueSchema),
     defaultValues: {
@@ -113,9 +116,9 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
         city: "",
         state: "",
         street: "",
-        checkIn: "12:00",
+        checkIn: "",
         maxGuest: "",
-        checkOut: "12:00",
+        checkOut: "",
         streetNumber: "",
         neighborhood: "",
         owners: [],
@@ -139,7 +142,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
         userId: data.userId,
         organizationId: data.organizationId,
         data: {
-          cep: data.data.cep,
+          cep: data.data.cep.replace(/\D/g, ''),
           email: data.data.email,
           name: data.data.name,
           city: data.data.city,
@@ -148,38 +151,72 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
           checkIn: data.data.checkIn,
           maxGuest: data.data.maxGuest,
           checkOut: data.data.checkOut,
-          streetNumber: data.data.streetNumber,
+          streetNumber: data.data.streetNumber.replace(/\D/g, ''),
           neighborhood: data.data.neighborhood,
           owners: data.data.owners,
           hasOvernightStay: data.data.hasOvernightStay,
           complement: data.data.complement,
-          pricePerDay: data.data.pricePerDay,
-          pricePerPerson: data.data.pricePerPerson,
-          pricePerPersonDay: data.data.pricePerPersonDay,
-          pricePerPersonHour: data.data.pricePerPersonHour,
+          pricePerDay: data.data.pricePerDay?.replace(/\D/g, ''),
+          pricePerPerson: data.data.pricePerPerson?.replace(/\D/g, ''),
+          pricePerPersonDay: data.data.pricePerPersonDay?.replace(/\D/g, ''),
+          pricePerPersonHour: data.data.pricePerPersonHour?.replace(/\D/g, ''),
           pricingModel: data.data.pricingModel,
         }
       };
       
-      await venueService.createVenue(venueData);
-      toast({
-        title: "Sucesso",
-        description: "Espaço criado com sucesso",
+      const response = await createVenue(venueData);
+      const { title, message } = handleBackendSuccess(response, "Espaço criado com sucesso!");
+      showSuccessToast({
+        title,
+        description: message
       });
-      queryClient.invalidateQueries({ queryKey: ["venues", userId] });
       onSuccess?.();
-    } catch (error) {
+    } catch (error: unknown) {
+      const { title, message } = handleBackendError(error, "Erro ao criar espaço. Tente novamente mais tarde.");
       toast({
-        title: "Erro",
-        description: "Erro ao criar espaço",
+        title,
+        description: message,
         variant: "destructive",
       });
     }
   };
 
+  const handleDelete = async () => {
+    if (!venueId) return;
+    setIsDeleting(true);
+    try {
+      const response = await deleteVenue(venueId);
+      const { title, message } = handleBackendSuccess(response, "Espaço excluído com sucesso!");
+      showSuccessToast({
+        title,
+        description: message
+      });
+      onSuccess?.();
+    } catch (error: unknown) {
+      const { title, message } = handleBackendError(error, "Erro ao excluir espaço. Tente novamente mais tarde.");
+      toast({
+        title,
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <FormLayout
+      form={form}
+      title={isEditing ? "Editar Espaço" : "Novo Espaço"}
+      onSubmit={onSubmit}
+      onCancel={onSuccess}
+      submitLabel={isEditing ? "Salvar" : "Criar"}
+      onDelete={isEditing ? handleDelete : undefined}
+      isDeleting={isDeleting}
+      entityName={form.watch("data.name")}
+      entityType="espaço"
+    >
+      <div className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -236,7 +273,14 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
                 <FormItem>
                   <FormLabel>Número*</FormLabel>
                   <FormControl>
-                    <Input placeholder="123" {...field} />
+                    <InputMask
+                      mask="999999"
+                      placeholder="123"
+                      value={field.value}
+                      onChange={field.onChange}
+                    >
+                      {(inputProps) => <Input {...inputProps} />}
+                    </InputMask>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -296,7 +340,14 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
                 <FormItem>
                   <FormLabel>Estado*</FormLabel>
                   <FormControl>
-                    <Input placeholder="UF" {...field} />
+                    <InputMask
+                      mask="aa"
+                      placeholder="UF"
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                    >
+                      {(inputProps) => <Input {...inputProps} />}
+                    </InputMask>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -310,7 +361,14 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
                 <FormItem>
                   <FormLabel>CEP*</FormLabel>
                   <FormControl>
-                    <Input placeholder="00000-000" {...field} />
+                    <InputMask
+                      mask="99999-999"
+                      placeholder="00000-000"
+                      value={field.value}
+                      onChange={field.onChange}
+                    >
+                      {(inputProps) => <Input {...inputProps} />}
+                    </InputMask>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -326,37 +384,9 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
           <div className="grid grid-cols-3 gap-4">
             <FormField
               control={form.control}
-              name="data.checkIn"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Check-in</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="data.checkOut"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Check-out</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="data.hasOvernightStay"
               render={({ field }) => (
-                <FormItem className="flex items-center space-x-2 mt-6">
+                <FormItem className="flex items-center space-x-2">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -368,6 +398,38 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
                 </FormItem>
               )}
             />
+
+            {hasOvernightStay && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="data.checkIn"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Check-in</FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="data.checkOut"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Check-out</FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
           </div>
         </div>
 
@@ -412,10 +474,18 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
                   <FormItem>
                     <FormLabel>Preço por pessoa (R$)*</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
+                      <NumericFormat
+                        value={field.value}
+                        onValueChange={(values) => {
+                          field.onChange(values.value);
+                        }}
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        prefix="R$ "
+                        decimalScale={2}
+                        fixedDecimalScale
+                        placeholder="R$ 0,00"
+                        customInput={Input}
                       />
                     </FormControl>
                     <FormMessage />
@@ -432,10 +502,18 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
                   <FormItem>
                     <FormLabel>Preço por dia (R$)*</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
+                      <NumericFormat
+                        value={field.value}
+                        onValueChange={(values) => {
+                          field.onChange(values.value);
+                        }}
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        prefix="R$ "
+                        decimalScale={2}
+                        fixedDecimalScale
+                        placeholder="R$ 0,00"
+                        customInput={Input}
                       />
                     </FormControl>
                     <FormMessage />
@@ -452,10 +530,18 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
                   <FormItem>
                     <FormLabel>Preço por pessoa/dia (R$)*</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
+                      <NumericFormat
+                        value={field.value}
+                        onValueChange={(values) => {
+                          field.onChange(values.value);
+                        }}
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        prefix="R$ "
+                        decimalScale={2}
+                        fixedDecimalScale
+                        placeholder="R$ 0,00"
+                        customInput={Input}
                       />
                     </FormControl>
                     <FormMessage />
@@ -472,10 +558,18 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
                   <FormItem>
                     <FormLabel>Preço por pessoa/hora (R$)*</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        {...field}
+                      <NumericFormat
+                        value={field.value}
+                        onValueChange={(values) => {
+                          field.onChange(values.value);
+                        }}
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        prefix="R$ "
+                        decimalScale={2}
+                        fixedDecimalScale
+                        placeholder="R$ 0,00"
+                        customInput={Input}
                       />
                     </FormControl>
                     <FormMessage />
@@ -504,9 +598,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess }: CreateVen
             </FormItem>
           )}
         />
-
-        <SubmitButton>Criar Espaço</SubmitButton>
-      </form>
-    </Form>
+      </div>
+    </FormLayout>
   );
 } 

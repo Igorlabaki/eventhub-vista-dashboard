@@ -1,12 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Building, ChevronRight, Menu } from "lucide-react";
+import { Building, Calendar, ChevronRight, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useGetOrganizationById } from "@/hooks/organization/queries/getById";
-import { useUpdateOrganizationMutations } from "@/hooks/organization/mutations/update";
-import { useDeleteOrganizationMutations } from "@/hooks/organization/mutations/delete";
 import { EditOrganizationForm } from "@/components/organization/EditOrganizationForm";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { OrganizationNav } from "@/components/organization/OrganizationNav";
@@ -17,6 +14,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useOrganizationStore } from "@/store/organizationStore";
+import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
+import { showSuccessToast } from "@/components/ui/success-toast";
+import { useVenueStore } from "@/store/venueStore";
+import { useUserStore } from "@/store/userStore";
 
 export function SidebarNav({
   showOnMobile = false,
@@ -35,15 +37,15 @@ export function SidebarNav({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
-  const { data: organization } = useGetOrganizationById(params.id || "");
-  const { updateOrganization } = useUpdateOrganizationMutations(params.id || "");
-  const { deleteOrganization } = useDeleteOrganizationMutations(params.id || "");
+  const { currentOrganization, deleteOrganization, isLoading } = useOrganizationStore();
   
   // Determine if we're in a venue section
   const isInVenue = location.pathname.startsWith('/venue');
   
   // Determine if we're in an organization section
   const isInOrg = location.pathname.includes('/organization/');
+
+  const venueId = params.id; // venueId vem de /venue/:id/...
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -59,52 +61,52 @@ export function SidebarNav({
     setDeleteDialogOpen(true);
   };
   
-  const handleConfirmDelete = () => {
-    deleteOrganization.mutate(undefined, {
-      onSuccess: () => {
-    toast({
-      title: "Sucesso",
-      description: "Organização excluída com sucesso."
-    });
-    setDeleteDialogOpen(false);
-    navigate('/dashboard');
-      }
-    });
+  const handleConfirmDelete = async () => {
+    try {
+      const response = await deleteOrganization(params.id || "");
+      const { title, message } = handleBackendSuccess(response, "Organização excluída com sucesso!");
+      showSuccessToast({
+        title,
+        description: message
+      });
+      setDeleteDialogOpen(false);
+      navigate('/dashboard');
+    } catch (error: unknown) {
+      const { title, message } = handleBackendError(error, "Erro ao excluir organização. Tente novamente mais tarde.");
+      toast({
+        title,
+        description: message,
+        variant: "destructive",
+      });
+    }
   };
   
   const handleEditOrganization = () => {
     setEditDialogOpen(true);
   };
-  
-  const handleUpdateOrganization = (values: { name: string }) => {
-    updateOrganization.mutate(
-      { organizationId: params.id || "", data: { name: values.name } },
-      {
-        onSuccess: () => {
-    toast({
-      title: "Sucesso",
-      description: "Nome da organização atualizado com sucesso!"
-    });
-    setEditDialogOpen(false);
-        }
-      }
-    );
-  };
+
+  const user = useUserStore((state) => state.user);
+  const { selectedVenue, fetchVenueById } = useVenueStore();
+  useEffect(() => {
+    if (venueId && user?.id) {
+      fetchVenueById(venueId, user.id);
+    }
+  }, [venueId, user?.id, fetchVenueById]);
 
   return (
     <>
       <div
         className={cn(
-          "flex flex-col h-full border-r bg-white transition-all duration-300",
+          "flex flex-col h-screen border-r bg-white transition-all duration-300",
           isCollapsed ? "w-16" : "w-64",
           showOnMobile ? "block" : "hidden md:flex"
         )}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b">
           <div className="flex items-center">
-            <Building className="h-6 w-6 text-eventhub-primary" />
+          <Calendar className="h-8 w-8 text-eventhub-primary" />
             {!isCollapsed && (
-              <span className="ml-2 font-bold text-eventhub-primary">EventHub</span>
+              <span className="ml-2 font-bold text-2xl text-eventhub-primary">EventHub</span>
             )}
           </div>
           <Button
@@ -145,7 +147,7 @@ export function SidebarNav({
 
             {isInOrg && !isCollapsed && (
               <OrganizationNav
-                organizationName={organization?.name || ""}
+                organizationName={currentOrganization?.name || ""}
                 isCollapsed={isCollapsed}
                 onEditClick={handleEditOrganization}
                 onDeleteClick={handleDeleteOrganization}
@@ -157,6 +159,7 @@ export function SidebarNav({
               <VenueNav
                 isCollapsed={isCollapsed}
                 onNavItemClick={handleNavItemClick}
+                venue={selectedVenue}
               />
             )}
           </nav>
@@ -170,10 +173,9 @@ export function SidebarNav({
             <DialogTitle>Editar Organização</DialogTitle>
           </DialogHeader>
           <EditOrganizationForm
-            initialName={organization?.name || ""}
-            onSubmit={handleUpdateOrganization}
+            organizationId={params.id || ""}
+            initialName={currentOrganization?.name || ""}
             onCancel={() => setEditDialogOpen(false)}
-            isPending={updateOrganization.isPending}
           />
         </DialogContent>
       </Dialog>
@@ -183,9 +185,9 @@ export function SidebarNav({
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleConfirmDelete}
-        entityName={organization?.name || ""}
+        entityName={currentOrganization?.name || ""}
         entityType="organização"
-        isPending={deleteOrganization.isPending}
+        isPending={isLoading}
       />
     </>
   );

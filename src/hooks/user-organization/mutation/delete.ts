@@ -9,7 +9,7 @@ export const useDeleteUserOrganizationMutations = (organizationId: string) => {
     userOrganizationService.deleteUserOrganization,
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['user-permissions', organizationId] });
+        queryClient.invalidateQueries({ queryKey: ['user-organizations', organizationId] });
       }
     }
   );

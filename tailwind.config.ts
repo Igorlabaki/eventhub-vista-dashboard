@@ -111,12 +111,17 @@ export default {
 						opacity: '1'
 					}
 				},
+				'slow-pulse': {
+					'0%, 100%': { opacity: '0.5' },
+					'50%': { opacity: '0.8' }
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
 				'slide-in': 'slide-in 0.3s ease-out',
+				'slow-pulse': 'slow-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
 			}
 		}
 	},

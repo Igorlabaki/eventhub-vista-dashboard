@@ -22,9 +22,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCreateUserPermissionMutations } from "@/hooks/permissions/mutation/create";
 import { useUpdateUserPermissionMutations } from "@/hooks/permissions/mutation/update";
-import { showSuccessToast } from "./success-toast";
+import { showSuccessToast } from "../ui/success-toast";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { useDeleteUserPermissionMutations } from "@/hooks/permissions/mutation/delete";
+import { useUserPermissionStore } from '@/store/userPermissionStore';
 
 // Interface que define a estrutura de uma permissão
 interface Permission {
@@ -72,11 +73,7 @@ export function PermissionManager({
   userOrganizationId,
 }: PermissionManagerProps) {
   const { toast } = useToast();
-
-  // Instanciar as mutations
-  const { createUserPermission } = useCreateUserPermissionMutations(organizationId);
-  const { updateUserPermission } = useUpdateUserPermissionMutations(organizationId);
-  const { deleteUserPermission } = useDeleteUserPermissionMutations(organizationId);
+  const { createUserPermission, updateUserPermission, deleteUserPermission, isLoading } = useUserPermissionStore();
 
   // Hook que processa e formata as permissões do usuário para o local específico
   const userVenuePermissions = React.useMemo(() => {
@@ -101,7 +98,10 @@ export function PermissionManager({
         permissions = userVenue.permissions;
       }
     }
-    return permissions.includes("admin") ? "admin" : "user";
+    const hasAllPermissions = permissions.length === (
+      viewPermissions.length + editPermissions.length + proposalPermissions.length
+    );
+    return (permissions.includes("admin") || hasAllPermissions) ? "admin" : "user";
   });
 
   // Estado para armazenar as permissões temporárias
@@ -112,19 +112,10 @@ export function PermissionManager({
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deletePending, setDeletePending] = React.useState(false);
 
-  console.log("Permissões do usuário (final):", userVenuePermissions);
-
   // Função que verifica se o usuário possui uma permissão específica
   const hasPermission = (permissionKey: string): boolean => {
     const exactMatch = tempPermissions.some((p) => p === permissionKey);
     const partialMatch = tempPermissions.some((p) => p.includes(permissionKey));
-
-    console.log(`Verificando permissão ${permissionKey}:`, {
-      exactMatch,
-      partialMatch,
-      permissions: tempPermissions,
-    });
-
     return exactMatch || partialMatch;
   };
 
@@ -194,11 +185,7 @@ export function PermissionManager({
         <TableBody>
           {permissionsList.map((permission) => {
             const isEnabled = hasPermission(permission.enum);
-            console.log(
-              `Renderizando permissão ${permission.enum}:`,
-              isEnabled
-            );
-
+            
             return (
               <TableRow key={permission.enum}>
                 <TableCell className="font-medium">
@@ -220,6 +207,66 @@ export function PermissionManager({
       </Table>
     </div>
   );
+
+  const handleSave = async () => {
+    try {
+      const flatPermissions = tempPermissions;
+
+      if (userPermissionId && userPermissionId !== "") {
+        // UPDATE
+        const updateData = {
+          userPermissionId,
+          role,
+          venueId,
+          permissions: flatPermissions,
+        };
+        await updateUserPermission(updateData, organizationId || "");
+        showSuccessToast({
+          title: "Permissão atualizada!",
+          description: "As permissões do usuário foram atualizadas com sucesso.",
+        });
+      } else {
+        // CREATE
+        const createData = {
+          role,
+          venueId,
+          userOrganizationId: userOrganizationId || "",
+          userId: userId,
+          organizationId: organizationId || "",
+          permissions: flatPermissions,
+        };
+        await createUserPermission(createData);
+        showSuccessToast({
+          title: "Permissão criada!",
+          description: "As permissões do usuário foram criadas com sucesso.",
+        });
+      }
+      onGoBack();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar as permissões.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteUserPermission(userPermissionId, organizationId || "");
+      showSuccessToast({
+        title: "Permissão removida!",
+        description: "As permissões do usuário foram removidas com sucesso.",
+      });
+      onGoBack();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao remover as permissões.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <>
@@ -263,7 +310,12 @@ export function PermissionManager({
           <CardContent>
             <div className="flex items-center gap-4">
               <Label className="text-sm font-medium">Papel do usuário:</Label>
-              <Select value={role} onValueChange={handleRoleChange}>
+              <Select 
+                value={role} 
+                onValueChange={(value) => {
+                  handleRoleChange(value);
+                }}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Selecione o papel" />
                 </SelectTrigger>
@@ -292,73 +344,24 @@ export function PermissionManager({
           <div className="mt-8">
             <Button
               className="w-full"
-              onClick={async () => {
-                const flatPermissions = tempPermissions
-                  .flatMap((p) => p.split(","))
-                  .map((p) => p.trim())
-                  .filter(Boolean);
-
-                if (flatPermissions.length === 0 && currentUserPermissionId && currentUserPermissionId !== "") {
-                  setDeleteDialogOpen(true);
-                  return;
-                }
-
-                if (currentUserPermissionId && currentUserPermissionId !== "") {
-                  // UPDATE
-                  await updateUserPermission.mutateAsync({
-                    userPermissionId: currentUserPermissionId,
-                    role,
-                    venueId,
-                    permissions: flatPermissions,
-                  });
-                  showSuccessToast({
-                    title: "Permissão atualizada!",
-                    description:
-                      "As permissões do usuário foram atualizadas com sucesso.",
-                  });
-                } else {
-                  // CREATE
-                  await createUserPermission.mutateAsync({
-                    role,
-                    venueId,
-                    userOrganizationId: userOrganizationId || "",
-                    userId: userId,
-                    organizationId: organizationId || "",
-                    permissions: flatPermissions,
-                  });
-                  showSuccessToast({
-                    title: "Permissão criada!",
-                    description:
-                      "As permissões do usuário foram criadas com sucesso.",
-                  });
-                }
-                onGoBack();
+              onClick={() => {
+                handleSave();
               }}
+              disabled={isLoading}
             >
-              Atualizar
+              {isLoading ? "Salvando..." : "Atualizar"}
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Renderizar o dialog de confirmação de deleção */}
       <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onConfirm={async () => {
-          setDeletePending(true);
-          await deleteUserPermission.mutateAsync(currentUserPermissionId);
-          setDeletePending(false);
-          setDeleteDialogOpen(false);
-          showSuccessToast({
-            title: "Permissão removida!",
-            description: "As permissões do usuário foram removidas com sucesso.",
-          });
-          onGoBack();
-        }}
+        onConfirm={handleDelete}
         entityName={userName}
         entityType="permissão do usuário"
-        isPending={deletePending}
+        isPending={isLoading}
       />
     </>
   );

@@ -17,7 +17,10 @@ interface VenuePermissionsListProps {
   onVenueClick: (venue: Venue) => void;
   onBackClick: () => void;
   userPermissions: {
-    [venueId: string]: string[];
+    [venueId: string]: {
+      permissions: string[];
+      role: string;
+    };
   };
   title?: string;
   subtitle?: string;
@@ -73,9 +76,13 @@ export function VenuePermissionsList({
             </TableHeader>
             <TableBody>
               {filteredVenues.map((venue) => {
-                console.log("userPermissions", userPermissions)
-                const permissions = userPermissions[venue.id] || [];
-                const isAdmin = permissions.some(permission => permission === "admin");
+                const venuePermission = userPermissions[venue.id];
+                const permissions = venuePermission?.permissions || [];
+                const role = venuePermission?.role || "user";
+                
+                // Verifica se é admin baseado na role
+                const isAdmin = role === "admin";
+                
                 return (
                   <TableRow 
                     key={venue.id}
@@ -90,7 +97,7 @@ export function VenuePermissionsList({
                         <span className={cn(
                           "text-xs font-medium rounded-full px-2 py-1",
                           isAdmin 
-                            ? "bg-purple-100 text-purple-800"
+                            ? "bg-green-100 text-green-800"
                             : "bg-blue-100 text-blue-800"
                         )}>
                           {isAdmin ? "ADMIN" : "USER"}

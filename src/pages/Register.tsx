@@ -57,7 +57,6 @@ export default function Register() {
       navigate("/dashboard");
     } catch (error) {
       const apiError = error?.response?.data;
-      console.log(apiError)
       toast({
         title: apiError?.title || "Erro ao registrar",
         description: apiError?.message || "Tente novamente mais tarde.",

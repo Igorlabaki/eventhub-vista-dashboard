@@ -8,5 +8,6 @@ export const useGetOrganizationById = (organizationId : string) => {
     queryFn: () => organizationService.getOrganizationById(organizationId),
     select: (data) => data.data.organization,
     enabled: !!organizationId,
+    staleTime: 1000 * 60 * 5, // 5 minutos
   });
 }; 

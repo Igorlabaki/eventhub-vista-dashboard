@@ -1,5 +1,6 @@
 import { api } from '@/lib/axios';
 import axios from 'axios';
+import { useUserStore } from '@/store/userStore';
 
 interface LoginCredentials {
   email: string;
@@ -69,6 +70,10 @@ export const authService = {
   async logout(): Promise<void> {
     localStorage.removeItem('@EventHub:token');
     localStorage.removeItem('@EventHub:session');
+    // Limpa Zustand
+    const { setUser, setIsAuthenticated } = useUserStore.getState();
+    setUser(null);
+    setIsAuthenticated(false);
   },
 
   isAuthenticated(): boolean {

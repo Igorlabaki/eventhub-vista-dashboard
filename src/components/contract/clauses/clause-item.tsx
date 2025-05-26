@@ -3,7 +3,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Clause } from "@/types/contract"
+import { Clause } from "@/types/clause"
 
 interface ClauseItemProps {
   clause: Clause

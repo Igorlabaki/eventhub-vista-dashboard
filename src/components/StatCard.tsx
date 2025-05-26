@@ -1,10 +1,12 @@
-
 import { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ptBR } from "date-fns/locale";
+import { format } from "date-fns";
 
 interface StatCardProps {
   title: string;
-  value: string | number;
+  subtitle?: string;
+  value: string | number | ReactNode;
   icon: ReactNode;
   trend?: {
     value: number;
@@ -12,18 +14,22 @@ interface StatCardProps {
   };
   className?: string;
 }
+const mesAtual = format(new Date(), "MMMM", { locale: ptBR });
 
-export function StatCard({ title, value, icon, trend, className }: StatCardProps) {
+export function StatCard({ title, value, icon, trend, className, subtitle }: StatCardProps) {
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <div className="h-9 w-9 rounded-full bg-eventhub-tertiary/30 flex items-center justify-center">
+        <div className="flex flex-col">
+          <CardTitle className="text-sm md:text-lg font-medium">{title}</CardTitle>
+          {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+        </div>
+        <div className="h-6 w-6 md:h-9 md:w-9 rounded-full bg-eventhub-tertiary/30 flex items-center justify-center">
           {icon}
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-[15px] md:text-2xl  font-bold">{value}</div>
         {trend && (
           <p
             className={`text-xs ${
@@ -31,7 +37,7 @@ export function StatCard({ title, value, icon, trend, className }: StatCardProps
             }`}
           >
             {trend.isPositive ? "+" : "-"}
-            {trend.value}% em relação ao mês anterior
+            {trend.value.toFixed(0)}% em relação ao mês anterior
           </p>
         )}
       </CardContent>

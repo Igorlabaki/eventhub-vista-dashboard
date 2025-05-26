@@ -12,6 +12,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { useOrganizationStore } from "@/store/organizationStore";
+import { showSuccessToast } from "@/components/ui/success-toast";
+import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
+import { useToast } from "@/hooks/use-toast";
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
 
 const editOrganizationSchema = z.object({
   name: z.string().min(2, "Nome obrigatório"),
@@ -20,18 +32,19 @@ const editOrganizationSchema = z.object({
 type EditOrganizationFormValues = z.infer<typeof editOrganizationSchema>;
 
 interface EditOrganizationFormProps {
+  organizationId: string;
   initialName: string;
-  onSubmit: (values: EditOrganizationFormValues) => void;
   onCancel: () => void;
-  isPending?: boolean;
 }
 
 export function EditOrganizationForm({
+  organizationId,
   initialName,
-  onSubmit,
   onCancel,
-  isPending = false,
 }: EditOrganizationFormProps) {
+  const { updateOrganizationById, isLoading } = useOrganizationStore();
+  const { toast } = useToast();
+
   const form = useForm<EditOrganizationFormValues>({
     resolver: zodResolver(editOrganizationSchema),
     defaultValues: {
@@ -39,9 +52,28 @@ export function EditOrganizationForm({
     },
   });
 
+  const handleSubmit = async (values: EditOrganizationFormValues) => {
+    try {
+      const response = await updateOrganizationById(organizationId, { name: values.name });
+      const { title, message } = handleBackendSuccess(response, "Organização atualizada com sucesso!");
+      showSuccessToast({
+        title,
+        description: message
+      });
+      onCancel();
+    } catch (error: unknown) {
+      const { title, message } = handleBackendError(error, "Erro ao atualizar organização. Tente novamente mais tarde.");
+      toast({
+        title,
+        description: message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -71,7 +103,7 @@ export function EditOrganizationForm({
           <SubmitButton
             type="submit"
             className="flex-1"
-            loading={isPending}
+            loading={isLoading}
           >
             Salvar
           </SubmitButton>

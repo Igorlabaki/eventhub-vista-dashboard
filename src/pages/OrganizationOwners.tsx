@@ -1,21 +1,32 @@
 import { useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
-import { useGetOrganizationOwnersList } from "@/hooks/owner/queries/list";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { OwnerForm } from "@/components/owner/OwnerForm";
 import { OwnersList } from "@/components/owner/OwnersList";
 import { OwnersListSkeleton } from "@/components/owner/OwnersListSkeleton";
 import { Button } from "@/components/ui/button";
 import { Owner } from "@/types/owner";
 import { FilterList } from "@/components/filterList";
+import { useOwnerStore } from "@/store/ownerStore";
 
 export default function OrganizationOwners() {
   const { id: organizationId } = useParams<{ id: string }>();
-  const { data: owners = [], isLoading } = useGetOrganizationOwnersList(organizationId || "");
+  const { 
+    owners, 
+    isLoading, 
+    fetchOrganizationOwners 
+  } = useOwnerStore();
+  
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentOwner, setCurrentOwner] = useState<Owner | null>(null);
+
+  useEffect(() => {
+    if (organizationId) {
+      fetchOrganizationOwners(organizationId);
+    }
+  }, [organizationId, fetchOrganizationOwners]);
 
   const handleCreateClick = () => {
     setCurrentOwner(null);
@@ -53,6 +64,7 @@ export default function OrganizationOwners() {
       subtitle="Gerenciar proprietários da organização"
     >
       <PageHeader
+        isFormOpen={isCreating || isEditing}
         title="Proprietários"
         count={owners.length}
         onCreateClick={handleCreateClick}
@@ -71,15 +83,15 @@ export default function OrganizationOwners() {
               placeholder="Buscar proprietários..."
             >
               {(filteredOwners) => (
-          <OwnersList
+                <OwnersList
                   owners={filteredOwners}
                   searchTerm=""
                   onSearchChange={() => {}}
-            onCreateClick={handleCreateClick}
-            onEditClick={handleEdit}
-            onEditVenuesClick={handleEditVenues}
-            organizationId={organizationId || ""}
-          />
+                  onCreateClick={handleCreateClick}
+                  onEditClick={handleEdit}
+                  onEditVenuesClick={handleEditVenues}
+                  organizationId={organizationId || ""}
+                />
               )}
             </FilterList>
           )}
@@ -88,23 +100,11 @@ export default function OrganizationOwners() {
       
       {/* Formulário de Criação/Edição */}
       {(isCreating || isEditing) && (
-        <div className="bg-white rounded-lg border shadow-sm p-6 animate-slide-in">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">
-              {isEditing ? 'Editar Proprietário' : 'Novo Proprietário'}
-            </h2>
-            <Button variant="outline" size="sm" onClick={resetForm}>
-              Voltar
-            </Button>
-          </div>
-          
-          <OwnerForm
-            owner={currentOwner || undefined}
-            organizationId={organizationId || ""}
-            onCancel={resetForm}
-            isEditing={!!currentOwner}
-          />
-        </div>
+        <OwnerForm
+          owner={currentOwner || undefined}
+          organizationId={organizationId || ""}
+          onCancel={resetForm}
+        />
       )}
     </DashboardLayout>
   );

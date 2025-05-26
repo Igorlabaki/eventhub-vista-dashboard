@@ -7,11 +7,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "lucide-react";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
-import { useQueryClient } from "@tanstack/react-query";
-
 import { z } from "zod";
 import { authService } from "@/services/auth.service";
 import { showSuccessToast } from "@/components/ui/success-toast";
+import { useUserStore } from "@/store/userStore";
+import { userService } from "@/services/user.service";
 
 // Schema de validação
 const loginSchema = z.object({
@@ -34,19 +34,20 @@ export default function Login() {
     password: "",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const queryClient = useQueryClient();
+  const setUser = useUserStore((state) => state.setUser);
+  const setIsAuthenticated = useUserStore((state) => state.setIsAuthenticated);
 
   useEffect(() => {
     const token = localStorage.getItem("@EventHub:token");
     if (token) {
+      setIsAuthenticated(true);
       navigate("/dashboard", { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, setIsAuthenticated]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Limpa o erro do campo quando ele é alterado
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -58,18 +59,17 @@ export default function Login() {
     setErrors({});
 
     try {
-      // Validação com Zod
       loginSchema.parse(formData);
-
       const response = await authService.login(formData);
-
+      // Buscar usuário pelo userId da session
+      const userId = response.session.userId;
+      const user = await userService.getById(userId);
+      setUser(user);
+      setIsAuthenticated(true);
       showSuccessToast({
         title: "Login realizado",
         description: "Bem-vindo ao EventHub!",
       });
-
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-      queryClient.invalidateQueries({ queryKey: ["organizations"] });
       navigate("/dashboard");
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -197,18 +197,14 @@ export default function Login() {
                         },
                       });
 
-                      localStorage.setItem(
-                        "@EventHub:token",
-                        apiResponse.accessToken
-                      );
-                      localStorage.setItem(
-                        "@EventHub:session",
-                        JSON.stringify(apiResponse.session)
-                      );
-
-                      queryClient.invalidateQueries({ queryKey: ["user"] });
-                      queryClient.invalidateQueries({
-                        queryKey: ["organizations"],
+                      // Buscar usuário pelo userId da session
+                      const userId = apiResponse.session.userId;
+                      const user = await userService.getById(userId);
+                      setUser(user);
+                      setIsAuthenticated(true);
+                      showSuccessToast({
+                        title: "Login realizado",
+                        description: "Bem-vindo ao EventHub!",
                       });
                       navigate("/dashboard");
                     } catch (error) {

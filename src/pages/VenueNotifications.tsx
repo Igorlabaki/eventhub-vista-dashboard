@@ -1,112 +1,95 @@
-
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bell } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import { useEffect } from "react";
+import { useGetNotificationsList } from "@/hooks/notification/queries/list";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { EmptyState } from "@/components/EmptyState";
+import { FilterList } from "@/components/filterList";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function VenueNotifications() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
-  // Mock data for notifications
-  const notifications = [
-    {
-      id: "1",
-      title: "Novo orçamento de Daniela Paradiso",
-      value: "R$ 16.767",
-      date: "20/12/2025",
-      read: false,
-      budgetId: "1" // Added budgetId to link to specific budget
-    },
-    {
-      id: "2",
-      title: "Novo orçamento de Caroline",
-      value: "R$ 5.247",
-      date: "17/05/2025",
-      read: false,
-      budgetId: "2" 
-    },
-    {
-      id: "3",
-      title: "Novo orçamento de Fernanda Silva",
-      value: "R$ 4.540",
-      date: "19/07/2025",
-      read: false,
-      budgetId: "3"
-    },
-    {
-      id: "4",
-      title: "Novo orçamento de João Vitor",
-      value: "R$ 11.500",
-      date: "18/10/2025",
-      read: false,
-      budgetId: "1"
-    },
-    {
-      id: "5",
-      title: "Novo orçamento de Raisa Jamille",
-      value: "R$ 1.590",
-      date: "08/06/2025",
-      read: false,
-      budgetId: "2"
-    },
-  ];
+  const { id: venueId } = useParams<{ id: string }>();
+
+  const { data: notifications = [], isLoading } = useGetNotificationsList(venueId);
 
   useEffect(() => {
-    // Check if there's a notification ID in the URL that should be opened
     const notificationId = searchParams.get('notification');
-    if (notificationId) {
+    if (notificationId && notifications.length > 0) {
       const notification = notifications.find(n => n.id === notificationId);
       if (notification) {
-        handleNotificationClick(notification.budgetId);
+        // Exemplo: navegação para orçamento relacionado, se existir
+        // handleNotificationClick(notification.proposalId);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, notifications]);
 
-  const handleNotificationClick = (budgetId: string) => {
-    // Navigate to the budgets page and auto-select the specific budget
-    navigate(`/venue/budgets?id=${budgetId}&action=view`);
+  // Exemplo de navegação ao clicar (ajuste conforme sua regra)
+  const handleNotificationClick = (proposalId?: string) => {
+    if (proposalId) {
+      navigate(`/venue/budgets?id=${proposalId}&action=view`);
+    }
   };
 
   return (
     <DashboardLayout title="Notificações" subtitle="Mantenha-se atualizado">
       <div className="space-y-4">
-        {notifications.map((notification) => (
-          <Card 
-            key={notification.id} 
-            className="bg-white hover:bg-gray-100 transition-colors cursor-pointer border shadow-sm"
-            onClick={() => handleNotificationClick(notification.budgetId)}
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))
+        ) : (
+          <FilterList
+            items={notifications}
+            filterBy={(item, query) =>
+              item.content.toLowerCase().includes(query.toLowerCase())
+            }
+            placeholder="Buscar notificação..."
           >
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="bg-eventhub-tertiary/30 p-2 rounded-full mt-1">
-                  <Bell className="h-5 w-5 text-eventhub-primary" />
-                </div>
-                <div className="flex-grow">
-                  <p className="font-medium text-gray-800">{notification.title}</p>
-                  <div className="flex justify-between text-sm text-gray-600 mt-1">
-                    <span>no valor de {notification.value}, para {notification.date}</span>
-                    {!notification.read && (
-                      <span className="bg-eventhub-primary text-white text-xs px-2 py-0.5 rounded-full">
-                        Novo
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        
-        {notifications.length === 0 && (
-          <div className="text-center py-12">
-            <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-1">Sem notificações</h3>
-            <p className="text-gray-500">
-              Você não possui notificações no momento.
-            </p>
-          </div>
+            {(filtered) =>
+              filtered.length > 0 ? (
+                filtered.map((notification) => (
+                  <Card
+                    key={notification.id}
+                    className="bg-white hover:bg-gray-100 transition-colors cursor-pointer border shadow-sm"
+                    onClick={() => handleNotificationClick(notification.proposalId)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-eventhub-tertiary/30 p-2 rounded-full mt-1">
+                          <Bell className="h-5 w-5 text-eventhub-primary" />
+                        </div>
+                        <div className="flex-grow">
+                          <p className="font-medium text-gray-800">{notification.content}</p>
+                          <div className="flex justify-between text-sm text-gray-600 mt-1">
+                            <span>
+                              Criada em {format(new Date(notification.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                            </span>
+                            {!notification.isRead && (
+                              <span className="bg-eventhub-primary text-white text-xs px-2 py-0.5 rounded-full">
+                                Novo
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <EmptyState
+                  title="Sem notificações"
+                  description="Você não possui notificações no momento."
+                  actionText="Atualizar"
+                  onAction={() => window.location.reload()}
+                />
+              )
+            }
+          </FilterList>
         )}
       </div>
     </DashboardLayout>

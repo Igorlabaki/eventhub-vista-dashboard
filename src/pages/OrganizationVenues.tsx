@@ -1,10 +1,15 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { VenueCard } from "@/components/VenueCard";
-import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CreateVenueForm } from "@/components/venue/CreateVenueForm";
+import { EditOrganizationForm } from "@/components/organization/EditOrganizationForm";
+import { useUpdateOrganizationMutations } from "@/hooks/organization/mutations/update";
+import { PageHeader } from "@/components/PageHeader";
+import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
+import { VenuesList } from "@/components/venue/VenuesList";
+import { useVenueStore } from "@/store/venueStore";
+import { useOrganizationStore } from "@/store/organizationStore";
 import {
   Dialog,
   DialogContent,
@@ -12,37 +17,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { PermissionsManager } from "@/components/PermissionsManager";
-import { useGetVenuesList } from "@/hooks/venue/queries/list";
-import { CreateVenueForm } from "@/components/venue/CreateVenueForm";
-import { VenueCardSkeleton } from "@/components/venue/VenueCardSkeleton";
-import { FilterList } from "@/components/filterList";
-import { useGetOrganizationById } from "@/hooks/organization/queries/getById";
-import { EditOrganizationForm } from "@/components/organization/EditOrganizationForm";
-import { useUpdateOrganizationMutations } from "@/hooks/organization/mutations/update";
-import { useUser } from "@/hooks/user/queries/byId";
-import { OwnersManager } from "@/components/owner/OwnersManager";
-import { PageHeader } from "@/components/PageHeader";
-import { EmptyState } from "@/components/EmptyState";
-
 export default function OrganizationVenues() {
   const { id: organizationId } = useParams<{ id: string }>();
-  const { data: organization } = useGetOrganizationById(organizationId || "");
-  const { data: venues = [], isLoading } = useGetVenuesList(
-    organizationId || ""
-  );
-
-  const navigate = useNavigate();
+  const { currentOrganization, fetchOrganizationById } = useOrganizationStore();
   const { toast } = useToast();
 
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [ownersDialogOpen, setOwnersDialogOpen] = useState(false);
-  const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
+  const [selectedVenueId, setSelectedVenueId] = useState<string | undefined>();
 
+  const { venues, isLoading, fetchVenues } = useVenueStore();
   const { updateOrganization } = useUpdateOrganizationMutations(
     organizationId || ""
   );
+
+  useEffect(() => {
+    if (organizationId) {
+      fetchVenues(organizationId);
+      fetchOrganizationById(organizationId);
+    }
+  }, [organizationId, fetchVenues, fetchOrganizationById]);
 
   const handleUpdateOrganization = (values: { name: string }) => {
     if (!organizationId) {
@@ -68,8 +62,14 @@ export default function OrganizationVenues() {
     );
   };
 
-  const handleViewVenue = (venueId: string) => {
-    navigate(`/venue/${venueId}`);
+  const handleEditVenue = (venueId: string) => {
+    setSelectedVenueId(venueId);
+    setShowForm(true);
+  };
+
+  const handleFormClose = () => {
+    setShowForm(false);
+    setSelectedVenueId(undefined);
   };
 
   return (
@@ -77,64 +77,39 @@ export default function OrganizationVenues() {
       title="Espaços"
       subtitle="Gerenciar espaços da organização"
     >
-      <PageHeader
-        title="Espaços"
-        count={venues.length}
-        onCreateClick={() => setDialogOpen(true)}
-        createButtonText="Novo Espaço"
-      />
+      <div className="flex flex-col h-full">
+        <PageHeader
+          isFormOpen={showForm}
+          title="Espaços"
+          count={venues.length}
+          onCreateClick={() => setShowForm(true)}
+          createButtonText="Novo Espaço"
+        />
 
-      <FilterList
-        items={venues}
-        filterBy={(venue, query) =>
-          venue.name.toLowerCase().includes(query.toLowerCase())
-        }
-        placeholder="Buscar espaço..."
-      >
-        {(filtered) => (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {isLoading
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <VenueCardSkeleton key={i} />
-                ))
-              : filtered.map((venue) => (
-                  <VenueCard
-                    key={venue.id}
-                    id={venue.id}
-                    name={venue.name}
-                    capacity={venue.maxGuest}
-                    upcomingEvents={0}
-                    organizationId={venue.organizationId}
-                  />
-                ))}
-
-            {!isLoading && filtered.length === 0 && (
-              <EmptyState
-                title="Nenhum espaço cadastrado"
-                description="Comece cadastrando seu primeiro espaço para gerenciar eventos"
-                actionText="Cadastrar primeiro espaço"
-                onAction={() => setDialogOpen(true)}
+        <div className="flex-1 overflow-hidden">
+          <AnimatedFormSwitcher
+            showForm={showForm}
+            list={
+              <VenuesList
+                venues={venues}
+                isLoading={isLoading}
+                onCreateClick={() => setShowForm(true)}
+                organizationId={organizationId || ""}
+                onEditClick={handleEditVenue}
               />
-            )}
-          </div>
-        )}
-      </FilterList>
-
-      {/* Dialog para criar novo espaço */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Novo Espaço</DialogTitle>
-          </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto pr-2">
-            <CreateVenueForm
-              organizationId={organizationId || ""}
-              userId={organizationId || ""}
-              onSuccess={() => setDialogOpen(false)}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+            }
+            form={
+              <CreateVenueForm
+                organizationId={organizationId || ""}
+                userId={organizationId || ""}
+                onSuccess={handleFormClose}
+                venueId={selectedVenueId}
+                isEditing={!!selectedVenueId}
+              />
+            }
+          />
+        </div>
+      </div>
 
       {/* Dialog para editar organização */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
@@ -143,10 +118,9 @@ export default function OrganizationVenues() {
             <DialogTitle>Editar Organização</DialogTitle>
           </DialogHeader>
           <EditOrganizationForm
-            initialName={organization?.name || ""}
-            onSubmit={handleUpdateOrganization}
+            organizationId={organizationId || ""}
+            initialName={currentOrganization?.name || ""}
             onCancel={() => setEditDialogOpen(false)}
-            isPending={updateOrganization.isPending}
           />
         </DialogContent>
       </Dialog>

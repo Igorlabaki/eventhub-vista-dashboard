@@ -8,14 +8,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Venue } from "@/types/venue";
-import { useUpdateOwnerMutations } from "@/hooks/owner/mutations/update";
+import { ItemListVenueResponse, Venue } from "@/types/venue";
 import { showSuccessToast } from "../ui/success-toast";
+import { useOwnerStore } from "@/store/ownerStore";
 
 interface VenueSelectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  venues: Venue[];
+  venues: ItemListVenueResponse[];
   selectedVenues: string[];
   ownerId?: string;
   organizationId: string;
@@ -30,7 +30,7 @@ export function VenueSelectionDialog({
   organizationId,
 }: VenueSelectionDialogProps) {
   const { toast } = useToast();
-  const { updateOwner } = useUpdateOwnerMutations(organizationId);
+  const { updateOwner, fetchOrganizationOwners } = useOwnerStore();
   const [selectedVenues, setSelectedVenues] = useState<string[]>([]);
 
   // Atualiza o estado quando o modal abrir ou quando initialSelectedVenues mudar
@@ -51,10 +51,11 @@ export function VenueSelectionDialog({
   const handleSave = async () => {
     if (!ownerId) return;
     try {
-      await updateOwner.mutateAsync({
-        ownerId,
-        data: { venueIds: selectedVenues },
-      });
+      await updateOwner(ownerId, { venueIds: selectedVenues });
+      
+      // Atualiza a lista de proprietários após a atualização
+      await fetchOrganizationOwners(organizationId);
+      
       onOpenChange(false);
       showSuccessToast({
         title: "Espaços atualizados",
@@ -62,7 +63,6 @@ export function VenueSelectionDialog({
           "Os espaços do proprietário foram atualizados com sucesso.",
       });
     } catch (error) {
-      console.log(error);
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao atualizar os espaços.",

@@ -10,7 +10,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { UserList, User } from "@/components/ui/user-list";
 import { VenueList, Venue } from "@/components/ui/venue-list";
-import { PermissionManager } from "@/components/ui/permission-manager";
+import { PermissionManager } from "@/components/permissions/permission-manager";
 import { userViewPermissions, userEditPermissions, userProposalPermissions } from "@/types/permissions";
 
 // Mock data

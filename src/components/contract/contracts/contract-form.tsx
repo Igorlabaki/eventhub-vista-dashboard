@@ -15,9 +15,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ClauseList } from "@/components/ui/clause-list"
-import { Clause, Contract } from "@/types/contract"
+import { ClauseList } from "@/components/contract/clauses/clause-list"
+import { Contract } from "@/types/contract"
 import { Venue } from "@/components/ui/venue-list"
+import { Clause } from "@/types/clause"
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),

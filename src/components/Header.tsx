@@ -11,11 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarNav } from "./SidebarNav";
-import { useUser } from "@/hooks/user/queries/byId";
-import { useGetOrganizationById } from "@/hooks/organization/queries/getById";
-import { useGetVenueById } from "@/hooks/venue/queries/getById";
+import { useOrganizationStore } from "@/store/organizationStore";
 import { authService } from "@/services/auth.service";
 import { useQueryClient } from "@tanstack/react-query";
+import { useUserStore } from "@/store/userStore";
+import { useVenueStore } from "@/store/venueStore";
 
 interface HeaderProps {
   title?: string;
@@ -23,11 +23,11 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
-  const { data: user } = useUser();
+  const user = useUserStore((state) => state.user);
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
-  const queryClient = useQueryClient();
+  
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Verifica se está em uma rota de organização ou venue
@@ -39,20 +39,30 @@ export function Header({ title, subtitle }: HeaderProps) {
   const venueId = isVenueRoute ? params.id : undefined;
 
   // Busca os dados da organização ou venue
-  const { data: organization } = useGetOrganizationById(organizationId || '');
-  const { data: venue } = useGetVenueById(venueId || '');
+  const { currentOrganization, fetchOrganizationById } = useOrganizationStore();
+  const { selectedVenue, fetchVenueById } = useVenueStore();
+
+  useEffect(() => {
+    if (isVenueRoute && venueId && user?.id) {
+      fetchVenueById(venueId, user.id);
+    }
+  }, [isVenueRoute, venueId, user?.id, fetchVenueById]);
+
+  useEffect(() => {
+    if (organizationId) {
+      fetchOrganizationById(organizationId);
+    }
+  }, [organizationId, fetchOrganizationById]);
 
   // Define o título dinâmico baseado na rota
   const dynamicTitle = isOrganizationRoute 
-    ? organization?.name 
+    ? currentOrganization?.name 
     : isVenueRoute 
-      ? venue?.name 
+      ? selectedVenue?.name 
       : title;
 
   const logout = () => {
     authService.logout();
-    queryClient.invalidateQueries({ queryKey: ['user'] });
-    queryClient.invalidateQueries({ queryKey: ['organizations'] });
     navigate("/login");
   };
 

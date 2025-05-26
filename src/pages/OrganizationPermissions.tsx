@@ -3,27 +3,21 @@ import { useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { Venue } from "@/components/ui/venue-list";
-import { PermissionManager } from "@/components/ui/permission-manager";
+import { PermissionManager } from "@/components/permissions/permission-manager";
 import { PageHeader } from "@/components/PageHeader";
 import { UserOrganizationList } from "@/components/permissions/UserOrganizationList";
 import { VenuePermissionsList } from "@/components/permissions/VenuePermissionsList";
-import { PermissionForm } from "@/components/permissions/PermissionForm";
-import { User } from "@/components/ui/user-list";
 import { UserOrganization } from "@/types/userOrganization";
 import {
   userViewPermissions,
   userEditPermissions,
   userProposalPermissions,
 } from "@/types/permissions";
-import { useGetUserOrganizationOwnersList } from "@/hooks/user-organization/queries/list";
-import { useGetVenuesList } from "@/hooks/venue/queries/list";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
 import { showSuccessToast } from "@/components/ui/success-toast";
-import { useUserByEmail } from "@/hooks/user/queries/byEmail";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { userService } from "@/services/user.service";
 import {
   Dialog,
   DialogContent,
@@ -31,12 +25,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
+import { useUserOrganizationStore } from "@/store/userOrganizationStore";
+import { useVenueStore } from "@/store/venueStore";
+import { useUserStore } from "@/store/userStore";
 
 type UserPermissionState = {
   [userId: string]: {
     [venueId: string]: {
       id: string;
       permissions: string[] | string;
+      role: string;
     };
   };
 };
@@ -65,21 +63,43 @@ export default function OrganizationPermissions() {
   const [debouncedEmail, setDebouncedEmail] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
 
+  // Stores
+  const { 
+    userOrganizations, 
+    isLoading: isLoadingUsers,
+    fetchUserOrganizations,
+    deleteUserOrganization,
+  } = useUserOrganizationStore();
+
+  const {
+    venues,
+    isLoading: isLoadingVenues,
+    fetchVenues
+  } = useVenueStore();
+
+  const {
+    searchUserByEmail,
+    searchedUser,
+    isLoading: isUserLoading
+  } = useUserStore();
+
+  // Fetch data
+  useEffect(() => {
+    if (organizationId) {
+      fetchUserOrganizations(organizationId);
+      fetchVenues(organizationId);
+    }
+  }, [organizationId, fetchUserOrganizations, fetchVenues]);
+
   // Debounce para busca de e-mail
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedEmail(searchEmail);
+      if (searchEmail) {
+        searchUserByEmail(searchEmail);
+      }
     }, 400);
     return () => clearTimeout(handler);
-  }, [searchEmail]);
-
-  // Queries
-  const { data: userOrganizations, isLoading: isLoadingUsers } =
-    useGetUserOrganizationOwnersList(organizationId || "");
-  const { data: venues = [], isLoading: isLoadingVenues } = useGetVenuesList(
-    organizationId || ""
-  );
-  const { data: user, isLoading: isUserLoading } = useUserByEmail(debouncedEmail);
+  }, [searchEmail, searchUserByEmail]);
 
   // Transformar as permissões da API para o formato esperado pelo componente
   useEffect(() => {
@@ -92,6 +112,7 @@ export default function OrganizationPermissions() {
           permissions[org.user.id][permission.venueId || ""] = {
             id: permission.id,
             permissions: permission.permissions,
+            role: permission.role,
           };
         });
       });
@@ -123,6 +144,7 @@ export default function OrganizationPermissions() {
         id:
           updated[selectedUserOrganization.user.id][selectedVenue.id]?.id || "",
         permissions: newPermissions,
+        role: "",
       };
 
       return updated;
@@ -141,135 +163,169 @@ export default function OrganizationPermissions() {
     }
   };
 
+  const handleDeleteUserOrganization = async (userOrganization) => {
+    try {
+      await deleteUserOrganization(userOrganization.id);
+      showSuccessToast({
+        title: "Usuário removido",
+        description: "O usuário foi removido com sucesso da organização.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao remover o usuário.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Render the appropriate view based on state
   const renderContent = () => {
-    // Users list view
-    if (view === "users") {
-      return (
-        <>
-          <PageHeader
-            title="Permissões"
-            count={userOrganizations?.length || 0}
-            onCreateClick={() => setAddUserDialogOpen(true)}
-            createButtonText="Adicionar Usuário"
-          />
+    return (
+      <div className="relative min-h-screen">
+        {/* Users list view */}
+        <div className={cn(
+          "transition-all duration-300 ease-in-out h-[90vh]",
+          view === "users" ? "opacity-100 scale-100 w-full" : "opacity-0 scale-95 absolute w-full"
+        )}>
+          {view === "users" && (
+            <>
+              <PageHeader
+                isFormOpen={addUserDialogOpen}
+                title="Permissões"
+                count={userOrganizations?.length || 0}
+                onCreateClick={() => setAddUserDialogOpen(true)}
+                createButtonText="Adicionar Usuário"
+              />
 
-          <UserOrganizationList
-            userOrganizations={userOrganizations || []}
-            onUserClick={handleUserClick}
-            isLoading={isLoadingUsers}
-            onCreateClick={() => setAddUserDialogOpen(true)}
-          />
-          {/* Modal de adicionar usuário */}
-          {addUserDialogOpen && (
-            <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
-              <DialogContent className="w-[90%] md:w-[50%] rounded-md">
-                <DialogHeader>
-                  <DialogTitle>Buscar usuário por e-mail</DialogTitle>
-                </DialogHeader>
-                <Input
-                  value={searchEmail}
-                  onChange={e => setSearchEmail(e.target.value)}
-                  placeholder="Digite o e-mail do usuário"
-                  className="mb-2"
-                />
-                {isUserLoading && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500 transition-opacity duration-300 opacity-100">
-                    <Loader2 className="animate-spin" size={18} />
-                    Buscando...
-                  </div>
-                )}
-                {user && !selectedUser && (
-                  <div className="border rounded p-3 flex flex-col gap-2 mt-2 bg-gray-50 transition-all duration-300 animate-fade-in">
-                    <div>
-                      <strong>{user.username}</strong> ({user.email})
-                    </div>
-                    <Button
-                      onClick={() => {
-                        setSearchEmail("");
-                        setDebouncedEmail("");
-                        setAddUserDialogOpen(false);
-                        handleUserClick({
-                          id: "",
-                          user: user,
-                          userId: user.id,
-                          organizationId: organizationId || "",
-                          joinedAt: new Date(),
-                          organization: {
-                            id: organizationId || "",
-                            name: "",
-                            createdAt: "",
-                            venues: []
-                          },
-                          userPermissions: []
-                        });
-                      }}
-                    >
-                      Selecionar este usuário
-                    </Button>
-                  </div>
-                )}
-                {!isUserLoading && !user && searchEmail && (
-                  <div className="text-sm text-red-500 mt-2">
-                    Usuário não encontrado.
-                  </div>
-                )}
-              </DialogContent>
-            </Dialog>
+              <UserOrganizationList
+                userOrganizations={userOrganizations || []}
+                onUserClick={handleUserClick}
+                isLoading={isLoadingUsers}
+                onCreateClick={() => setAddUserDialogOpen(true)}
+                onDeleteUserOrganization={handleDeleteUserOrganization}
+              />
+              {/* Modal de adicionar usuário */}
+              {addUserDialogOpen && (
+                <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
+                  <DialogContent className="w-[90%] md:w-[50%] rounded-md">
+                    <DialogHeader>
+                      <DialogTitle>Buscar usuário por e-mail</DialogTitle>
+                    </DialogHeader>
+                    <Input
+                      value={searchEmail}
+                      onChange={e => setSearchEmail(e.target.value)}
+                      placeholder="Digite o e-mail do usuário"
+                      className="mb-2"
+                    />
+                    {isUserLoading && (
+                      <div className="flex items-center gap-2 text-sm text-gray-500 transition-opacity duration-300 opacity-100">
+                        <Loader2 className="animate-spin" size={18} />
+                        Buscando...
+                      </div>
+                    )}
+                    {searchedUser && !selectedUser && (
+                      <div className="border rounded p-3 flex flex-col gap-2 mt-2 bg-gray-50 transition-all duration-300 animate-fade-in">
+                        <div>
+                          <strong>{searchedUser.username}</strong> ({searchedUser.email})
+                        </div>
+                        <Button
+                          onClick={() => {
+                            setSearchEmail("");
+                            setDebouncedEmail("");
+                            setAddUserDialogOpen(false);
+                            handleUserClick({
+                              id: "",
+                              user: searchedUser,
+                              userId: searchedUser.id,
+                              organizationId: organizationId || "",
+                              joinedAt: new Date(),
+                              organization: {
+                                id: organizationId || "",
+                                name: "",
+                                createdAt: "",
+                                venues: [],
+                                owners: [],
+                                clauses: [],
+                                contracts: [],
+                                attachments: []
+                              },
+                              userPermissions: []
+                            });
+                          }}
+                        >
+                          Selecionar este usuário
+                        </Button>
+                      </div>
+                    )}
+                    {!isUserLoading && !searchedUser && searchEmail && (
+                      <div className="text-sm text-red-500 mt-2">
+                        Usuário não encontrado.
+                      </div>
+                    )}
+                  </DialogContent>
+                </Dialog>
+              )}
+            </>
           )}
-        </>
-      );
-    }
+        </div>
 
-    // Venues list view
-    if (view === "venues" && selectedUserOrganization) {
-      return (
-        <VenuePermissionsList
-          venues={venues}
-          onVenueClick={handleVenueClick}
-          onBackClick={goBack}
-          userPermissions={Object.fromEntries(
-            Object.entries(
-              userPermissions[selectedUserOrganization.user.id] || {}
-            ).map(([venueId, obj]) => [
-              venueId,
-              Array.isArray(obj.permissions)
-                ? obj.permissions
-                : typeof obj.permissions === "string"
-                ? obj.permissions.replace(/\s+/g, "").split(",")
-                : [],
-            ])
+        {/* Venues list view */}
+        <div className={cn(
+          "transition-all duration-300 ease-in-out",
+          view === "venues" ? "opacity-100 scale-100 w-full" : "opacity-0 scale-95 absolute w-full"
+        )}>
+          {view === "venues" && selectedUserOrganization && (
+            <VenuePermissionsList
+              venues={venues}
+              onVenueClick={handleVenueClick}
+              onBackClick={goBack}
+              userPermissions={Object.fromEntries(
+                Object.entries(
+                  userPermissions[selectedUserOrganization.user.id] || {}
+                ).map(([venueId, obj]) => [
+                  venueId,
+                  {
+                    permissions: Array.isArray(obj.permissions)
+                      ? obj.permissions
+                      : typeof obj.permissions === "string"
+                      ? obj.permissions.replace(/\s+/g, "").split(",")
+                      : [],
+                    role: obj.role || "user"
+                  }
+                ])
+              )}
+              title={`Permissões para ${selectedUserOrganization.user.username}`}
+              subtitle="Selecione um espaço para gerenciar as permissões:"
+            />
           )}
-          title={`Permissões para ${selectedUserOrganization.user.username}`}
-          subtitle="Selecione um espaço para gerenciar as permissões:"
-        />
-      );
-    }
+        </div>
 
-    // Permissions management view
-    if (view === "permissions" && selectedUserOrganization && selectedVenue) {
-      const userPermissionObj =
-        userPermissions[selectedUserOrganization.user.id]?.[selectedVenue.id];
-      return (
-        <PermissionManager
-          userId={selectedUserOrganization.user.id}
-          userName={selectedUserOrganization.user.username}
-          venueId={selectedVenue.id}
-          userOrganizationId={selectedUserOrganization.id}
-          organizationId={organizationId || ""}
-          venueName={selectedVenue.name}
-          viewPermissions={userViewPermissions}
-          editPermissions={userEditPermissions}
-          proposalPermissions={userProposalPermissions}
-          userPermissions={userPermissions}
-          userPermissionId={userPermissionObj?.id}
-          onGoBack={goBack}
-          onSavePermissions={handleSavePermissions}
-        />
-      );
-    }
-
-    return null;
+        {/* Permissions management view */}
+        <div className={cn(
+          "transition-all duration-300 ease-in-out",
+          view === "permissions" ? "opacity-100 scale-100 w-full" : "opacity-0 scale-95 absolute w-full"
+        )}>
+          {view === "permissions" && selectedUserOrganization && selectedVenue && (
+            <PermissionManager
+              userId={selectedUserOrganization.user.id}
+              userName={selectedUserOrganization.user.username}
+              venueId={selectedVenue.id}
+              userOrganizationId={selectedUserOrganization.id}
+              organizationId={organizationId || ""}
+              venueName={selectedVenue.name}
+              viewPermissions={userViewPermissions}
+              editPermissions={userEditPermissions}
+              proposalPermissions={userProposalPermissions}
+              userPermissions={userPermissions}
+              userPermissionId={userPermissions[selectedUserOrganization.user.id]?.[selectedVenue.id]?.id}
+              onGoBack={goBack}
+              onSavePermissions={handleSavePermissions}
+            />
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
