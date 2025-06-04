@@ -31,7 +31,7 @@ export default function VenueNotifications() {
   // Exemplo de navegação ao clicar (ajuste conforme sua regra)
   const handleNotificationClick = (proposalId?: string) => {
     if (proposalId) {
-      navigate(`/venue/budgets?id=${proposalId}&action=view`);
+      navigate(`/proposal/${proposalId}`);
     }
   };
 

@@ -80,7 +80,6 @@ export default function OrganizationVenues() {
       <div className="flex flex-col h-full">
         <PageHeader
           isFormOpen={showForm}
-          title="Espaços"
           count={venues.length}
           onCreateClick={() => setShowForm(true)}
           createButtonText="Novo Espaço"

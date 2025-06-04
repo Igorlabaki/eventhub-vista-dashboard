@@ -99,12 +99,10 @@ export const useVenueReportsStore = create<VenueReportsStore>((set, get) => ({
 
       // Se tiver cache válido, usa ele
       if (cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
-        console.log("Using cached events data");
         set({ monthlyEventsData: cachedData.data });
         return;
       }
 
-      console.log("Fetching fresh events data");
       set({ isLoading: true, error: null });
 
       const response = await venueService.getVenueAnalysisByMonth({ 
@@ -142,12 +140,10 @@ export const useVenueReportsStore = create<VenueReportsStore>((set, get) => ({
 
       // Se tiver cache válido, usa ele
       if (cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
-        console.log("Using cached budgets data");
         set({ monthlyBudgetsData: cachedData.data });
         return;
       }
 
-      console.log("Fetching fresh budgets data");
       set({ isLoading: true, error: null });
 
       const response = await venueService.getVenueAnalysisByMonth({ 
@@ -184,12 +180,10 @@ export const useVenueReportsStore = create<VenueReportsStore>((set, get) => ({
 
       // Se tiver cache válido, usa ele
       if (cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
-        console.log("Using cached events traffic data");
         set({ trafficEventsData: cachedData.data });
         return;
       }
 
-      console.log("Fetching fresh events traffic data");
       set({ isLoading: true, error: null });
 
       const response = await venueService.getVenueTrafficCount({ 
@@ -227,12 +221,10 @@ export const useVenueReportsStore = create<VenueReportsStore>((set, get) => ({
 
       // Se tiver cache válido, usa ele
       if (cachedData && (now - cachedData.timestamp) < CACHE_DURATION) {
-        console.log("Using cached budgets traffic data");
         set({ trafficBudgetsData: cachedData.data });
         return;
       }
 
-      console.log("Fetching fresh budgets traffic data");
       set({ isLoading: true, error: null });
 
       const response = await venueService.getVenueTrafficCount({ 

@@ -10,6 +10,8 @@ import {
   ExpenseAnalysisParams,
   ExpenseAnalysisResponse,
   ExpenseAnalysis,
+  CreateExpenseDTO,
+  UpdateExpenseDTO,
 } from "@/types/expense";
 import { expenseService } from "@/services/expenseService";
 
@@ -20,8 +22,8 @@ interface ExpenseStore {
   expenseAnalysis: ExpenseAnalysis | null;
   setExpenses: (expenses: Expense[]) => void;
   fetchExpenses: (venueId: string, name?: string) => Promise<void>;
-  createExpense: (expense: Omit<Expense, "id">) => Promise<ExpenseCreateResponse>;
-  updateExpense: (expenseId: string, data: Partial<Expense>) => Promise<ExpenseUpdateResponse>;
+  createExpense: (expense: CreateExpenseDTO) => Promise<ExpenseCreateResponse>;
+  updateExpense: (expenseId: string, data: UpdateExpenseDTO) => Promise<ExpenseUpdateResponse>;
   deleteExpense: (expenseId: string, venueId: string) => Promise<ExpenseDeleteResponse>;
   fetchExpenseAnalysis: (params: ExpenseAnalysisParams) => Promise<void>;
   clearError: () => void;
@@ -59,7 +61,7 @@ export const useExpenseStore = create<ExpenseStore>((set, get) => ({
     }
   },
 
-  createExpense: async (expense) => {
+  createExpense: async (expense: CreateExpenseDTO) => {
     set({ isLoading: true, error: null });
     try {
       const response = await expenseService.create(expense);
@@ -77,7 +79,7 @@ export const useExpenseStore = create<ExpenseStore>((set, get) => ({
     }
   },
 
-  updateExpense: async (expenseId, data) => {
+  updateExpense: async (expenseId: string, data: UpdateExpenseDTO) => {
     set({ isLoading: true, error: null });
     try {
       const response = await expenseService.update({ expenseId, data });

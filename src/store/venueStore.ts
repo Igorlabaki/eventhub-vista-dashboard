@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Venue, ItemListVenueResponse, VenueListResponse, CreateVenueDTO, VenueCreateResponse, VenueDeleteResponse } from '@/types/venue';
+import { Venue, ItemListVenueResponse, VenueListResponse, CreateVenueDTO, VenueCreateResponse, VenueDeleteResponse, UpdateVenueDTO } from '@/types/venue';
 import { venueService } from '@/services/venue.service';
 import { AxiosError } from 'axios';
 import { BackendResponse } from '@/lib/error-handler';
@@ -18,7 +18,7 @@ interface VenueState {
   fetchVenues: (organizationId: string) => Promise<void>;
   fetchVenueById: (venueId: string, userId: string) => Promise<void>;
   createVenue: (data: CreateVenueDTO) => Promise<BackendResponse<Venue>>;
-  updateVenue: (venueId: string, data: Partial<CreateVenueDTO>) => Promise<void>;
+  updateVenue: (data: UpdateVenueDTO) => Promise<BackendResponse<Venue>>;
   deleteVenue: (id: string) => Promise<BackendResponse<void>>;
 }
 
@@ -79,14 +79,15 @@ export const useVenueStore = create<VenueState>((set) => ({
     }
   },
 
-  updateVenue: async (venueId: string, data: Partial<CreateVenueDTO>) => {
+  updateVenue: async ({venueId, userId, data}: UpdateVenueDTO) => {
     try {
       set({ isLoading: true, error: null });
-      await venueService.updateVenue(venueId, data);
-      if (data.organizationId) {
-        const response = await venueService.getAllVenues(data.organizationId);
-        set({ venues: response.data.venueList, isLoading: false });
-      }
+      const response = await venueService.updateVenue({
+        venueId,
+        userId,
+        data
+      });
+      return response;
     } catch (err: unknown) {
       const error = err as ApiError;
       set({ 

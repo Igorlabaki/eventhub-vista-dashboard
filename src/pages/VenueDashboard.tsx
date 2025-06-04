@@ -34,6 +34,7 @@ import { useGetGoals } from "@/hooks/goal/queries/useGetGoals";
 import { VenuePerformanceChart } from "@/components/venue/VenuePerformanceChart";
 import { VenuePerformanceChartAllMonths } from "@/components/venue/VenuePerformanceChartAllMonths";
 import { useVenueStore } from "@/store/venueStore";
+import { useGoalStore } from "@/store/goalStore";
 
 function VenueNotFound() {
   return (
@@ -63,16 +64,18 @@ export default function VenueDashboard() {
   // Mês inicial: atual (1-based para backend, mas select usa string)
   const currentMonth = (new Date().getMonth() + 1).toString();
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const years = Array.from({ length: 30 }, (_, i) => currentYear - 15 + i);
   const months = [
     "Todas",
     ...Array.from({ length: 12 }, (_, i) =>
       format(new Date(2000, i), "MMMM", { locale: ptBR })
     ),
   ];
-  const years = [2023, 2024, 2025];
 
   const { selectedVenue: venue, fetchVenueById, isLoading } = useVenueStore();
+  const { goals, fetchGoals, isLoading: isLoadingGoals } = useGoalStore();
   
   useEffect(() => {
     if (venueId && user?.id) {
@@ -80,14 +83,18 @@ export default function VenueDashboard() {
     }
   }, [venueId, user?.id, fetchVenueById]);
 
+  useEffect(() => {
+    if (venueId) {
+      fetchGoals(venueId);
+    }
+  }, [venueId, fetchGoals]);
+
   const { data: venueDashBoardData, isLoading: isLoadingDashBoardData } =
     useGetVenueDashBoardData(venueId || "", {
       month: selectedMonth,
       year: selectedYear ? String(selectedYear) : undefined,
     });
 
-  const { data: goals } = useGetGoals({ venueId: venueId });
-  
   // Verifica se temos o ID do usuário
   if (!user?.id) {
     return (
@@ -117,8 +124,8 @@ export default function VenueDashboard() {
       {isLoading || isLoadingDashBoardData ? (
         <VenueDashboardSkeleton />
       ) : (
-        <>
-          <div className="mb-6">
+        <div className="bg-white rounded-md p-4 shadow-md">
+          <div className="mb-6 ">
             <h2 className="text-2xl font-semibold text-gray-900">Visão Geral</h2>
             <p className="text-gray-500 mt-1">Acompanhe os principais indicadores do seu espaço</p>
           </div>
@@ -226,7 +233,7 @@ export default function VenueDashboard() {
               )}
             </CardContent>
           </Card>
-        </>
+        </div>
       )}
     </DashboardLayout>
   );

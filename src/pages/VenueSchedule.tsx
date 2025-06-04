@@ -1,223 +1,364 @@
-
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
-import { pt } from "date-fns/locale";
+import { Plus, Users, CalendarDays, Clock, Trash } from "lucide-react";
+import { useDateEventStore } from "@/store/dateEventStore";
+import { DateEventType } from "@/types/dateEvent";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import { format } from "date-fns";
+import { parse } from "date-fns";
+import { startOfWeek } from "date-fns";
+import { getDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "@/styles/fullcalendar-google.css"; // Pode ser usado para customização extra
+import { formatInTimeZone } from 'date-fns-tz';
+import { AnimatedFormSwitcher } from '@/components/ui/animated-form-switcher';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { FormLayout } from '@/components/ui/form-layout';
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  Form,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/use-toast';
+import { handleBackendError, handleBackendSuccess } from '@/lib/error-handler';
+import { showSuccessToast } from '@/components/ui/success-toast';
+import { useVenueStore } from "@/store/venueStore";
+import { useUserStore } from "@/store/userStore";
+import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog';
+
+const locales = {
+  "pt-BR": ptBR,
+};
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 0 }),
+  getDay,
+  locales,
+});
+
+const eventColors = {
+  [DateEventType.EVENT]: "#2563eb",
+  [DateEventType.VISIT]: "#22c55e",
+  [DateEventType.OTHER]: "#ef4444",
+};
+
+const eventFormSchema = z.object({
+  title: z.string().min(1, 'Título obrigatório'),
+  startDay: z.string().min(1, 'Data inicial obrigatória'),
+  startHour: z.string().min(1, 'Hora inicial obrigatória'),
+  endDay: z.string().min(1, 'Data final obrigatória'),
+  endHour: z.string().min(1, 'Hora final obrigatória'),
+  type: z.string().default("OTHER"),
+  venueId: z.string(),
+  proposalId: z.string().optional(),
+  userId: z.string(),
+  username: z.string(),
+}).refine(
+  (data) => new Date(data.startDay) <= new Date(data.endDay),
+  {
+    message: "A data final deve ser igual ou posterior à data inicial",
+    path: ["endDay"],
+  }
+);
+type EventFormValues = z.infer<typeof eventFormSchema>;
 
 export default function VenueSchedule() {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  
-  const events = [
-    {
-      id: "1",
-      title: "Casamento Silva",
-      start: new Date(2025, 5, 15),
-      end: new Date(2025, 5, 16),
-      type: "wedding",
+  const { dateEvents, fetchDateEvents, isLoading, createOvernightEvent, deleteDateEvent } = useDateEventStore();
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const { selectedVenue } = useVenueStore();
+  const { user } = useUserStore();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  useEffect(() => {
+    fetchDateEvents();
+  }, []);
+  console.log(dateEvents)
+  // Formulário de criação de evento
+  const form = useForm<EventFormValues>({
+    resolver: zodResolver(eventFormSchema),
+    defaultValues: {
+      title: '',
+      startDay: '',
+      startHour: '',
+      endDay: '',
+      endHour: '',
+      type: 'OTHER',
+      userId: user?.id,
+      username: user?.username,
+      venueId: selectedVenue.id,
     },
-    {
-      id: "2",
-      title: "Aniversário 15 anos - Maria",
-      start: new Date(2025, 5, 22),
-      end: new Date(2025, 5, 22),
-      type: "birthday",
-    },
-    {
-      id: "3",
-      title: "Visita Agendada - João e Ana",
-      start: new Date(2025, 5, 10, 14, 30),
-      end: new Date(2025, 5, 10, 16, 0),
-      type: "visit",
-    },
-    {
-      id: "4",
-      title: "Reunião - Fornecedores",
-      start: new Date(2025, 5, 5, 10, 0),
-      end: new Date(2025, 5, 5, 11, 30),
-      type: "meeting",
-    },
-    {
-      id: "5",
-      title: "Manutenção - Jardim",
-      start: new Date(2025, 5, 8),
-      end: new Date(2025, 5, 8),
-      type: "maintenance",
-    },
-  ];
+  });
 
-  const previousMonth = () => {
-    setCurrentMonth(subMonths(currentMonth, 1));
-  };
-
-  const nextMonth = () => {
-    setCurrentMonth(addMonths(currentMonth, 1));
-  };
-
-  // Dias do mês atual
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
-  
-  // Função para verificar se um dia tem eventos
-  const getDayEvents = (day) => {
-    return events.filter(event => 
-      day.getDate() === event.start.getDate() && 
-      day.getMonth() === event.start.getMonth() && 
-      day.getFullYear() === event.start.getFullYear()
-    );
-  };
-
-  // Função para obter a cor com base no tipo do evento
-  const getEventColor = (type) => {
-    switch (type) {
-      case "wedding":
-        return "bg-pink-500";
-      case "birthday":
-        return "bg-purple-500";
-      case "visit":
-        return "bg-blue-500";
-      case "meeting":
-        return "bg-amber-500";
-      case "maintenance":
-        return "bg-green-500";
-      default:
-        return "bg-gray-500";
+  async function onSubmit(data: EventFormValues) {
+    console.log(data)
+    try {
+      const response = await createOvernightEvent({
+        userId: data.userId,
+        username: data.username,
+        venueId: data.venueId,
+        proposalId: data.proposalId || undefined,
+        data:{
+          title: data.title,
+          startDay: data.startDay,
+          endDay: data.endDay,
+          startHour: data.startHour,
+          endHour: data.endHour,
+          type: data.type as DateEventType,
+        }
+      });
+      const { title, message } = handleBackendSuccess(response, 'Data criada com sucesso!');
+      showSuccessToast({ title, description: message });
+      await fetchDateEvents();
+      setShowForm(false);
+      form.reset();
+    } catch (error: unknown) {
+      const { title, message } = handleBackendError(error, 'Erro ao criar data. Tente novamente mais tarde.');
+      toast({ title, description: message, variant: 'destructive' });
     }
-  };
+  }
 
-  // Preenche arrays vazios para os dias da semana antes do início do mês
-  const firstDayOfMonth = getDay(monthStart);
-  const emptyDaysBefore = Array.from({ length: firstDayOfMonth }, (_, i) => null);
-  
-  // Dias da semana em português
-  const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const events = useMemo(
+    () =>
+      dateEvents.map((event) => ({
+        id: event.id,
+        title: event.title,
+        start: new Date(event.startDate),
+        end: new Date(event.endDate),
+        allDay: false,
+        resource: event,
+      })),
+    [dateEvents]
+  );
+
+  function eventStyleGetter(event) {
+    const color = eventColors[event.resource.type] || "#6b7280";
+    return {
+      style: {
+        backgroundColor: color,
+        borderRadius: "8px",
+        color: "#fff",
+        border: "none",
+        display: "block",
+        fontWeight: 500,
+        fontSize: "0.95rem",
+        boxShadow: "0 1px 4px 0 rgba(60,64,67,.10)",
+      },
+    };
+  }
+
+  // Formulário de criação de evento
+  const eventForm = (
+    <FormLayout
+      title="Nova Data"
+      onSubmit={onSubmit}
+      onCancel={() => setShowForm(false)}
+      isSubmitting={form.formState.isSubmitting}
+      form={form}
+    >
+      <div className="space-y-4">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Título</FormLabel>
+              <FormControl>
+                <Input placeholder="Título" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="flex gap-2">
+          <FormField
+            control={form.control}
+            name="startDay"
+            render={({ field }) => (
+              <FormItem className="w-1/2">
+                <FormLabel>Data Inicial</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="startHour"
+            render={({ field }) => (
+              <FormItem className="w-1/2">
+                <FormLabel>Hora Inicial</FormLabel>
+                <FormControl>
+                  <Input type="time" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex gap-2">
+          <FormField
+            control={form.control}
+            name="endDay"
+            render={({ field }) => (
+              <FormItem className="w-1/2">
+                <FormLabel>Data Final</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="endHour"
+            render={({ field }) => (
+              <FormItem className="w-1/2">
+                <FormLabel>Hora Final</FormLabel>
+                <FormControl>
+                  <Input type="time" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      </div>
+    </FormLayout>
+  );
+
+  // Calendário + detalhes
+  const calendar = (
+    <>
+      <div className="flex justify-end mb-6">
+        <Button className="bg-eventhub-primary hover:bg-eventhub-primary/90 text-white font-semibold shadow-md px-6 py-2 rounded-lg" onClick={() => setShowForm(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Data
+        </Button>
+      </div>
+      <Card className="shadow-lg border-0">
+        <CardContent className="p-4">
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: 600 }}
+            messages={{
+              next: 'Próximo',
+              previous: 'Anterior',
+              today: 'Hoje',
+              month: 'Mês',
+              week: 'Semana',
+              day: 'Dia',
+              agenda: 'Agenda',
+              date: 'Data',
+              time: 'Hora',
+              event: 'Evento',
+              noEventsInRange: 'Nenhum evento neste período.'
+            }}
+            views={['month']}
+            onSelectEvent={event => setSelectedEvent(event.resource)}
+            onSelectSlot={() => setSelectedEvent(null)}
+            eventPropGetter={eventStyleGetter}
+            popup
+            toolbar={true}
+            selectable={false}
+            components={{
+              toolbar: (props) => (
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <button onClick={() => props.onNavigate('PREV')} className="px-2 py-1 rounded hover:bg-gray-100 mr-2">&#8592;</button>
+                    <button onClick={() => props.onNavigate('NEXT')} className="px-2 py-1 rounded hover:bg-gray-100">&#8594;</button>
+                  </div>
+                  <div className="text-lg font-bold uppercase tracking-wide">{format(props.label, 'MMMM yyyy', { locale: ptBR })}</div>
+                  <div></div>
+                </div>
+              )
+            }}
+          />
+        </CardContent>
+      </Card>
+      {/* Detalhes do evento selecionado */}
+      {selectedEvent && (
+        <div className="mt-6 flex flex-col items-center">
+          <Card className="w-full bg-white border-0 shadow-lg">
+            <CardContent className="p-6 flex flex-col items-center gap-4 relative">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="text-lg font-bold">{selectedEvent.title}</div>
+                <button
+                  type="button"
+                  className="absolute top-3 right-3 ml-2 text-gray-400 hover:text-red-700"
+                  onClick={() => setShowDeleteDialog(true)}
+                  title="Deletar data"
+                >
+                  <Trash className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex gap-8 text-sm mb-2">
+                <div className="flex items-center gap-2  font-medium">
+                  <Users className="w-5 h-5" />
+                  {selectedEvent.proposal?.guestNumber || "--"}
+                </div>
+                <div className="flex items-center gap-2  font-medium">
+                  <CalendarDays className="w-5 h-5" />
+                  {selectedEvent.startDate
+                    ? formatInTimeZone(selectedEvent.startDate, 'UTC', 'dd/MM/yyyy')
+                    : '--'}
+                </div>
+                <div className="flex items-center gap-2  font-medium">
+                  <Clock className="w-5 h-5" />
+                  {(selectedEvent.startDate && selectedEvent.endDate)
+                    ? (
+                      <>
+                        {formatInTimeZone(selectedEvent.startDate, 'UTC', 'HH:mm')}
+                        /
+                        {formatInTimeZone(selectedEvent.endDate, 'UTC', 'HH:mm')}
+                      </>
+                    )
+                    : '--'}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <ConfirmDeleteDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+            onConfirm={async () => {
+              setIsDeleting(true);
+              try {
+                await deleteDateEvent(selectedEvent.id);
+                await fetchDateEvents();
+                setSelectedEvent(null);
+              } finally {
+                setIsDeleting(false);
+              }
+            }}
+            entityName={selectedEvent.title}
+            entityType="data"
+            isPending={isDeleting}
+          />
+        </div>
+      )}
+    </>
+  );
 
   return (
     <DashboardLayout title="Agenda" subtitle="Visualize e gerencie sua agenda">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
-          <button 
-            onClick={previousMonth}
-            className="p-1 rounded-full hover:bg-gray-100"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <h3 className="text-xl font-semibold">
-            {format(currentMonth, "MMMM yyyy", { locale: pt })}
-          </h3>
-          <button 
-            onClick={nextMonth}
-            className="p-1 rounded-full hover:bg-gray-100"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Evento
-        </Button>
-      </div>
-      
-      <Card>
-        <CardContent className="p-4">
-          {/* Cabeçalho com os dias da semana */}
-          <div className="grid grid-cols-7 gap-2 mb-2">
-            {weekDays.map((day) => (
-              <div 
-                key={day}
-                className="text-center text-sm font-semibold text-gray-500 p-2"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-          
-          {/* Grade do calendário */}
-          <div className="grid grid-cols-7 gap-2">
-            {/* Dias vazios antes do início do mês */}
-            {emptyDaysBefore.map((_, index) => (
-              <div 
-                key={`empty-before-${index}`}
-                className="aspect-square p-1 border rounded-md bg-gray-50"
-              ></div>
-            ))}
-            
-            {/* Dias do mês */}
-            {monthDays.map((day) => {
-              const dayEvents = getDayEvents(day);
-              return (
-                <div 
-                  key={day.toString()}
-                  className="aspect-square p-1 border rounded-md hover:border-eventhub-primary hover:bg-eventhub-tertiary/10 transition-colors cursor-pointer"
-                >
-                  <div className="text-right text-sm font-medium mb-1">
-                    {format(day, "d")}
-                  </div>
-                  
-                  {/* Lista de eventos do dia */}
-                  <div className="space-y-1">
-                    {dayEvents.slice(0, 3).map((event) => (
-                      <div
-                        key={event.id}
-                        className="text-xs text-white px-1 py-0.5 rounded truncate"
-                        style={{ backgroundColor: getEventColor(event.type) }}
-                      >
-                        {event.title}
-                      </div>
-                    ))}
-                    
-                    {/* Indicador de mais eventos */}
-                    {dayEvents.length > 3 && (
-                      <div className="text-xs text-center text-gray-500">
-                        +{dayEvents.length - 3} mais
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-      
-      <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-4">Próximos eventos</h3>
-        
-        <div className="space-y-4">
-          {events
-            .filter(event => event.start >= new Date())
-            .sort((a, b) => a.start.getTime() - b.start.getTime())
-            .slice(0, 5)
-            .map(event => (
-              <Card key={event.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center">
-                    <div 
-                      className={`flex-shrink-0 w-4 h-full rounded-full mr-3 ${getEventColor(event.type)}`}
-                    ></div>
-                    <div className="flex-grow">
-                      <h4 className="font-medium">{event.title}</h4>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <CalendarDays className="h-3.5 w-3.5 mr-1" />
-                        {format(event.start, "dd/MM/yyyy")}
-                        {event.start.getHours() > 0 && (
-                          <span> às {format(event.start, "HH:mm")}</span>
-                        )}
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      Detalhes
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          }
-        </div>
-      </div>
+      <AnimatedFormSwitcher showForm={showForm} list={calendar} form={eventForm} />
     </DashboardLayout>
   );
 }

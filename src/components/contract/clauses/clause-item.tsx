@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
@@ -29,7 +28,7 @@ export function ClauseItem({ clause, onClick, isSelected, index }: ClauseItemPro
       )}
       onClick={handleClick}
     >
-      <CardContent className="flex items-center justify-between p-4" onClick={(e) => e.stopPropagation()}>
+      <CardContent className="flex items-center justify-between p-4">
         <span className="font-medium">{clause.title}</span>
         {index !== undefined && (
           <Badge variant="secondary" className="ml-2 text-xs">

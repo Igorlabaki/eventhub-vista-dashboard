@@ -17,7 +17,7 @@ export const expenseService = {
 
   async list(params: ListExpensesParams): Promise<Expense[]> {
     const { venueId, name } = params;
-    const response = await api.get(`/expense/list/${venueId}${name ? `/${name}` : ""}`);
+    const response = await api.get(`/expense/list?venueId=${venueId}${name ? `&name=${name}` : ""}`);
     return response.data;
   },
 

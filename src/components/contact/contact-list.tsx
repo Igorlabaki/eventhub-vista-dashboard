@@ -49,7 +49,7 @@ export function ContactList({ contacts, isLoading, onCreateClick, onEditClick, o
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Função</TableHead>
-                  <TableHead>WhatsApp</TableHead>
+                  <TableHead className="hidden md:table-cell">WhatsApp</TableHead>
                   <TableHead className="w-[100px] text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -72,7 +72,7 @@ export function ContactList({ contacts, isLoading, onCreateClick, onEditClick, o
                         {contact.role}
                       </span>
                     </TableCell>
-                    <TableCell>{contact.whatsapp}</TableCell>
+                    <TableCell className="hidden md:table-cell">{contact.whatsapp}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button

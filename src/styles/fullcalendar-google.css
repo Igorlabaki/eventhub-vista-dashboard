@@ -1,0 +1,71 @@
+/* fullcalendar-google.css */
+
+/* Cabeçalho do calendário */
+.fc .fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a202c;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+}
+.fc .fc-button {
+  background: #fff;
+  color: #2563eb;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-weight: 500;
+  box-shadow: none;
+  transition: background 0.2s, color 0.2s;
+}
+.fc .fc-button:hover, .fc .fc-button:focus {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+.fc .fc-button-primary:not(:disabled).fc-button-active, .fc .fc-button-primary:not(:disabled):active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+/* Dias da semana */
+.fc .fc-col-header-cell {
+  background: #f3f4f6;
+  color: #374151;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  padding: 0.5rem 0;
+}
+
+/* Células do calendário */
+.fc .fc-daygrid-day {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  transition: background 0.2s;
+}
+.fc .fc-daygrid-day:hover {
+  background: #f1f5f9;
+}
+
+/* Dia atual */
+.fc .fc-day-today {
+  background: #e0e7ff !important;
+  border: 1.5px solid #2563eb !important;
+}
+
+/* Eventos (ajuste extra) */
+.fc .fc-daygrid-event {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px 0 rgba(60,64,67,.10);
+  border: none;
+}
+
+/* Mais eventos */
+.fc .fc-daygrid-more-link {
+  color: #2563eb;
+  font-weight: 500;
+  font-size: 0.9rem;
+} 

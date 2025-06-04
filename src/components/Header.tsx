@@ -54,12 +54,7 @@ export function Header({ title, subtitle }: HeaderProps) {
     }
   }, [organizationId, fetchOrganizationById]);
 
-  // Define o título dinâmico baseado na rota
-  const dynamicTitle = isOrganizationRoute 
-    ? currentOrganization?.name 
-    : isVenueRoute 
-      ? selectedVenue?.name 
-      : title;
+
 
   const logout = () => {
     authService.logout();
@@ -81,7 +76,7 @@ export function Header({ title, subtitle }: HeaderProps) {
           </Button>
 
           <div className="ml-4">
-            {dynamicTitle && <h1 className="text-xl font-bold text-gray-800">{dynamicTitle}</h1>}
+            {title && <h1 className="text-xl font-bold text-gray-800">{title}</h1>}
             {subtitle && <p className="text-sm text-gray-500 hidden md:block">{subtitle}</p>}
           </div>
         </div>

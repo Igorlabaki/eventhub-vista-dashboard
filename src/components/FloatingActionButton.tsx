@@ -1,29 +1,18 @@
-
 import { Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface FloatingActionButtonProps {
   onClick: () => void;
-  label?: string;
-  className?: string;
 }
 
-export function FloatingActionButton({
-  onClick,
-  label = "Novo Orçamento",
-  className,
-}: FloatingActionButtonProps) {
+export function FloatingActionButton({ onClick }: FloatingActionButtonProps) {
   return (
-    <button
+    <Button
       onClick={onClick}
-      className={cn(
-        "fixed bottom-6 right-6 flex items-center gap-2 py-3 px-4 rounded-full bg-eventhub-primary text-white shadow-lg hover:bg-indigo-600 transition-colors",
-        "animate-fade-in",
-        className
-      )}
+      className="md:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+      size="icon"
     >
-      <Plus className="h-5 w-5" />
-      <span>{label}</span>
-    </button>
+      <Plus className="h-6 w-6" />
+    </Button>
   );
 }

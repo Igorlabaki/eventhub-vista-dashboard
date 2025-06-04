@@ -11,11 +11,8 @@ export function EventsReport({ selectedYear }: EventsReportProps) {
   const { id: venueId } = useParams<{ id: string }>();
   const { monthlyEventsData, trafficEventsData, fetchEventsData, fetchEventsTraffic, monthlyBudgetsData, fetchBudgetsData } = useVenueReportsStore();
 
-  console.log("EventsReport render", { venueId, selectedYear });
-
   const fetchData = useCallback(async () => {
     if (!venueId) return;
-    console.log("EventsReport useEffect", { venueId, selectedYear });
     await fetchEventsData({ venueId, year: selectedYear, approved: true });
     await fetchEventsTraffic({ venueId, year: selectedYear, approved: true });
     await fetchBudgetsData({ venueId, year: selectedYear, approved: false });
@@ -24,8 +21,6 @@ export function EventsReport({ selectedYear }: EventsReportProps) {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  console.log("EventsReport data", { monthlyEventsData, trafficEventsData });
 
   return (
     <ReportsChartCard

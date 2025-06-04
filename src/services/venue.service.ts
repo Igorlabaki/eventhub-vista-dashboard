@@ -15,7 +15,8 @@ import {
   TrafficSource,
   TrafficData,
   MonthData,
-  AnalysisData
+  AnalysisData,
+  UpdateVenueDTO
 } from '@/types/venue';
 
 export const venueService = {
@@ -34,8 +35,8 @@ export const venueService = {
     return response.data;
   },
 
-  updateVenue: async (venueId: string, data: Partial<CreateVenueDTO>) => {
-    const response = await api.put<VenueUpdateResponse>(`/venue/update`, { venueId, data });
+  updateVenue: async (data: UpdateVenueDTO) => {
+    const response = await api.put<VenueUpdateResponse>(`/venue/update`, data);
     return response.data;
   },
 

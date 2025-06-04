@@ -122,4 +122,17 @@ export interface ExpenseAnalysisResponse {
   data: ExpenseAnalysis;
   count: number;
   type: string;
-} 
+}
+
+export type CreateExpenseDTO = {
+  name: string;
+  description?: string;
+  amount: number;
+  paymentDate?: string;
+  type: ExpenseType;
+  category: ExpenseCategory;
+  recurring: boolean;
+  venueId: string;
+};
+
+export type UpdateExpenseDTO = Partial<CreateExpenseDTO>; 

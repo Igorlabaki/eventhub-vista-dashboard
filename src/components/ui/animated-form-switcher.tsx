@@ -9,12 +9,12 @@ interface AnimatedFormSwitcherProps {
 
 export function AnimatedFormSwitcher({ showForm, list, form, className = "" }: AnimatedFormSwitcherProps) {
   return (
-    <>
+    <div className={cn("relative flex justify-center", className)}>
       {/* Lista */}
       <div
         className={cn(
-          "transition-all duration-300 ease-in-out mb-0 pb-0",
-          !showForm ? "opacity-100 scale-100" : "opacity-0 scale-95 absolute"
+          "transition-all duration-300 ease-in-out w-full",
+          !showForm ? "opacity-100 scale-100" : "opacity-0 scale-95 hidden"
         )}
       >
         {list}
@@ -22,12 +22,12 @@ export function AnimatedFormSwitcher({ showForm, list, form, className = "" }: A
       {/* Formulário */}
       <div
         className={cn(
-          "transition-all duration-300 ease-in-out h-full",
-          showForm ? "opacity-100 scale-100" : "opacity-0 scale-95 absolute"
+          "transition-all duration-300 ease-in-out w-full",
+          showForm ? "opacity-100 scale-100" : "opacity-0 scale-95 hidden"
         )}
       >
         {form}
       </div>
-    </>
+    </div>
   );
 } 

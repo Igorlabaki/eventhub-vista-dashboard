@@ -15,7 +15,7 @@ import VenueDashboard from "./pages/VenueDashboard";
 import VenueBudgets from "./pages/VenueBudgets";
 import VenueNotifications from "./pages/VenueNotifications";
 import VenueWebsite from "./pages/VenueWebsite";
-import VenueVisits from "./pages/VenueVisits";
+import VenueWebsiteTexts from "./pages/website/VenueWebsiteTexts";
 import VenueEvents from "./pages/VenueEvents";
 import VenueReports from "./pages/VenueReports";
 import VenueSchedule from "./pages/VenueSchedule";
@@ -31,6 +31,19 @@ import ResetPassword from "./pages/ResetPassword";
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useBootstrapUser } from "@/hooks/useBootstrapUser";
+import VenueServices from "./pages/VenueServices";
+import ProposalDetails from "./pages/ProposalDetails";
+import ProposalEdit from "./pages/ProposalEdit";
+import ProposalHistory from "./pages/ProposalHistory";
+import { ProposalPayment } from "@/components/proposal/proposal-payment";
+import { ProposalSchedule } from "@/components/proposal/proposal-schedule";
+import ProposalAttendanceListPage from "./pages/ProposalAttendanceList";
+import { DateEventListPage } from "./pages/DateEventList";
+import { ScheduleListPage } from "./pages/ScheduleList";
+import ProposalDocuments from "./pages/ProposalDocuments";
+import VenueExpenses from "./pages/VenueExpenses";
+import VenueWebsiteFaq from "./pages/website/VenueWebsiteFaq";
+import VenueWebsiteImages from "./pages/website/VenueWebsiteImages";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +53,10 @@ function AppInitializer() {
   useBootstrapUser();
   return null;
 }
+
+const ProposalContact = () => <div>Entrar em contato</div>;
+const ProposalSend = () => <div>Enviar Orçamento</div>;
+const ProposalContract = () => <div>Enviar Contrato</div>;
 
 const App = () => {
   return (
@@ -65,9 +82,13 @@ const App = () => {
               <Route path="/venue/:id/notifications" element={<ProtectedRoute><VenueNotifications /></ProtectedRoute>} />
               <Route path="/venue/:id" element={<ProtectedRoute><VenueDashboard /></ProtectedRoute>} />
               <Route path="/venue/:id/website" element={<ProtectedRoute><VenueWebsite /></ProtectedRoute>} />
+              <Route path="/venue/:id/website/texts" element={<ProtectedRoute><VenueWebsiteTexts /></ProtectedRoute>} />
+              <Route path="/venue/:id/website/images" element={<ProtectedRoute><VenueWebsiteImages /></ProtectedRoute>} />
+              <Route path="/venue/:id/website/faq" element={<ProtectedRoute><VenueWebsiteFaq /></ProtectedRoute>} />
               <Route path="/venue/:id/budgets" element={<ProtectedRoute><VenueBudgets /></ProtectedRoute>} />
+              <Route path="/venue/:id/expenses" element={<ProtectedRoute><VenueExpenses /></ProtectedRoute>} />
               <Route path="/venue/:id/new-budget" element={<ProtectedRoute><NewBudget /></ProtectedRoute>} />
-              <Route path="/venue/:id/visits" element={<ProtectedRoute><VenueVisits /></ProtectedRoute>} />
+              <Route path="/venue/:id/services" element={<ProtectedRoute><VenueServices /></ProtectedRoute>} />
               <Route path="/venue/:id/events" element={<ProtectedRoute><VenueEvents /></ProtectedRoute>} />
               <Route path="/venue/:id/reports" element={<ProtectedRoute><VenueReports /></ProtectedRoute>} />
               <Route path="/venue/:id/schedule" element={<ProtectedRoute><VenueSchedule /></ProtectedRoute>} />
@@ -75,6 +96,18 @@ const App = () => {
               <Route path="/venue/:id/goals" element={<ProtectedRoute><VenueGoals /></ProtectedRoute>} />
               <Route path="/venue/:id/contacts" element={<ProtectedRoute><VenueContacts /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/proposal/:id" element={<ProtectedRoute><ProposalDetails /></ProtectedRoute>} />
+              <Route path="/proposal/:id/edit" element={<ProtectedRoute><ProposalEdit /></ProtectedRoute>} />
+              <Route path="/proposal/:id/history" element={<ProtectedRoute><ProposalHistory /></ProtectedRoute>} />
+              <Route path="/proposal/:id/contact" element={<ProtectedRoute><ProposalContact /></ProtectedRoute>} />
+              <Route path="/proposal/:id/send" element={<ProtectedRoute><ProposalSend /></ProtectedRoute>} />
+              <Route path="/proposal/:id/contract" element={<ProtectedRoute><ProposalContract /></ProtectedRoute>} />
+              <Route path="/proposal/:id/dates" element={<ProtectedRoute><DateEventListPage /></ProtectedRoute>} />
+              <Route path="/proposal/:id/payment" element={<ProtectedRoute><ProposalPayment /></ProtectedRoute>} />
+              <Route path="/proposal/:id/attendance-list" element={<ProtectedRoute><ProposalAttendanceListPage /></ProtectedRoute>} />
+              <Route path="/proposal/:id/program" element={<ProtectedRoute><ScheduleListPage /></ProtectedRoute>} />
+              <Route path="/proposal/:id/documents" element={<ProtectedRoute><ProposalDocuments /></ProtectedRoute>} />
+              <Route path="/proposal/:id/schedule" element={<ProtectedRoute><ScheduleListPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

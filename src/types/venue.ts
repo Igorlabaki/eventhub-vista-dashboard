@@ -54,6 +54,7 @@ export interface CreateVenueDTO {
     cep: string;
     email: string;
     name: string;
+    url?: string;
     city: string;
     state: string;
     street: string;
@@ -71,6 +72,33 @@ export interface CreateVenueDTO {
     pricePerPersonHour?: string;
     pricingModel: "PER_PERSON" | "PER_DAY" | "PER_PERSON_DAY" | "PER_PERSON_HOUR";
   };
+}
+
+export interface UpdateVenueDTO {
+  userId: string;
+  venueId: string;
+  data: {
+    cep?: string;
+    email?: string;
+    name?: string;
+    url?: string;
+    city?: string;
+    state?: string;
+    street?: string;
+    checkIn?: string;
+    maxGuest?: string;
+    checkOut?: string;
+    streetNumber?: string;
+    neighborhood?: string;
+    owners?: string[];
+    hasOvernightStay?: boolean;
+    complement?: string;
+    pricePerDay?: string;
+    pricePerPerson?: string;
+    pricePerPersonDay?: string;
+    pricePerPersonHour?: string;
+    pricingModel: "PER_PERSON" | "PER_DAY" | "PER_PERSON_DAY" | "PER_PERSON_HOUR";
+  }; 
 }
 
 export type ItemListVenueResponse = {

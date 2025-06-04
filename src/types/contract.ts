@@ -1,6 +1,13 @@
-import { Clause } from "./clause";
+import { Venue } from "@/components/ui/venue-list";
 import { Organization } from "./organization";
-import { Venue } from "./venue";
+
+export interface Clause {
+  id: string;
+  text: string;
+  title: string;
+  position: number;
+  contractId: string;
+}
 
 export interface Contract {
   id: string;
@@ -10,14 +17,18 @@ export interface Contract {
   organization: Organization;
   venues: Venue[];
   clauses: Clause[];
-};
+}
 
 export interface CreateContractDTO {
   title: string;
   name: string;
   organizationId?: string;
   venueIds?: string[];
-  clauses: Clause[];
+  clauses: {
+    text: string;
+    title: string;
+    position: number;
+  }[];
 }
 
 export interface UpdateContractDTO {
@@ -25,51 +36,60 @@ export interface UpdateContractDTO {
   name: string;
   contractId: string;
   venueIds: string[];
-  clauses: Clause[];
+  clauses: {
+    text: string;
+    title: string;
+    position: number;
+    id?: string;
+  }[];
+}
+
+export interface ListContractParams {
+  organizationId: string;
+  title?: string;
+  venueId?: string;
 }
 
 export interface ContractByIdResponse {
-  success: true,
-  message: string,
-  data: {
-    contract: Contract
-  },
-  count: number,
-  type: string
+  success: true;
+  message: string;
+  data: Contract;
+  count: number;
+  type: string;
 }
 
 export interface ContractListResponse {
-  success: true,
-  message: string,
+  success: true;
+  message: string;
   data: {
-    contractList: Contract[]
-  },
-  count: number,
-  type: string
+    contractList: Contract[];
+  };
+  count: number;
+  type: string;
 }
 
 export interface ContractCreateResponse {
-  success: true,
-  message: string,
-  data: Contract,
-  count: number,
-  type: string
+  success: true;
+  message: string;
+  data: Contract;
+  count: number;
+  type: string;
 }
 
 export interface ContractDeleteResponse {
-  success: true,
-  message: string,
-  data: Contract,
-  count: number,
-  type: string
+  success: true;
+  message: string;
+  data: Contract;
+  count: number;
+  type: string;
 }
 
 export interface ContractUpdateResponse {
-  success: true,
-  message: string,
-  data: Contract,
-  count: number,
-  type: string
+  success: true;
+  message: string;
+  data: Contract;
+  count: number;
+  type: string;
 }
 
 export type DynamicField =

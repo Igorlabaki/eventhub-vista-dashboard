@@ -14,6 +14,8 @@ import {
   CalendarDays,
   Settings,
   KeyRound,
+  Wrench,
+  Receipt,
 } from "lucide-react";
 import { Venue } from "@/types";
 
@@ -62,9 +64,14 @@ export function VenueNav({
       icon: ClipboardList,
     },
     {
-      title: "Visitas",
-      href: `/venue/${venue?.id}/visits`,
-      icon: MapPin,
+      title: "Despesas",
+      href: `/venue/${venue?.id}/expenses`,
+      icon: Receipt,
+    },
+    {
+      title: "Serviços",
+      href: `/venue/${venue?.id}/services`,
+      icon: Wrench,
     },
     {
       title: "Eventos",

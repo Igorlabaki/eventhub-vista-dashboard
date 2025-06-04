@@ -1,95 +1,83 @@
-
-import { 
-  Edit, 
-  History, 
-  MessageCircle, 
-  FileText, 
-  Calendar, 
-  DollarSign, 
-  Users, 
-  Clock, 
-  File 
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
+import { Proposal } from "@/types/proposal";
 
-interface BudgetSidebarProps {
+export interface BudgetSidebarProps {
   onBack: () => void;
-  budget: {
-    id: string;
-    clientName: string;
-    eventDate: Date;
-    eventType: string;
-    totalValue: number;
-    guestCount: number;
-    eventTime: string;
-    details: {
-      baseValue: number;
-      extraHour: number;
-      cleaning: number;
-      receptionist: number;
-      security: number;
-      valuePerPerson: number;
-      contactInfo: {
-        email: string;
-        whatsapp: string;
-        hasVisitedVenue: boolean;
-        referralSource: string;
-      };
-    };
-  };
+  proposal: Proposal;
 }
 
-export function BudgetSidebar({ onBack, budget }: BudgetSidebarProps) {
+export function BudgetSidebar({ onBack, proposal }: BudgetSidebarProps) {
   return (
-    <div className="w-64 bg-gray-900 text-white flex flex-col h-screen sticky top-0">
-      <div className="p-4 border-b border-gray-700">
-        <Button 
-          variant="ghost" 
-          onClick={onBack}
-          className="text-white hover:bg-gray-800 w-full justify-start"
-        >
-          ← Voltar para lista
-        </Button>
-      </div>
-      
-      <div className="p-4">
-        <h2 className="text-lg font-medium mb-1">{budget.clientName}</h2>
-        <p className="text-sm text-gray-400">{budget.eventType}</p>
-      </div>
-      
-      <div className="flex-1 overflow-auto">
-        <nav className="space-y-1 p-2">
-          <SidebarItem icon={Edit} label="Editar Orçamento" />
-          <SidebarItem icon={History} label="Ver Histórico" />
-          <SidebarItem icon={MessageCircle} label="Entrar em contato" />
-          <SidebarItem icon={FileText} label="Enviar Orçamento" />
-          <SidebarItem icon={File} label="Enviar Contrato" />
-          <SidebarItem icon={Calendar} label="Agendar Data" />
-          <SidebarItem icon={DollarSign} label="Efetuar Pagamento" disabled />
-          <SidebarItem icon={Users} label="Lista de Presença" disabled />
-          <SidebarItem icon={Clock} label="Programação" disabled />
-          <SidebarItem icon={File} label="Documentos" disabled />
-        </nav>
+    <div className="w-80 border-r bg-white p-6">
+      <Button variant="ghost" onClick={onBack} className="mb-6">
+        <ChevronLeft className="mr-2 h-4 w-4" />
+        Voltar
+      </Button>
+
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Cliente</h3>
+          <p className="mt-1 text-sm text-gray-900">{proposal.completeClientName}</p>
+          {proposal.completeCompanyName && (
+            <p className="mt-1 text-sm text-gray-900">{proposal.completeCompanyName}</p>
+          )}
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Email</h3>
+          <p className="mt-1 text-sm text-gray-900">{proposal.email}</p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">WhatsApp</h3>
+          <p className="mt-1 text-sm text-gray-900">{proposal.whatsapp}</p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Visitou o Local</h3>
+          <p className="mt-1 text-sm text-gray-900">
+            {proposal.knowsVenue ? "Sim" : "Não"}
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Fonte de Indicação</h3>
+          <p className="mt-1 text-sm text-gray-900">{proposal.trafficSource}</p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Tipo de Evento</h3>
+          <p className="mt-1 text-sm text-gray-900">{proposal.type}</p>
+        </div>
+
+        {proposal.cpf && (
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">CPF</h3>
+            <p className="mt-1 text-sm text-gray-900">{proposal.cpf}</p>
+          </div>
+        )}
+
+        {proposal.cnpj && (
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">CNPJ</h3>
+            <p className="mt-1 text-sm text-gray-900">{proposal.cnpj}</p>
+          </div>
+        )}
+
+        {proposal.street && (
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Endereço</h3>
+            <p className="mt-1 text-sm text-gray-900">
+              {proposal.street}, {proposal.streetNumber}
+              {proposal.neighborhood && ` - ${proposal.neighborhood}`}
+              {proposal.city && `, ${proposal.city}`}
+              {proposal.state && ` - ${proposal.state}`}
+              {proposal.cep && `, ${proposal.cep}`}
+            </p>
+          </div>
+        )}
       </div>
     </div>
-  );
-}
-
-interface SidebarItemProps {
-  icon: React.ElementType;
-  label: string;
-  disabled?: boolean;
-}
-
-function SidebarItem({ icon: Icon, label, disabled }: SidebarItemProps) {
-  return (
-    <Button 
-      variant="ghost" 
-      className={`w-full justify-start text-left ${disabled ? 'opacity-50' : 'hover:bg-gray-800'} text-white`}
-      disabled={disabled}
-    >
-      <Icon className="h-5 w-5 mr-2" />
-      {label}
-    </Button>
   );
 }

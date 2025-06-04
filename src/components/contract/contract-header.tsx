@@ -57,21 +57,20 @@ export function ContractHeader({
             CONTRATOS
           </TabsTrigger>
         </TabsList>
-        {!isFormOpen && (
-          <Button
-            className="
-              bg-violet-500 hover:bg-violet-600 text-white md:my-0
-              font-semibold px-3 py-2 rounded-lg shadow mx-2 md:mx-0 hidden md:block
-               md:w-auto text-sm hover:scale-105 active:scale-95 transition-all duration-200"
-            onClick={onActionClick}
-          >
-            {activeTab === "clausulas"
-              ? "Nova Cláusula"
-              : activeTab === "anexos"
-              ? "Novo Anexo"
-              : "Novo Contrato"}
-          </Button>
-        )}
+        {/* DEBUG: Forçar o botão a aparecer sempre */}
+        <Button
+          className="
+            bg-violet-500 hover:bg-violet-600 text-white md:my-0
+            font-semibold px-3 py-2 rounded-lg shadow mx-2 md:mx-0 hidden md:block
+             md:w-auto text-sm hover:scale-105 active:scale-95 transition-all duration-200"
+          onClick={onActionClick}
+        >
+          {activeTab === "clausulas"
+            ? "Nova Cláusula"
+            : activeTab === "anexos"
+            ? "Novo Anexo"
+            : "Novo Contrato"}
+        </Button>
       </div>
       {/* Botão flutuante mobile */}
       {!isFormOpen && (

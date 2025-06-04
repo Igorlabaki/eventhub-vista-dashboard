@@ -50,7 +50,7 @@ export function OrganizationCard({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const { deleteOrganization, updateOrganization, isLoading } = useOrganizationStore();
+  const { deleteOrganization,fetchOrganizationById, updateOrganization, isLoading } = useOrganizationStore();
   const { toast } = useToast();
 
   const editForm = useForm<UpdateOrganizationFormValues>({
@@ -58,7 +58,9 @@ export function OrganizationCard({
     defaultValues: { name },
   });
 
-  const handleViewVenues = () => {
+  const handleViewVenues = async () => {
+    await fetchOrganizationById(id);
+
     navigate(`/organization/${id}/venues`);
   };
 

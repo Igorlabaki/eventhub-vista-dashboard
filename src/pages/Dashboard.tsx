@@ -15,6 +15,7 @@ import { OrganizationList } from "@/components/organization/OrganizationList";
 import { useOrganizationStore } from "@/store/organizationStore";
 import { useUserStore } from "@/store/userStore";
 import { useToast } from "@/components/ui/use-toast";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function Dashboard() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -41,19 +42,12 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout title="Organizações" subtitle="Gerencie suas organizações">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg md:text-xl font-semibold text-gray-800 flex items-center gap-2">
-          <Building className="h-5 w-5 text-eventhub-primary" />
-          Suas Organizações ({organizations.length})
-        </h2>
-        <Button
-          onClick={() => setDialogOpen(true)}
-          className="bg-eventhub-primary hover:bg-indigo-600"
-        >
-          <Plus className="hidden md:block h-4 w-4 mr-2 text-sm md:text-base" />
-          Nova Organização
-        </Button>
-      </div>
+      <PageHeader
+        count={organizations.length}
+        onCreateClick={() => setDialogOpen(true)}
+        createButtonText="Nova Organização"
+        isFormOpen={dialogOpen}
+      />
       <FilterList
         items={organizations}
         filterBy={(org, query) =>

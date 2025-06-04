@@ -3,30 +3,31 @@ import { Venue } from "./venue";
 export interface Goal {
     id: string;
     minValue: number;
-    maxValue: number | null;
+    maxValue?: number;
     increasePercent: number;
     months: string;
     venueId: string;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: string;
+    updatedAt: string;
     venue?: Venue;
 }
 
 export interface CreateGoalDTO {
-    minValue: number;
-    maxValue?: number;
-    increasePercent: number;
-    months: string;
+    minValue: string;
+    maxValue?: string;
+    increasePercent: string;
+    months: string[];
     venueId: string;
 }
 
 export interface UpdateGoalDTO {
     goalId: string;
+    venueId: string;
     data: {
-        minValue?: number;
+        minValue: number;
         maxValue?: number;
-        increasePercent?: number;
-        months?: string;
+        increasePercent: number;
+        months: string;
     };
 }
 

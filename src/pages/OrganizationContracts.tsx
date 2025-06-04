@@ -21,46 +21,48 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { ContractHeader } from "@/components/contract/contract-header";
 import { ClauseSection } from "@/components/contract/clauses/clause-section";
-import { ClauseDialog } from "@/components/contract/clauses/clause-dialog";
 import { Clause } from "@/types/clause";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useToast } from "@/hooks/use-toast";
 import { AttachmentsSection } from "@/components/contract/attachments/attachments-section";
 import { useGetVenuesList } from "@/hooks/venue/queries/list";
 import { useClauseStore } from "@/store/clauseStore";
+import ContractSection from "@/components/contract/contracts/contract-section";
+import { useContractStore } from "@/store/contractStore";
+import { Venue } from "@/components/ui/venue-list";
+import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
 
-// Mock de anexos
-const mockContracts: Contract[] = [];
+type ContractClausePayload = { text: string; title: string; position: number };
+type ContractPayload = {
+  name: string;
+  title: string;
+  venues: Venue[];
+  clauses: ContractClausePayload[];
+  // outros campos se necessário
+};
 
 export default function OrganizationContracts() {
   const { id: organizationId } = useParams<{ id: string }>();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("clausulas");
   const { clauses, isLoading: isLoadingClauses, fetchClauses } = useClauseStore();
-  const [contracts, setContracts] = useState<Contract[]>(mockContracts);
-  const [isAttachmentDialogOpen, setIsAttachmentDialogOpen] = useState(false);
-  const [isContractDialogOpen, setIsContractDialogOpen] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null | undefined>(undefined);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreatingClause, setIsCreatingClause] = useState(false);
   const [selectedClause, setSelectedClause] = useState<Clause | null | undefined>(undefined);
   const { data: venues = [] } = useGetVenuesList(organizationId || "");
+  const [isCreatingContract, setIsCreatingContract] = useState(false);
+
+  const { contracts, isLoading: isLoadingContracts, fetchContracts, createContract, updateContract, deleteContract } = useContractStore();
 
   useEffect(() => {
     if (organizationId) {
       fetchClauses(organizationId);
+      fetchContracts({ organizationId });
     }
-  }, [organizationId, fetchClauses]);
+  }, [organizationId, fetchClauses, fetchContracts]);
 
-  const handleAttachmentClick = (attachment: Attachment) => {
-    setSelectedAttachment(attachment);
-  };
-
-  const handleContractClick = (contract: Contract) => {
-    setSelectedContract(contract);
-    setIsContractDialogOpen(true);
-  };
 
   const handleCreateClause = () => {
     setIsCreatingClause(true);
@@ -72,22 +74,63 @@ export default function OrganizationContracts() {
 
   const handleCreateContract = () => {
     setSelectedContract(null);
-    setIsContractDialogOpen(true);
+    setIsCreatingContract(true);
   };
 
-  const handleContractFormSubmit = (data: Partial<Contract>) => {
-    if (selectedContract) {
-      return;
-    } else {
-      // Criando novo contrato
-     
+  const handleContractFormSubmit = async (data: ContractPayload) => {
+    try {
+      let response;
+      if (selectedContract && selectedContract.id) {
+        // Atualizar contrato existente
+        response = await updateContract({
+          contractId: selectedContract.id,
+          name: data.name,
+          title: data.title,
+          venueIds: data.venues.map(v => v.id),
+          clauses: data.clauses,
+        });
+      } else {
+        // Criar novo contrato
+        response = await createContract({
+          name: data.name,
+          title: data.title,
+          organizationId: organizationId || "",
+          venueIds: data.venues.map(v => v.id),
+          clauses: data.clauses,
+        });
+        // Buscar lista completa após criar
+        await fetchContracts({ organizationId });
+      }
+      const { title, message } = handleBackendSuccess(response, selectedContract ? "Contrato atualizado com sucesso!" : "Contrato criado com sucesso!");
+      showSuccessToast({ title, description: message });
+      setIsCreatingContract(false);
+      setSelectedContract(null);
+    } catch (error: unknown) {
+      const { title, message } = handleBackendError(error, "Erro ao salvar contrato. Tente novamente mais tarde.");
+      toast({ title, description: message, variant: "destructive" });
     }
-    setIsContractDialogOpen(false);
   };
 
-  const handleAttachmentFormSubmit = (data: Partial<Attachment>) => {
-    // ... lógica de submit ...
-    setSelectedAttachment(undefined);
+  const handleContractClick = (contract: Contract) => {
+    setIsCreatingContract(true);
+    // Mapear venues para objetos completos
+    const fullVenues = venues.filter(v => contract.venues.some(cv => cv.id === v.id));
+    setSelectedContract({
+      ...contract,
+      venues: fullVenues,
+      clauses: contract.clauses, // Usar as cláusulas do contrato selecionado
+    });
+  };
+
+  const handleDeleteContract = async (contract: Contract) => {
+    try {
+      const response = await deleteContract(contract.id);
+      const { title, message } = handleBackendSuccess(response, "Contrato deletado com sucesso!");
+      showSuccessToast({ title, description: message });
+    } catch (error: unknown) {
+      const { title, message } = handleBackendError(error, "Erro ao deletar contrato. Tente novamente mais tarde.");
+      toast({ title, description: message, variant: "destructive" });
+    }
   };
 
   return (
@@ -106,7 +149,7 @@ export default function OrganizationContracts() {
           isFormOpen={
             (activeTab === "clausulas" && (isCreatingClause || selectedClause !== undefined)) ||
             (activeTab === "anexos" && selectedAttachment !== undefined) ||
-            (activeTab === "contratos" && selectedContract !== undefined)
+            (activeTab === "contratos" && (isCreatingContract || selectedContract !== undefined))
           }
         />
 
@@ -135,54 +178,23 @@ export default function OrganizationContracts() {
         </TabsContent>
 
         <TabsContent value="contratos" className="mt-6">
-          <div className="animate-fade-in transition-all duration-300">
-            {contracts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                <FileText className="h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-600 mb-2">Nenhum contrato encontrado</h3>
-                <p className="text-sm text-gray-500">
-                  Os contratos da organização serão exibidos aqui.
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {contracts.map(contract => (
-                  <div
-                    key={contract.id}
-                    className="p-4 border rounded-lg cursor-pointer hover:shadow-md"
-                    onClick={() => handleContractClick(contract)}
-                  >
-                    <h3 className="font-medium">{contract.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {contract.name || "Sem descrição"}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-      {/* Diálogo para criação/edição de contratos */}
-      <Dialog open={isContractDialogOpen} onOpenChange={setIsContractDialogOpen}>
-        <DialogContent className="max-w-2xl" onClick={(e) => e.stopPropagation()}>
-          <DialogHeader>
-            <DialogTitle>
-              {selectedContract ? "Editar Contrato" : "Novo Contrato"}
-            </DialogTitle>
-            <DialogDescription>
-              Complete o formulário abaixo para {selectedContract ? "editar o" : "criar um novo"} contrato.
-            </DialogDescription>
-          </DialogHeader>
-          <ContractForm
+          <ContractSection
+            contracts={contracts}
+            organizationId={organizationId || ""}
+            isLoading={isLoadingContracts}
+            isCreating={isCreatingContract}
+            selectedContract={selectedContract}
+            setSelectedContract={setSelectedContract}
+            onCreateClick={handleCreateContract}
+            onCancelCreate={() => setIsCreatingContract(false)}
             onSubmit={handleContractFormSubmit}
-            initialData={selectedContract || {}}
-            isEditing={!!selectedContract}
             clauses={clauses}
             venues={venues}
+            onEditClick={handleContractClick}
+            onDeleteContract={handleDeleteContract}
           />
-        </DialogContent>
-      </Dialog>
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 }

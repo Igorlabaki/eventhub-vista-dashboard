@@ -1,38 +1,15 @@
-
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Proposal } from "@/types/proposal";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
-import { Users, Calendar, Clock, ClipboardList, Mail, Phone } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 
-interface BudgetDetailsProps {
-  budget: {
-    id: string;
-    clientName: string;
-    eventDate: Date;
-    eventType: string;
-    totalValue: number;
-    guestCount: number;
-    eventTime: string;
-    details: {
-      baseValue: number;
-      extraHour: number;
-      cleaning: number;
-      receptionist: number;
-      security: number;
-      valuePerPerson: number;
-      contactInfo: {
-        email: string;
-        whatsapp: string;
-        hasVisitedVenue: boolean;
-        referralSource: string;
-      };
-    };
-  };
+export interface BudgetDetailsProps {
+  proposal: Proposal;
   onClose: () => void;
 }
 
-export function BudgetDetails({ budget, onClose }: BudgetDetailsProps) {
+export function BudgetDetails({ proposal, onClose }: BudgetDetailsProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -42,132 +19,71 @@ export function BudgetDetails({ budget, onClose }: BudgetDetailsProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Informações do Evento</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-            <Users className="h-5 w-5 text-eventhub-primary" />
-            <div>
-              <p className="text-xs text-gray-500">Convidados</p>
-              <p className="font-medium">{budget.guestCount} pessoas</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-            <Calendar className="h-5 w-5 text-eventhub-primary" />
-            <div>
-              <p className="text-xs text-gray-500">Data</p>
-              <p className="font-medium">
-                {format(budget.eventDate, "dd/MM/yyyy", { locale: pt })}
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-            <Clock className="h-5 w-5 text-eventhub-primary" />
-            <div>
-              <p className="text-xs text-gray-500">Horário</p>
-              <p className="font-medium">{budget.eventTime}</p>
-            </div>
-          </div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Detalhes do Orçamento</h2>
+        <Button variant="outline" onClick={onClose}>
+          Fechar
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Data do Evento</h3>
+          <p className="mt-1 text-sm text-gray-900">
+            {format(proposal.startDate, "dd/MM/yyyy", {
+              locale: pt
+            })}
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Valor Total</h3>
+          <p className="mt-1 text-sm text-gray-900">
+            {formatCurrency(proposal.totalAmount)}
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Número de Convidados</h3>
+          <p className="mt-1 text-sm text-gray-900">{proposal.guestNumber}</p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Horário do Evento</h3>
+          <p className="mt-1 text-sm text-gray-900">
+            {format(proposal.startDate, "HH:mm")} - {format(proposal.endDate, "HH:mm")}
+          </p>
         </div>
       </div>
 
-      <Separator />
-      
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Valores</h3>
-        
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <span>Valor Base</span>
-            <span className="font-medium">{formatCurrency(budget.details.baseValue)}</span>
+      <div className="border-t pt-6">
+        <h3 className="text-lg font-medium mb-4">Valores</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h4 className="text-sm font-medium text-gray-500">Valor Base</h4>
+            <p className="mt-1 text-sm text-gray-900">
+              {formatCurrency(proposal.basePrice)}
+            </p>
           </div>
-          
-          <div className="flex justify-between">
-            <span>Hora Extra</span>
-            <span className="font-medium">{formatCurrency(budget.details.extraHour)}</span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span>Limpeza</span>
-            <span className="font-medium">{formatCurrency(budget.details.cleaning)}</span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span>Recepcionista</span>
-            <span className="font-medium">{formatCurrency(budget.details.receptionist)}</span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span>Segurança</span>
-            <span className="font-medium">{formatCurrency(budget.details.security)}</span>
-          </div>
-          
-          <Separator className="my-2" />
-          
-          <div className="flex justify-between font-bold">
-            <span>Total:</span>
-            <span>{formatCurrency(budget.totalValue)}</span>
-          </div>
-          
-          <div className="mt-4 pt-2 border-t">
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>* Valor por pessoa</span>
-              <span>{formatCurrency(budget.details.valuePerPerson)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <Separator />
-      
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Descrição</h3>
-        <div className="p-3 bg-gray-50 rounded-lg">
-          <p>{budget.eventType}</p>
-        </div>
-      </div>
+          <div>
+            <h4 className="text-sm font-medium text-gray-500">Hora Extra (R$ {formatCurrency(proposal.extraHoursQty)})</h4>
+            <p className="mt-1 text-sm text-gray-900">
+              {formatCurrency(proposal.extraHourPrice * proposal.extraHoursQty)}
+            </p>
+          </div>
 
-      <Separator />
+          <div>
+            <h4 className="text-sm font-medium text-gray-500">Descrição</h4>
+            <p className="mt-1 text-sm text-gray-900">{proposal.description}</p>
+          </div>
 
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Informações Pessoais</h3>
-        
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span>Nome:</span>
-            <span className="font-medium">{budget.clientName}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span>Email:</span>
-            <div className="flex items-center gap-1 font-medium">
-              <Mail className="h-4 w-4" />
-              <span>{budget.details.contactInfo.email}</span>
+          {proposal.hostMessage && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Mensagem do Anfitrião</h4>
+              <p className="mt-1 text-sm text-gray-900">{proposal.hostMessage}</p>
             </div>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span>WhatsApp:</span>
-            <div className="flex items-center gap-1 font-medium">
-              <Phone className="h-4 w-4" />
-              <span>{budget.details.contactInfo.whatsapp}</span>
-            </div>
-          </div>
-          
-          <div className="flex justify-between">
-            <span>Já conhece o espaço:</span>
-            <span className="font-medium">
-              {budget.details.contactInfo.hasVisitedVenue ? "Sim" : "Não"}
-            </span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span>Por onde nos conheceu:</span>
-            <span className="font-medium">{budget.details.contactInfo.referralSource}</span>
-          </div>
+          )}
         </div>
       </div>
 

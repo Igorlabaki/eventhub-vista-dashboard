@@ -28,9 +28,7 @@ export type OrganizationWithVenueCount = Organization & {
 export interface OrganizationByIdResponse {
     success: true,
     message: string,
-    data: {
-        organization: Organization
-    },
+    data: Organization,
     count: number,
     type: string
 }

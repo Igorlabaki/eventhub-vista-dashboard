@@ -2,7 +2,6 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PageHeaderProps {
-  title: string;
   count?: number;
   onCreateClick: () => void;
   createButtonText?: string;
@@ -10,18 +9,13 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ 
-  title, 
   count, 
   onCreateClick,
   createButtonText = "Novo",
   isFormOpen
 }: PageHeaderProps) {
   return (
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-semibold text-gray-800">
-        {title} {count !== undefined && `(${count})`}
-      </h2>
-      {/* Botão desktop */}
+    <div className="flex justify-start items-center mb-6 w-full">
       {!isFormOpen && (
         <Button onClick={onCreateClick} className="shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 hidden md:block">
           {createButtonText}

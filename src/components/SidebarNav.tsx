@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Building, Calendar, ChevronRight, Menu } from "lucide-react";
+import { Building, Calendar, ChevronRight, Menu, House } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EditOrganizationForm } from "@/components/organization/EditOrganizationForm";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { OrganizationNav } from "@/components/organization/OrganizationNav";
 import { VenueNav } from "@/components/venue/VenueNav";
+import { WebsiteNav } from "@/components/website/WebsiteNav";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,8 @@ import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useVenueStore } from "@/store/venueStore";
 import { useUserStore } from "@/store/userStore";
+import { useProposalStore } from "@/store/proposalStore";
+import ProposalNav from "@/components/ProposalNav";
 
 export function SidebarNav({
   showOnMobile = false,
@@ -36,14 +39,18 @@ export function SidebarNav({
   // State for dialogs
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  
-  const { currentOrganization, deleteOrganization, isLoading } = useOrganizationStore();
-  
+
+  const { currentOrganization, deleteOrganization, isLoading } =
+    useOrganizationStore();
+
   // Determine if we're in a venue section
-  const isInVenue = location.pathname.startsWith('/venue');
-  
+  const isInVenue = location.pathname.startsWith("/venue");
+
   // Determine if we're in an organization section
-  const isInOrg = location.pathname.includes('/organization/');
+  const isInOrg = location.pathname.includes("/organization/");
+
+  // Determine if we're in a website section
+  const isInWebsite = location.pathname.includes("/website");
 
   const venueId = params.id; // venueId vem de /venue/:id/...
 
@@ -56,23 +63,29 @@ export function SidebarNav({
       onClose();
     }
   };
-  
+
   const handleDeleteOrganization = () => {
     setDeleteDialogOpen(true);
   };
-  
+
   const handleConfirmDelete = async () => {
     try {
       const response = await deleteOrganization(params.id || "");
-      const { title, message } = handleBackendSuccess(response, "Organização excluída com sucesso!");
+      const { title, message } = handleBackendSuccess(
+        response,
+        "Organização excluída com sucesso!"
+      );
       showSuccessToast({
         title,
-        description: message
+        description: message,
       });
       setDeleteDialogOpen(false);
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (error: unknown) {
-      const { title, message } = handleBackendError(error, "Erro ao excluir organização. Tente novamente mais tarde.");
+      const { title, message } = handleBackendError(
+        error,
+        "Erro ao excluir organização. Tente novamente mais tarde."
+      );
       toast({
         title,
         description: message,
@@ -80,7 +93,7 @@ export function SidebarNav({
       });
     }
   };
-  
+
   const handleEditOrganization = () => {
     setEditDialogOpen(true);
   };
@@ -88,10 +101,13 @@ export function SidebarNav({
   const user = useUserStore((state) => state.user);
   const { selectedVenue, fetchVenueById } = useVenueStore();
   useEffect(() => {
-    if (venueId && user?.id) {
+    if (venueId && user?.id && isInVenue) {
       fetchVenueById(venueId, user.id);
     }
   }, [venueId, user?.id, fetchVenueById]);
+
+  const isInProposal = location.pathname.includes("/proposal/");
+  const { currentProposal } = useProposalStore();
 
   return (
     <>
@@ -104,9 +120,11 @@ export function SidebarNav({
       >
         <div className="flex items-center justify-between h-16 px-4 border-b">
           <div className="flex items-center">
-          <Calendar className="h-8 w-8 text-eventhub-primary" />
+            <Calendar className="h-8 w-8 text-eventhub-primary" />
             {!isCollapsed && (
-              <span className="ml-2 font-bold text-2xl text-eventhub-primary">EventHub</span>
+              <span className="ml-2 font-bold text-2xl text-eventhub-primary">
+                EventHub
+              </span>
             )}
           </div>
           <Button
@@ -144,6 +162,33 @@ export function SidebarNav({
               <Building className="h-5 w-5 mr-2" />
               {!isCollapsed && <span>Organizações</span>}
             </Link>
+            {(selectedVenue && isInProposal) ||
+              (selectedVenue && isInWebsite && (
+                <Link
+                  to={`/venue/${selectedVenue.id}`}
+                  className={cn(
+                    "flex items-center ml-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary mt-4",
+                    "text-gray-700"
+                  )}
+                  onClick={handleNavItemClick}
+                >
+                  <House className="h-5 w-5 mr-2" />
+                  {!isCollapsed && <span>{selectedVenue.name}</span>}
+                </Link>
+              ))}
+            {selectedVenue && isInProposal && (
+              <Link
+                to={`/venue/${selectedVenue.id}`}
+                className={cn(
+                  "flex items-center ml-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary mt-4",
+                  "text-gray-700"
+                )}
+                onClick={handleNavItemClick}
+              >
+                <House className="h-5 w-5 mr-2" />
+                {!isCollapsed && <span>{selectedVenue.name}</span>}
+              </Link>
+            )}
 
             {isInOrg && !isCollapsed && (
               <OrganizationNav
@@ -155,17 +200,35 @@ export function SidebarNav({
               />
             )}
 
-            {isInVenue && (
+            {isInVenue && !isInWebsite && (
               <VenueNav
                 isCollapsed={isCollapsed}
                 onNavItemClick={handleNavItemClick}
                 venue={selectedVenue}
               />
             )}
+
+            {isInWebsite && selectedVenue && (
+              <WebsiteNav
+                isCollapsed={isCollapsed}
+                onNavItemClick={handleNavItemClick}
+                venueId={selectedVenue.id}
+              />
+            )}
+
+            {isInProposal && (
+              <>
+                <ProposalNav
+                  isCollapsed={isCollapsed}
+                  onNavItemClick={handleNavItemClick}
+                  proposal={currentProposal}
+                />
+              </>
+            )}
           </nav>
         </div>
       </div>
-      
+
       {/* Edit Organization Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="w-full max-w-full md:w-[50%] md:max-w-[50%] rounded-md z-[9999]">

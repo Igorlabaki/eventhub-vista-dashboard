@@ -62,10 +62,10 @@ export function OrganizationNav({
       action: onDeleteClick
     },
   ];
-
+  console.log(organizationName);
   return (
-    <div className="pt-3 pb-1">
-      <div className="px-3 mt-4 mb-2 text-sm font-semibold text-eventhub-primary">
+    <div className=" pb-1">
+      <div className="px-3 mt-4 mb-2 text-sm font-semibold text-gray-500">
         {organizationName}
       </div>
       
