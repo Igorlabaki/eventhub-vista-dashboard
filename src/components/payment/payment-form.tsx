@@ -159,12 +159,18 @@ export function PaymentForm({ payment, proposalId, venueId, userId, username, on
     }
   };
 
+  const handleCancel = () => {
+    form.reset();
+    setPreview(null);
+    onCancel();
+  };
+
   return (
     <FormLayout
       form={form}
       title={payment ? 'Editar Pagamento' : 'Novo Pagamento'}
       onSubmit={handleSubmit}
-      onCancel={onCancel}
+      onCancel={handleCancel}
       isSubmitting={isSubmitting}
       isEditing={!!payment}
       onDelete={handleDelete}

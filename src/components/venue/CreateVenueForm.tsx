@@ -26,6 +26,7 @@ import { showSuccessToast } from "@/components/ui/success-toast";
 import { useState } from "react";
 import InputMask from 'react-input-mask';
 import { NumericFormat } from 'react-number-format';
+import { useUserStore } from "@/store/userStore";
 
 const pricingModels = [
   { value: "PER_PERSON", label: "Por pessoa" },
@@ -104,6 +105,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
   const [isDeleting, setIsDeleting] = useState(false);
   const { createVenue, deleteVenue } = useVenueStore();
   const { toast } = useToast();
+  const { user } = useUserStore();
   const form = useForm<CreateVenueFormValues>({
     resolver: zodResolver(createVenueSchema),
     defaultValues: {
@@ -139,7 +141,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
   const onSubmit = async (data: CreateVenueFormValues) => {
     try {
       const venueData: CreateVenueDTO = {
-        userId: data.userId,
+        userId: user?.id || "",
         organizationId: data.organizationId,
         data: {
           cep: data.data.cep.replace(/\D/g, ''),

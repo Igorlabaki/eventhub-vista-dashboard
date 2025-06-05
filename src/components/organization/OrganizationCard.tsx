@@ -24,6 +24,7 @@ import { EditOrganizationForm } from "./EditOrganizationForm";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { useOrganizationStore } from "@/store/organizationStore";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
+import { useVenueStore } from "@/store/venueStore";
 
 export interface OrganizationCardProps {
   id: string;
@@ -52,7 +53,7 @@ export function OrganizationCard({
 
   const { deleteOrganization,fetchOrganizationById, updateOrganization, isLoading } = useOrganizationStore();
   const { toast } = useToast();
-
+  const { venues } = useVenueStore();
   const editForm = useForm<UpdateOrganizationFormValues>({
     resolver: zodResolver(updateOrganizationSchema),
     defaultValues: { name },
@@ -90,7 +91,7 @@ export function OrganizationCard({
       });
     }
   };
-
+  
   return (
     <>
       <Card className="eventhub-card hover:shadow-lg transition-all duration-300 border-l-4 border-l-eventhub-primary">

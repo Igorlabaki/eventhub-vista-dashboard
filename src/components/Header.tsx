@@ -123,7 +123,7 @@ export function Header({ title, subtitle }: HeaderProps) {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 flex">
           <div className="fixed inset-0 bg-black/30" onClick={() => setMobileMenuOpen(false)} />
-          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
+          <div className="relative flex w-full max-w-xs flex-1 flex-col ">
             <SidebarNav showOnMobile={true} onClose={() => setMobileMenuOpen(false)} />
           </div>
         </div>

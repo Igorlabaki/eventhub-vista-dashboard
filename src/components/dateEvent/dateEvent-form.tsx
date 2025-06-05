@@ -33,6 +33,14 @@ interface DateEventFormProps {
   onCancel: () => void;
 }
 
+function formatarDataIso(isoString: string) {
+  const [datePart, timePart] = isoString.split("T");
+  const [year, month, day] = datePart.split("-");
+  const hour = timePart.slice(0, 5); // "HH:mm"
+  return `${day}/${month}/${year} às ${hour}`;
+}
+
+
 type DateEventFormValues = {
   title: string;
   startDay: string;
@@ -74,10 +82,10 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: dateEvent?.title || "",
-      startDay: dateEvent?.startDate ? new Date(dateEvent.startDate).toISOString().split('T')[0] : "",
-      endDay: dateEvent?.endDate ? new Date(dateEvent.endDate).toISOString().split('T')[0] : "",
-      startHour: dateEvent?.startDate ? new Date(dateEvent.startDate).toTimeString().slice(0, 5) : "",
-      endHour: dateEvent?.endDate ? new Date(dateEvent.endDate).toTimeString().slice(0, 5) : "",
+      startDay: dateEvent?.startDate ? dateEvent.startDate.split('T')[0] : "",
+      endDay: dateEvent?.endDate ? dateEvent.endDate.split('T')[0] : "",
+      startHour: dateEvent?.startDate ? dateEvent.startDate.split('T')[1].slice(0, 5) : "",
+      endHour: dateEvent?.endDate ? dateEvent.endDate.split('T')[1].slice(0, 5) : "",
       type: dateEvent?.type ?? undefined,
     },
   });
@@ -85,10 +93,10 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
   React.useEffect(() => {
     form.reset({
       title: dateEvent?.title || "",
-      startDay: dateEvent?.startDate ? new Date(dateEvent.startDate).toISOString().split('T')[0] : "",
-      endDay: dateEvent?.endDate ? new Date(dateEvent.endDate).toISOString().split('T')[0] : "",
-      startHour: dateEvent?.startDate ? new Date(dateEvent.startDate).toTimeString().slice(0, 5) : "",
-      endHour: dateEvent?.endDate ? new Date(dateEvent.endDate).toTimeString().slice(0, 5) : "",
+      startDay: dateEvent?.startDate ? dateEvent.startDate.split('T')[0] : "",
+      endDay: dateEvent?.endDate ? dateEvent.endDate.split('T')[0] : "",
+      startHour: dateEvent?.startDate ? dateEvent.startDate.split('T')[1].slice(0, 5) : "",
+      endHour: dateEvent?.endDate ? dateEvent.endDate.split('T')[1].slice(0, 5) : "",
       type: dateEvent?.type ?? undefined,
     });
   }, [dateEvent, form]);

@@ -249,7 +249,7 @@ export default function VenueSettings() {
         title: "Sucesso",
         description: "Espaço excluído com sucesso",
       });
-      navigate(`/organizations/${selectedVenue.organizationId}/venues`);
+      navigate(`/organization/${selectedVenue.organizationId}/venues`);
     } catch (error) {
       toast({
         title: "Erro",

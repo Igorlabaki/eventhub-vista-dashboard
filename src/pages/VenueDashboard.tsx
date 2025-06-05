@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
@@ -36,6 +36,13 @@ import { VenuePerformanceChartAllMonths } from "@/components/venue/VenuePerforma
 import { useVenueStore } from "@/store/venueStore";
 import { useGoalStore } from "@/store/goalStore";
 
+function formatarDataIso(isoString: string) {
+  const [datePart, timePart] = isoString.split("T");
+  const [year, month, day] = datePart.split("-");
+  const hour = timePart.slice(0, 5); // "HH:mm"
+  return `${day}/${month}/${year} às ${hour}`;
+}
+
 function VenueNotFound() {
   return (
     <DashboardLayout title="Espaço não encontrado" subtitle="">
@@ -59,8 +66,9 @@ function VenueNotFound() {
 
 export default function VenueDashboard() {
   const { id: venueId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const user = useUserStore((state) => state.user);
-  
+
   // Mês inicial: atual (1-based para backend, mas select usa string)
   const currentMonth = (new Date().getMonth() + 1).toString();
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth);
@@ -76,7 +84,7 @@ export default function VenueDashboard() {
 
   const { selectedVenue: venue, fetchVenueById, isLoading } = useVenueStore();
   const { goals, fetchGoals, isLoading: isLoadingGoals } = useGoalStore();
-  
+
   useEffect(() => {
     if (venueId && user?.id) {
       fetchVenueById(venueId, user.id);
@@ -94,6 +102,10 @@ export default function VenueDashboard() {
       month: selectedMonth,
       year: selectedYear ? String(selectedYear) : undefined,
     });
+
+  const handleViewProposal = (proposalId: string) => {
+    navigate(`/proposal/${proposalId}`);
+  };
 
   // Verifica se temos o ID do usuário
   if (!user?.id) {
@@ -126,8 +138,12 @@ export default function VenueDashboard() {
       ) : (
         <div className="bg-white rounded-md p-4 shadow-md">
           <div className="mb-6 ">
-            <h2 className="text-2xl font-semibold text-gray-900">Visão Geral</h2>
-            <p className="text-gray-500 mt-1">Acompanhe os principais indicadores do seu espaço</p>
+            <h2 className="text-2xl font-semibold text-gray-900">
+              Visão Geral
+            </h2>
+            <p className="text-gray-500 mt-1">
+              Acompanhe os principais indicadores do seu espaço
+            </p>
           </div>
           <VenueStatsPanel
             data={venueDashBoardData}
@@ -143,9 +159,19 @@ export default function VenueDashboard() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-lg">Próximo Evento</h3>
-                  <Button variant="outline" size="sm">
-                    Ver
-                  </Button>
+                  {venueDashBoardData?.nextEvent && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleViewProposal(
+                          venueDashBoardData.nextEvent.proposalId
+                        )
+                      }
+                    >
+                      Ver
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -159,11 +185,9 @@ export default function VenueDashboard() {
                           {venueDashBoardData.nextEvent.title}
                         </h4>
                         <div className="text-sm text-gray-500">
-                          {format(
-                            new Date(venueDashBoardData.nextEvent.startDate),
-                            "dd 'de' MMMM",
-                            { locale: ptBR }
-                          )}{" "}
+                          {formatarDataIso(
+                            String(venueDashBoardData.nextEvent.startDate)
+                          )}
                         </div>
                       </div>
                     </div>
@@ -180,7 +204,15 @@ export default function VenueDashboard() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-lg">Proxima Visita</h3>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      handleViewProposal(
+                        venueDashBoardData.nextEvent.proposalId
+                      )
+                    }
+                  >
                     Ver
                   </Button>
                 </div>
@@ -196,8 +228,9 @@ export default function VenueDashboard() {
                           {venueDashBoardData.nextVisit.title}
                         </h4>
                         <div className="text-sm text-gray-500">
-                          {format(new Date(venueDashBoardData.nextVisit.startDate), "dd 'de' MMMM", { locale: ptBR })} {" "}
-                          às {format(new Date(venueDashBoardData.nextVisit.startDate), "HH:mm")}
+                          {formatarDataIso(
+                            String(venueDashBoardData.nextVisit.startDate)
+                          )}
                         </div>
                       </div>
                     </div>
@@ -217,7 +250,7 @@ export default function VenueDashboard() {
                 <h3 className="font-semibold text-lg">Desempenho Mensal</h3>
               </div>
 
-              {selectedMonth === 'all' ? (
+              {selectedMonth === "all" ? (
                 <VenuePerformanceChartAllMonths
                   data={venueDashBoardData}
                   goals={goals || []}

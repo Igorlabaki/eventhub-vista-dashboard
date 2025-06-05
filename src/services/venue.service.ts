@@ -25,8 +25,8 @@ export const venueService = {
     return response.data;
   },
 
-  getAllVenues: async (organizationId: string) => {
-    const response = await api.get<VenueListResponse>(`/venue/list?organizationId=${organizationId}`);
+  getAllVenues: async ({ organizationId, userId }: { organizationId: string, userId: string }) => {
+    const response = await api.get<VenueListResponse>(`/venue/permittedVenueList?organizationId=${organizationId}&userId=${userId}`);
     return response.data;
   },
 

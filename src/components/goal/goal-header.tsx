@@ -70,11 +70,12 @@ export function GoalHeader({
         {!isFormOpen && activeTab !== "panel" && (
           <Button
             className="
-              bg-violet-500 hover:bg-violet-600 text-white md:my-0
-              font-semibold px-3 py-2 rounded-lg shadow mx-2 md:mx-0 hidden md:block
+              bg-eventhub-primary hover:bg-indigo-600 text-white md:my-0
+              font-semibold px-3 py-2 rounded-lg shadow mx-2 md:mx-0 hidden md:flex
                md:w-auto text-sm hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={onActionClick}
           >
+            <Plus className="w-7 h-7" />
             {activeTab === "metas"
               ? "Nova Meta"
               : activeTab === "adicionais"
@@ -86,7 +87,7 @@ export function GoalHeader({
       {/* Botão flutuante mobile */}
       {!isFormOpen && activeTab !== "panel" && (
         <button
-          className="fixed bottom-6 right-6 z-50 md:hidden bg-violet-500 hover:bg-violet-600 text-white rounded-full shadow-lg p-4 flex items-center justify-center transition-all duration-200"
+          className="fixed bottom-6 right-6 z-50 md:hidden bg-eventhub-primary hover:bg-indigo-600 text-white rounded-full shadow-lg p-4 flex items-center justify-center transition-all duration-200"
           onClick={onActionClick}
           aria-label={
             activeTab === "metas"

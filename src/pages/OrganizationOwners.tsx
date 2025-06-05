@@ -65,7 +65,6 @@ export default function OrganizationOwners() {
     >
       <PageHeader
         isFormOpen={isCreating || isEditing}
-        title="Proprietários"
         count={owners.length}
         onCreateClick={handleCreateClick}
         createButtonText="Novo Proprietário"

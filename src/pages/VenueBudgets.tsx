@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
-import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { BudgetDetails } from "@/components/BudgetDetails";
 import { BudgetSidebar } from "@/components/BudgetSidebar";
 import { useProposalStore } from "@/store/proposalStore";
@@ -19,6 +17,7 @@ import { MonthYearNavigator } from "@/components/proposal/MonthYearNavigator";
 import { ProposalTable } from "@/components/proposal/ProposalTable";
 import { PerDayProposalForm } from "@/components/proposal/forms/PerDayProposalForm";
 import { PerPersonProposalForm } from "@/components/proposal/forms/PerPersonProposalForm";
+import { PageHeader } from "@/components/PageHeader";
 
 // Month names in Portuguese
 const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -140,13 +139,11 @@ export default function VenueBudgets() {
 
   const renderProposalList = () => (
     <>
-      <div className="mb-6 items-center justify-between hidden md:flex">
-        <div className="flex-1" />
-        <Button onClick={handleCreateNewProposal} className="ml-4">
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Orçamento
-        </Button>
-      </div>
+      <PageHeader
+        onCreateClick={handleCreateNewProposal}
+        createButtonText="Novo Orçamento"
+        isFormOpen={showForm}
+      />
 
       <MonthYearNavigator
         selectedYear={selectedYear}
@@ -175,7 +172,6 @@ export default function VenueBudgets() {
             <ProposalTable
               proposals={filteredProposals}
               isLoading={isLoading}
-              onProposalClick={handleOpenProposalDetails}
               monthNames={monthNames}
               selectedMonth={selectedMonth}
               selectedYear={selectedYear}
@@ -202,7 +198,6 @@ export default function VenueBudgets() {
             list={renderProposalList()}
             form={renderProposalForm()}
           />
-          {!showForm && <FloatingActionButton onClick={handleCreateNewProposal}/>}
         </>
       ) : (
         <div className="flex w-full">

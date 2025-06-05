@@ -35,7 +35,14 @@ export function VenueCard({
   const handleViewVenue = () => {
     navigate(`/venue/${id}`);
   };
-
+  console.log(nextEvent?.startDate)
+  // Função para formatar a data sem considerar fuso horário
+  function formatarDataIso(isoString: string) {
+    const [datePart, timePart] = isoString.split("T");
+    const [year, month, day] = datePart.split("-");
+    const hour = timePart.slice(0, 5); // "HH:mm"
+    return `${day}/${month}/${year} às ${hour}`;
+  }
   return (
     <Card className="eventhub-card border-l-4 border-l-eventhub-primary">
       <CardHeader className="flex flex-row items-center justify-between mb-4 pb-2">
@@ -51,24 +58,20 @@ export function VenueCard({
             <div className="eventhub-stat">
               <div className="flex items-center gap-1">
                 <Users className="h-3 w-3 text-gray-500" />
-                <span className="text-xs text-gray-500">Próximo evento</span>
+                <span className="text-xs text-gray-500">Próxima data</span>
               </div>
               {nextEvent ? (
                 <div className="flex items-center justify-between p-3">
-                  <span className="text-sm font-semibold ">
+                  <span className="text-[13px] md:text-sm font-semibold ">
                     {nextEvent.title}
                   </span>
                   <span className="text-sm font-semibold">
-                    {format(
-                      new Date(nextEvent.startDate),
-                      "dd/MM/yyyy 'às' HH:mm",
-                      { locale: ptBR }
-                    )}
+                    {formatarDataIso(new Date(nextEvent.startDate).toISOString())}
                   </span>
                 </div>
               ) : (
-                <span className="text-sm text-gray-400  p-3">
-                  Nenhum evento agendado
+                <span className="text-[13px] md:text-sm text-gray-400  p-3">
+                  Nenhuma data agendada
                 </span>
               )}
               {/* Se quiser mostrar o número de pessoas, adicione aqui: */}
@@ -77,7 +80,7 @@ export function VenueCard({
           </div>
 
           <Button
-            className="w-full bg-eventhub-primary hover:bg-indigo-600"
+            className="w-full bg-eventhub-primary hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={handleViewVenue}
           >
             Gerenciar Venue

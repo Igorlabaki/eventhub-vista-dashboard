@@ -73,17 +73,6 @@ export function QuestionList({
 
   return (
     <>
-      {/* Botão web no topo direito */}
-      <div className="hidden md:flex justify-end mb-4">
-        <button
-          onClick={onCreateClick}
-          className="flex items-center gap-2 bg-[#8854D0] text-white font-medium px-5 py-2 rounded-lg shadow hover:bg-[#6c3fc9] transition-colors"
-        >
-          <Plus className="h-5 w-5" />
-          Nova Pergunta
-        </button>
-      </div>
-
       <div className={cn("space-y-4", className)}>
         <FilterList
           items={questions}

@@ -16,13 +16,13 @@ import { useOrganizationStore } from "@/store/organizationStore";
 import { useUserStore } from "@/store/userStore";
 import { useToast } from "@/components/ui/use-toast";
 import { PageHeader } from "@/components/PageHeader";
-
+import { useVenueStore } from "@/store/venueStore";
 export default function Dashboard() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { user } = useUserStore();
   const { organizations, fetchOrganizations, isLoading, error, clearError } = useOrganizationStore();
   const { toast } = useToast();
-
+ 
   useEffect(() => {
     if (user?.id) {
       fetchOrganizations(user.id);

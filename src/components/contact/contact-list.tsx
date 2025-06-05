@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ContactListSkeleton } from "./contact-list-skeleton";
 import { FilterList } from "@/components/filterList";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 
@@ -80,7 +80,7 @@ export function ContactList({ contacts, isLoading, onCreateClick, onEditClick, o
                           className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                           title="Editar contato"
                         >
-                          <Edit className="h-4 w-4" />
+                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); setContactToDelete(contact); }}

@@ -15,8 +15,8 @@ interface VenueState {
   isLoading: boolean;
   error: string | null;
   selectedVenue: Venue | null;
-  fetchVenues: (organizationId: string) => Promise<void>;
-  fetchVenueById: (venueId: string, userId: string) => Promise<void>;
+  fetchVenues: (params: { organizationId: string, userId: string }) => Promise<void>;
+  fetchVenueById: ( venueId: string, userId: string ) => Promise<void>;
   createVenue: (data: CreateVenueDTO) => Promise<BackendResponse<Venue>>;
   updateVenue: (data: UpdateVenueDTO) => Promise<BackendResponse<Venue>>;
   deleteVenue: (id: string) => Promise<BackendResponse<void>>;
@@ -28,10 +28,10 @@ export const useVenueStore = create<VenueState>((set) => ({
   error: null,
   selectedVenue: null,
 
-  fetchVenues: async (organizationId: string) => {
+  fetchVenues: async ({ organizationId, userId }: { organizationId: string, userId: string }) => {
     try {
       set({ isLoading: true, error: null });
-      const response = await venueService.getAllVenues(organizationId);
+      const response = await venueService.getAllVenues({ organizationId, userId });
       set({ venues: response.data.venueList, isLoading: false });
     } catch (err: unknown) {
       const error = err as ApiError;
@@ -62,7 +62,7 @@ export const useVenueStore = create<VenueState>((set) => ({
     try {
       set({ isLoading: true, error: null });
       const response = await venueService.createVenue(data);
-      const venuesResponse = await venueService.getAllVenues(data.organizationId);
+      const venuesResponse = await venueService.getAllVenues({organizationId:data.organizationId, userId:data.userId});
       set({ venues: venuesResponse.data.venueList, isLoading: false });
       return {
         success: true,

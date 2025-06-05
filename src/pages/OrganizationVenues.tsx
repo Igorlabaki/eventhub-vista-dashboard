@@ -16,12 +16,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useUserStore } from "@/store/userStore";
 
 export default function OrganizationVenues() {
   const { id: organizationId } = useParams<{ id: string }>();
   const { currentOrganization, fetchOrganizationById } = useOrganizationStore();
   const { toast } = useToast();
-
+  const { user } = useUserStore();
   const [showForm, setShowForm] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedVenueId, setSelectedVenueId] = useState<string | undefined>();
@@ -33,7 +34,7 @@ export default function OrganizationVenues() {
 
   useEffect(() => {
     if (organizationId) {
-      fetchVenues(organizationId);
+      fetchVenues({organizationId, userId: user?.id || ""});
       fetchOrganizationById(organizationId);
     }
   }, [organizationId, fetchVenues, fetchOrganizationById]);
@@ -47,7 +48,7 @@ export default function OrganizationVenues() {
       });
       return;
     }
-
+console.log(venues)
     updateOrganization.mutate(
       { organizationId, data: { name: values.name } },
       {

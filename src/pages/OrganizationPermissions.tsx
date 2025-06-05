@@ -80,6 +80,7 @@ export default function OrganizationPermissions() {
   const {
     searchUserByEmail,
     searchedUser,
+    user,
     isLoading: isUserLoading
   } = useUserStore();
 
@@ -87,7 +88,7 @@ export default function OrganizationPermissions() {
   useEffect(() => {
     if (organizationId) {
       fetchUserOrganizations(organizationId);
-      fetchVenues(organizationId);
+      fetchVenues({ organizationId, userId: user?.id || "" });
     }
   }, [organizationId, fetchUserOrganizations, fetchVenues]);
 
@@ -178,7 +179,7 @@ export default function OrganizationPermissions() {
       });
     }
   };
-
+  console.log("permissions", userPermissions);
   // Render the appropriate view based on state
   const renderContent = () => {
     return (
@@ -192,7 +193,6 @@ export default function OrganizationPermissions() {
             <>
               <PageHeader
                 isFormOpen={addUserDialogOpen}
-                title="Permissões"
                 count={userOrganizations?.length || 0}
                 onCreateClick={() => setAddUserDialogOpen(true)}
                 createButtonText="Adicionar Usuário"

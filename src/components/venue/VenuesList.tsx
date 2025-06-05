@@ -34,7 +34,7 @@ export function VenuesList({ venues, isLoading, onCreateClick, organizationId, o
       />
     );
   }
-
+  console.log(venues)
   return (
     <FilterList
       items={venues}
