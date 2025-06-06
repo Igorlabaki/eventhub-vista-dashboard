@@ -45,6 +45,8 @@ import VenueExpenses from "./pages/VenueExpenses";
 import VenueWebsiteFaq from "./pages/website/VenueWebsiteFaq";
 import VenueWebsiteImages from "./pages/website/VenueWebsiteImages";
 import OrganizationSettings from "./pages/OrganizationSettings";
+import SendMessagePage from "./pages/SendMessagePage";
+import SendProposalPage from "./pages/SendProposalPage";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +112,8 @@ const App = () => {
               <Route path="/proposal/:id/program" element={<ProtectedRoute><ScheduleListPage /></ProtectedRoute>} />
               <Route path="/proposal/:id/documents" element={<ProtectedRoute><ProposalDocuments /></ProtectedRoute>} />
               <Route path="/proposal/:id/schedule" element={<ProtectedRoute><ScheduleListPage /></ProtectedRoute>} />
+              <Route path="/proposal/:id/send-message" element={<ProtectedRoute><SendMessagePage /></ProtectedRoute>} />
+              <Route path="/proposal/:id/send-proposal" element={<ProtectedRoute><SendProposalPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

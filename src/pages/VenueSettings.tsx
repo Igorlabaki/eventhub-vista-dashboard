@@ -70,6 +70,23 @@ const venueSettingsSchema = z.object({
   pricePerPersonDay: z.string().optional(),
   pricePerPersonHour: z.string().optional(),
   maxGuest: z.string().min(1, "Capacidade máxima é obrigatória"),
+  tiktokUrl: z
+    .string()
+    .url("URL do TikTok inválida")
+    .optional()
+    .or(z.literal("")),
+  instagramUrl: z
+    .string()
+    .url("URL do Instagram inválida")
+    .optional()
+    .or(z.literal("")),
+  facebookUrl: z
+    .string()
+    .url("URL do Facebook inválida")
+    .optional()
+    .or(z.literal("")),
+  logoUrl: z.string().url("URL do logo inválida").optional().or(z.literal("")),
+  logoFile: z.instanceof(File).optional(),
 });
 
 type VenueSettingsFormValues = z.infer<typeof venueSettingsSchema>;
@@ -80,6 +97,7 @@ export default function VenueSettings() {
   const navigate = useNavigate();
   const { user } = useUserStore();
   const { selectedVenue, updateVenue, deleteVenue } = useVenueStore();
+  const [logoPreview, setLogoPreview] = useState<string | null>(selectedVenue?.logoUrl || null);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -105,8 +123,27 @@ export default function VenueSettings() {
       pricePerPersonDay: "",
       pricePerPersonHour: "",
       maxGuest: "",
+      tiktokUrl: "",
+      instagramUrl: "",
+      facebookUrl: "",
+      logoUrl: "",
     },
   });
+
+  const handleLogoChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onChange: (value: File | null) => void
+  ) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setLogoPreview(url);
+      onChange(file);
+    } else {
+      setLogoPreview(selectedVenue?.logoUrl || null);
+      onChange(null);
+    }
+  };
 
   useEffect(() => {
     if (selectedVenue) {
@@ -139,13 +176,23 @@ export default function VenueSettings() {
           ? formatCurrency((selectedVenue.pricePerPersonHour * 100).toString())
           : "",
         maxGuest: selectedVenue.maxGuest?.toString() || "",
+        tiktokUrl: selectedVenue.tiktokUrl || "",
+        instagramUrl: selectedVenue.instagramUrl || "",
+        facebookUrl: selectedVenue.facebookUrl || "",
+        logoUrl: selectedVenue.logoUrl || "",
       });
+      setLogoPreview(selectedVenue.logoUrl || null);
     }
   }, [selectedVenue, form]);
 
   function formatCurrency(value: string | number) {
-    const number = typeof value === 'number' ? value : Number(value.replace(/\D/g, "")) / 100;
-    return number ? `R$ ${number.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : "";
+    const number =
+      typeof value === "number"
+        ? value
+        : Number(value.replace(/\D/g, "")) / 100;
+    return number
+      ? `R$ ${number.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+      : "";
   }
 
   function parseCurrencyStringToNumberString(value: string): string {
@@ -168,7 +215,7 @@ export default function VenueSettings() {
   }
 
   const onSubmit = async (data: VenueSettingsFormValues) => {
-    console.log('onSubmit disparado', data);
+    console.log("onSubmit disparado", data);
     setIsLoading(true);
     if (!selectedVenue.id || !user?.id) {
       console.log("venueId ou user.id não encontrado");
@@ -192,27 +239,30 @@ export default function VenueSettings() {
       const response = await updateVenue({
         venueId: selectedVenue.id,
         userId: user.id,
-        data: {
-          name: data.name,
-          email: data.email,
-          url: data.url,
-          street: data.street,
-          streetNumber: data.streetNumber,
-          complement: data.complement,
-          neighborhood: data.neighborhood,
-          city: data.city,
-          state: data.state,
-          cep: data.cep,
-          checkIn: data.checkIn,
-          checkOut: data.checkOut,
-          hasOvernightStay: data.hasOvernightStay,
-          pricingModel: data.pricingModel,
-          pricePerPerson: pricePerPerson || undefined,
-          pricePerDay: pricePerDay || undefined,
-          pricePerPersonDay: pricePerPersonDay || undefined,
-          pricePerPersonHour: pricePerPersonHour || undefined,
-          maxGuest: data.maxGuest,
-        },
+        name: data.name,
+        email: data.email,
+        url: data.url,
+        street: data.street,
+        streetNumber: data.streetNumber,
+        complement: data.complement,
+        neighborhood: data.neighborhood,
+        city: data.city,
+        state: data.state,
+        cep: data.cep,
+        checkIn: data.checkIn,
+        checkOut: data.checkOut,
+        hasOvernightStay: data.hasOvernightStay,
+        pricingModel: data.pricingModel,
+        pricePerPerson: pricePerPerson || undefined,
+        pricePerDay: pricePerDay || undefined,
+        pricePerPersonDay: pricePerPersonDay || undefined,
+        pricePerPersonHour: pricePerPersonHour || undefined,
+        maxGuest: data.maxGuest,
+        tiktokUrl: data.tiktokUrl,
+        instagramUrl: data.instagramUrl,
+        facebookUrl: data.facebookUrl,
+        logoUrl: data.logoUrl,
+        logoFile: data.logoFile,
       });
       console.log("response", response);
       const { title, message } = handleBackendSuccess(
@@ -241,7 +291,7 @@ export default function VenueSettings() {
 
   const handleDelete = async () => {
     if (!selectedVenue?.id || !selectedVenue?.organizationId) return;
-    
+
     try {
       setIsLoading(true);
       await deleteVenue(selectedVenue.id);
@@ -309,7 +359,7 @@ export default function VenueSettings() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-3 gap-4">
                 <div className="grid gap-2">
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-10 w-full" />
@@ -381,7 +431,7 @@ export default function VenueSettings() {
         entityType="Espaços"
       >
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="name"
@@ -411,7 +461,7 @@ export default function VenueSettings() {
           </div>
 
           <div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="street"
@@ -440,7 +490,7 @@ export default function VenueSettings() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <FormField
                 control={form.control}
                 name="complement"
@@ -469,7 +519,7 @@ export default function VenueSettings() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
               <FormField
                 control={form.control}
                 name="city"
@@ -513,199 +563,319 @@ export default function VenueSettings() {
           </div>
 
           <div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="pricingModel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Modelo de precificação</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um modelo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PER_PERSON">Por pessoa</SelectItem>
-                        <SelectItem value="PER_DAY">Por dia</SelectItem>
-                        <SelectItem value="PER_PERSON_DAY">
-                          Por pessoa/dia
-                        </SelectItem>
-                        <SelectItem value="PER_PERSON_HOUR">
-                          Por pessoa/hora
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+            <div className="space-y-6">
+              {/* Grid de 2 colunas: Modelo de precificação e Preço */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="pricingModel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Modelo de precificação</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um modelo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PER_PERSON">Por pessoa</SelectItem>
+                          <SelectItem value="PER_DAY">Por dia</SelectItem>
+                          <SelectItem value="PER_PERSON_DAY">
+                            Por pessoa/dia
+                          </SelectItem>
+                          <SelectItem value="PER_PERSON_HOUR">
+                            Por pessoa/hora
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {/* Preço dinâmico conforme modelo */}
+                {form.watch("pricingModel") === "PER_PERSON" && (
+                  <FormField
+                    control={form.control}
+                    name="pricePerPerson"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Preço por pessoa (R$)</FormLabel>
+                        <FormControl>
+                          <Input
+                            value={field.value}
+                            onChange={(e) =>
+                              handleCurrencyChange(e, field.onChange)
+                            }
+                            placeholder="R$ 0,00"
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
-              {form.watch("pricingModel") === "PER_PERSON" && (
-                <FormField
-                  control={form.control}
-                  name="pricePerPerson"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preço por pessoa (R$)</FormLabel>
-                      <FormControl>
-                        <Input
-                          value={field.value}
-                          onChange={(e) => handleCurrencyChange(e, field.onChange)}
-                          placeholder="R$ 0,00"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              {form.watch("pricingModel") === "PER_DAY" && (
-                <FormField
-                  control={form.control}
-                  name="pricePerDay"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preço por dia (R$)</FormLabel>
-                      <FormControl>
-                        <Input
-                          value={field.value}
-                          onChange={(e) => handleCurrencyChange(e, field.onChange)}
-                          placeholder="R$ 0,00"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              {form.watch("pricingModel") === "PER_PERSON_DAY" && (
-                <FormField
-                  control={form.control}
-                  name="pricePerPersonDay"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preço por pessoa/dia (R$)</FormLabel>
-                      <FormControl>
-                        <Input
-                          value={field.value}
-                          onChange={(e) => handleCurrencyChange(e, field.onChange)}
-                          placeholder="R$ 0,00"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              {form.watch("pricingModel") === "PER_PERSON_HOUR" && (
-                <FormField
-                  control={form.control}
-                  name="pricePerPersonHour"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preço por pessoa/hora (R$)</FormLabel>
-                      <FormControl>
-                        <Input
-                          value={field.value}
-                          onChange={(e) => handleCurrencyChange(e, field.onChange)}
-                          placeholder="R$ 0,00"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              <FormField
-                control={form.control}
-                name="maxGuest"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Capacidade </FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                {form.watch("pricingModel") === "PER_DAY" && (
+                  <FormField
+                    control={form.control}
+                    name="pricePerDay"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Preço por dia (R$)</FormLabel>
+                        <FormControl>
+                          <Input
+                            value={field.value}
+                            onChange={(e) =>
+                              handleCurrencyChange(e, field.onChange)
+                            }
+                            placeholder="R$ 0,00"
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
-              <FormField
-                control={form.control}
-                name="url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL do Espaço</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="url"
-                        placeholder="https://exemplo.com"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                {form.watch("pricingModel") === "PER_PERSON_DAY" && (
+                  <FormField
+                    control={form.control}
+                    name="pricePerPersonDay"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Preço por pessoa/dia (R$)</FormLabel>
+                        <FormControl>
+                          <Input
+                            value={field.value}
+                            onChange={(e) =>
+                              handleCurrencyChange(e, field.onChange)
+                            }
+                            placeholder="R$ 0,00"
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
-            </div>
-          </div>
+                {form.watch("pricingModel") === "PER_PERSON_HOUR" && (
+                  <FormField
+                    control={form.control}
+                    name="pricePerPersonHour"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Preço por pessoa/hora (R$)</FormLabel>
+                        <FormControl>
+                          <Input
+                            value={field.value}
+                            onChange={(e) =>
+                              handleCurrencyChange(e, field.onChange)
+                            }
+                            placeholder="R$ 0,00"
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
 
-          <div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {form.watch("hasOvernightStay") && (
-                <div className="col-span-1 md:col-span-2">
-                  <div className="grid grid-cols-2 gap-4">
+              {/* Capacidade sozinha */}
+              <div className="grid grid-cols-1">
+                <FormField
+                  control={form.control}
+                  name="maxGuest"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Capacidade </FormLabel>
+                      <FormControl>
+                        <Input type="number" className="w-full" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {form.watch("hasOvernightStay") && (
+                    <div className="col-span-1 md:col-span-2">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="checkIn"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Check-in</FormLabel>
+                              <FormControl>
+                                <Input type="time" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="checkOut"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Check-out</FormLabel>
+                              <FormControl>
+                                <Input type="time" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-2 mt-4 md:mt-6">
                     <FormField
                       control={form.control}
-                      name="checkIn"
+                      name="hasOvernightStay"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Check-in</FormLabel>
+                        <FormItem className="flex flex-row items-center space-x-2 m-0 p-0">
                           <FormControl>
-                            <Input type="time" {...field} />
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                if (!checked) {
+                                  form.setValue("checkIn", "");
+                                  form.setValue("checkOut", "");
+                                }
+                              }}
+                            />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="checkOut"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Check-out</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
+                          <FormLabel className="m-0 p-0">
+                            Permite pernoite
+                          </FormLabel>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
                 </div>
-              )}
-              <div className="flex items-center space-x-2 mt-4 md:mt-6">
+              </div>
+
+              {/* Grid de 2 colunas: URLs (2 por linha no desktop) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="hasOvernightStay"
+                  name="url"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-2 m-0 p-0">
+                    <FormItem>
+                      <FormLabel>URL do Espaço</FormLabel>
                       <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={(checked) => {
-                            field.onChange(checked);
-                            if (!checked) {
-                              form.setValue("checkIn", "");
-                              form.setValue("checkOut", "");
-                            }
-                          }}
+                        <Input
+                          type="url"
+                          placeholder="https://exemplo.com"
+                          className="w-full"
+                          {...field}
                         />
                       </FormControl>
-                      <FormLabel className="m-0 p-0">Permite pernoite</FormLabel>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="instagramUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL do Instagram</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="url"
+                          placeholder="https://instagram.com/seu-perfil"
+                          className="w-full"
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="facebookUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL do Facebook</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="url"
+                          placeholder="https://facebook.com/seu-perfil"
+                          className="w-full"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="tiktokUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL do TikTok</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="url"
+                          placeholder="https://tiktok.com/@seu-perfil"
+                          className="w-full"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="w-full">
+              <FormField
+                control={form.control}
+                name="logoFile"
+                render={({ field: { value, onChange, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Logo do Espaço</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        className="w-full"
+                        onChange={(e) => handleLogoChange(e, onChange)}
+                        {...field}
+                      />
+                    </FormControl>
+                    {logoPreview && (
+                      <div className="mt-2">
+                        <img
+                          src={logoPreview}
+                          alt="Logo do espaço"
+                          className="max-h-40 rounded border shadow"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => window.open(logoPreview, "_blank")}
+                        />
+                      </div>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
         </div>

@@ -21,7 +21,18 @@ interface ProposalNavProps {
   proposal: Proposal;
 }
 
-export function ProposalNav({ isCollapsed, onNavItemClick, proposal }: ProposalNavProps) {
+interface NavItem {
+  title: string;
+  href?: string;
+  action?: () => void;
+  icon: React.ElementType;
+}
+
+export function ProposalNav({
+  isCollapsed,
+  onNavItemClick,
+  proposal,
+}: ProposalNavProps) {
   const location = useLocation();
 
   function openWhatsApp(whatsapp: string) {
@@ -36,11 +47,13 @@ export function ProposalNav({ isCollapsed, onNavItemClick, proposal }: ProposalN
     const numeroLimpo = proposal.whatsapp.replace(/\D/g, "");
     const venueName = proposal.venue?.name || "";
     const message = `Olá ${proposal.completeClientName},\n\nVimos que você fez um orçamento conosco para sua festa e estamos muito felizes em saber que a nossa casa de eventos te chamou a atenção. ✨\n\nAqui está o link para o seu orçamento:\n\nhttps://www.ar756.com/orcamento/byId/${proposal.id}\n\nPara que você possa ter a certeza de que a AR756 é o local perfeito para realizar o seu grande dia, gostaríamos de te convidar para uma visita sem compromisso!\n\nAdoraríamos te mostrar pessoalmente todos os detalhes do nosso espaço, te apresentar as diversas opções de decoração e serviços que oferecemos, e te ajudar a visualizar como o seu evento dos sonhos se tornar realidade aqui.\n\nFicamos à sua disposição para te ajudar a realizar o evento dos seus sonhos!\n\nAtenciosamente,\nEquipe ${venueName}`;
-    const link = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(message)}`;
+    const link = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(
+      message
+    )}`;
     window.open(link, "whatsapp");
   }
-  console.log(proposal)
-  const proposalNavItems = [
+  console.log(proposal);
+  const proposalNavItems: NavItem[] = [
     {
       title: "Visão Geral",
       href: `/proposal/${proposal?.id}`,
@@ -58,12 +71,12 @@ export function ProposalNav({ isCollapsed, onNavItemClick, proposal }: ProposalN
     },
     {
       title: "Entrar em contato",
-      action: () => openWhatsApp(proposal?.whatsapp),
+      href: `/proposal/${proposal?.id}/send-message`,
       icon: MessageCircle,
     },
     {
       title: "Enviar Orçamento",
-      action: () => sendProposalWhatsApp(proposal),
+      href: `/proposal/${proposal?.id}/send-proposal`,
       icon: Send,
     },
     {
@@ -107,23 +120,7 @@ export function ProposalNav({ isCollapsed, onNavItemClick, proposal }: ProposalN
       )}
 
       {proposalNavItems.map((item) =>
-        item.action ? (
-          <button
-            key={item.title}
-            type="button"
-            className={cn(
-              "flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
-              "text-gray-700"
-            )}
-            onClick={() => {
-              item.action();
-              onNavItemClick();
-            }}
-          >
-            <item.icon className="h-5 w-5 mr-2" />
-            {!isCollapsed && <span>{item.title}</span>}
-          </button>
-        ) : (
+        item.href ? (
           <Link
             key={item.href}
             to={item.href}
@@ -138,10 +135,26 @@ export function ProposalNav({ isCollapsed, onNavItemClick, proposal }: ProposalN
             <item.icon className="h-5 w-5 mr-2" />
             {!isCollapsed && <span>{item.title}</span>}
           </Link>
+        ) : (
+          <button
+            key={item.title}
+            type="button"
+            className={cn(
+              "flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
+              "text-gray-700"
+            )}
+            onClick={() => {
+              item.action?.();
+              onNavItemClick();
+            }}
+          >
+            <item.icon className="h-5 w-5 mr-2" />
+            {!isCollapsed && <span>{item.title}</span>}
+          </button>
         )
       )}
     </div>
   );
 }
 
-export default ProposalNav; 
+export default ProposalNav;

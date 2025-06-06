@@ -20,6 +20,7 @@ interface FormLayoutProps<T extends FieldValues = FieldValues> {
   entityType?: string;
   isDeleting?: boolean;
   form: UseFormReturn<T>;
+  customSubmitButton?: React.ReactNode;
 }
 
 export function FormLayout<T extends FieldValues = FieldValues>({
@@ -36,6 +37,7 @@ export function FormLayout<T extends FieldValues = FieldValues>({
   entityType,
   isDeleting = false,
   form,
+  customSubmitButton,
 }: FormLayoutProps<T>) {
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
@@ -69,11 +71,13 @@ export function FormLayout<T extends FieldValues = FieldValues>({
                 Deletar
               </Button>
             )}
-            <AsyncActionButton
-              onClick={form.handleSubmit(onSubmit)}
-              label={submitLabel || (isEditing ? "Atualizar" : "Criar")}
-              disabled={isSubmitting}
-            />
+            {customSubmitButton || (
+              <AsyncActionButton
+                onClick={form.handleSubmit(onSubmit)}
+                label={submitLabel || (isEditing ? "Atualizar" : "Criar")}
+                disabled={isSubmitting}
+              />
+            )}
           </div>
         </form>
       </Form>

@@ -79,14 +79,10 @@ export const useVenueStore = create<VenueState>((set) => ({
     }
   },
 
-  updateVenue: async ({venueId, userId, data}: UpdateVenueDTO) => {
+  updateVenue: async (data: UpdateVenueDTO) => {
     try {
       set({ isLoading: true, error: null });
-      const response = await venueService.updateVenue({
-        venueId,
-        userId,
-        data
-      });
+      const response = await venueService.updateVenue(data);
       return response;
     } catch (err: unknown) {
       const error = err as ApiError;

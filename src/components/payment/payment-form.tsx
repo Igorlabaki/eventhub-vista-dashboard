@@ -164,7 +164,7 @@ export function PaymentForm({ payment, proposalId, venueId, userId, username, on
     setPreview(null);
     onCancel();
   };
-
+  console.log("values", payment?.imageUrl)
   return (
     <FormLayout
       form={form}

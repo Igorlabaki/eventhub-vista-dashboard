@@ -19,9 +19,35 @@ import {
   UpdateVenueDTO
 } from '@/types/venue';
 
+export type CreateVenueWithFileDTO = Omit<CreateVenueDTO, 'imageUrl'> & {
+  file?: File;
+};
+
+export type UpdateVenueWithFileDTO = Omit<UpdateVenueDTO, 'imageUrl'> & {
+  file?: File;
+};
+
 export const venueService = {
-  createVenue: async (data: CreateVenueDTO) => {
-    const response = await api.post<VenueCreateResponse>('/venue/create', data);
+  createVenue: async (data: CreateVenueWithFileDTO) => {
+    const formData = new FormData();
+    
+    // Adiciona todos os campos do DTO ao FormData
+    Object.entries(data).forEach(([key, value]) => {
+      if (key !== 'file' && value !== undefined) {
+        formData.append(key, String(value));
+      }
+    });
+    console.log("data.file", data.file)
+    // Adiciona o arquivo se existir
+    if (data.file) {
+      formData.append('file', data.file, data.file.name);
+    }
+
+    const response = await api.post<VenueCreateResponse>('/venue/create', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
@@ -35,8 +61,26 @@ export const venueService = {
     return response.data;
   },
 
-  updateVenue: async (data: UpdateVenueDTO) => {
-    const response = await api.put<VenueUpdateResponse>(`/venue/update`, data);
+  updateVenue: async (data: UpdateVenueWithFileDTO) => {
+    const formData = new FormData();
+    
+    // Adiciona todos os campos do DTO ao FormData
+    Object.entries(data).forEach(([key, value]) => {
+      if (key !== 'logoFile' && value !== undefined) {
+        formData.append(key, String(value));
+      }
+    });
+    console.log("data.logoFile", data.logoFile)
+    // Adiciona o arquivo se existir
+    if (data.logoFile) {
+      formData.append('file', data.logoFile, data.logoFile.name);
+    }
+
+    const response = await api.put<VenueUpdateResponse>('/venue/update', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
