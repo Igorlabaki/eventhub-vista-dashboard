@@ -60,7 +60,7 @@ export function ProposalNav({
       icon: LayoutDashboard,
     },
     {
-      title: "Editar Orçamento",
+      title: "Editar",
       href: `/proposal/${proposal?.id}/edit`,
       icon: Edit,
     },

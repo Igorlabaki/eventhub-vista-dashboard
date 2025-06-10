@@ -18,7 +18,7 @@ interface EmailConfigStore {
   error: string | null;
   setEmailConfigs: (emailConfigs: EmailConfig[]) => void;
   setCurrentEmailConfig: (emailConfig: EmailConfig | null) => void;
-  fetchEmailConfigs: (venueId: string, type?: 'PROPOSAL' | 'CONTRACT') => Promise<void>;
+  fetchEmailConfigs: (venueId: string, type?: string) => Promise<void>;
   fetchEmailConfigById: (emailConfigId: string) => Promise<void>;
   createEmailConfig: (data: CreateEmailConfigDTO) => Promise<EmailConfigCreateResponse>;
   updateEmailConfig: (data: UpdateEmailConfigDTO) => Promise<EmailConfigUpdateResponse>;
@@ -27,6 +27,7 @@ interface EmailConfigStore {
   updateEmailConfigInStore: (emailConfig: EmailConfig) => void;
   removeEmailConfig: (emailConfigId: string) => void;
   clearError: () => void;
+  fetchEmailConfigByType: (venueId: string, type: string) => Promise<void>;
 }
 
 interface ApiError {
@@ -50,7 +51,7 @@ export const useEmailConfigStore = create<EmailConfigStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await emailConfigService.getEmailConfigsList(venueId, type);
-      set({ emailConfigs: response.data.emailConfigList });
+      set({ emailConfigs: response.data });
     } catch (err: unknown) {
       const error = err as ApiError;
       set({
@@ -66,7 +67,8 @@ export const useEmailConfigStore = create<EmailConfigStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await emailConfigService.getEmailConfigById(emailConfigId);
-      set({ currentEmailConfig: response.data.emailConfig });
+      console.log("response", response);
+      set({ currentEmailConfig: response.data });
     } catch (err: unknown) {
       const error = err as ApiError;
       set({
@@ -150,4 +152,20 @@ export const useEmailConfigStore = create<EmailConfigStore>((set, get) => ({
   })),
 
   clearError: () => set({ error: null }),
+
+  fetchEmailConfigByType: async (venueId: string, type: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await emailConfigService.getEmailConfigByType(venueId, type as string);
+      set({ currentEmailConfig: response.data });
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      set({
+        error: error?.response?.data?.message || "Não foi possível carregar a configuração de email por tipo.",
+        currentEmailConfig: null
+      });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 })); 

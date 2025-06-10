@@ -36,9 +36,7 @@ export interface UpdateEmailConfigDTO {
 export interface EmailConfigByIdResponse {
     success: true;
     message: string;
-    data: {
-        emailConfig: EmailConfig;
-    };
+    data: EmailConfig;
     count: number;
     type: string;
 }
@@ -46,9 +44,7 @@ export interface EmailConfigByIdResponse {
 export interface EmailConfigListResponse {
     success: true;
     message: string;
-    data: {
-        emailConfigList: EmailConfig[];
-    };
+    data: EmailConfig[];
     count: number;
     type: string;
 }

@@ -32,7 +32,7 @@ export default function SendProposalPage() {
     defaultValues: {
       message: `Olá ${currentProposal?.completeClientName},\n\nVimos que você fez um orçamento conosco para seu evento e estamos 
       muito felizes em saber que a nossa casa de eventos te chamou a atenção. ✨\n\nAqui está o link para o seu 
-      orçamento:\n\n${venue?.url}/orcamento/byId/${currentProposal?.id}\n\n
+      orçamento:\n\n${venue?.url}orcamento/byId/${currentProposal?.id}\n\n
       Para que você possa ter a certeza de que o espaço ${venue?.name} é o local perfeito para realizar o seu grande dia, gostaríamos de te convidar para uma visita sem compromisso!\n\nAdoraríamos te mostrar pessoalmente todos os detalhes do nosso espaço, te apresentar as diversas opções de decoração e serviços que oferecemos, e te ajudar a visualizar como o seu evento dos sonhos se tornar realidade aqui.\n\nFicamos à sua disposição para te ajudar a realizar o evento dos seus sonhos!\n\nAtenciosamente,\nEquipe ${venue?.name}`,
       file: null,
     },
@@ -44,7 +44,9 @@ export default function SendProposalPage() {
       return;
     }
     const numeroLimpo = currentProposal.whatsapp.replace(/\D/g, "");
-    const link = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(values.message)}`;
+    const link = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(
+      values.message
+    )}`;
     window.open(link, "whatsapp");
   };
 
@@ -56,8 +58,8 @@ export default function SendProposalPage() {
       }
 
       const emailConfigData: CreateEmailConfigWithFileDTO = {
-        title: `Orçamento - ${venue.name}`,
-        type: 'PROPOSAL' as const,
+        title: `PROPOSAL - ${venue.name}`,
+        type: "PROPOSAL" as const,
         message: values.message,
         venueId: venue.id,
         file: values.file || undefined,
@@ -73,6 +75,7 @@ export default function SendProposalPage() {
         message: values.message,
         userId: user.id,
         username: user.username || "",
+        venueId: venue.id,
       });
       toast.success("Orçamento enviado por email com sucesso!");
     } catch (error) {
@@ -85,37 +88,42 @@ export default function SendProposalPage() {
   }
 
   return (
-    <DashboardLayout title="Enviar Orçamento" subtitle="Envie o orçamento para o cliente via WhatsApp ou email">
+    <DashboardLayout
+      title="Enviar Orçamento"
+      subtitle="Envie o orçamento para o cliente via WhatsApp ou email"
+    >
       <div className="space-y-6">
         <SendProposalHeader activeTab={activeTab} onTabChange={setActiveTab} />
         <Tabs value={activeTab}>
-          <FormLayout
-            form={form}
-            title="Mensagem do Orçamento"
-            onSubmit={activeTab === "whatsapp" ? onSubmitWhatsApp : onSubmitEmail}
-            onCancel={() => window.history.back()}
-            submitLabel="Enviar"
-          >
-            <TabsContent value="whatsapp">
+          <TabsContent value="whatsapp">
+            <FormLayout
+              form={form}
+              title="Mensagem do Orçamento"
+              onSubmit={
+                activeTab === "whatsapp" ? onSubmitWhatsApp : onSubmitEmail
+              }
+              onCancel={() => window.history.back()}
+              submitLabel="Enviar"
+            >
               <WhatsAppTab
                 proposal={currentProposal}
                 venueUrl={venue.url}
                 venueName={venue.name}
                 form={form}
               />
-            </TabsContent>
+            </FormLayout>
+          </TabsContent>
 
-            <TabsContent value="email">
-              <EmailTab
-                proposal={currentProposal}
-                venueUrl={venue.url}
-                venueName={venue.name}
-                form={form}
-              />
-            </TabsContent>
-          </FormLayout>
+          <TabsContent value="email">
+            <EmailTab
+              proposal={currentProposal}
+              venueUrl={venue.url}
+              venueName={venue.name}
+              form={form}
+            />
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
   );
-} 
+}

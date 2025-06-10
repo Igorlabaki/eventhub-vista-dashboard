@@ -310,7 +310,7 @@ export default function VenueSettings() {
       setIsLoading(false);
     }
   };
-
+  console.log(selectedVenue.logoUrl)
   if (isLoading) {
     return (
       <DashboardLayout

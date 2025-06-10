@@ -22,6 +22,7 @@ export type UpdateEmailConfigWithFileDTO = Omit<UpdateEmailConfigDTO, 'data'> & 
 export const emailConfigService = {
   createEmailConfig: async (data: CreateEmailConfigWithFileDTO) => {
     const formData = new FormData();
+    console.log("data", data)
     formData.append('title', data.title || '');
     formData.append('type', data.type);
     formData.append('message', data.message || '');
@@ -68,6 +69,11 @@ export const emailConfigService = {
 
   deleteEmailConfig: async (emailConfigId: string) => {
     const response = await api.delete<EmailConfigDeleteResponse>(`/emailConfig/delete/${emailConfigId}`);
+    return response.data;
+  },
+
+  getEmailConfigByType: async (venueId: string, type: string) => {
+    const response = await api.get(`/emailConfig/getByType?venueId=${venueId}&type=${type}`);
     return response.data;
   }
 }; 

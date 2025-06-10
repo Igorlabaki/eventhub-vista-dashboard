@@ -9,6 +9,7 @@ interface SendProposalEmailParams {
   message?: string;
   userId?: string;
   username?: string;
+  venueId: string;
 }
 
 interface SendContractEmailParams {
@@ -20,6 +21,7 @@ interface SendContractEmailParams {
   message?: string;
   userId?: string;
   username?: string;
+  venueId: string;
 }
 
 export const emailService = {

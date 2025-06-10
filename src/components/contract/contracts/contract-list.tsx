@@ -14,8 +14,6 @@ import {
 import { ContractListSkeleton } from "./contract-list-skeleton";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { Contract } from "@/types/contract";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 
 interface ContractListProps {
   contracts: Contract[];

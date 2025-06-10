@@ -77,6 +77,11 @@ export default function OrganizationContracts() {
     setIsCreatingContract(true);
   };
 
+  const handleCancelCreate = () => {
+    setIsCreatingContract(false);
+    setSelectedContract(null);
+  };
+
   const handleContractFormSubmit = async (data: ContractPayload) => {
     try {
       let response;
@@ -103,8 +108,7 @@ export default function OrganizationContracts() {
       }
       const { title, message } = handleBackendSuccess(response, selectedContract ? "Contrato atualizado com sucesso!" : "Contrato criado com sucesso!");
       showSuccessToast({ title, description: message });
-      setIsCreatingContract(false);
-      setSelectedContract(null);
+      handleCancelCreate();
     } catch (error: unknown) {
       const { title, message } = handleBackendError(error, "Erro ao salvar contrato. Tente novamente mais tarde.");
       toast({ title, description: message, variant: "destructive" });
@@ -134,7 +138,7 @@ export default function OrganizationContracts() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Contratos" subtitle="Gerencie os contratos da sua organização">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <ContractHeader
           activeTab={activeTab}
@@ -149,7 +153,7 @@ export default function OrganizationContracts() {
           isFormOpen={
             (activeTab === "clausulas" && (isCreatingClause || selectedClause !== undefined)) ||
             (activeTab === "anexos" && selectedAttachment !== undefined) ||
-            (activeTab === "contratos" && (isCreatingContract || selectedContract !== undefined))
+            (activeTab === "contratos" && (isCreatingContract || selectedContract !== null))
           }
         />
 
@@ -186,7 +190,7 @@ export default function OrganizationContracts() {
             selectedContract={selectedContract}
             setSelectedContract={setSelectedContract}
             onCreateClick={handleCreateContract}
-            onCancelCreate={() => setIsCreatingContract(false)}
+            onCancelCreate={handleCancelCreate}
             onSubmit={handleContractFormSubmit}
             clauses={clauses}
             venues={venues}
