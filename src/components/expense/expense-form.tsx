@@ -140,10 +140,6 @@ export function ExpenseForm({
 
   React.useEffect(() => {
     const subscription = form.watch((value, { name, type }) => {
-      console.log('Campo alterado:', name, value);
-      if (form.formState.errors[name as keyof ExpenseFormValues]) {
-        console.log('Erro no campo:', name, form.formState.errors[name as keyof ExpenseFormValues]);
-      }
     });
     return () => subscription.unsubscribe();
   }, [form.watch, form.formState.errors]);

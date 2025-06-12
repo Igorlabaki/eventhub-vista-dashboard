@@ -35,7 +35,7 @@ export function VenueCard({
   const handleViewVenue = () => {
     navigate(`/venue/${id}`);
   };
-  console.log(nextEvent?.startDate)
+
   // Função para formatar a data sem considerar fuso horário
   function formatarDataIso(isoString: string) {
     const [datePart, timePart] = isoString.split("T");

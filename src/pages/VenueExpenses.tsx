@@ -94,7 +94,7 @@ export default function VenueExpenses() {
   });
 
   const showForm = isCreatingExpense || !!selectedExpense;
-  console.log(expenses);
+
   return (
     <DashboardLayout>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

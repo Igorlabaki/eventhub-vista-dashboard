@@ -52,7 +52,7 @@ export function ProposalNav({
     )}`;
     window.open(link, "whatsapp");
   }
-  console.log(proposal);
+
   const proposalNavItems: NavItem[] = [
     {
       title: "Visão Geral",

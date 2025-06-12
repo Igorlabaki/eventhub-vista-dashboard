@@ -48,7 +48,7 @@ export default function OrganizationVenues() {
       });
       return;
     }
-console.log(venues)
+
     updateOrganization.mutate(
       { organizationId, data: { name: values.name } },
       {

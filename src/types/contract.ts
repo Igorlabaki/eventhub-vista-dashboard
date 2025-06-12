@@ -1,5 +1,6 @@
 import { Venue } from "@/components/ui/venue-list";
 import { Organization } from "./organization";
+import { Attachment } from "./attachment";
 
 export interface Clause {
   id: string;
@@ -17,6 +18,7 @@ export interface Contract {
   organization: Organization;
   venues: Venue[];
   clauses: Clause[];
+  attachments: Attachment[];
 }
 
 export interface CreateContractDTO {

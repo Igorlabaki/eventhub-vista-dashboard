@@ -28,9 +28,9 @@ export default function VenueWebsite() {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString()
       }).then(() => {
-        console.log('Métricas carregadas:', analytics);
+     
       }).catch(error => {
-        console.error('Erro ao carregar métricas:', error);
+    
       });
     }
   }, [selectedVenue?.id, fetchImages, fetchAnalytics]);

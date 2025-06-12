@@ -53,7 +53,7 @@ export default function OrganizationSettings() {
   const onSubmit = async (data: OrganizationSettingsFormValues) => {
     setIsLoading(true);
     if (!organizationId || !user?.id) {
-      console.log("organizationId ou user.id não encontrado");
+     
       return;
     }
 

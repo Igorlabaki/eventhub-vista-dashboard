@@ -70,17 +70,17 @@ export function ContractForm({
 
   // LOG: mostrar selectedClauseIds sempre que mudar
   useEffect(() => {
-    console.log("selectedClauseIds:", selectedClauseIds);
+
   }, [selectedClauseIds]);
 
   const handleClauseClick = (clause: Clause) => {
-    console.log("Clicou na cláusula:", clause.id, clause.title);
+
     setSelectedClauseIds(prev => {
       if (prev.includes(clause.id)) {
-        console.log("Removendo cláusula:", clause.id, clause.title);
+
         return prev.filter(id => id !== clause.id)
       } else {
-        console.log("Adicionando cláusula:", clause.id, clause.title);
+   
         return [...prev, clause.id]
       }
     })
@@ -214,7 +214,7 @@ export function ContractForm({
             <div className="flex flex-col gap-2">
               {filteredClauses.map((clause) => {
                 const selectedIdx = selectedClauseIds.indexOf(clause.id);
-                console.log(`Cláusula: ${clause.title} | id: ${clause.id} | selectedIdx:`, selectedIdx);
+          
                 return (
                   <ClauseItem
                     key={clause.id}

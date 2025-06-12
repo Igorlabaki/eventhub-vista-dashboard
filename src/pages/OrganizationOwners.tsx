@@ -65,7 +65,7 @@ export default function OrganizationOwners() {
     >
       <PageHeader
         isFormOpen={isCreating || isEditing}
-        count={owners.length}
+        count={owners?.length}
         onCreateClick={handleCreateClick}
         createButtonText="Novo Proprietário"
       />
@@ -77,7 +77,7 @@ export default function OrganizationOwners() {
             <OwnersListSkeleton />
           ) : (
             <FilterList
-              items={owners}
+              items={owners || []}
               filterBy={filterOwners}
               placeholder="Buscar proprietários..."
             >

@@ -16,6 +16,7 @@ import { BackendResponse } from '@/lib/error-handler';
 
 interface OwnerStore {
   owners: Owner[];
+  ownersByVenueId: Owner[];
   currentOwner: Owner | null;
   isLoading: boolean;
   error: string | null;
@@ -44,6 +45,7 @@ interface ApiError {
 
 export const useOwnerStore = create<OwnerStore>((set, get) => ({
   owners: [],
+  ownersByVenueId: [],
   currentOwner: null,
   isLoading: false,
   error: null,
@@ -71,12 +73,12 @@ export const useOwnerStore = create<OwnerStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await ownerService.getOwnersByVenueId(params);
-      set({ owners: response.data.ownerByOrganizationList });
+      set({ ownersByVenueId: response.data.ownerByVenueList });
     } catch (err: unknown) {
       const error = err as ApiError;
       set({ 
         error: error?.response?.data?.message || "Não foi possível carregar os proprietários do espaço.",
-        owners: [] 
+        ownersByVenueId: [] 
       });
     } finally {
       set({ isLoading: false });

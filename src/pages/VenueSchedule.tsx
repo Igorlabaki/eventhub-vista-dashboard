@@ -83,7 +83,7 @@ export default function VenueSchedule() {
   useEffect(() => {
     fetchDateEvents();
   }, []);
-  console.log(dateEvents)
+
   // Formulário de criação de evento
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
@@ -101,7 +101,7 @@ export default function VenueSchedule() {
   });
 
   async function onSubmit(data: EventFormValues) {
-    console.log(data)
+
     try {
       const response = await createOvernightEvent({
         userId: data.userId,

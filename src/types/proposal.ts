@@ -1,14 +1,13 @@
 import { Venue } from "@/components/ui/venue-list";
-/* import { Person } from "./person";
-import { History } from "./history"; */
 import { Payment } from "./payment";
 import { DateEvent } from "./dateEvent";
-/* import { ProposalCost } from "./proposalCost";
-import { ProposalService } from "./proposalService"; */
 import { Notification } from "./notification";
 import { Service } from "./service";
-/* import { Schedule } from "./schedule";
-import { Document } from "./document"; */
+import { Schedule } from "./schedule";
+import { Document, DocumentType } from "./document";
+import { Person } from "./person";
+import { Owner } from "./owner";
+
 
 export enum ProposalType {
   EVENT = "EVENT",
@@ -73,16 +72,17 @@ export interface Proposal {
   paid?: boolean;
   amountPaid?: number;
   venueId: string;
+  organizationId: string;
   venue: Venue;
   dateEvents: DateEvent[];
   noificationList: Notification[];
   histories?: History[];
-  /*   personList: Person[]; */
+  personList: Person[];
   payments: Payment[];
-  /*   proposalCosts: ProposalCost[]; */
   proposalServices: ProposalService[];
-  /*   schedules: Schedule[]; */
-  /*   documents: Document[]; */
+  schedules: Schedule[];
+  documents: Document[];
+  owners: Owner[];
 }
 
 export interface ProposalService {

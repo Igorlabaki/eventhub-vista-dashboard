@@ -47,6 +47,7 @@ import VenueWebsiteImages from "./pages/website/VenueWebsiteImages";
 import OrganizationSettings from "./pages/OrganizationSettings";
 import SendMessagePage from "./pages/SendMessagePage";
 import SendProposalPage from "./pages/SendProposalPage";
+import ProposalContract from "./pages/ProposalContract";
 
 const queryClient = new QueryClient();
 
@@ -59,7 +60,6 @@ function AppInitializer() {
 
 const ProposalContact = () => <div>Entrar em contato</div>;
 const ProposalSend = () => <div>Enviar Orçamento</div>;
-const ProposalContract = () => <div>Enviar Contrato</div>;
 
 const App = () => {
   return (
@@ -114,6 +114,7 @@ const App = () => {
               <Route path="/proposal/:id/schedule" element={<ProtectedRoute><ScheduleListPage /></ProtectedRoute>} />
               <Route path="/proposal/:id/send-message" element={<ProtectedRoute><SendMessagePage /></ProtectedRoute>} />
               <Route path="/proposal/:id/send-proposal" element={<ProtectedRoute><SendProposalPage /></ProtectedRoute>} />
+              <Route path="/proposal/:id/contract" element={<ProtectedRoute><ProposalContract /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

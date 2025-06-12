@@ -25,12 +25,13 @@ import { Clause } from "@/types/clause";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useToast } from "@/hooks/use-toast";
 import { AttachmentsSection } from "@/components/contract/attachments/attachments-section";
-import { useGetVenuesList } from "@/hooks/venue/queries/list";
+import { useVenueStore } from "@/store/venueStore";
 import { useClauseStore } from "@/store/clauseStore";
 import ContractSection from "@/components/contract/contracts/contract-section";
 import { useContractStore } from "@/store/contractStore";
 import { Venue } from "@/components/ui/venue-list";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
+import { useUserStore } from "@/store/userStore";
 
 type ContractClausePayload = { text: string; title: string; position: number };
 type ContractPayload = {
@@ -51,17 +52,19 @@ export default function OrganizationContracts() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreatingClause, setIsCreatingClause] = useState(false);
   const [selectedClause, setSelectedClause] = useState<Clause | null | undefined>(undefined);
-  const { data: venues = [] } = useGetVenuesList(organizationId || "");
+  const { venues, isLoading: isLoadingVenues, fetchVenues } = useVenueStore();
+  const { user } = useUserStore();
   const [isCreatingContract, setIsCreatingContract] = useState(false);
 
   const { contracts, isLoading: isLoadingContracts, fetchContracts, createContract, updateContract, deleteContract } = useContractStore();
 
   useEffect(() => {
-    if (organizationId) {
+    if (organizationId && user?.id) {
       fetchClauses(organizationId);
       fetchContracts({ organizationId });
+      fetchVenues({ organizationId, userId: user.id });
     }
-  }, [organizationId, fetchClauses, fetchContracts]);
+  }, [organizationId, user?.id, fetchClauses, fetchContracts, fetchVenues]);
 
 
   const handleCreateClause = () => {

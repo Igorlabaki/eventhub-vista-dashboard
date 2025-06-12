@@ -179,7 +179,7 @@ export default function OrganizationPermissions() {
       });
     }
   };
-  console.log("permissions", userPermissions);
+  
   // Render the appropriate view based on state
   const renderContent = () => {
     return (

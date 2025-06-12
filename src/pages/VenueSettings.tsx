@@ -215,10 +215,10 @@ export default function VenueSettings() {
   }
 
   const onSubmit = async (data: VenueSettingsFormValues) => {
-    console.log("onSubmit disparado", data);
+   
     setIsLoading(true);
     if (!selectedVenue.id || !user?.id) {
-      console.log("venueId ou user.id não encontrado");
+  
       return;
     }
 
@@ -264,7 +264,7 @@ export default function VenueSettings() {
         logoUrl: data.logoUrl,
         logoFile: data.logoFile,
       });
-      console.log("response", response);
+    
       const { title, message } = handleBackendSuccess(
         response,
         "Configurações atualizadas com sucesso!"
@@ -274,7 +274,7 @@ export default function VenueSettings() {
         description: message,
       });
     } catch (error: unknown) {
-      console.log("error", error);
+     
       const { title, message } = handleBackendError(
         error,
         "Erro ao atualizar configurações. Tente novamente mais tarde."
@@ -310,7 +310,7 @@ export default function VenueSettings() {
       setIsLoading(false);
     }
   };
-  console.log(selectedVenue.logoUrl)
+
   if (isLoading) {
     return (
       <DashboardLayout

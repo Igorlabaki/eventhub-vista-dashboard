@@ -10,12 +10,15 @@ import { BackendResponse } from '@/lib/error-handler';
 
 interface ContractStore {
   contracts: Contract[];
+  venueContracts: Contract[];
   currentContract: Contract | null;
   isLoading: boolean;
   error: string | null;
   setContracts: (contracts: Contract[]) => void;
+  setVenueContracts: (contracts: Contract[]) => void;
   setCurrentContract: (contract: Contract | null) => void;
   fetchContracts: (params: ListContractParams) => Promise<void>;
+  fetchVenueContracts: (params: ListContractParams & { venueId: string }) => Promise<void>;
   fetchContractById: (contractId: string) => Promise<void>;
   createContract: (data: CreateContractDTO) => Promise<BackendResponse<Contract>>;
   updateContract: (data: UpdateContractDTO) => Promise<BackendResponse<Contract>>;
@@ -36,10 +39,12 @@ interface ApiError {
 
 export const useContractStore = create<ContractStore>((set, get) => ({
   contracts: [],
+  venueContracts: [],
   currentContract: null,
   isLoading: false,
   error: null,
   setContracts: (contracts) => set({ contracts }),
+  setVenueContracts: (contracts) => set({ venueContracts: contracts }),
   setCurrentContract: (contract) => set({ currentContract: contract }),
   
   fetchContracts: async (params) => {
@@ -52,6 +57,22 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       set({ 
         error: error?.response?.data?.message || "Não foi possível carregar os contratos.",
         contracts: [] 
+      });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchVenueContracts: async (params) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await contractService.listContracts(params);
+      set({ venueContracts: response.data.contractList });
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      set({ 
+        error: error?.response?.data?.message || "Não foi possível carregar os contratos do local.",
+        venueContracts: [] 
       });
     } finally {
       set({ isLoading: false });

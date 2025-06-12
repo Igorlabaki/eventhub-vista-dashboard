@@ -11,13 +11,14 @@ import {
 } from "@/components/ui/table";
 import { Owner } from "@/types/owner";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { EmptyState } from "@/components/EmptyState";
 import { VenueSelectionDialog } from "./VenueSelectionDialog";
-import { useGetVenuesList } from "@/hooks/venue/queries/list";
+import { useVenueStore } from "@/store/venueStore";
 import { showSuccessToast } from "../ui/success-toast";
 import { useOwnerStore } from "@/store/ownerStore";
+import { useUserStore } from "@/store/userStore";
 
 interface OwnersListProps {
   owners: Owner[];
@@ -43,7 +44,14 @@ export function OwnersList({
   const [ownerToDelete, setOwnerToDelete] = useState<Owner | null>(null);
   const [venueDialogOpen, setVenueDialogOpen] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
-  const { data: venues = [] } = useGetVenuesList(organizationId);
+  const { venues, isLoading: isLoadingVenues, fetchVenues } = useVenueStore();
+  const { user } = useUserStore();
+
+  useEffect(() => {
+    if (organizationId && user?.id) {
+      fetchVenues({ organizationId, userId: user.id });
+    }
+  }, [organizationId, user?.id, fetchVenues]);
 
   // Filter owners by search term
   const filteredOwners = owners.filter(owner => 

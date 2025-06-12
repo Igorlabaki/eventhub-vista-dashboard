@@ -37,7 +37,7 @@ export const venueService = {
         formData.append(key, String(value));
       }
     });
-    console.log("data.file", data.file)
+  
     // Adiciona o arquivo se existir
     if (data.file) {
       formData.append('file', data.file, data.file.name);
@@ -70,7 +70,7 @@ export const venueService = {
         formData.append(key, String(value));
       }
     });
-    console.log("data.logoFile", data.logoFile)
+
     // Adiciona o arquivo se existir
     if (data.logoFile) {
       formData.append('file', data.logoFile, data.logoFile.name);

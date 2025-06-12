@@ -57,7 +57,7 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
   const { selectedVenue: currentVenue } = useVenueStore();
 
   const isOvernight = currentVenue?.hasOvernightStay;
-  console.log(currentVenue)
+
 
   const baseSchema = {
     title: z.string().min(1, "Título é obrigatório"),

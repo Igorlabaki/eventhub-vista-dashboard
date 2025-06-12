@@ -49,12 +49,6 @@ import { useGoalStore } from "@/store/goalStore";
 import { useParams } from "react-router-dom";
 import { useSeasonalFeeStore } from "@/store/seasonalFeeStore";
 import { GoalHeader } from "@/components/goal/goal-header";
-import { GoalForm } from "@/components/goal/goal-form";
-import { FeeForm } from "@/components/goal/fee-form";
-import { DiscountForm } from "@/components/goal/discount-form";
-import { FilterList } from "@/components/filterList";
-import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
-import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { GoalsTab } from "@/components/goal/GoalsTab";
 import { FeesTab } from "@/components/goal/FeesTab";
 import { DiscountsTab } from "@/components/goal/DiscountsTab";
@@ -277,7 +271,11 @@ export default function VenueGoals() {
       const response = await updateVenue({
         venueId: venueId!,
         userId: user?.id,
-        data: updateData
+        pricingModel: values.pricingModel as PricingModel,
+        pricePerDay: values.price && values.price !== "0" ? values.price : undefined,
+        pricePerPerson: values.price && values.price !== "0" ? values.price : undefined,
+        pricePerPersonDay: values.price && values.price !== "0" ? values.price : undefined,
+        pricePerPersonHour: values.price && values.price !== "0" ? values.price : undefined,
       });
       const { title, message } = handleBackendSuccess(response, "Preço atualizado com sucesso!");
       showSuccessToast({ title, description: message });

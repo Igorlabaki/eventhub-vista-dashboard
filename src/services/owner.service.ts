@@ -8,7 +8,8 @@ import {
   OwnerDeleteResponse,
   CreateVenueOwnerRequestParams,
   CreateOrganizationOwnerRequestParams,
-  ListOwnerByVenueIdQuerySchema
+  ListOwnerByVenueIdQuerySchema,
+  OwnerVenueListResponse
 } from '@/types/owner';
 
 export const ownerService = {
@@ -28,7 +29,7 @@ export const ownerService = {
   },
 
   getOwnersByVenueId: async (params: ListOwnerByVenueIdQuerySchema) => {
-    const response = await api.get<OwnerListResponse>('/owner/listByVenue', { params });
+    const response = await api.get<OwnerVenueListResponse>(`/owner/listByVenue?organizationId=${params.organizationId}&venueId=${params.venueId}`);
     return response.data;
   },
 

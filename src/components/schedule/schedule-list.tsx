@@ -62,7 +62,7 @@ export function ScheduleList({
       />
     );
   }
-  console.log(schedules);
+
   return (
     <div className={cn("space-y-4", className)}>
       <Table className="bg-white rounded-md shadow-lg">

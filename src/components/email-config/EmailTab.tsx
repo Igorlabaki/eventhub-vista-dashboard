@@ -61,7 +61,7 @@ export function EmailTab({
     }
   }, [currentEmailConfig]);
 
-  console.log("currentEmailConfig", currentEmailConfig?.backgroundImageUrl);
+
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

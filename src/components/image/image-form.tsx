@@ -136,7 +136,6 @@ export function ImageForm({ imageItem, venueId, onSubmit, onCancel }: ImageFormP
   const handleSubmit = async (values: ImageFormValues) => {
     setIsSubmitting(true);
     try {
-      console.log('FILE SUBMIT', values.file);
       await onSubmit({
         file: values.file,
         tag: values.tag,

@@ -1,3 +1,4 @@
+import { Attachment } from "./attachment";
 import { DateEvent } from "./date-event";
 import { Organization } from "./organization";
 
@@ -47,8 +48,9 @@ export interface Venue {
   UserPermission: any[];
   seasonalFee: any[];
   contracts: any[];
-  attachments: any[];
-  goals: any[]; */
+  goals: any[]; 
+  */
+  attachments: Attachment[];
 };
 
 export interface CreateVenueDTO {

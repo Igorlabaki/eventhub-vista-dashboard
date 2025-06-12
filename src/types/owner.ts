@@ -139,6 +139,15 @@ export interface OwnerListResponse {
   count: number,
   type: string
 }
+export interface OwnerVenueListResponse {
+  success: true,
+  message: string,
+  data: {
+    ownerByVenueList: Owner[]
+  },
+  count: number,
+  type: string
+}
 
 export interface OwnerCreateResponse {
   success: true,

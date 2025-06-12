@@ -10,14 +10,8 @@ const VERCEL_API_TOKEN = import.meta.env.VITE_VERCEL_API_TOKEN;
 
 export const analyticsService = {
   getAnalytics: async (params: ListAnalyticsParams) => {
-    console.log("variaveis", VERCEL_PROJECT_ID, VERCEL_API_TOKEN);
+   
     try {
-      console.log('Iniciando busca de métricas com:', {
-        projectId: VERCEL_PROJECT_ID,
-        startDate: params.startDate,
-        endDate: params.endDate
-      });
-
       // Obtém as métricas de visitas
       const visitsResponse = await fetch(
         `${VERCEL_API_URL}/insights/visits?projectId=${VERCEL_PROJECT_ID}&from=${params.startDate}&to=${params.endDate}`,
@@ -30,12 +24,12 @@ export const analyticsService = {
 
       if (!visitsResponse.ok) {
         const errorData = await visitsResponse.json();
-        console.error('Erro na resposta de visitas:', errorData);
+       
         throw new Error(`Erro ao buscar visitas: ${errorData.message || visitsResponse.statusText}`);
       }
 
       const visitsData = await visitsResponse.json();
-      console.log('Dados de visitas:', visitsData);
+  
 
       // Obtém as métricas de SEO
       const seoResponse = await fetch(
@@ -49,12 +43,12 @@ export const analyticsService = {
 
       if (!seoResponse.ok) {
         const errorData = await seoResponse.json();
-        console.error('Erro na resposta de SEO:', errorData);
+      
         throw new Error(`Erro ao buscar SEO: ${errorData.message || seoResponse.statusText}`);
       }
 
       const seoData = await seoResponse.json();
-      console.log('Dados de SEO:', seoData);
+    
 
       // Formata os dados para o formato esperado pela aplicação
       const analyticsData = {
@@ -69,8 +63,6 @@ export const analyticsService = {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-
-      console.log('Dados formatados:', analyticsData);
 
       return {
         success: true,

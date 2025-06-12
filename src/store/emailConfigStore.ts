@@ -67,7 +67,7 @@ export const useEmailConfigStore = create<EmailConfigStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await emailConfigService.getEmailConfigById(emailConfigId);
-      console.log("response", response);
+
       set({ currentEmailConfig: response.data });
     } catch (err: unknown) {
       const error = err as ApiError;

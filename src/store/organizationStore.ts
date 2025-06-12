@@ -55,7 +55,7 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await organizationService.getOrganizationById(organizationId);
-      console.log("organização", response);
+   
       set({ currentOrganization: response.data });
     } catch (err: unknown) {
       const error = err as ApiError;
