@@ -30,6 +30,8 @@ export interface Venue {
   pricePerPersonDay?: number | null;
   pricePerPersonHour?: number | null;
   maxGuest: number;
+  whatsappNumber?: string | null;
+  minimumPrice?: number | null;
 
   // Relacionamentos (ajuste os tipos conforme seus models)
   organization: Organization;
@@ -58,6 +60,8 @@ export interface CreateVenueDTO {
   organizationId: string;
   data: {
     cep: string;
+    whatsappNumber?: string;
+    minimumPrice?: string;
     email: string;
     name: string;
     url?: string;
@@ -88,6 +92,8 @@ export interface CreateVenueDTO {
 export interface UpdateVenueDTO {
   userId: string;
   venueId: string;
+  whatsappNumber?: string;
+  minimumPrice?: string;
   cep?: string;
   email?: string;
   name?: string;

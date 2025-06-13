@@ -38,6 +38,8 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 type PricingModel =
   | "PER_PERSON"
@@ -53,6 +55,8 @@ const venueSettingsSchema = z.object({
   streetNumber: z.string().min(1, "Número é obrigatório"),
   complement: z.string().optional(),
   neighborhood: z.string().min(1, "Bairro é obrigatório"),
+  whatsappNumber: z.string().optional(),
+  minimumPrice: z.string().optional(),
   city: z.string().min(1, "Cidade é obrigatória"),
   state: z.string().min(1, "Estado é obrigatório"),
   cep: z.string().min(1, "CEP é obrigatório"),
@@ -112,6 +116,8 @@ export default function VenueSettings() {
       complement: "",
       neighborhood: "",
       city: "",
+      whatsappNumber: "",
+      minimumPrice: "",
       state: "",
       cep: "",
       checkIn: "",
@@ -160,6 +166,10 @@ export default function VenueSettings() {
         cep: selectedVenue.cep || "",
         checkIn: selectedVenue.checkIn || "",
         checkOut: selectedVenue.checkOut || "",
+        whatsappNumber: selectedVenue.whatsappNumber || "",
+        minimumPrice: selectedVenue.minimumPrice
+          ? formatCurrency((selectedVenue.minimumPrice * 100).toString())
+          : "",
         hasOvernightStay: selectedVenue.hasOvernightStay || false,
         pricingModel:
           (selectedVenue.pricingModel as PricingModel) || "PER_PERSON",
@@ -202,6 +212,17 @@ export default function VenueSettings() {
     return sanitized;
   }
 
+  function maskPhone(value: string) {
+    let v = value.replace(/\D/g, "");
+    if (v.length > 13) v = v.slice(0, 13); // Limita ao máximo
+    if (v.length <= 2) return `+${v}`;
+    if (v.length <= 4) return `+${v.slice(0,2)} (${v.slice(2)}`;
+    if (v.length <= 6) return `+${v.slice(0,2)} (${v.slice(2,4)}) ${v.slice(4)}`;
+    if (v.length <= 11)
+      return `+${v.slice(0,2)} (${v.slice(2,4)}) ${v.slice(4,9)}-${v.slice(9)}`;
+    return `+${v.slice(0,2)} (${v.slice(2,4)}) ${v.slice(4,9)}-${v.slice(9,13)}`;
+  }
+
   function handleCurrencyChange(
     e: React.ChangeEvent<HTMLInputElement>,
     onChange: (value: string) => void
@@ -235,6 +256,10 @@ export default function VenueSettings() {
       ? parseCurrencyStringToNumberString(data.pricePerPersonHour)
       : undefined;
 
+    const minimumPrice = data.minimumPrice
+      ? parseCurrencyStringToNumberString(data.minimumPrice)
+      : undefined;
+
     try {
       const response = await updateVenue({
         venueId: selectedVenue.id,
@@ -247,6 +272,8 @@ export default function VenueSettings() {
         complement: data.complement,
         neighborhood: data.neighborhood,
         city: data.city,
+        minimumPrice: minimumPrice || undefined,
+        whatsappNumber: data.whatsappNumber,
         state: data.state,
         cep: data.cep,
         checkIn: data.checkIn,
@@ -519,7 +546,7 @@ export default function VenueSettings() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-1 md:grid-3 gap-4 mt-4">
               <FormField
                 control={form.control}
                 name="city"
@@ -554,6 +581,31 @@ export default function VenueSettings() {
                     <FormLabel>CEP</FormLabel>
                     <FormControl>
                       <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-1 md:grid-2 gap-4 mt-4">
+              <FormField
+                control={form.control}
+                name="whatsappNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número do WhatsApp</FormLabel>
+                    <FormControl>
+                      <PhoneInput
+                        country={'br'}
+                        value={field.value}
+                        onChange={field.onChange}
+                        inputClass="w-full"
+                        placeholder="Digite o número"
+                        enableSearch={true}
+                        containerClass="w-full"
+                        inputStyle={{ width: '100%' }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -695,6 +747,26 @@ export default function VenueSettings() {
                       <FormLabel>Capacidade </FormLabel>
                       <FormControl>
                         <Input type="number" className="w-full" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-1">
+                <FormField
+                  control={form.control}
+                  name="minimumPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preço mínimo de orçamento (R$)</FormLabel>
+                      <FormControl>
+                        <Input
+                          value={field.value}
+                          onChange={(e) => handleCurrencyChange(e, field.onChange)}
+                          placeholder="R$ 0,00"
+                          className="w-full"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

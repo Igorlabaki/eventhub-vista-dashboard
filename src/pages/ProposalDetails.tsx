@@ -127,7 +127,7 @@ export default function ProposalDetails() {
 
   return (
     <DashboardLayout
-      title="Detalhes do Orçamento"
+      title="Orçamento"
       subtitle="Visão geral do orçamento/proposta"
     >
       <div className="mx-auto flex flex-col md:flex-row   gap-2">

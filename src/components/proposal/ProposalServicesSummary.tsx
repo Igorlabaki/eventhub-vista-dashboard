@@ -3,6 +3,7 @@ import { Calendar } from "lucide-react";
 import { useProposalStore } from "@/store/proposalStore";
 import { Users } from "lucide-react";
 import React from "react";
+import { useVenueStore } from '@/store/venueStore';
 
 interface ProposalService {
   service?: {
@@ -14,6 +15,7 @@ interface ProposalService {
 
 export function ProposalServicesSummary() {
     const { currentProposal } = useProposalStore()
+    const { selectedVenue } = useVenueStore();
   const servicosAdicionais = currentProposal?.proposalServices.map((ps) => ({
     name: ps.service?.name,
     price: ps.service?.price || 0,
@@ -23,26 +25,26 @@ export function ProposalServicesSummary() {
     <div className="rounded-xl p-6 mb-6 bg-white shadow-md w-full max-w-2xl mx-auto">
          <h1 className="text-2xl font-bold text-center text-primary mb-10">Informações do Evento</h1>
       <div className="flex sm:flex-row justify-center md:gap-6 mb-6 px-4">
-        <div className="flex items-center gap-2  rounded-lg px-4 pb-2">
+        <div className="flex flex-col items-center gap-2  rounded-lg px-4 pb-2">
           <Users className="text-primary" size={18} />
           <span className="font-semibold text-primary text-sm md:text-base">
             {currentProposal?.guestNumber}
           </span>
         </div>
-        <div className="flex items-center gap-2  rounded-lg px-4 pb-2">
+        <div className="flex flex-col items-center gap-2  rounded-lg px-4 pb-2">
           <Calendar className="text-primary" size={18} />
-          <span className="font-semibold text-primary text-sm md:text-base">
-            {currentProposal?.startDate
-              ? new Date(currentProposal?.startDate)
-                  .toISOString()
-                  .substring(0, 10)
-                  .split("-")
-                  .reverse()
-                  .join("/")
-              : "-"}
+          <span className="font-semibold text-center text-primary text-[13px] md:text-base">
+            {selectedVenue?.hasOvernightStay
+              ? currentProposal?.startDate && currentProposal?.endDate
+                ? `${new Date(currentProposal.startDate).toLocaleDateString("pt-BR")} até ${new Date(currentProposal.endDate).toLocaleDateString("pt-BR")}`
+                : "-"
+              : currentProposal?.startDate
+                ? new Date(currentProposal.startDate).toLocaleDateString("pt-BR")
+                : "-"
+            }
           </span>
         </div>
-        <div className="flex items-center text-primary gap-2  rounded-lg px-4 pb-2">
+        <div className="flex flex-col items-center text-primary gap-2  rounded-lg px-4 pb-2">
           <Clock className="" size={18} />
           <span className="font-semibold text-sm md:text-base flex">
             <p>{`${new Date(currentProposal?.startDate).toISOString().substring(11, 16)}`}</p>
