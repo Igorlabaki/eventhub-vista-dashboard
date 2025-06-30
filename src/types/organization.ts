@@ -7,6 +7,13 @@ import { Attachment } from "./attachment";
 export interface Organization {
     id: string;
     name: string;
+    whatsappNumber: string
+    tiktokUrl: string
+    instagramUrl: string
+    email: string
+    url: string
+    facebookUrl: string
+    logoUrl: string
     createdAt: string;
     venues: Venue[];
     owners: Owner[];
@@ -17,6 +24,24 @@ export interface Organization {
 export interface CreateOrganizationDTO {
     name: string;
     userId: string;
+    whatsappNumber?: string
+    tiktokUrl?: string
+    instagramUrl?: string
+    email: string
+    url?: string
+    facebookUrl?: string
+    logoFile?: File
+}
+export interface UpdateOrganizationDTO {
+    organizationId: string;
+    name: string;
+    whatsappNumber?: string
+    tiktokUrl?: string
+    instagramUrl?: string
+    email: string
+    url?: string
+    facebookUrl?: string
+    logoFile?: File
 }
 
 export type OrganizationWithVenueCount = Organization & {

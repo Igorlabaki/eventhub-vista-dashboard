@@ -7,7 +7,10 @@ import {
   TextByIdResponse, 
   TextUpdateResponse, 
   TextCreateResponse, 
-  TextDeleteResponse 
+  TextDeleteResponse,
+  CreateTextOrganizationDTO,
+  UpdateTextOrganizationDTO,
+  ListTextOrganizationParams
 } from '@/types/text';
 
 export const textService = {
@@ -37,6 +40,25 @@ export const textService = {
 
   deleteText: async (textId: string) => {
     const response = await api.delete<TextDeleteResponse>(`/text/delete/${textId}`);
+    return response.data;
+  },
+
+  createTextOrganization: async (data: CreateTextOrganizationDTO) => {
+    const response = await api.post<TextCreateResponse>('/text/create-text-organization', data);
+    return response.data;
+  },
+
+  updateTextOrganization: async (data: UpdateTextOrganizationDTO) => {
+    const response = await api.put<TextUpdateResponse>('/text/update-text-organization', data);
+    return response.data;
+  },
+
+  listTextOrganization: async (params: ListTextOrganizationParams) => {
+    const queryParams = new URLSearchParams();
+    if (params.organizationId) queryParams.append('organizationId', params.organizationId);
+    if (params.area) queryParams.append('area', params.area);
+
+    const response = await api.get<TextListResponse>(`/text/list-text-organization?${queryParams.toString()}`);
     return response.data;
   }
 }; 

@@ -30,6 +30,7 @@ import { NumericFormat } from 'react-number-format';
 import InputMask from 'react-input-mask';
 import { Textarea } from "@/components/ui/textarea";
 import { useServiceStore } from "@/store/serviceStore";
+import { useVenueStore } from "@/store/venueStore";
 
 const proposalTypes = [
   { value: ProposalType.EVENT, label: "Evento" },
@@ -77,7 +78,7 @@ export default function ProposalEdit() {
   const { toast } = useToast();
   const { fetchProposalById, updateProposalPerPerson, currentProposal, isLoading, deleteProposal } = useProposalStore();
   const { services, fetchServices, isLoading: isLoadingServices } = useServiceStore();
-
+  const { selectedVenue } = useVenueStore();
   const form = useForm<EditProposalFormValues>({
     resolver: zodResolver(editProposalSchema),
     defaultValues: {
@@ -102,27 +103,27 @@ export default function ProposalEdit() {
   });
 
   useEffect(() => {
-    if (id) {
+    if (id && id.trim() !== '') {
       fetchProposalById(id);
     }
   }, [id, fetchProposalById]);
 
   useEffect(() => {
-    if (currentProposal) {
+    if (currentProposal && currentProposal.id) {
       form.reset({
         proposalId: currentProposal.id,
         data: {
-          completeClientName: currentProposal.completeClientName,
+          completeClientName: currentProposal.completeClientName || "",
           completeCompanyName: currentProposal.completeCompanyName || "",
-          email: currentProposal.email,
-          whatsapp: currentProposal.whatsapp,
-          guestNumber: currentProposal.guestNumber.toString(),
-          description: currentProposal.description,
-          knowsVenue: currentProposal.knowsVenue,
-          type: currentProposal.type,
-          trafficSource: currentProposal.trafficSource,
-          totalAmountInput: currentProposal.totalAmount.toString(),
-          serviceIds: currentProposal.proposalServices.map(service => service.serviceId),
+          email: currentProposal.email || "",
+          whatsapp: currentProposal.whatsapp || "",
+          guestNumber: currentProposal.guestNumber?.toString() || "",
+          description: currentProposal.description || "",
+          knowsVenue: currentProposal.knowsVenue || false,
+          type: currentProposal.type || ProposalType.EVENT,
+          trafficSource: currentProposal.trafficSource || TrafficSource.OTHER,
+          totalAmountInput: currentProposal.totalAmount?.toString() || "",
+          serviceIds: (currentProposal.proposalServices || []).map(service => service.serviceId),
           date: currentProposal.startDate ? new Date(currentProposal.startDate).toISOString().split('T')[0] : '',
           startHour: currentProposal.startDate ? new Date(currentProposal.startDate).toISOString().substring(11, 16) : '',
           endHour: currentProposal.endDate ? new Date(currentProposal.endDate).toISOString().substring(11, 16) : '',
@@ -132,7 +133,7 @@ export default function ProposalEdit() {
   }, [currentProposal, form]);
 
   useEffect(() => {
-    if (currentProposal?.venueId) {
+    if (currentProposal?.venueId && currentProposal.venueId.trim() !== '') {
       fetchServices(currentProposal.venueId);
     }
   }, [currentProposal?.venueId, fetchServices]);
@@ -165,7 +166,9 @@ export default function ProposalEdit() {
         title,
         description: message
       });
-      navigate(`/proposal/${id}`);
+      
+      // Recarregar a proposta para garantir que temos os dados mais atualizados
+      navigate(`/proposal/${id}`)
     } catch (error: unknown) {
       const { title, message } = handleBackendError(error, "Erro ao atualizar orçamento. Tente novamente mais tarde.");
       toast({
@@ -184,7 +187,7 @@ export default function ProposalEdit() {
         title: "Orçamento excluído",
         description: "O orçamento foi excluído com sucesso."
       });
-      navigate(`/venue/${currentProposal.venueId}/budgets`);
+      navigate(`/venue/${selectedVenue.id}/budgets`)
     } catch (error: unknown) {
       const { title, message } = handleBackendError(error, "Erro ao excluir orçamento. Tente novamente mais tarde.");
       toast({
@@ -196,285 +199,291 @@ export default function ProposalEdit() {
   };
 
   return (
-    <DashboardLayout>
-      <FormLayout
-        form={form}
-        title="Editar Orçamento"
-        onSubmit={onSubmit}
-        onCancel={() => navigate(`/proposal/${id}`)}
-        submitLabel="Atualizar"
-        isSubmitting={isLoading}
-        isEditing={true}
-        onDelete={handleDelete}
-        entityName={currentProposal?.completeClientName}
-        entityType="orçamento"
-      >
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="data.completeClientName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome completo do cliente" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="data.completeCompanyName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome da Empresa</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome da empresa (opcional)" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="data.email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="email@cliente.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="data.whatsapp"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Whatsapp</FormLabel>
-                  <FormControl>
-                    <InputMask
-                      mask="(99) 99999-9999"
-                      placeholder="(00) 00000-0000"
-                      value={field.value}
-                      onChange={field.onChange}
-                    >
-                      {(inputProps) => <Input {...inputProps} />}
-                    </InputMask>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="data.date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data do evento :</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="data.startHour"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Horário Início</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="data.endHour"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Horário Fim</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="data.guestNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Convidados</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="Ex: 100" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="data.totalAmountInput"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Total</FormLabel>
-                  <FormControl>
-                    <NumericFormat
-                      value={field.value}
-                      onValueChange={(values) => {
-                        field.onChange(values.value);
-                      }}
-                      thousandSeparator="."
-                      decimalSeparator=","
-                      prefix="R$ "
-                      decimalScale={2}
-                      fixedDecimalScale
-                      placeholder="R$ 0,00"
-                      customInput={Input}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <FormField
-            control={form.control}
-            name="data.description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Descricao:</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Descreva os detalhes do evento" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="data.knowsVenue"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Já conhece o espaço?</FormLabel>
-                <FormControl>
-                  <Select
-                    value={field.value === true ? "sim" : "nao"}
-                    onValueChange={v => field.onChange(v === "sim")}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sim">Sim</SelectItem>
-                      <SelectItem value="nao">Não</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="data.type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipo do aluguel:</FormLabel>
-                <FormControl>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {proposalTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div>
-            <FormLabel>Serviços</FormLabel>
-            {isLoadingServices ? (
-              <div>Carregando serviços...</div>
-            ) : (
-              <div className="flex flex-wrap gap-3 mt-2">
-                {services.map(service => (
-                  <label key={service.id} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={form.watch("data.serviceIds").includes(service.id)}
-                      onChange={e => {
-                        const checked = e.target.checked;
-                        const current = form.watch("data.serviceIds");
-                        if (checked) {
-                          form.setValue("data.serviceIds", [...current, service.id]);
-                        } else {
-                          form.setValue("data.serviceIds", current.filter(id => id !== service.id));
-                        }
-                      }}
-                    />
-                    {service.name} <span className="text-xs text-gray-500">(R$ {service.price.toFixed(2)})</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <FormField
-            control={form.control}
-            name="data.trafficSource"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Onde nos achou?</FormLabel>
-                <FormControl>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {trafficSources.map((source) => (
-                        <SelectItem key={source.value} value={source.value}>{source.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <DashboardLayout title="Editar Orçamento">
+      {!currentProposal ? (
+        <div className="flex justify-center items-center h-40 text-destructive text-lg font-medium">
+          Carregando orçamento...
         </div>
-      </FormLayout>
+      ) : (
+        <FormLayout
+          form={form}
+          title="Editar Orçamento"
+          onSubmit={onSubmit}
+          onCancel={() => navigate(`/proposal/${id}`)}
+          submitLabel="Atualizar"
+          isSubmitting={isLoading}
+          isEditing={true}
+          onDelete={handleDelete}
+          entityName={currentProposal?.completeClientName}
+          entityType="orçamento"
+        >
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="data.completeClientName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome completo do cliente" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="data.completeCompanyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome da Empresa</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome da empresa (opcional)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="data.email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="email@cliente.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="data.whatsapp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Whatsapp</FormLabel>
+                    <FormControl>
+                      <InputMask
+                        mask="(99) 99999-9999"
+                        placeholder="(00) 00000-0000"
+                        value={field.value}
+                        onChange={field.onChange}
+                      >
+                        {(inputProps) => <Input {...inputProps} />}
+                      </InputMask>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="data.date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data do evento :</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="data.startHour"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Horário Início</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="data.endHour"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Horário Fim</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="data.guestNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Convidados</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="Ex: 100" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="data.totalAmountInput"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total</FormLabel>
+                    <FormControl>
+                      <NumericFormat
+                        value={field.value}
+                        onValueChange={(values) => {
+                          field.onChange(values.value);
+                        }}
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        prefix="R$ "
+                        decimalScale={2}
+                        fixedDecimalScale
+                        placeholder="R$ 0,00"
+                        customInput={Input}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="data.description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descricao:</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Descreva os detalhes do evento" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="data.knowsVenue"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Já conhece o espaço?</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value === true ? "sim" : "nao"}
+                      onValueChange={v => field.onChange(v === "sim")}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sim">Sim</SelectItem>
+                        <SelectItem value="nao">Não</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="data.type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo do aluguel:</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {proposalTypes.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div>
+              <FormLabel>Serviços</FormLabel>
+              {isLoadingServices ? (
+                <div>Carregando serviços...</div>
+              ) : (
+                <div className="flex flex-wrap gap-3 mt-2">
+                  {(services || []).map(service => (
+                    <label key={service.id} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={form.watch("data.serviceIds").includes(service.id)}
+                        onChange={e => {
+                          const checked = e.target.checked;
+                          const current = form.watch("data.serviceIds");
+                          if (checked) {
+                            form.setValue("data.serviceIds", [...current, service.id]);
+                          } else {
+                            form.setValue("data.serviceIds", current.filter(id => id !== service.id));
+                          }
+                        }}
+                      />
+                      {service.name} <span className="text-xs text-gray-500">(R$ {service.price.toFixed(2)})</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <FormField
+              control={form.control}
+              name="data.trafficSource"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Onde nos achou?</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {trafficSources.map((source) => (
+                          <SelectItem key={source.value} value={source.value}>{source.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </FormLayout>
+      )}
     </DashboardLayout>
   );
 } 

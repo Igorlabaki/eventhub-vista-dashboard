@@ -209,7 +209,7 @@ export default function VenueDashboard() {
                     size="sm"
                     onClick={() =>
                       handleViewProposal(
-                        venueDashBoardData.nextEvent.proposalId
+                        venueDashBoardData.nextVisit.proposalId
                       )
                     }
                   >

@@ -1,9 +1,22 @@
 import { api } from '@/lib/axios';
-import { CreateOrganizationDTO, OrganizationListResponse, OrganizationByIdResponse, OrganizationUpdateResponse, OrganizationCreateResponse, OrganizationDeleteResponse } from '@/types/organization';
+import { CreateOrganizationDTO, OrganizationListResponse, OrganizationByIdResponse, OrganizationUpdateResponse, OrganizationCreateResponse, OrganizationDeleteResponse, UpdateOrganizationDTO } from '@/types/organization';
 
 export const organizationService = {
   createOrganization: async (data: CreateOrganizationDTO) => {
-    const response = await api.post<OrganizationCreateResponse>('/organization/create', data);
+    const formData = new FormData();
+
+    // Adiciona todos os campos do DTO ao FormData
+    Object.entries(data).forEach(([key, value]) => {
+      if (key !== 'logoFile' && value !== undefined) {
+        formData.append(key, String(value));
+      }
+    });
+
+    if (data.logoFile) {
+      formData.append('file', data.logoFile, data.logoFile.name);
+    }
+
+    const response = await api.post<OrganizationCreateResponse>('/organization/create', formData);
     return response.data;
   },
 
@@ -17,8 +30,21 @@ export const organizationService = {
     return response.data;
   },
 
-  updateOrganization: async (organizationId: string, data: Partial<CreateOrganizationDTO>) => {
-    const response = await api.put<OrganizationUpdateResponse>(`/organization/update`, { organizationId, data });
+  updateOrganization: async (data: UpdateOrganizationDTO) => {
+    const formData = new FormData();
+
+    // Adiciona todos os campos do DTO ao FormData
+    Object.entries(data).forEach(([key, value]) => {
+      if (key !== 'logoFile' && value !== undefined) {
+        formData.append(key, String(value));
+      }
+    });
+
+    if (data.logoFile) {
+      formData.append('file', data.logoFile, data.logoFile.name);
+    }
+
+    const response = await api.put<OrganizationUpdateResponse>(`/organization/update`, formData);
     return response.data;
   },
 

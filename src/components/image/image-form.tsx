@@ -16,33 +16,34 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { CreateImageDTO, Image } from "@/types/image";
+import { CreateImageDTO, CreateImageOrganizationDTO, Image } from "@/types/image";
 import { min } from "date-fns";
 
 const MAX_FILE_SIZE_MB = 2.5;
 
 const formSchema = z.object({
-  file: z.any().refine((file) => file instanceof File && file.size > 0, {
-    message: "O arquivo é obrigatório.",
-  }),
+  file: z.any().optional(),
   tag: z.string().min(1, "A tag é obrigatória."),
   venueId: z.string().optional(),
+  organizationId: z.string().optional(),
   position: z.string().min(1, "A posição é obrigatória."),
   description: z.string().optional(),
   responsiveMode: z.string().optional(),
   imageUrl: z.string().optional(),
+  group: z.string().optional(),
 });
 
 type ImageFormValues = z.infer<typeof formSchema>;
 
 interface ImageFormProps {
   imageItem?: Image | null;
-  venueId: string;
-  onSubmit: (data: CreateImageDTO) => Promise<void>;
+  venueId?: string;
+  organizationId?: string;
+  onSubmit: (data: CreateImageDTO | CreateImageOrganizationDTO) => Promise<void>;
   onCancel: () => void;
 }
 
-export function ImageForm({ imageItem, venueId, onSubmit, onCancel }: ImageFormProps) {
+export function ImageForm({ imageItem, venueId, organizationId, onSubmit, onCancel }: ImageFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [preview, setPreview] = useState<string | null>(imageItem?.imageUrl || null);
@@ -55,10 +56,12 @@ export function ImageForm({ imageItem, venueId, onSubmit, onCancel }: ImageFormP
       file: null,
       tag: imageItem?.tag ?? "",
       venueId: venueId,
+      organizationId: organizationId,
       position: imageItem?.position?.toString() ?? "",
       description: imageItem?.description ?? "",
       responsiveMode: imageItem?.responsiveMode ?? "",
       imageUrl: imageItem?.imageUrl ?? "",
+      group: imageItem?.group ?? "",
     },
   });
 
@@ -67,12 +70,15 @@ export function ImageForm({ imageItem, venueId, onSubmit, onCancel }: ImageFormP
       file: null,
       tag: imageItem?.tag ?? "",
       venueId: venueId,
+      organizationId: organizationId,
       position: imageItem?.position?.toString() ?? "",
       description: imageItem?.description ?? "",
       responsiveMode: imageItem?.responsiveMode ?? "",
+      group: imageItem?.group ?? "",
+      imageUrl: imageItem?.imageUrl ?? "",
     });
     setPreview(imageItem?.imageUrl || null);
-  }, [imageItem, form, venueId]);
+  }, [imageItem, form, venueId, organizationId]);
 
   const handleDelete = async () => {
     if (!imageItem) return;
@@ -136,15 +142,42 @@ export function ImageForm({ imageItem, venueId, onSubmit, onCancel }: ImageFormP
   const handleSubmit = async (values: ImageFormValues) => {
     setIsSubmitting(true);
     try {
-      await onSubmit({
-        file: values.file,
-        tag: values.tag,
-        venueId,
-        imageUrl: values.imageUrl,
-        position: values.position,
-        description: values.description,
-        responsiveMode: values.responsiveMode,
-      });
+      // Validação do arquivo para novas imagens
+      if (!imageItem && !values.file) {
+        toast({
+          title: "Erro",
+          description: "O arquivo é obrigatório para novas imagens.",
+          variant: "destructive",
+        });
+        return;
+      }
+      let payload;
+      if (organizationId) {
+        payload = {
+          file: values.file,
+          tag: values.tag,
+          imageUrl: values.imageUrl,
+          position: values.position,
+          description: values.description,
+          responsiveMode: values.responsiveMode,
+          group: values.group,
+          organizationId: organizationId,
+        };
+      } else if (venueId) {
+        payload = {
+          file: values.file,
+          tag: values.tag,
+          imageUrl: values.imageUrl,
+          position: values.position,
+          description: values.description,
+          responsiveMode: values.responsiveMode,
+          group: values.group,
+          venueId: venueId,
+        };
+      } else {
+        throw new Error("Nem organizationId nem venueId foram fornecidos.");
+      }
+      await onSubmit(payload);
     } finally {
       setIsSubmitting(false);
     }
@@ -219,6 +252,23 @@ export function ImageForm({ imageItem, venueId, onSubmit, onCancel }: ImageFormP
             <FormControl>
               <Input
                 placeholder="Ex: desktop, mobile, etc"
+                className="mt-1"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+       <FormField
+        control={form.control}
+        name="group"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Grupo</FormLabel>
+            <FormControl>
+              <Input
+                placeholder="Gupo de imagens"
                 className="mt-1"
                 {...field}
               />

@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useVenueStore } from "@/store/venueStore";
 import { useParams, useNavigate } from "react-router-dom";
 import { useUserStore } from "@/store/userStore";
+import { useOwnerStore } from "@/store/ownerStore";
 import { Venue } from "@/types/venue";
 import { Skeleton } from "@/components/ui/skeleton";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
@@ -38,8 +39,9 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import { Textarea } from "@/components/ui/textarea";
 
 type PricingModel =
   | "PER_PERSON"
@@ -50,6 +52,7 @@ type PricingModel =
 const venueSettingsSchema = z.object({
   name: z.string().min(1, "Nome do espaço é obrigatório"),
   email: z.string().email("Email inválido"),
+  description: z.string().optional(),
   url: z.string().url("URL inválida").optional().or(z.literal("")),
   street: z.string().min(1, "Rua é obrigatória"),
   streetNumber: z.string().min(1, "Número é obrigatório"),
@@ -69,6 +72,7 @@ const venueSettingsSchema = z.object({
     "PER_PERSON_DAY",
     "PER_PERSON_HOUR",
   ]),
+  minimumNights: z.string().optional(),
   pricePerPerson: z.string().optional(),
   pricePerDay: z.string().optional(),
   pricePerPersonDay: z.string().optional(),
@@ -91,6 +95,7 @@ const venueSettingsSchema = z.object({
     .or(z.literal("")),
   logoUrl: z.string().url("URL do logo inválida").optional().or(z.literal("")),
   logoFile: z.instanceof(File).optional(),
+  owners: z.array(z.string()).min(1, "Pelo menos um proprietário deve ser selecionado"),
 });
 
 type VenueSettingsFormValues = z.infer<typeof venueSettingsSchema>;
@@ -101,7 +106,10 @@ export default function VenueSettings() {
   const navigate = useNavigate();
   const { user } = useUserStore();
   const { selectedVenue, updateVenue, deleteVenue } = useVenueStore();
-  const [logoPreview, setLogoPreview] = useState<string | null>(selectedVenue?.logoUrl || null);
+  const { owners, fetchOrganizationOwners } = useOwnerStore();
+  const [logoPreview, setLogoPreview] = useState<string | null>(
+    selectedVenue?.logoUrl || null
+  );
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -110,9 +118,11 @@ export default function VenueSettings() {
     defaultValues: {
       name: "",
       email: "",
+      description: "",
       url: "",
       street: "",
       streetNumber: "",
+      minimumNights: "",
       complement: "",
       neighborhood: "",
       city: "",
@@ -133,6 +143,8 @@ export default function VenueSettings() {
       instagramUrl: "",
       facebookUrl: "",
       logoUrl: "",
+      logoFile: undefined,
+      owners: [],
     },
   });
 
@@ -156,12 +168,14 @@ export default function VenueSettings() {
       form.reset({
         name: selectedVenue.name || "",
         email: selectedVenue.email || "",
+        description: selectedVenue.description || "",
         url: selectedVenue.url || "",
         street: selectedVenue.street || "",
         streetNumber: selectedVenue.streetNumber || "",
         complement: selectedVenue.complement || "",
         neighborhood: selectedVenue.neighborhood || "",
         city: selectedVenue.city || "",
+        minimumNights: selectedVenue.minimumNights?.toString() || "1",
         state: selectedVenue.state || "",
         cep: selectedVenue.cep || "",
         checkIn: selectedVenue.checkIn || "",
@@ -190,6 +204,7 @@ export default function VenueSettings() {
         instagramUrl: selectedVenue.instagramUrl || "",
         facebookUrl: selectedVenue.facebookUrl || "",
         logoUrl: selectedVenue.logoUrl || "",
+        owners: selectedVenue.ownerVenue.map((owner) => owner.ownerId) || [],
       });
       setLogoPreview(selectedVenue.logoUrl || null);
     }
@@ -216,11 +231,17 @@ export default function VenueSettings() {
     let v = value.replace(/\D/g, "");
     if (v.length > 13) v = v.slice(0, 13); // Limita ao máximo
     if (v.length <= 2) return `+${v}`;
-    if (v.length <= 4) return `+${v.slice(0,2)} (${v.slice(2)}`;
-    if (v.length <= 6) return `+${v.slice(0,2)} (${v.slice(2,4)}) ${v.slice(4)}`;
+    if (v.length <= 4) return `+${v.slice(0, 2)} (${v.slice(2)}`;
+    if (v.length <= 6)
+      return `+${v.slice(0, 2)} (${v.slice(2, 4)}) ${v.slice(4)}`;
     if (v.length <= 11)
-      return `+${v.slice(0,2)} (${v.slice(2,4)}) ${v.slice(4,9)}-${v.slice(9)}`;
-    return `+${v.slice(0,2)} (${v.slice(2,4)}) ${v.slice(4,9)}-${v.slice(9,13)}`;
+      return `+${v.slice(0, 2)} (${v.slice(2, 4)}) ${v.slice(4, 9)}-${v.slice(
+        9
+      )}`;
+    return `+${v.slice(0, 2)} (${v.slice(2, 4)}) ${v.slice(4, 9)}-${v.slice(
+      9,
+      13
+    )}`;
   }
 
   function handleCurrencyChange(
@@ -236,10 +257,8 @@ export default function VenueSettings() {
   }
 
   const onSubmit = async (data: VenueSettingsFormValues) => {
-   
     setIsLoading(true);
     if (!selectedVenue.id || !user?.id) {
-  
       return;
     }
 
@@ -255,7 +274,6 @@ export default function VenueSettings() {
     const pricePerPersonHour = data.pricePerPersonHour
       ? parseCurrencyStringToNumberString(data.pricePerPersonHour)
       : undefined;
-
     const minimumPrice = data.minimumPrice
       ? parseCurrencyStringToNumberString(data.minimumPrice)
       : undefined;
@@ -266,7 +284,9 @@ export default function VenueSettings() {
         userId: user.id,
         name: data.name,
         email: data.email,
+        description: data.description,
         url: data.url,
+        minimumNights: data.minimumNights,
         street: data.street,
         streetNumber: data.streetNumber,
         complement: data.complement,
@@ -290,8 +310,9 @@ export default function VenueSettings() {
         facebookUrl: data.facebookUrl,
         logoUrl: data.logoUrl,
         logoFile: data.logoFile,
+        owners: data.owners,
       });
-    
+
       const { title, message } = handleBackendSuccess(
         response,
         "Configurações atualizadas com sucesso!"
@@ -301,7 +322,6 @@ export default function VenueSettings() {
         description: message,
       });
     } catch (error: unknown) {
-     
       const { title, message } = handleBackendError(
         error,
         "Erro ao atualizar configurações. Tente novamente mais tarde."
@@ -487,6 +507,24 @@ export default function VenueSettings() {
             />
           </div>
 
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descrição</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Descreva o espaço, suas características e diferenciais..." 
+                    className="min-h-[100px]"
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -597,14 +635,14 @@ export default function VenueSettings() {
                     <FormLabel>Número do WhatsApp</FormLabel>
                     <FormControl>
                       <PhoneInput
-                        country={'br'}
+                        country={"br"}
                         value={field.value}
                         onChange={field.onChange}
                         inputClass="w-full"
                         placeholder="Digite o número"
                         enableSearch={true}
                         containerClass="w-full"
-                        inputStyle={{ width: '100%' }}
+                        inputStyle={{ width: "100%" }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -763,7 +801,9 @@ export default function VenueSettings() {
                       <FormControl>
                         <Input
                           value={field.value}
-                          onChange={(e) => handleCurrencyChange(e, field.onChange)}
+                          onChange={(e) =>
+                            handleCurrencyChange(e, field.onChange)
+                          }
                           placeholder="R$ 0,00"
                           className="w-full"
                         />
@@ -774,65 +814,81 @@ export default function VenueSettings() {
                 />
               </div>
               <div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center justify-center">
+                  <FormField
+                    control={form.control}
+                    name="hasOvernightStay"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-2 m-0 p-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked);
+                              if (!checked) {
+                                form.setValue("checkIn", "");
+                                form.setValue("checkOut", "");
+                                form.setValue("minimumNights", "1");
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="m-0 p-0">
+                          Permite pernoite
+                        </FormLabel>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   {form.watch("hasOvernightStay") && (
-                    <div className="col-span-1 md:col-span-2">
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="checkIn"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Check-in</FormLabel>
-                              <FormControl>
-                                <Input type="time" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="checkOut"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Check-out</FormLabel>
-                              <FormControl>
-                                <Input type="time" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="checkIn"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Check-in</FormLabel>
+                            <FormControl>
+                              <Input type="time" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="checkOut"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Check-out</FormLabel>
+                            <FormControl>
+                              <Input type="time" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="minimumNights"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Noites mínimas</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={1}
+                                placeholder="1"
+                                className="w-full"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
                   )}
-                  <div className="flex items-center space-x-2 mt-4 md:mt-6">
-                    <FormField
-                      control={form.control}
-                      name="hasOvernightStay"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-2 m-0 p-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={(checked) => {
-                                field.onChange(checked);
-                                if (!checked) {
-                                  form.setValue("checkIn", "");
-                                  form.setValue("checkOut", "");
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="m-0 p-0">
-                            Permite pernoite
-                          </FormLabel>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -949,6 +1005,48 @@ export default function VenueSettings() {
                 )}
               />
             </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="font-semibold text-md">Proprietários</h3>
+            <FormField
+              control={form.control}
+              name="owners"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Selecione os proprietários do espaço</FormLabel>
+                  <div className="space-y-3 mt-2">
+                    {owners.map((owner) => (
+                      <div key={owner.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`owner-${owner.id}`}
+                          checked={field.value.includes(owner.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              field.onChange([...field.value, owner.id]);
+                            } else {
+                              field.onChange(field.value.filter((id) => id !== owner.id));
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`owner-${owner.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {owner.completeName}
+                        </label>
+                      </div>
+                    ))}
+                    {owners.length === 0 && (
+                      <p className="text-sm text-gray-500">
+                        Nenhum proprietário cadastrado na organização.
+                      </p>
+                    )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         </div>
       </FormLayout>

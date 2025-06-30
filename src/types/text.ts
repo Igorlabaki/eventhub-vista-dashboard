@@ -20,6 +20,14 @@ export interface CreateTextDTO {
   title?: string;
 }
 
+export interface CreateTextOrganizationDTO {
+  area: string;
+  text: string;
+  organizationId: string;
+  position: number;
+  title?: string;
+}
+
 export interface UpdateTextDTO {
   textId: string;
   venueId: string;
@@ -27,14 +35,29 @@ export interface UpdateTextDTO {
     area?: string;
     title?: string;
     position?: number;
+    text?: string;
   };
 }
+export interface UpdateTextOrganizationDTO {
+  textId: string;
+  organziationId: string;
+  data: {
+    area?: string;
+    title?: string;
+    position?: number;
+    text?: string;
+  };
+}
+
 
 export interface ListTextParams {
   venueId: string;
   area?: string;
 }
-
+export interface ListTextOrganizationParams {
+  organizationId: string;
+  area?: string;
+}
 export interface TextByIdResponse {
   success: true;
   message: string;

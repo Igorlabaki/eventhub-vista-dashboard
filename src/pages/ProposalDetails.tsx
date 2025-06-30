@@ -68,8 +68,9 @@ function ProposalDetailsSkeleton() {
 export default function ProposalDetails() {
   const { id } = useParams();
   const { fetchProposalById, currentProposal, isLoading } = useProposalStore();
-
+console.log(id)
   useEffect(() => {
+    console.log(id,"id")
     if (id) fetchProposalById(id);
   }, [id, fetchProposalById]);
 
@@ -116,7 +117,7 @@ export default function ProposalDetails() {
   } = currentProposal;
 
   // Calcular soma dos serviços adicionais
-  const servicosAdicionais = proposalServices.map((ps) => ({
+  const servicosAdicionais = (proposalServices || []).map((ps) => ({
     name: ps.service?.name,
     price: ps.service?.price || 0,
   }));

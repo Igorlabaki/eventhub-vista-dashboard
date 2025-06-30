@@ -33,14 +33,19 @@ export const venueService = {
     
     // Adiciona todos os campos do DTO ao FormData
     Object.entries(data).forEach(([key, value]) => {
-      if (key !== 'file' && value !== undefined) {
-        formData.append(key, String(value));
+      if (key !== 'logoFile' && value !== undefined) {
+        if (key === 'owners' && Array.isArray(value)) {
+          // Para o array owners, converte para JSON string
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, String(value));
+        }
       }
     });
   
     // Adiciona o arquivo se existir
-    if (data.file) {
-      formData.append('file', data.file, data.file.name);
+    if (data.logoFile) {
+      formData.append('file', data.logoFile, data.logoFile.name);
     }
 
     const response = await api.post<VenueCreateResponse>('/venue/create', formData, {
@@ -67,7 +72,12 @@ export const venueService = {
     // Adiciona todos os campos do DTO ao FormData
     Object.entries(data).forEach(([key, value]) => {
       if (key !== 'logoFile' && value !== undefined) {
-        formData.append(key, String(value));
+        if (key === 'owners' && Array.isArray(value)) {
+          // Para o array owners, converte para JSON string
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, String(value));
+        }
       }
     });
 

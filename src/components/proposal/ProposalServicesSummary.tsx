@@ -16,10 +16,10 @@ interface ProposalService {
 export function ProposalServicesSummary() {
     const { currentProposal } = useProposalStore()
     const { selectedVenue } = useVenueStore();
-  const servicosAdicionais = currentProposal?.proposalServices.map((ps) => ({
+  const servicosAdicionais = currentProposal?.proposalServices?.map((ps) => ({
     name: ps.service?.name,
     price: ps.service?.price || 0,
-  }));
+  })) || [];
 
   return (
     <div className="rounded-xl p-6 mb-6 bg-white shadow-md w-full max-w-2xl mx-auto">
@@ -74,7 +74,7 @@ export function ProposalServicesSummary() {
             </span>
           </div>
         )}
-        {servicosAdicionais.map((serv, idx) => (
+        {(servicosAdicionais || []).map((serv, idx) => (
           <div
             className="flex justify-between  text-gray-600"
             key={idx}

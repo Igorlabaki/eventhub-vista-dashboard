@@ -94,7 +94,8 @@ export function ImageList({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Imagem</TableHead>
-                    <TableHead>Descrição</TableHead>
+                    <TableHead>Tag</TableHead>
+                    <TableHead className="hidden md:table-cell">Descrição</TableHead>
                     <TableHead>Posição</TableHead>
                     <TableHead className="w-[100px] text-center">Ações</TableHead>
                   </TableRow>
@@ -109,12 +110,15 @@ export function ImageList({
                       )}
                     >
                       <TableCell>
-                        <img src={image.imageUrl} alt={image.description || ""} className="h-10 w-20 object-cover rounded" />
-                      </TableCell>
+                          <img src={image.imageUrl} alt={image.description || ""} className="h-10 w-20 object-cover rounded" />
+                        </TableCell>
                       <TableCell>
+                        {image.tag}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {image.description}
                       </TableCell>
-                      <TableCell>
+                      <TableCell  className="text-center">
                         {image.position}
                       </TableCell>
                       <TableCell className="text-center">

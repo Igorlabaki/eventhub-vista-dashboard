@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Organization, OrganizationListResponse, OrganizationCreateResponse, OrganizationWithVenueCount } from '@/types/organization';
+import { Organization, OrganizationListResponse, OrganizationCreateResponse, OrganizationWithVenueCount, CreateOrganizationDTO, UpdateOrganizationDTO } from '@/types/organization';
 import { organizationService } from '@/services/organization.service';
 import { BackendResponse } from '@/lib/error-handler';
 
@@ -12,9 +12,9 @@ interface OrganizationStore {
   setCurrentOrganization: (org: Organization | null) => void;
   fetchOrganizations: (userId: string) => Promise<void>;
   fetchOrganizationById: (organizationId: string) => Promise<void>;
-  createOrganization: (data: { name: string; userId: string }) => Promise<BackendResponse<Organization>>;
+  createOrganization: (data: CreateOrganizationDTO) => Promise<BackendResponse<Organization>>;
   deleteOrganization: (id: string) => Promise<BackendResponse<void>>;
-  updateOrganizationById: (id: string, data: { name: string }) => Promise<BackendResponse<Organization>>;
+  updateOrganizationById: (data: UpdateOrganizationDTO) => Promise<BackendResponse<Organization>>;
   addOrganization: (org: Organization) => void;
   updateOrganization: (org: Organization) => void;
   removeOrganization: (id: string) => void;
@@ -68,7 +68,7 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
     }
   },
 
-  createOrganization: async (data) => {
+  createOrganization: async (data: CreateOrganizationDTO) => {
     set({ isLoading: true, error: null });
     try {
       const response = await organizationService.createOrganization(data);
@@ -111,13 +111,13 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
     }
   },
 
-  updateOrganizationById: async (id: string, data: { name: string }) => {
+  updateOrganizationById: async (data: UpdateOrganizationDTO) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await organizationService.updateOrganization(id, data);
+      const response = await organizationService.updateOrganization(data);
       set((state) => ({
-        organizations: state.organizations.map((o) => o.id === id ? response.data : o),
-        currentOrganization: state.currentOrganization && state.currentOrganization.id === id ? response.data : state.currentOrganization,
+        organizations: state.organizations.map((o) => o.id === data.organizationId ? response.data : o),
+        currentOrganization: state.currentOrganization && state.currentOrganization.id === data.organizationId ? response.data : state.currentOrganization,
         isLoading: false
       }));
       return {

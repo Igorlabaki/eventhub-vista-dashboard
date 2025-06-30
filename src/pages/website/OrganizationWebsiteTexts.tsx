@@ -3,12 +3,12 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { TextSection } from "@/components/text/text-section";
 import { useTextStore } from "@/store/textStore";
 import { Text } from "@/types/text";
-import { useVenueStore } from "@/store/venueStore";
+import { useOrganizationStore } from "@/store/organizationStore";
 import { PageHeader } from "@/components/PageHeader";
 
-export default function VenueWebsiteTexts() {
-  const { selectedVenue: venue } = useVenueStore();
-  const { texts, isLoading, fetchTexts } = useTextStore();
+export default function OrganizationWebsiteTexts() {
+  const { currentOrganization: organization } = useOrganizationStore();
+  const { textOrganizationList: texts, isLoading, fetchTextsOrganization } = useTextStore();
   const [isCreating, setIsCreating] = useState(false);
   const [selectedText, setSelectedText] = useState<Text | null | undefined>(
     undefined
@@ -25,15 +25,15 @@ export default function VenueWebsiteTexts() {
   };
 
   useEffect(() => {
-    if (venue.id) {
-      fetchTexts({ venueId: venue.id });
+    if (organization.id) {
+      fetchTextsOrganization({ organizationId: organization.id });
     }
-  }, [venue.id, fetchTexts]);
-
+  }, [organization.id, fetchTextsOrganization]);
+  
   return (
     <DashboardLayout
       title="Textos do Site"
-      subtitle="Gerencie os textos do seu site"
+      subtitle="Gerencie os textos do site da sua organização"
     >
       <div className="space-y-6">
         <PageHeader
@@ -43,9 +43,9 @@ export default function VenueWebsiteTexts() {
         />
 
         <TextSection
-          type="venue"
           texts={texts}
-          venueId={venue.id || ""}
+          type="organization"
+          organizationId={organization?.id}
           isLoading={isLoading}
           isCreating={isCreating}
           selectedText={selectedText}

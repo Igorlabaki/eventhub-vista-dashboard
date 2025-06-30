@@ -106,7 +106,7 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
     try {
       const response = await proposalService.createProposalPerPerson(data);
       set((state) => ({ 
-        proposals: [...state.proposals, response.data],
+        proposals: [...(state.proposals || []), response.data],
         isLoading: false 
       }));
       return {
@@ -129,7 +129,7 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
     try {
       const response = await proposalService.createProposalPerDay(data);
       set((state) => ({ 
-        proposals: [...state.proposals, response.data],
+        proposals: [...(state.proposals || []), response.data],
         isLoading: false 
       }));
       return {
@@ -151,8 +151,9 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await proposalService.updateProposalPerPerson(data);
+      console.log(response, "response");
       set((state) => ({
-        proposals: state.proposals.map((p) => p.id === response.data.id ? response.data : p),
+        proposals: (state.proposals || []).map((p) => p.id === response.data.id ? response.data : p),
         currentProposal: state.currentProposal && state.currentProposal.id === response.data.id ? response.data : state.currentProposal,
         isLoading: false
       }));
@@ -176,7 +177,7 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
     try {
       const response = await proposalService.updateProposalPersonalInfo(data);
       set((state) => ({
-        proposals: state.proposals.map((p) => p.id === response.data.id ? response.data : p),
+        proposals: (state.proposals || []).map((p) => p.id === response.data.id ? response.data : p),
         currentProposal: state.currentProposal && state.currentProposal.id === response.data.id ? response.data : state.currentProposal,
         isLoading: false
       }));
@@ -200,7 +201,7 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
     try {
       const response = await proposalService.updateProposalPerDay(data);
       set((state) => ({
-        proposals: state.proposals.map((p) => p.id === response.data.id ? response.data : p),
+        proposals: (state.proposals || []).map((p) => p.id === response.data.id ? response.data : p),
         currentProposal: state.currentProposal && state.currentProposal.id === response.data.id ? response.data : state.currentProposal,
         isLoading: false
       }));
@@ -224,7 +225,7 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
     try {
       await proposalService.deleteProposal(id);
       set((state) => ({
-        proposals: state.proposals.filter((p) => p.id !== id),
+        proposals: (state.proposals || []).filter((p) => p.id !== id),
         currentProposal: state.currentProposal && state.currentProposal.id === id ? null : state.currentProposal,
         isLoading: false
       }));
@@ -243,15 +244,15 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
     }
   },
 
-  addProposal: (proposal) => set((state) => ({ proposals: [...state.proposals, proposal] })),
+  addProposal: (proposal) => set((state) => ({ proposals: [...(state.proposals || []), proposal] })),
   
   updateProposal: (proposal) => set((state) => ({
-    proposals: state.proposals.map((p) => p.id === proposal.id ? proposal : p),
+    proposals: (state.proposals || []).map((p) => p.id === proposal.id ? proposal : p),
     currentProposal: state.currentProposal && state.currentProposal.id === proposal.id ? proposal : state.currentProposal,
   })),
   
   removeProposal: (id) => set((state) => ({
-    proposals: state.proposals.filter((p) => p.id !== id),
+    proposals: (state.proposals || []).filter((p) => p.id !== id),
     currentProposal: state.currentProposal && state.currentProposal.id === id ? null : state.currentProposal,
   })),
   

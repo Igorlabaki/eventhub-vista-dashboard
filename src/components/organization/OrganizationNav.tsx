@@ -6,6 +6,7 @@ import {
   FileText,
   Building,
   Settings,
+  Globe,
 } from "lucide-react";
 
 interface OrganizationNavProps {
@@ -43,6 +44,11 @@ export function OrganizationNav({
       title: "Proprietários",
       href: `/organization/${organizationId}/owners`,
       icon: KeyRound,
+    },
+    {
+      title: "Site",
+      href: `/organization/${organizationId}/website`,
+      icon: Globe,
     },
     {
       title: "Configurações",

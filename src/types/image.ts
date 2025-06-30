@@ -8,6 +8,8 @@ export interface Image {
   responsiveMode?: string;
   tag?: string;
   venueId: string;
+  organizationId: string;
+  group: string;
 }
 
 export interface CreateImageDTO {
@@ -18,6 +20,17 @@ export interface CreateImageDTO {
   position?: string;
   responsiveMode?: string;  
   file: File;
+  group?: string;
+}
+export interface CreateImageOrganizationDTO {
+  organizationId: string;
+  imageUrl: string;
+  description: string;
+  tag?: string;
+  position?: string;
+  responsiveMode?: string;  
+  file: File;
+  group?: string;
 }
 
 export interface UpdateImageDTO {
@@ -29,6 +42,18 @@ export interface UpdateImageDTO {
   position?: string;
   responsiveMode?: string;
   file: File;
+  group?: string;
+}
+export interface UpdateImageOrganizationDTO {
+  imageId: string;
+  organizationId: string;
+  imageUrl: string;
+  description: string;
+  tag?: string;
+  position?: string;
+  responsiveMode?: string;
+  file: File;
+  group?: string;
 }
 
 export interface ListImageParams {
@@ -36,9 +61,19 @@ export interface ListImageParams {
   responsiveMode?: string;
   description?: string;
 }
+export interface ListImageOrganizationParams {
+  organizationId: string;
+  responsiveMode?: string;
+  description?: string;
+}
 
 export interface GetByTagImageParams {
   venueId: string;
+  tag?: string;
+  responsiveMode?: string;
+}
+export interface GetByTagImageOrganizationParams {
+  organizationId: string;
   tag?: string;
   responsiveMode?: string;
 }

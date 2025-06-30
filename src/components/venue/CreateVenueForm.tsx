@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -20,13 +21,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { CreateVenueDTO } from "@/types/venue";
 import { useVenueStore } from "@/store/venueStore";
+import { useOwnerStore } from "@/store/ownerStore";
 import { FormLayout } from "@/components/ui/form-layout";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
 import { showSuccessToast } from "@/components/ui/success-toast";
-import { useState } from "react";
-import InputMask from 'react-input-mask';
-import { NumericFormat } from 'react-number-format';
+import { useState, useEffect } from "react";
+import InputMask from "react-input-mask";
+import { NumericFormat } from "react-number-format";
 import { useUserStore } from "@/store/userStore";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const pricingModels = [
   { value: "PER_PERSON", label: "Por pessoa" },
@@ -38,57 +42,88 @@ const pricingModels = [
 const createVenueSchema = z.object({
   userId: z.string(),
   organizationId: z.string(),
-  data: z.object({
-    cep: z.string().min(1, "CEP é obrigatório"),
-    email: z.string().email("Email inválido"),
-    name: z.string().min(1, "Nome é obrigatório"),
-    city: z.string().min(1, "Cidade é obrigatória"),
-    state: z.string().min(1, "Estado é obrigatório"),
-    street: z.string().min(1, "Rua é obrigatória"),
-    checkIn: z.string().optional(),
-    maxGuest: z.string().min(1, "Capacidade máxima é obrigatória"),
-    checkOut: z.string().optional(),
-    streetNumber: z.string().min(1, "Número é obrigatório"),
-    neighborhood: z.string().min(1, "Bairro é obrigatório"),
-    owners: z.array(z.string()).default([]),
-    hasOvernightStay: z.boolean().default(false),
-    complement: z.string().optional(),
-    pricePerDay: z.string().optional(),
-    pricePerPerson: z.string().optional(),
-    pricePerPersonDay: z.string().optional(),
-    pricePerPersonHour: z.string().optional(),
-    pricingModel: z.enum(["PER_PERSON", "PER_DAY", "PER_PERSON_DAY", "PER_PERSON_HOUR"]),
-  }).refine(
-    (data) => {
-      if (data.hasOvernightStay) {
-        return data.checkIn?.trim() && data.checkOut?.trim();
+  data: z
+    .object({
+      cep: z.string().min(1, "CEP é obrigatório"),
+      email: z.string().email("Email inválido"),
+      name: z.string().min(1, "Nome é obrigatório"),
+      city: z.string().min(1, "Cidade é obrigatória"),
+      state: z.string().min(1, "Estado é obrigatório"),
+      street: z.string().min(1, "Rua é obrigatória"),
+      checkIn: z.string().optional(),
+      maxGuest: z.string().min(1, "Capacidade máxima é obrigatória"),
+      checkOut: z.string().optional(),
+      description: z.string().optional(),
+      streetNumber: z.string().min(1, "Número é obrigatório"),
+      neighborhood: z.string().min(1, "Bairro é obrigatório"),
+      owners: z.array(z.string()).min(1, "Pelo menos um proprietário deve ser selecionado"),
+      hasOvernightStay: z.boolean().default(false),
+      complement: z.string().optional(),
+      pricePerDay: z.string().optional(),
+      pricePerPerson: z.string().optional(),
+      pricePerPersonDay: z.string().optional(),
+      pricePerPersonHour: z.string().optional(),
+      pricingModel: z.enum([
+        "PER_PERSON",
+        "PER_DAY",
+        "PER_PERSON_DAY",
+        "PER_PERSON_HOUR",
+      ]),
+      url: z.string().url("URL inválida").optional().or(z.literal("")),
+      whatsappNumber: z.string().optional(),
+      minimumPrice: z.string().optional(),
+      minimumNights: z.string().optional(),
+      tiktokUrl: z
+        .string()
+        .url("URL do TikTok inválida")
+        .optional()
+        .or(z.literal("")),
+      instagramUrl: z
+        .string()
+        .url("URL do Instagram inválida")
+        .optional()
+        .or(z.literal("")),
+      facebookUrl: z
+        .string()
+        .url("URL do Facebook inválida")
+        .optional()
+        .or(z.literal("")),
+      logoFile: z.instanceof(File).optional(),
+    })
+    .refine(
+      (data) => {
+        if (data.hasOvernightStay) {
+          return data.checkIn?.trim() && data.checkOut?.trim();
+        }
+        return true;
+      },
+      {
+        message:
+          "Se o espaço aceitar pernoite, os campos check-in e check-out são obrigatórios.",
+        path: ["checkIn"],
       }
-      return true;
-    },
-    {
-      message: "Se o espaço aceitar pernoite, os campos check-in e check-out são obrigatórios.",
-      path: ["checkIn"],
-    }
-  ).refine(
-    (data) => {
-      switch (data.pricingModel) {
-        case "PER_PERSON":
-          return !!data.pricePerPerson;
-        case "PER_DAY":
-          return !!data.pricePerDay;
-        case "PER_PERSON_DAY":
-          return !!data.pricePerPersonDay;
-        case "PER_PERSON_HOUR":
-          return !!data.pricePerPersonHour;
-        default:
-          return false;
+    )
+    .refine(
+      (data) => {
+        switch (data.pricingModel) {
+          case "PER_PERSON":
+            return !!data.pricePerPerson;
+          case "PER_DAY":
+            return !!data.pricePerDay;
+          case "PER_PERSON_DAY":
+            return !!data.pricePerPersonDay;
+          case "PER_PERSON_HOUR":
+            return !!data.pricePerPersonHour;
+          default:
+            return false;
+        }
+      },
+      {
+        message:
+          "O preço é obrigatório para o modelo de precificação selecionado.",
+        path: ["pricingModel"],
       }
-    },
-    {
-      message: "O preço é obrigatório para o modelo de precificação selecionado.",
-      path: ["pricingModel"],
-    }
-  ),
+    ),
 });
 
 type CreateVenueFormValues = z.infer<typeof createVenueSchema>;
@@ -101,9 +136,17 @@ interface CreateVenueFormProps {
   isEditing?: boolean;
 }
 
-export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, isEditing }: CreateVenueFormProps) {
+export function CreateVenueForm({
+  organizationId,
+  userId,
+  onSuccess,
+  venueId,
+  isEditing,
+}: CreateVenueFormProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const { createVenue, deleteVenue } = useVenueStore();
+  const { owners, fetchOrganizationOwners } = useOwnerStore();
   const { toast } = useToast();
   const { user } = useUserStore();
   const form = useForm<CreateVenueFormValues>({
@@ -121,6 +164,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
         checkIn: "",
         maxGuest: "",
         checkOut: "",
+        description: "",
         streetNumber: "",
         neighborhood: "",
         owners: [],
@@ -131,6 +175,14 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
         pricePerPersonDay: "",
         pricePerPersonHour: "",
         pricingModel: "PER_PERSON",
+        url: "",
+        whatsappNumber: "",
+        minimumPrice: "",
+        minimumNights: "",
+        tiktokUrl: "",
+        instagramUrl: "",
+        facebookUrl: "",
+        logoFile: undefined,
       },
     },
   });
@@ -138,43 +190,71 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
   const pricingModel = form.watch("data.pricingModel");
   const hasOvernightStay = form.watch("data.hasOvernightStay");
 
+  const handleLogoChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onChange: (value: File | null) => void
+  ) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setLogoPreview(url);
+      onChange(file);
+    } else {
+      setLogoPreview(null);
+      onChange(null);
+    }
+  };
+
   const onSubmit = async (data: CreateVenueFormValues) => {
     try {
       const venueData: CreateVenueDTO = {
         userId: user?.id || "",
         organizationId: data.organizationId,
-        data: {
-          cep: data.data.cep.replace(/\D/g, ''),
-          email: data.data.email,
-          name: data.data.name,
-          city: data.data.city,
-          state: data.data.state,
-          street: data.data.street,
-          checkIn: data.data.checkIn,
-          maxGuest: data.data.maxGuest,
-          checkOut: data.data.checkOut,
-          streetNumber: data.data.streetNumber.replace(/\D/g, ''),
-          neighborhood: data.data.neighborhood,
-          owners: data.data.owners,
-          hasOvernightStay: data.data.hasOvernightStay,
-          complement: data.data.complement,
-          pricePerDay: data.data.pricePerDay?.replace(/\D/g, ''),
-          pricePerPerson: data.data.pricePerPerson?.replace(/\D/g, ''),
-          pricePerPersonDay: data.data.pricePerPersonDay?.replace(/\D/g, ''),
-          pricePerPersonHour: data.data.pricePerPersonHour?.replace(/\D/g, ''),
-          pricingModel: data.data.pricingModel,
-        }
+        cep: data.data.cep.replace(/\D/g, ""),
+        email: data.data.email,
+        name: data.data.name,
+        city: data.data.city,
+        state: data.data.state,
+        street: data.data.street,
+        checkIn: data.data.checkIn || undefined,
+        maxGuest: data.data.maxGuest,
+        checkOut: data.data.checkOut || undefined,
+        description: data.data.description || undefined,
+        streetNumber: data.data.streetNumber.replace(/\D/g, ""),
+        neighborhood: data.data.neighborhood,
+        owners: data.data.owners,
+        hasOvernightStay: data.data.hasOvernightStay,
+        complement: data.data.complement || undefined,
+        pricePerDay: data.data.pricePerDay?.replace(/\D/g, "") || undefined,
+        pricePerPerson: data.data.pricePerPerson?.replace(/\D/g, "") || undefined,
+        pricePerPersonDay: data.data.pricePerPersonDay?.replace(/\D/g, "") || undefined,
+        pricePerPersonHour: data.data.pricePerPersonHour?.replace(/\D/g, "") || undefined,
+        pricingModel: data.data.pricingModel,
+        url: data.data.url || undefined,
+        whatsappNumber: data.data.whatsappNumber || undefined,
+        minimumPrice: data.data.minimumPrice?.replace(/\D/g, "") || undefined,
+        minimumNights: data.data.minimumNights || undefined,
+        tiktokUrl: data.data.tiktokUrl || undefined,
+        instagramUrl: data.data.instagramUrl || undefined,
+        facebookUrl: data.data.facebookUrl || undefined,
+        logoFile: data.data.logoFile,
       };
-      
+
       const response = await createVenue(venueData);
-      const { title, message } = handleBackendSuccess(response, "Espaço criado com sucesso!");
+      const { title, message } = handleBackendSuccess(
+        response,
+        "Espaço criado com sucesso!"
+      );
       showSuccessToast({
         title,
-        description: message
+        description: message,
       });
       onSuccess?.();
     } catch (error: unknown) {
-      const { title, message } = handleBackendError(error, "Erro ao criar espaço. Tente novamente mais tarde.");
+      const { title, message } = handleBackendError(
+        error,
+        "Erro ao criar espaço. Tente novamente mais tarde."
+      );
       toast({
         title,
         description: message,
@@ -188,14 +268,20 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
     setIsDeleting(true);
     try {
       const response = await deleteVenue(venueId);
-      const { title, message } = handleBackendSuccess(response, "Espaço excluído com sucesso!");
+      const { title, message } = handleBackendSuccess(
+        response,
+        "Espaço excluído com sucesso!"
+      );
       showSuccessToast({
         title,
-        description: message
+        description: message,
       });
       onSuccess?.();
     } catch (error: unknown) {
-      const { title, message } = handleBackendError(error, "Erro ao excluir espaço. Tente novamente mais tarde.");
+      const { title, message } = handleBackendError(
+        error,
+        "Erro ao excluir espaço. Tente novamente mais tarde."
+      );
       toast({
         title,
         description: message,
@@ -205,6 +291,12 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
       setIsDeleting(false);
     }
   };
+
+  useEffect(() => {
+    if (organizationId) {
+      fetchOrganizationOwners(organizationId);
+    }
+  }, [organizationId, fetchOrganizationOwners]);
 
   return (
     <FormLayout
@@ -219,7 +311,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
       entityType="espaço"
     >
       <div className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="data.name"
@@ -241,7 +333,11 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="email@espaco.com" {...field} />
+                  <Input
+                    type="email"
+                    placeholder="email@espaco.com"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -249,11 +345,30 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
           />
         </div>
 
+        {/* Descrição */}
+        <FormField
+          control={form.control}
+          name="data.description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Descrição</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Descreva o espaço, suas características e diferenciais..."
+                  className="min-h-[100px]"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         {/* Endereço */}
         <div className="space-y-4">
           <h3 className="font-semibold text-md">Endereço</h3>
-          
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="data.street"
@@ -290,7 +405,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="data.complement"
@@ -320,7 +435,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
               control={form.control}
               name="data.city"
@@ -346,7 +461,9 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
                       mask="aa"
                       placeholder="UF"
                       value={field.value}
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      onChange={(e) =>
+                        field.onChange(e.target.value.toUpperCase())
+                      }
                     >
                       {(inputProps) => <Input {...inputProps} />}
                     </InputMask>
@@ -382,8 +499,8 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
         {/* Horários */}
         <div className="space-y-4">
           <h3 className="font-semibold text-md">Horários</h3>
-          
-          <div className="grid grid-cols-3 gap-4">
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
               control={form.control}
               name="data.hasOvernightStay"
@@ -438,25 +555,22 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
         {/* Preços */}
         <div className="space-y-4">
           <h3 className="font-semibold text-md">Preços</h3>
-          
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="data.pricingModel"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Modelo de precificação*</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
+                  <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um modelo" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {pricingModels.map(model => (
+                      {pricingModels.map((model) => (
                         <SelectItem key={model.value} value={model.value}>
                           {model.label}
                         </SelectItem>
@@ -468,7 +582,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
               )}
             />
 
-            {pricingModel === 'PER_PERSON' && (
+            {pricingModel === "PER_PERSON" && (
               <FormField
                 control={form.control}
                 name="data.pricePerPerson"
@@ -496,7 +610,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
               />
             )}
 
-            {pricingModel === 'PER_DAY' && (
+            {pricingModel === "PER_DAY" && (
               <FormField
                 control={form.control}
                 name="data.pricePerDay"
@@ -524,7 +638,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
               />
             )}
 
-            {pricingModel === 'PER_PERSON_DAY' && (
+            {pricingModel === "PER_PERSON_DAY" && (
               <FormField
                 control={form.control}
                 name="data.pricePerPersonDay"
@@ -552,7 +666,7 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
               />
             )}
 
-            {pricingModel === 'PER_PERSON_HOUR' && (
+            {pricingModel === "PER_PERSON_HOUR" && (
               <FormField
                 control={form.control}
                 name="data.pricePerPersonHour"
@@ -590,17 +704,242 @@ export function CreateVenueForm({ organizationId, userId, onSuccess, venueId, is
             <FormItem>
               <FormLabel>Capacidade máxima (pessoas)*</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  placeholder="Ex: 200"
-                  {...field}
-                />
+                <Input type="number" placeholder="Ex: 200" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Informações Adicionais */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-md">Informações Adicionais</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="data.url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL do Espaço</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="url"
+                      placeholder="https://exemplo.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="data.whatsappNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número do WhatsApp</FormLabel>
+                  <FormControl>
+                    <PhoneInput
+                      country={"br"}
+                      value={field.value}
+                      onChange={field.onChange}
+                      inputClass="w-full"
+                      placeholder="Digite o número"
+                      enableSearch={true}
+                      containerClass="w-full"
+                      inputStyle={{ width: "100%" }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="data.minimumPrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preço mínimo de orçamento (R$)</FormLabel>
+                  <FormControl>
+                    <NumericFormat
+                      value={field.value}
+                      onValueChange={(values) => {
+                        field.onChange(values.value);
+                      }}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      prefix="R$ "
+                      decimalScale={2}
+                      fixedDecimalScale
+                      placeholder="R$ 0,00"
+                      customInput={Input}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {hasOvernightStay && (
+              <FormField
+                control={form.control}
+                name="data.minimumNights"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Noites mínimas</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={1} placeholder="1" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Redes Sociais */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-md">Redes Sociais</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="data.instagramUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL do Instagram</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="url"
+                      placeholder="https://instagram.com/seu-perfil"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="data.facebookUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL do Facebook</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="url"
+                      placeholder="https://facebook.com/seu-perfil"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="data.tiktokUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL do TikTok</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="url"
+                      placeholder="https://tiktok.com/@seu-perfil"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="data.logoFile"
+              render={({ field: { value, onChange, ...field } }) => (
+                <FormItem>
+                  <FormLabel>Logo do Espaço</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleLogoChange(e, onChange)}
+                      {...field}
+                    />
+                  </FormControl>
+                  {logoPreview && (
+                    <div className="mt-2">
+                      <img
+                        src={logoPreview}
+                        alt="Logo do espaço"
+                        className="max-h-40 rounded border shadow"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => window.open(logoPreview, "_blank")}
+                      />
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Proprietários */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-md">Proprietários</h3>
+          
+          <FormField
+            control={form.control}
+            name="data.owners"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Selecione os proprietários do espaço</FormLabel>
+                <div className="space-y-3 mt-2">
+                  {owners.map((owner) => (
+                    <div key={owner.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`owner-${owner.id}`}
+                        checked={field.value.includes(owner.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            field.onChange([...field.value, owner.id]);
+                          } else {
+                            field.onChange(field.value.filter((id) => id !== owner.id));
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={`owner-${owner.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {owner.completeName}
+                      </label>
+                    </div>
+                  ))}
+                  {owners.length === 0 && (
+                    <p className="text-sm text-gray-500">
+                      Nenhum proprietário cadastrado na organização.
+                    </p>
+                  )}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       </div>
     </FormLayout>
   );
-} 
+}

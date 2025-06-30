@@ -33,7 +33,7 @@ export function VenueCard({
   const navigate = useNavigate();
 
   const handleViewVenue = () => {
-    navigate(`/venue/${id}`);
+    navigate(`/venue/${id}/notifications`);
   };
 
   // Função para formatar a data sem considerar fuso horário

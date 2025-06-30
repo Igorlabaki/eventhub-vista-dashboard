@@ -8,7 +8,11 @@ import {
   ImageByIdResponse, 
   ImageUpdateResponse, 
   ImageCreateResponse, 
-  ImageDeleteResponse 
+  ImageDeleteResponse,
+  CreateImageOrganizationDTO,
+  ListImageOrganizationParams,
+  GetByTagImageOrganizationParams,
+  UpdateImageOrganizationDTO
 } from '@/types/image';
 
 export const imageService = {
@@ -18,6 +22,7 @@ export const imageService = {
     formData.append('file', data.file);
     formData.append('tag', data.tag);
     formData.append('venueId', data.venueId);
+    if (data.group) formData.append('group', data.group);
     if (data.position) formData.append('position', data.position);
     if (data.description) formData.append('description', data.description);
     if (data.responsiveMode) formData.append('responsiveMode', data.responsiveMode);
@@ -41,6 +46,7 @@ export const imageService = {
     formData.append('imageId', data.imageId);
     formData.append('tag', data.tag);
     formData.append('venueId', data.venueId);
+    if (data.group) formData.append('group', data.group);
     if (data.position) formData.append('position', data.position);
     if (data.description) formData.append('description', data.description);
     if (data.responsiveMode) formData.append('responsiveMode', data.responsiveMode);
@@ -75,6 +81,63 @@ export const imageService = {
 
   deleteImage: async (imageId: string) => {
     const response = await api.delete<ImageDeleteResponse>(`/image/delete/${imageId}`);
+    return response.data;
+  },
+
+  createImageOrganization: async (data: CreateImageOrganizationDTO) => {
+    const formData = new FormData();
+    formData.append('file', data.file);
+    formData.append('organizationId', data.organizationId);
+    formData.append('description', data.description);
+    if (data.tag) formData.append('tag', data.tag);
+    if (data.group) formData.append('group', data.group);
+    if (data.position) formData.append('position', data.position);
+    if (data.responsiveMode) formData.append('responsiveMode', data.responsiveMode);
+
+    const response = await api.post<ImageCreateResponse>('/image/upload/image-organization', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  listImagesOrganization: async (params: ListImageOrganizationParams) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append('organizationId', params.organizationId);
+    if (params.responsiveMode) queryParams.append('responsiveMode', params.responsiveMode);
+    if (params.description) queryParams.append('description', params.description);
+
+    const response = await api.get<ImageListResponse>(`/image/organization/list?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  getImagesByTagOrganization: async (params: GetByTagImageOrganizationParams) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append('organizationId', params.organizationId);
+    if (params.tag) queryParams.append('tag', params.tag);
+    if (params.responsiveMode) queryParams.append('responsiveMode', params.responsiveMode);
+
+    const response = await api.get<ImageListResponse>(`/image/getByTag/image-organization?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  updateImageOrganization: async (data: UpdateImageOrganizationDTO) => {
+    const formData = new FormData();
+    if (data.file) formData.append('file', data.file);
+    formData.append('imageId', data.imageId);
+    formData.append('organizationId', data.organizationId);
+    formData.append('description', data.description);
+    if (data.tag) formData.append('tag', data.tag);
+    if (data.group) formData.append('group', data.group);
+    if (data.position) formData.append('position', data.position);
+    if (data.responsiveMode) formData.append('responsiveMode', data.responsiveMode);
+
+    const response = await api.put<ImageUpdateResponse>('/image/organization/update', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   }
 }; 

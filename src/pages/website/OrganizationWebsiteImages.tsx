@@ -1,26 +1,14 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useImageStore } from "@/store/imageStore";
-import { useVenueStore } from "@/store/venueStore";
+import { useOrganizationStore } from "@/store/organizationStore";
 import { Image } from "@/types/image";
 import { PageHeader } from "@/components/PageHeader";
 import { ImageSection } from "@/components/image/image-section";
-import { useParams } from "react-router-dom";
 
-export default function VenueWebsiteImages() {
-  const params = useParams();
-  const venueId = params.id;
-  const organizationId = params.organizationId;
-  const isOrganization = Boolean(organizationId);
-
-  const {
-    images,
-    isLoading,
-    fetchImages,
-    organizationImages,
-    fetchOrganizationImages
-  } = useImageStore();
-
+export default function OrganizationWebsiteImages() {
+  const { currentOrganization: organization } = useOrganizationStore();
+  const { images, isLoading, fetchOrganizationImages, organizationImages } = useImageStore();
   const [isCreating, setIsCreating] = useState(false);
   const [selectedImage, setSelectedImage] = useState<Image | null | undefined>(undefined);
 
@@ -35,15 +23,13 @@ export default function VenueWebsiteImages() {
   };
 
   useEffect(() => {
-    if (isOrganization && organizationId) {
-      fetchOrganizationImages({ organizationId });
-    } else if (venueId) {
-      fetchImages({ venueId });
+    if (organization?.id) {
+      fetchOrganizationImages({ organizationId: organization.id });
     }
-  }, [isOrganization, organizationId, venueId, fetchImages, fetchOrganizationImages]);
+  }, [organization?.id, fetchOrganizationImages]);
 
   return (
-    <DashboardLayout title="Imagens do Site" subtitle="Gerencie as imagens do seu site">
+    <DashboardLayout title="Imagens do Site" subtitle="Gerencie as imagens do site da sua organização">
       <div className="space-y-6">
         <PageHeader
           onCreateClick={handleCreateClick}
@@ -52,10 +38,9 @@ export default function VenueWebsiteImages() {
         />
 
         <ImageSection
-          contextType={isOrganization ? "organization" : "venue"}
-          images={isOrganization ? organizationImages : images}
-          venueId={venueId}
-          organizationId={organizationId}
+          contextType="organization"
+          images={organizationImages}
+          organizationId={organization?.id}
           isLoading={isLoading}
           isCreating={isCreating}
           selectedImage={selectedImage}

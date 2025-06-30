@@ -6,6 +6,7 @@ import { Building, Calendar, ChevronRight, Menu, House } from "lucide-react";
 import { OrganizationNav } from "@/components/organization/OrganizationNav";
 import { VenueNav } from "@/components/venue/VenueNav";
 import { WebsiteNav } from "@/components/website/WebsiteNav";
+import { OrganizationWebsiteNav } from "@/components/website/OrganizationWebsiteNav";
 import { useOrganizationStore } from "@/store/organizationStore";
 import { useVenueStore } from "@/store/venueStore";
 import { useUserStore } from "@/store/userStore";
@@ -34,7 +35,11 @@ export function SidebarNav({
   // Determine if we're in a website section
   const isInWebsite = location.pathname.includes("/website");
 
+  // Determine if we're in an organization website section
+  const isInOrgWebsite = isInOrg && isInWebsite;
+
   const venueId = params.id; // venueId vem de /venue/:id/...
+  const organizationId = params.id; // organizationId vem de /organization/:id/...
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -112,23 +117,38 @@ export function SidebarNav({
             <Building className="h-5 w-5 mr-2" />
             {!isCollapsed && <span>Organizações</span>}
           </Link>
-          {(selectedVenue && isInProposal) ||
-            (selectedVenue && isInWebsite && (
-              <Link
-                to={`/venue/${selectedVenue.id}`}
-                className={cn(
-                  "flex items-center ml-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary mt-4",
-                  "text-gray-700"
-                )}
-                onClick={handleNavItemClick}
-              >
-                <House className="h-5 w-5 mr-2" />
-                {!isCollapsed && <span>{selectedVenue.name}</span>}
-              </Link>
-            ))}
+
+          {isInOrgWebsite && currentOrganization   &&(
+            <Link
+              to={`/organization/${currentOrganization.id}/venues`}
+              className={cn(
+                "flex items-center ml-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary mt-4",
+                "text-gray-700"
+              )}
+              onClick={handleNavItemClick}
+            >
+              <Building className="h-5 w-5 mr-2" />
+              {!isCollapsed && <span>{currentOrganization.name}</span>}
+            </Link>
+          )}
+
+          { isInVenue && selectedVenue   &&(
+            <Link
+              to={`/organization/${currentOrganization.id}/venues`}
+              className={cn(
+                "flex items-center ml-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary mt-4",
+                "text-gray-700"
+              )}
+              onClick={handleNavItemClick}
+            >
+              <Building className="h-5 w-5 mr-2" />
+              {!isCollapsed && <span>{currentOrganization.name}</span>}
+            </Link>
+          )}
+
           {selectedVenue && isInProposal && (
             <Link
-              to={`/venue/${selectedVenue.id}`}
+              to={`/venue/${selectedVenue.id}/notifications`}
               className={cn(
                 "flex items-center ml-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary mt-4",
                 "text-gray-700"
@@ -140,7 +160,7 @@ export function SidebarNav({
             </Link>
           )}
 
-          {isInOrg && !isCollapsed && (
+          {isInOrg && !isCollapsed && !isInOrgWebsite && (
             <OrganizationNav
               organizationName={currentOrganization?.name || ""}
               isCollapsed={isCollapsed}
@@ -148,7 +168,7 @@ export function SidebarNav({
             />
           )}
 
-          {isInVenue && !isInWebsite && (
+          {isInVenue && !isInWebsite && selectedVenue && (
             <VenueNav
               isCollapsed={isCollapsed}
               onNavItemClick={handleNavItemClick}
@@ -156,11 +176,19 @@ export function SidebarNav({
             />
           )}
 
-          {isInWebsite && selectedVenue && (
+          {isInWebsite && selectedVenue && !isInOrgWebsite && (
             <WebsiteNav
               isCollapsed={isCollapsed}
               onNavItemClick={handleNavItemClick}
               venueId={selectedVenue.id}
+            />
+          )}
+
+          {isInOrgWebsite && organizationId && (
+            <OrganizationWebsiteNav
+              isCollapsed={isCollapsed}
+              onNavItemClick={handleNavItemClick}
+              organizationId={organizationId}
             />
           )}
 

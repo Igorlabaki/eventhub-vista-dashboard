@@ -4,7 +4,11 @@ import {
   CreateImageDTO, 
   UpdateImageDTO,
   ListImageParams,
-  GetByTagImageParams
+  GetByTagImageParams,
+  CreateImageOrganizationDTO,
+  UpdateImageOrganizationDTO,
+  ListImageOrganizationParams,
+  GetByTagImageOrganizationParams
 } from '@/types/image';
 import { imageService } from '@/services/image.service';
 import { BackendResponse } from '@/lib/error-handler';
@@ -26,6 +30,13 @@ interface ImageStore {
   updateImageInStore: (image: Image) => void;
   removeImage: (id: string) => void;
   clearError: () => void;
+  organizationImages: Image[];
+  setOrganizationImages: (images: Image[]) => void;
+  fetchOrganizationImages: (params: ListImageOrganizationParams) => Promise<void>;
+  fetchOrganizationImagesByTag: (params: GetByTagImageOrganizationParams) => Promise<void>;
+  createOrganizationImage: (data: CreateImageOrganizationDTO) => Promise<BackendResponse<Image>>;
+  updateOrganizationImage: (data: UpdateImageOrganizationDTO) => Promise<BackendResponse<Image>>;
+  removeOrganizationImage: (id: string) => void;
 }
 
 interface ApiError {
@@ -41,8 +52,10 @@ export const useImageStore = create<ImageStore>((set, get) => ({
   currentImage: null,
   isLoading: false,
   error: null,
+  organizationImages: [],
   setImages: (images) => set({ images }),
   setCurrentImage: (image) => set({ currentImage: image }),
+  setOrganizationImages: (images) => set({ organizationImages: images }),
   
   fetchImages: async (params) => {
     set({ isLoading: true, error: null });
@@ -145,6 +158,7 @@ export const useImageStore = create<ImageStore>((set, get) => ({
       await imageService.deleteImage(id);
       set((state) => ({
         images: state.images.filter((i) => i.id !== id),
+        organizationImages: state.organizationImages.filter((i) => i.id !== id),
         currentImage: state.currentImage && state.currentImage.id === id ? null : state.currentImage,
         isLoading: false
       }));
@@ -176,4 +190,86 @@ export const useImageStore = create<ImageStore>((set, get) => ({
   })),
   
   clearError: () => set({ error: null }),
+
+  fetchOrganizationImages: async (params) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await imageService.listImagesOrganization(params);
+      set({ organizationImages: response.data.imageList });
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      set({ 
+        error: error?.response?.data?.message || "Não foi possível carregar as imagens da organização.",
+        organizationImages: []
+      });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchOrganizationImagesByTag: async (params) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await imageService.getImagesByTagOrganization(params);
+      set({ organizationImages: response.data.imageList });
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      set({ 
+        error: error?.response?.data?.message || "Não foi possível carregar as imagens da organização por tag.",
+        organizationImages: []
+      });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  createOrganizationImage: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await imageService.createImageOrganization(data);
+      set((state) => ({ 
+        organizationImages: [...state.organizationImages, response.data],
+        isLoading: false 
+      }));
+      return {
+        success: true,
+        message: "Imagem da organização criada com sucesso",
+        data: response.data
+      };
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      set({ 
+        error: error?.response?.data?.message || "Não foi possível criar a imagem da organização.",
+        isLoading: false 
+      });
+      throw err;
+    }
+  },
+
+  updateOrganizationImage: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await imageService.updateImageOrganization(data);
+      set((state) => ({
+        organizationImages: state.organizationImages.map((i) => i.id === response.data.id ? response.data : i),
+        isLoading: false
+      }));
+      return {
+        success: true,
+        message: "Imagem da organização atualizada com sucesso",
+        data: response.data
+      };
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      set({ 
+        error: error?.response?.data?.message || "Não foi possível atualizar a imagem da organização.",
+        isLoading: false 
+      });
+      throw err;
+    }
+  },
+
+  removeOrganizationImage: (id) => set((state) => ({
+    organizationImages: state.organizationImages.filter((i) => i.id !== id),
+  })),
 })); 

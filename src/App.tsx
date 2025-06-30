@@ -11,6 +11,7 @@ import OrganizationVenues from "./pages/OrganizationVenues";
 import OrganizationOwners from "./pages/OrganizationOwners";
 import OrganizationPermissions from "./pages/OrganizationPermissions";
 import OrganizationContracts from "./pages/OrganizationContracts";
+import OrganizationWebsite from "./pages/OrganizationWebsite";
 import VenueDashboard from "./pages/VenueDashboard";
 import VenueBudgets from "./pages/VenueBudgets";
 import VenueNotifications from "./pages/VenueNotifications";
@@ -48,6 +49,8 @@ import OrganizationSettings from "./pages/OrganizationSettings";
 import SendMessagePage from "./pages/SendMessagePage";
 import SendProposalPage from "./pages/SendProposalPage";
 import ProposalContract from "./pages/ProposalContract";
+import OrganizationWebsiteTexts from "./pages/website/OrganizationWebsiteTexts";
+import OrganizationWebsiteVenues from "./pages/website/OrganizationWebsiteVenues";
 
 const queryClient = new QueryClient();
 
@@ -83,11 +86,15 @@ const App = () => {
               <Route path="/organization/:id/permissions" element={<ProtectedRoute><OrganizationPermissions /></ProtectedRoute>} />
               <Route path="/organization/:id/contracts" element={<ProtectedRoute><OrganizationContracts /></ProtectedRoute>} />
               <Route path="/organization/:id/settings" element={<ProtectedRoute><OrganizationSettings /></ProtectedRoute>} />
+              <Route path="/organization/:id/website" element={<ProtectedRoute><OrganizationWebsite /></ProtectedRoute>} />
+              <Route path="/organization/:id/website/venues" element={<ProtectedRoute><OrganizationWebsiteVenues /></ProtectedRoute>} />
               <Route path="/venue/:id/notifications" element={<ProtectedRoute><VenueNotifications /></ProtectedRoute>} />
               <Route path="/venue/:id" element={<ProtectedRoute><VenueDashboard /></ProtectedRoute>} />
               <Route path="/venue/:id/website" element={<ProtectedRoute><VenueWebsite /></ProtectedRoute>} />
               <Route path="/venue/:id/website/texts" element={<ProtectedRoute><VenueWebsiteTexts /></ProtectedRoute>} />
+              <Route path="/organization/:id/website/texts" element={<ProtectedRoute><OrganizationWebsiteTexts /></ProtectedRoute>} />
               <Route path="/venue/:id/website/images" element={<ProtectedRoute><VenueWebsiteImages /></ProtectedRoute>} />
+              <Route path="/organization/:organizationId/website/images" element={<ProtectedRoute><VenueWebsiteImages /></ProtectedRoute>} />
               <Route path="/venue/:id/website/faq" element={<ProtectedRoute><VenueWebsiteFaq /></ProtectedRoute>} />
               <Route path="/venue/:id/budgets" element={<ProtectedRoute><VenueBudgets /></ProtectedRoute>} />
               <Route path="/venue/:id/expenses" element={<ProtectedRoute><VenueExpenses /></ProtectedRoute>} />

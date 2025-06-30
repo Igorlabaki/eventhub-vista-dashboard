@@ -2,23 +2,16 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Plus, Building } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { FilterList } from "@/components/filterList";
-import { OrganizationCreateForm } from "@/components/organization/OrganizationCreateForm";
-import { OrganizationList } from "@/components/organization/OrganizationList";
+import { OrganizationSection } from "@/components/organization/OrganizationSection";
 import { useOrganizationStore } from "@/store/organizationStore";
 import { useUserStore } from "@/store/userStore";
 import { useToast } from "@/components/ui/use-toast";
 import { PageHeader } from "@/components/PageHeader";
 import { useVenueStore } from "@/store/venueStore";
+
 export default function Dashboard() {
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const { user } = useUserStore();
   const { organizations, fetchOrganizations, isLoading, error, clearError } = useOrganizationStore();
   const { toast } = useToast();
@@ -40,49 +33,61 @@ export default function Dashboard() {
     }
   }, [error, toast, clearError]);
 
+  const handleCreateClick = () => {
+    setIsCreating(true);
+  };
+
+  const handleCancelCreate = () => {
+    setIsCreating(false);
+  };
+
   return (
     <DashboardLayout title="Organizações" subtitle="Gerencie suas organizações">
       <PageHeader
         count={organizations.length}
-        onCreateClick={() => setDialogOpen(true)}
+        onCreateClick={handleCreateClick}
         createButtonText="Nova Organização"
-        isFormOpen={dialogOpen}
+        isFormOpen={isCreating}
       />
-      <FilterList
-        items={organizations}
-        filterBy={(org, query) =>
-          org.name.toLowerCase().includes(query.toLowerCase())
-        }
-        placeholder="Buscar organização..."
-      >
-        {(filtered) => (
-          <OrganizationList 
-            organizations={filtered.map(org => ({
-              ...org,
-              _count: { 
-                venues: typeof org._count === 'object' ? org._count.venues : 0 
-              }
-            }))} 
-            isLoading={isLoading} 
-          />
-        )}
-      </FilterList>
-      {/* Dialog para criar nova organização */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-[80%] md:max-w-[40%] rounded-md">
-          <DialogHeader>
-            <DialogTitle>Nova Organização</DialogTitle>
-            <DialogDescription>
-              Crie uma nova organização para gerenciar seus espaços de eventos
-            </DialogDescription>
-          </DialogHeader>
-          <OrganizationCreateForm
-            userId={user?.id}
-            onCancel={() => setDialogOpen(false)}
-            onSuccess={() => setDialogOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      {isCreating ? (
+        <OrganizationSection
+          organizations={organizations.map(org => ({
+            ...org,
+            _count: { 
+              venues: typeof org._count === 'object' ? org._count.venues : 0 
+            }
+          }))}
+          userId={user?.id}
+          isLoading={isLoading}
+          isCreating={isCreating}
+          onCreateClick={handleCreateClick}
+          onCancelCreate={handleCancelCreate}
+        />
+      ) : (
+        <FilterList
+          items={organizations}
+          filterBy={(org, query) =>
+            org.name.toLowerCase().includes(query.toLowerCase())
+          }
+          placeholder="Buscar organização..."
+        >
+          {(filtered) => (
+            <OrganizationSection
+              organizations={filtered.map(org => ({
+                ...org,
+                _count: { 
+                  venues: typeof org._count === 'object' ? org._count.venues : 0 
+                }
+              }))}
+              userId={user?.id}
+              isLoading={isLoading}
+              isCreating={isCreating}
+              onCreateClick={handleCreateClick}
+              onCancelCreate={handleCancelCreate}
+            />
+          )}
+        </FilterList>
+      )}
     </DashboardLayout>
   );
 }

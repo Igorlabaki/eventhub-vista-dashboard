@@ -9,9 +9,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProposalStore } from "@/store/proposalStore";
-import { ProposalType, TrafficSource } from "@/types/proposal";
+import { ProposalType, TrafficSource, CreateProposalPerDayDTO } from "@/types/proposal";
 import { PROPOSAL_TYPE_OPTIONS, TRAFFIC_SOURCE_OPTIONS } from "./constants";
 import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
+import { showSuccessToast } from "@/components/ui/success-toast";
+import { useServiceStore } from "@/store/serviceStore";
+import { NumericFormat } from 'react-number-format';
+import InputMask from 'react-input-mask';
 
 const formSchema = z.object({
   completeClientName: z.string().min(1, "Nome do cliente é obrigatório"),
@@ -25,7 +31,8 @@ const formSchema = z.object({
   description: z.string().min(1, "Descrição é obrigatória"),
   knowsVenue: z.boolean(),
   type: z.nativeEnum(ProposalType),
-  trafficSource: z.nativeEnum(TrafficSource)
+  trafficSource: z.nativeEnum(TrafficSource),
+  totalAmountInput: z.string().optional(),
 }).refine(
   (data) => data.startHour >= "07:00" && data.startHour <= "22:00",
   { message: "Horário de início deve ser entre 07:00 e 22:00", path: ["startHour"] }
@@ -67,6 +74,13 @@ function clampHour(value: string) {
 export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps) {
   const navigate = useNavigate();
   const { createProposalPerDay } = useProposalStore();
+  const { services, fetchServices, isLoading: isLoadingServices } = useServiceStore();
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    if (venueId) fetchServices(venueId);
+  }, [venueId, fetchServices]);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -82,13 +96,14 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
       description: "",
       knowsVenue: false,
       type: ProposalType.EVENT,
-      trafficSource: TrafficSource.OTHER
+      trafficSource: TrafficSource.OTHER,
+      totalAmountInput: ""
     }
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await createProposalPerDay({
+      const proposalData: CreateProposalPerDayDTO = {
         completeClientName: values.completeClientName,
         startDay: values.startDay,
         endDay: values.endDay,
@@ -102,37 +117,80 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         type: values.type,
         trafficSource: values.trafficSource,
         venueId,
-        serviceIds: [] // Você precisará implementar a seleção de serviços
+        serviceIds: selectedServiceIds,
+        totalAmountInput: values.totalAmountInput,
+      };
+      
+      const response = await createProposalPerDay(proposalData);
+      
+      const { title, message } = handleBackendSuccess(response, "Orçamento criado com sucesso!");
+      showSuccessToast({
+        title,
+        description: message
       });
-      navigate('/venue/budgets');
-    } catch (error) {
-      console.error('Erro ao criar proposta:', error);
+      
+      onBack();
+    } catch (error: unknown) {
+      const { title, message } = handleBackendError(error, "Erro ao criar orçamento. Tente novamente mais tarde.");
+      toast({
+        title,
+        description: message,
+        variant: "destructive",
+      });
     }
   };
 
   return (
     <FormLayout
-      title="Novo Orçamento - Diária"
+      title="Novo Orçamento"
       onSubmit={onSubmit}
       onCancel={onBack}
       submitLabel="Criar Orçamento"
       form={form}
     >
-      <FormField
-        control={form.control}
-        name="completeClientName"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Nome do Cliente</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="completeClientName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome</FormLabel>
+              <FormControl>
+                <Input placeholder="Nome completo do cliente" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="totalAmountInput"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Valor Total</FormLabel>
+              <FormControl>
+                <NumericFormat
+                  value={field.value}
+                  onValueChange={(values) => {
+                    field.onChange(values.value);
+                  }}
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  prefix="R$ "
+                  decimalScale={2}
+                  fixedDecimalScale
+                  placeholder="R$ 0,00"
+                  customInput={Input}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="startDay"
@@ -162,7 +220,7 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="startHour"
@@ -206,29 +264,15 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         />
       </div>
 
-      <FormField
-        control={form.control}
-        name="guestNumber"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Número de Hóspedes</FormLabel>
-            <FormControl>
-              <Input type="number" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="email"
+          name="guestNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>E-mail</FormLabel>
+              <FormLabel>Número de Hóspedes</FormLabel>
               <FormControl>
-                <Input type="email" {...field} />
+                <Input type="number" placeholder="Ex: 4" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -237,18 +281,12 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
 
         <FormField
           control={form.control}
-          name="whatsapp"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>WhatsApp</FormLabel>
+              <FormLabel>E-mail</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  value={field.value}
-                  onChange={e => field.onChange(formatWhatsapp(e.target.value))}
-                  placeholder="(99) 99999-9999"
-                  maxLength={15}
-                />
+                <Input type="email" placeholder="email@cliente.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -258,55 +296,20 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
 
       <FormField
         control={form.control}
-        name="type"
+        name="whatsapp"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Tipo de Evento</FormLabel>
-            <Select
-              value={field.value}
-              onValueChange={field.onChange}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo de evento" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {PROPOSAL_TYPE_OPTIONS.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="trafficSource"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Fonte de Tráfego</FormLabel>
-            <Select
-              value={field.value}
-              onValueChange={field.onChange}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a fonte de tráfego" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {TRAFFIC_SOURCE_OPTIONS.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FormLabel>WhatsApp</FormLabel>
+            <FormControl>
+              <InputMask
+                mask="(99) 99999-9999"
+                placeholder="(00) 00000-0000"
+                value={field.value}
+                onChange={field.onChange}
+              >
+                {(inputProps) => <Input {...inputProps} />}
+              </InputMask>
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -317,9 +320,9 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Descrição do Evento</FormLabel>
+            <FormLabel>Descrição</FormLabel>
             <FormControl>
-              <Textarea {...field} />
+              <Textarea placeholder="Descreva os detalhes da estadia" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -330,14 +333,100 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         control={form.control}
         name="knowsVenue"
         render={({ field }) => (
-          <FormItem className="flex items-center space-x-2">
+          <FormItem>
+            <FormLabel>Já conhece o espaço?</FormLabel>
             <FormControl>
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
+              <Select
+                value={field.value === true ? "sim" : "nao"}
+                onValueChange={v => field.onChange(v === "sim")}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sim">Sim</SelectItem>
+                  <SelectItem value="nao">Não</SelectItem>
+                </SelectContent>
+              </Select>
             </FormControl>
-            <FormLabel>Já conhece o local?</FormLabel>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="type"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Tipo do aluguel</FormLabel>
+            <FormControl>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROPOSAL_TYPE_OPTIONS.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div>
+        <FormLabel>Serviços</FormLabel>
+        {isLoadingServices ? (
+          <div>Carregando serviços...</div>
+        ) : (
+          <div className="flex flex-wrap gap-3 mt-2">
+            {(services || []).map(service => (
+              <label key={service.id} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedServiceIds.includes(service.id)}
+                  onChange={e => {
+                    if (e.target.checked) {
+                      setSelectedServiceIds(ids => [...ids, service.id]);
+                    } else {
+                      setSelectedServiceIds(ids => ids.filter(id => id !== service.id));
+                    }
+                  }}
+                />
+                {service.name} <span className="text-xs text-gray-500">(R$ {service.price.toFixed(2)})</span>
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <FormField
+        control={form.control}
+        name="trafficSource"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Onde nos achou?</FormLabel>
+            <FormControl>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TRAFFIC_SOURCE_OPTIONS.map((source) => (
+                    <SelectItem key={source.value} value={source.value}>{source.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}

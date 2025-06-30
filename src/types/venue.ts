@@ -1,11 +1,12 @@
 import { Attachment } from "./attachment";
 import { DateEvent } from "./date-event";
 import { Organization } from "./organization";
-
+import { OwnerVenue } from "./owner";
 
 export interface Venue {
   id: string;
   name: string;
+  description?: string;
   email?: string | null;
   url?: string | null;
   tiktokUrl?: string | null;
@@ -14,6 +15,7 @@ export interface Venue {
   logoUrl?: string | null;
   street: string;
   streetNumber: string;
+  minimumNights?: number | null;
   complement?: string | null;
   neighborhood: string;
   city: string;
@@ -45,59 +47,64 @@ export interface Venue {
   questions: any[];
   proposals: any[];
   
-  ownerVenue: any[];
+ ;
   notifications: any[];
   UserPermission: any[];
   seasonalFee: any[];
   contracts: any[];
   goals: any[]; 
   */
+  ownerVenue: OwnerVenue[]
   attachments: Attachment[];
 };
 
 export interface CreateVenueDTO {
   userId: string;
   organizationId: string;
-  data: {
-    cep: string;
-    whatsappNumber?: string;
-    minimumPrice?: string;
-    email: string;
-    name: string;
-    url?: string;
-    city: string;
-    state: string;
-    street: string;
-    tiktokUrl?: string;
-    instagramUrl?: string;
-    facebookUrl?: string;
-    logoUrl?: string;
-    logoFile?: File;
-    checkIn?: string;
-    maxGuest: string;
-    checkOut?: string;
-    streetNumber: string;
-    neighborhood: string;
-    owners: string[];
-    hasOvernightStay: boolean;
-    complement?: string;
-    pricePerDay?: string;
-    pricePerPerson?: string;
-    pricePerPersonDay?: string;
-    pricePerPersonHour?: string;
-    pricingModel: "PER_PERSON" | "PER_DAY" | "PER_PERSON_DAY" | "PER_PERSON_HOUR";
-  };
+
+  cep: string;
+  description?: string;
+  whatsappNumber?: string;
+  minimumPrice?: string;
+  email: string;
+  name: string;
+  url?: string;
+  city: string;
+  state: string;
+  street: string;
+  minimumNights?: string;
+  tiktokUrl?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  logoUrl?: string;
+  logoFile?: File;
+  checkIn?: string;
+  maxGuest: string;
+  checkOut?: string;
+  streetNumber: string;
+  neighborhood: string;
+  owners: string[];
+  hasOvernightStay: boolean;
+  complement?: string;
+  pricePerDay?: string;
+  pricePerPerson?: string;
+  pricePerPersonDay?: string;
+  pricePerPersonHour?: string;
+  pricingModel: "PER_PERSON" | "PER_DAY" | "PER_PERSON_DAY" | "PER_PERSON_HOUR";
+
 }
 
 export interface UpdateVenueDTO {
   userId: string;
   venueId: string;
+  description?: string;
   whatsappNumber?: string;
   minimumPrice?: string;
   cep?: string;
   email?: string;
   name?: string;
   url?: string;
+  minimumNights?: string;
   city?: string;
   state?: string;
   street?: string;
@@ -131,6 +138,9 @@ export type ItemListVenueResponse = {
   _count: {
     DateEvent: number;
   };
+  city: string;
+  state: string;
+  description: string;
 };
 
 export interface VenueDashboardData {

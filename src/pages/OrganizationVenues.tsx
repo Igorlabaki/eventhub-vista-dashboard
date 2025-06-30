@@ -108,7 +108,7 @@ export default function OrganizationVenues() {
               />
             }
           />
-        </div>
+        </div>      
       </div>
 
       {/* Dialog para editar organização */}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useParams, Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,6 +18,7 @@ import { ProposalTable } from "@/components/proposal/ProposalTable";
 import { PerDayProposalForm } from "@/components/proposal/forms/PerDayProposalForm";
 import { PerPersonProposalForm } from "@/components/proposal/forms/PerPersonProposalForm";
 import { PageHeader } from "@/components/PageHeader";
+import { useUserStore } from "@/store/userStore";
 
 // Month names in Portuguese
 const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -86,9 +87,11 @@ export default function VenueBudgets() {
   const [showForm, setShowForm] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { selectedVenue } = useVenueStore();
+  const { selectedVenue, fetchVenueById } = useVenueStore();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const { id: venueIdParam } = useParams();
+  const { user } = useUserStore();
 
   const { 
     proposals, 
@@ -136,6 +139,13 @@ export default function VenueBudgets() {
       year: selectedYear.toString()
     });
   }, [selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    // Se não houver selectedVenue, tenta buscar pelo id da URL
+    if (!selectedVenue && venueIdParam && user?.id) {
+      fetchVenueById(venueIdParam, user.id);
+    }
+  }, [selectedVenue, venueIdParam, user?.id, fetchVenueById]);
 
   const renderProposalList = () => (
     <>
@@ -188,6 +198,11 @@ export default function VenueBudgets() {
     }
     return <PerPersonProposalForm venueId={selectedVenue.id} onBack={handleBackToList} />;
   };
+
+  // Se ainda não carregou o selectedVenue, mostra loading
+  if (!selectedVenue) {
+    return <div className="text-center py-16 text-gray-500">Carregando informações do espaço...</div>;
+  }
 
   return (
     <DashboardLayout title="Orçamentos" subtitle="Gerencie seus orçamentos">

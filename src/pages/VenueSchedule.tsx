@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Users, CalendarDays, Clock, Trash } from "lucide-react";
 import { useDateEventStore } from "@/store/dateEventStore";
-import { DateEventType } from "@/types/dateEvent";
+import { DateEvent, DateEventType } from "@/types/dateEvent";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format } from "date-fns";
 import { parse } from "date-fns";
@@ -34,6 +34,7 @@ import { showSuccessToast } from '@/components/ui/success-toast';
 import { useVenueStore } from "@/store/venueStore";
 import { useUserStore } from "@/store/userStore";
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog';
+import { useNavigate } from "react-router-dom";
 
 const locales = {
   "pt-BR": ptBR,
@@ -74,12 +75,13 @@ type EventFormValues = z.infer<typeof eventFormSchema>;
 
 export default function VenueSchedule() {
   const { dateEvents, fetchDateEvents, isLoading, createOvernightEvent, deleteDateEvent } = useDateEventStore();
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState<DateEvent | null>(null);
   const [showForm, setShowForm] = useState(false);
   const { selectedVenue } = useVenueStore();
   const { user } = useUserStore();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const navigate = useNavigate();
   useEffect(() => {
     fetchDateEvents();
   }, []);
@@ -294,7 +296,7 @@ export default function VenueSchedule() {
       </Card>
       {/* Detalhes do evento selecionado */}
       {selectedEvent && (
-        <div className="mt-6 flex flex-col items-center">
+        <div className="mt-6 flex flex-col items-center" onClick={() => navigate(`/proposal/${selectedEvent.proposalId}`)}>
           <Card className="w-full bg-white border-0 shadow-lg">
             <CardContent className="p-6 flex flex-col items-center gap-4 relative">
               <div className="flex items-center gap-2 mb-2">
