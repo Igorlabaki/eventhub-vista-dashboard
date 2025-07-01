@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Organization, OrganizationListResponse, OrganizationCreateResponse, OrganizationWithVenueCount, CreateOrganizationDTO, UpdateOrganizationDTO } from '@/types/organization';
 import { organizationService } from '@/services/organization.service';
 import { BackendResponse } from '@/lib/error-handler';
+import type { UpdateVenueOrganizationImagesDTO } from '@/types/organization';
 
 interface OrganizationStore {
   organizations: OrganizationWithVenueCount[];
@@ -19,6 +20,7 @@ interface OrganizationStore {
   updateOrganization: (org: Organization) => void;
   removeOrganization: (id: string) => void;
   clearError: () => void;
+  updateVenueOrganizationImages: (data: UpdateVenueOrganizationImagesDTO) => Promise<BackendResponse<void>>;
 }
 
 interface ApiError {
@@ -145,4 +147,20 @@ export const useOrganizationStore = create<OrganizationStore>((set, get) => ({
     currentOrganization: state.currentOrganization && state.currentOrganization.id === id ? null : state.currentOrganization,
   })),
   clearError: () => set({ error: null }),
+  updateVenueOrganizationImages: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await organizationService.updateVenueOrganizationImages(data);
+      set({ isLoading: false });
+      set({ currentOrganization: response.data });
+      return response;
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      set({
+        error: error?.response?.data?.message || "Não foi possível atualizar as imagens da venue.",
+        isLoading: false
+      });
+      throw err;
+    }
+  },
 })); 

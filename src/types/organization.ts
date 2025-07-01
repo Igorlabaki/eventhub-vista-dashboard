@@ -91,3 +91,9 @@ export interface OrganizationUpdateResponse {
     count: number,
     type: string
 }
+
+export interface UpdateVenueOrganizationImagesDTO {
+    organizationId: string;
+    imageids: string[];
+    venueId: string;
+}

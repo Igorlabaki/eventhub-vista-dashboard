@@ -23,6 +23,7 @@ const editOrganizationSchema = z.object({
   facebookUrl: z.string().url("URL do Facebook inválida").optional().or(z.literal("")),
   url: z.string().url("URL inválida").optional().or(z.literal("")),
   logoFile: z.instanceof(File).optional(),
+  logoUrl: z.string().optional(),
 });
 
 type EditOrganizationFormValues = z.infer<typeof editOrganizationSchema>;
@@ -31,11 +32,13 @@ interface EditOrganizationFormProps {
   organization: Organization;
   onCancel: () => void;
   onSuccess?: () => void;
+  organizationId: string;
 }
 
 export function EditOrganizationForm({
   organization,
   onCancel,
+  organizationId,
   onSuccess,
 }: EditOrganizationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,6 +58,7 @@ export function EditOrganizationForm({
       facebookUrl: organization.facebookUrl || "",
       url: organization.url || "",
       logoFile: undefined,
+      logoUrl: organization.logoUrl || "",
     },
   });
 
@@ -70,21 +74,6 @@ export function EditOrganizationForm({
       logoFile: undefined,
     });
   }, [organization, form]);
-  console.log("organization", organization);
-  const handleLogoChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    onChange: (value: File | null) => void
-  ) => {
-    const file = e.target.files?.[0] || null;
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setLogoPreview(url);
-      onChange(file);
-    } else {
-      setLogoPreview(null);
-      onChange(null);
-    }
-  };
 
   const handleSubmit = async (values: EditOrganizationFormValues) => {
     setIsSubmitting(true);
@@ -103,6 +92,7 @@ export function EditOrganizationForm({
       if (values.logoFile instanceof File) {
         payload.logoFile = values.logoFile;
       }
+
       const response = await updateOrganizationById(payload);
       const { title, message } = handleBackendSuccess(response, "Organização atualizada com sucesso!");
       showSuccessToast({
@@ -312,15 +302,23 @@ export function EditOrganizationForm({
           <FormField
             control={form.control}
             name="logoFile"
-            render={({ field: { value, onChange, ...field } }) => (
+            render={() => (
               <FormItem>
                 <FormLabel>Logo da Organização</FormLabel>
                 <FormControl>
                   <Input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleLogoChange(e, onChange)}
-                    {...field}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      if (file) {
+                        setLogoPreview(URL.createObjectURL(file));
+                        form.setValue("logoFile", file);
+                      } else {
+                        setLogoPreview(null);
+                        form.setValue("logoFile", undefined);
+                      }
+                    }}
                   />
                 </FormControl>
                 {/* Preview da nova logo selecionada */}

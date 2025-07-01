@@ -10,6 +10,7 @@ export interface Image {
   venueId: string;
   organizationId: string;
   group: string;
+  isShowOnOrganization: boolean;
 }
 
 export interface CreateImageDTO {

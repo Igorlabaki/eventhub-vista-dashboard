@@ -125,7 +125,7 @@ export default function VenueDashboard() {
       </DashboardLayout>
     );
   }
-  console.log(venue);
+
   if (
     (!venue && !isLoading) ||
     (!venueDashBoardData && !isLoadingDashBoardData)

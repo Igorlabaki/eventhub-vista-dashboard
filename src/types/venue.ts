@@ -2,6 +2,7 @@ import { Attachment } from "./attachment";
 import { DateEvent } from "./date-event";
 import { Organization } from "./organization";
 import { OwnerVenue } from "./owner";
+import type { Image } from "@/types/image";
 
 export interface Venue {
   id: string;
@@ -34,13 +35,14 @@ export interface Venue {
   maxGuest: number;
   whatsappNumber?: string | null;
   minimumPrice?: number | null;
-
+  showOnOrganization: boolean;
+  images: Image[]
   // Relacionamentos (ajuste os tipos conforme seus models)
   organization: Organization;
   dateEvent: DateEvent[];
   /*texts: any[];
   contacts: any[];
-  images: any[];
+  ;
   expenses: any[];
   services: any[];
   Payment: any[];
@@ -126,14 +128,13 @@ export interface UpdateVenueDTO {
   pricePerPersonDay?: string;
   pricePerPersonHour?: string;
   pricingModel: "PER_PERSON" | "PER_DAY" | "PER_PERSON_DAY" | "PER_PERSON_HOUR";
+  isShowOnOrganization?: boolean;
 }
 
 export type ItemListVenueResponse = {
   id: string;
   name: string;
-  images: {
-    imageUrl: string;
-  }[];
+  images: Image[];
   DateEvent: DateEvent[];
   _count: {
     DateEvent: number;
@@ -141,6 +142,12 @@ export type ItemListVenueResponse = {
   city: string;
   state: string;
   description: string;
+  tiktokUrl?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  url?: string;
+  texts: Text[];
+  isShowOnOrganization: boolean;
 };
 
 export interface VenueDashboardData {

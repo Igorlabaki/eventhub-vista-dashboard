@@ -47,7 +47,7 @@ export default function OrganizationSettings() {
       </DashboardLayout>
     );
   }
-  console.log("currentOrganization", currentOrganization);
+ 
   return (
     <DashboardLayout
       title="Configurações"

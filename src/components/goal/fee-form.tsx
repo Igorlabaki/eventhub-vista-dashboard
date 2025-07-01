@@ -18,6 +18,10 @@ import {
 import { SeasonalFee } from "@/types/seasonalFee";
 import { useSeasonalFeeStore } from "@/store/seasonalFeeStore";
 import { useVenueStore } from "@/store/venueStore";
+import ReactDatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { registerLocale } from "react-datepicker";
+import { ptBR } from "date-fns/locale/pt-BR";
 
 const formSchema = z.object({
   title: z.string().min(1, "Obrigatório"),
@@ -76,6 +80,47 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
     },
   });
 
+  // Função para formatar data de YYYY-MM-DD para DD/MM
+  const formatDateToDDMM = (dateString: string): string => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    return `${day}/${month}`;
+  };
+
+  // Função para converter data de DD/MM para YYYY-MM-DD (usando ano atual)
+  const formatDateToYYYYMMDD = (dateString: string): string => {
+    if (!dateString || !dateString.includes('/')) return "";
+    const [day, month] = dateString.split('/');
+    const currentYear = new Date().getFullYear();
+    return `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  };
+
+  // Função para criar uma data válida para o input (usando ano atual)
+  const createValidDateForInput = (day: number, month: number): string => {
+    const currentYear = new Date().getFullYear();
+    return `${currentYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+  };
+
+  // Função utilitária para converter Date para DD/MM
+  const dateToDDMM = (date: Date | null) => {
+    if (!date) return "";
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    return `${day}/${month}`;
+  };
+
+  // Função utilitária para converter DD/MM para Date (ano atual)
+  const ddmmToDate = (ddmm: string): Date | null => {
+    if (!ddmm || !ddmm.includes('/')) return null;
+    const [day, month] = ddmm.split('/');
+    const year = new Date().getFullYear();
+    return new Date(year, Number(month) - 1, Number(day));
+  };
+
+  registerLocale("pt-BR", ptBR);
+
   useEffect(() => {
     if (fee) {
       setTipoSelecao(fee.startDay && fee.endDay ? "periodo" : "dias");
@@ -83,8 +128,8 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
       form.reset({
         title: fee.title,
         fee: fee.fee.toString(),
-        startDay: fee.startDay || "",
-        endDay: fee.endDay || "",
+        startDay: fee.startDay ? formatDateToYYYYMMDD(fee.startDay) : "",
+        endDay: fee.endDay ? formatDateToYYYYMMDD(fee.endDay) : "",
         affectedDays: fee.affectedDays || "",
       });
     } else {
@@ -107,8 +152,8 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
         fee: Number(data.fee),
         venueId: venue?.id,
         type: fee?.type || "SURCHARGE",
-        startDay: tipoSelecao === "periodo" ? data.startDay : undefined,
-        endDay: tipoSelecao === "periodo" ? data.endDay : undefined,
+        startDay: tipoSelecao === "periodo" && data.startDay ? formatDateToDDMM(data.startDay) : undefined,
+        endDay: tipoSelecao === "periodo" && data.endDay ? formatDateToDDMM(data.endDay) : undefined,
         affectedDays: tipoSelecao === "dias" ? diasSelecionados.join(",") : undefined,
       };
       let response;
@@ -151,7 +196,7 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
       isEditing={!!fee}
       entityName={fee?.title}
       entityType="taxa sazonal"
-      onDelete={fee && onDelete ? onDelete : undefined}
+      onDelete={fee && onDelete ? async () => onDelete() : undefined}
     >
       <div className="space-y-6">
         {/* Select para escolher tipo */}
@@ -202,10 +247,22 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
               control={form.control}
               name="startDay"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Data Inicial</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <ReactDatePicker
+                      locale="pt-BR"
+                      dateFormat="dd/MM"
+                      showMonthDropdown
+                      showPopperArrow={false}
+                      selected={ddmmToDate(field.value)}
+                      onChange={(date: Date | null) => field.onChange(date ? dateToDDMM(date) : "")}
+                      placeholderText="dd/mm"
+                      customInput={<Input />}
+                      showYearDropdown={false}
+                      minDate={new Date(new Date().getFullYear(), 0, 1)}
+                      maxDate={new Date(new Date().getFullYear(), 11, 31)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -215,10 +272,22 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
               control={form.control}
               name="endDay"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Data Final</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <ReactDatePicker
+                      locale="pt-BR"
+                      dateFormat="dd/MM"
+                      showMonthDropdown
+                      showPopperArrow={false}
+                      selected={ddmmToDate(field.value)}
+                      onChange={(date: Date | null) => field.onChange(date ? dateToDDMM(date) : "")}
+                      placeholderText="dd/mm"
+                      customInput={<Input />}
+                      showYearDropdown={false}
+                      minDate={new Date(new Date().getFullYear(), 0, 1)}
+                      maxDate={new Date(new Date().getFullYear(), 11, 31)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -17,6 +17,11 @@ import {
 } from "@/components/ui/form";
 import { useVenueStore } from "@/store/venueStore";
 import { useSeasonalFeeStore } from "@/store/seasonalFeeStore";
+import ReactDatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { registerLocale } from "react-datepicker";
+import { ptBR } from "date-fns/locale/pt-BR";
+import type { SeasonalFeeType } from "@/types/seasonalFee";
 
 const formSchema = z.object({
   title: z.string().min(1, "Obrigatório"),
@@ -53,6 +58,24 @@ interface DiscountFormProps {
   onCancel: () => void;
   onDelete?: () => void;
 }
+
+registerLocale("pt-BR", ptBR);
+
+// Função utilitária para converter Date para DD/MM
+const dateToDDMM = (date: Date | null) => {
+  if (!date) return "";
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  return `${day}/${month}`;
+};
+
+// Função utilitária para converter DD/MM para Date (ano atual)
+const ddmmToDate = (ddmm: string): Date | null => {
+  if (!ddmm || !ddmm.includes('/')) return null;
+  const [day, month] = ddmm.split('/');
+  const year = new Date().getFullYear();
+  return new Date(year, Number(month) - 1, Number(day));
+};
 
 export function DiscountForm({ discount, onCancel, onDelete }: DiscountFormProps) {
   const { createSeasonalFee, updateSeasonalFee } = useSeasonalFeeStore();
@@ -113,7 +136,7 @@ export function DiscountForm({ discount, onCancel, onDelete }: DiscountFormProps
         title: data.title,
         fee: Number(data.fee),
         venueId: venue?.id,
-        type: "DISCOUNT",
+        type: "DISCOUNT" as SeasonalFeeType,
         startDay: tipoSelecao === "periodo" ? data.startDay : undefined,
         endDay: tipoSelecao === "periodo" ? data.endDay : undefined,
         affectedDays: tipoSelecao === "dias" ? diasSelecionados.join(",") : undefined,
@@ -158,7 +181,7 @@ export function DiscountForm({ discount, onCancel, onDelete }: DiscountFormProps
       isEditing={!!discount}
       entityName={discount?.title}
       entityType="desconto"
-      onDelete={discount && onDelete ? onDelete : undefined}
+      onDelete={discount && onDelete ? async () => onDelete() : undefined}
     >
       <div className="space-y-6">
         {/* Select para escolher tipo */}
@@ -209,10 +232,22 @@ export function DiscountForm({ discount, onCancel, onDelete }: DiscountFormProps
               control={form.control}
               name="startDay"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Data Inicial</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <ReactDatePicker
+                      locale="pt-BR"
+                      dateFormat="dd/MM"
+                      showMonthDropdown
+                      showPopperArrow={false}
+                      selected={ddmmToDate(field.value)}
+                      onChange={(date: Date | null) => field.onChange(date ? dateToDDMM(date) : "")}
+                      placeholderText="dd/mm"
+                      customInput={<Input />}
+                      showYearDropdown={false}
+                      minDate={new Date(new Date().getFullYear(), 0, 1)}
+                      maxDate={new Date(new Date().getFullYear(), 11, 31)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -222,10 +257,22 @@ export function DiscountForm({ discount, onCancel, onDelete }: DiscountFormProps
               control={form.control}
               name="endDay"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Data Final</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <ReactDatePicker
+                      locale="pt-BR"
+                      dateFormat="dd/MM"
+                      showMonthDropdown
+                      showPopperArrow={false}
+                      selected={ddmmToDate(field.value)}
+                      onChange={(date: Date | null) => field.onChange(date ? dateToDDMM(date) : "")}
+                      placeholderText="dd/mm"
+                      customInput={<Input />}
+                      showYearDropdown={false}
+                      minDate={new Date(new Date().getFullYear(), 0, 1)}
+                      maxDate={new Date(new Date().getFullYear(), 11, 31)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

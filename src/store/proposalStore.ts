@@ -151,7 +151,7 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await proposalService.updateProposalPerPerson(data);
-      console.log(response, "response");
+      
       set((state) => ({
         proposals: (state.proposals || []).map((p) => p.id === response.data.id ? response.data : p),
         currentProposal: state.currentProposal && state.currentProposal.id === response.data.id ? response.data : state.currentProposal,

@@ -68,9 +68,9 @@ function ProposalDetailsSkeleton() {
 export default function ProposalDetails() {
   const { id } = useParams();
   const { fetchProposalById, currentProposal, isLoading } = useProposalStore();
-console.log(id)
+
   useEffect(() => {
-    console.log(id,"id")
+ 
     if (id) fetchProposalById(id);
   }, [id, fetchProposalById]);
 

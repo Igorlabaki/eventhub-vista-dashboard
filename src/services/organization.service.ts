@@ -1,5 +1,5 @@
 import { api } from '@/lib/axios';
-import { CreateOrganizationDTO, OrganizationListResponse, OrganizationByIdResponse, OrganizationUpdateResponse, OrganizationCreateResponse, OrganizationDeleteResponse, UpdateOrganizationDTO } from '@/types/organization';
+import { CreateOrganizationDTO, OrganizationListResponse, OrganizationByIdResponse, OrganizationUpdateResponse, OrganizationCreateResponse, OrganizationDeleteResponse, UpdateOrganizationDTO, UpdateVenueOrganizationImagesDTO } from '@/types/organization';
 
 export const organizationService = {
   createOrganization: async (data: CreateOrganizationDTO) => {
@@ -16,7 +16,11 @@ export const organizationService = {
       formData.append('file', data.logoFile, data.logoFile.name);
     }
 
-    const response = await api.post<OrganizationCreateResponse>('/organization/create', formData);
+    const response = await api.post<OrganizationCreateResponse>('/organization/create', formData,{
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
@@ -32,7 +36,6 @@ export const organizationService = {
 
   updateOrganization: async (data: UpdateOrganizationDTO) => {
     const formData = new FormData();
-
     // Adiciona todos os campos do DTO ao FormData
     Object.entries(data).forEach(([key, value]) => {
       if (key !== 'logoFile' && value !== undefined) {
@@ -41,15 +44,24 @@ export const organizationService = {
     });
 
     if (data.logoFile) {
-      formData.append('file', data.logoFile, data.logoFile.name);
+      formData.append('file', data.logoFile);
     }
 
-    const response = await api.put<OrganizationUpdateResponse>(`/organization/update`, formData);
+    const response = await api.put<OrganizationUpdateResponse>(`/organization/update`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
   deleteOrganization: async (id: string) => {
     const response = await api.delete<OrganizationDeleteResponse>(`/organization/delete/${id}`);
+    return response.data;
+  },
+
+  updateVenueOrganizationImages: async (data: UpdateVenueOrganizationImagesDTO) => {
+    const response = await api.put('/organization/update-venue-organization-images', data);
     return response.data;
   }
 }; 

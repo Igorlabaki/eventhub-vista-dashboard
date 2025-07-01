@@ -83,6 +83,12 @@ export const useVenueStore = create<VenueState>((set) => ({
     try {
       set({ isLoading: true, error: null });
       const response = await venueService.updateVenue(data);
+      set((state) => ({
+        isLoading: false,
+        venues: state.venues.map(v =>
+          v.id === response.data.id ? { ...v, ...response.data } : v
+        )
+      }));
       return response;
     } catch (err: unknown) {
       const error = err as ApiError;
@@ -93,6 +99,8 @@ export const useVenueStore = create<VenueState>((set) => ({
       throw err;
     }
   },
+
+  
 
   deleteVenue: async (id: string) => {
     try {

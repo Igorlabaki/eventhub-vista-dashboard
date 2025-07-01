@@ -110,20 +110,6 @@ export default function OrganizationVenues() {
           />
         </div>      
       </div>
-
-      {/* Dialog para editar organização */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Organização</DialogTitle>
-          </DialogHeader>
-          <EditOrganizationForm
-            organizationId={organizationId || ""}
-            initialName={currentOrganization?.name || ""}
-            onCancel={() => setEditDialogOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }

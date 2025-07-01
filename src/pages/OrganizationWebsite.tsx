@@ -53,7 +53,7 @@ export default function OrganizationWebsite() {
                   </p>
                   <Button asChild className="mt-2" size="sm">
                     <a
-                      href="#"
+                      href="https://goncalos-hub.vercel.app/"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
