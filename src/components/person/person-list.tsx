@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/table";
 import { PersonListSkeleton } from "./person-list-skeleton";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
-import { Person } from "@/types/person";
+import { Person, PersonType } from "@/types/person";
+import { useVenueStore } from "@/store/venueStore";
 
 interface PersonListProps {
   persons: Person[];
@@ -24,6 +25,9 @@ interface PersonListProps {
   isDeleting?: boolean;
   onCreateClick: () => void;
   onEditClick: (person: Person) => void;
+  proposalId: string;
+  type: PersonType;
+  whatsapp?: string;
 }
 
 export function PersonList({
@@ -35,9 +39,30 @@ export function PersonList({
   isLoading = false,
   isDeleting = false,
   onCreateClick,
-  onEditClick
+  onEditClick,
+  proposalId,
+  type,
+  whatsapp
 }: PersonListProps) {
   const [personToDelete, setPersonToDelete] = React.useState<Person | null>(null);
+  const { selectedVenue } = useVenueStore();
+  // Cálculo de presenças confirmadas
+  const confirmedCount = persons.filter((p) => p.attendance).length;
+  const totalCount = persons.length;
+
+  // Link correto conforme o tipo
+  const isGuest = type === PersonType.GUEST;
+  const link = isGuest
+    ? `${selectedVenue.url}/orcamento/lista-de-convidados/${proposalId}`
+    : `${selectedVenue.url}/orcamento/lista-de-colaboradores/${proposalId}`;
+  const whatsappMsg = encodeURIComponent(
+    isGuest
+      ? `Olá! Segue o link para registrar os convidados: ${link}`
+      : `Olá! Segue o link para registrar os colaboradores: ${link}`
+  );
+  const whatsappUrl = whatsapp
+    ? `https://wa.me/+55${whatsapp.replace(/\D/g, "")}?text=${whatsappMsg}`
+    : `https://wa.me/?text=${whatsappMsg}`;
 
   if (isLoading) {
     return <PersonListSkeleton />;
@@ -49,6 +74,21 @@ export function PersonList({
 
   return (
     <div className={cn("space-y-4", className)}>
+      {/* Botão de link para o cliente */}
+      <div className="flex justify-end mb-2">
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition-colors text-sm font-medium"
+        >
+          Link para o cliente
+        </a>
+      </div>
+      {/* Resumo de presenças */}
+      <div className="text-sm font-medium text-gray-700">
+        Presenças confirmadas: <span className="font-bold">{confirmedCount}</span> / {totalCount}
+      </div>
       <Table className="bg-white rounded-md shadow-lg">
         <TableHeader>
           <TableRow>

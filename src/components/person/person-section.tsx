@@ -10,6 +10,7 @@ import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
 import { useUser } from "@/hooks/user/queries/byId";
 import { CreatePersonDTO } from "@/types/person";
 import { useEffect } from "react";
+import { useProposalStore } from "@/store/proposalStore";
 
 interface PersonSectionProps {
   type: PersonType;
@@ -40,6 +41,7 @@ export function PersonSection({
   } = usePersonStore();
   const { toast } = useToast();
   const { data: user, isLoading: isUserLoading } = useUser();
+  const { currentProposal } = useProposalStore();
 
   useEffect(() => {
     if (user) {
@@ -154,6 +156,9 @@ export function PersonSection({
               onCreateClick={onCreateClick}
               onEditClick={setSelectedPerson}
               onDeletePerson={(person) => handleDelete(person.id)}
+              proposalId={proposalId}
+              type={type}
+              whatsapp={currentProposal?.whatsapp}
             />
           }
           form={

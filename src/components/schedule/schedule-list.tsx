@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/table";
 import { Schedule } from "@/types/schedule";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
+import { useProposalStore } from "@/store/proposalStore";
+import { useVenueStore } from "@/store/venueStore";
 
 interface ScheduleListProps {
   schedules: Schedule[];
@@ -38,6 +40,18 @@ export function ScheduleList({
   onEditClick,
 }: ScheduleListProps) {
   const [scheduleToDelete, setScheduleToDelete] = React.useState<Schedule | null>(null);
+
+  // Link para programação
+  const { currentProposal } = useProposalStore();
+  const { selectedVenue } = useVenueStore();
+  const proposalId = currentProposal?.id;
+  const programacaoLink = proposalId && selectedVenue?.url
+    ? `${selectedVenue.url}/orcamento/programacao/${proposalId}`
+    : undefined;
+  const whatsappMsg = encodeURIComponent(`Olá! Segue o link para acessar a programação do evento: ${programacaoLink}`);
+  const whatsappUrl = programacaoLink
+    ? `https://wa.me/?text=${whatsappMsg}`
+    : undefined;
 
   const formatTime = (time: string) => {
     if (!time) return '';
@@ -65,6 +79,19 @@ export function ScheduleList({
 
   return (
     <div className={cn("space-y-4", className)}>
+      {/* Botão de link para programação */}
+      {programacaoLink && (
+        <div className="flex justify-end mb-2">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition-colors text-sm font-medium"
+          >
+            Link para programação
+          </a>
+        </div>
+      )}
       <Table className="bg-white rounded-md shadow-lg">
         <TableHeader>
           <TableRow>

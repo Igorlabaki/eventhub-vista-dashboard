@@ -3,8 +3,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { PersonType } from "@/types/person";
-import { PersonSection } from "@/components/person/person-section";
+
 import { useParams } from "react-router-dom";
+import { PersonSection } from "../person/person-section";
 
 export function ProposalAttendanceList() {
   const { id: proposalId } = useParams();

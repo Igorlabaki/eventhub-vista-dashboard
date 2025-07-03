@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +27,7 @@ const loginSchema = z.object({
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -37,13 +38,16 @@ export default function Login() {
   const setUser = useUserStore((state) => state.setUser);
   const setIsAuthenticated = useUserStore((state) => state.setIsAuthenticated);
 
+  // Pega a rota de origem, se houver
+  const from = location.state?.from?.pathname || "/dashboard";
+
   useEffect(() => {
     const token = localStorage.getItem("@EventHub:token");
     if (token) {
       setIsAuthenticated(true);
-      navigate("/dashboard", { replace: true });
+      navigate(from, { replace: true });
     }
-  }, [navigate, setIsAuthenticated]);
+  }, [navigate, setIsAuthenticated, from]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -70,7 +74,7 @@ export default function Login() {
         title: "Login realizado",
         description: "Bem-vindo ao EventHub!",
       });
-      navigate("/dashboard");
+      navigate(from, { replace: true });
     } catch (error) {
       if (error instanceof z.ZodError) {
         const formattedErrors: { [key: string]: string } = {};
@@ -206,7 +210,7 @@ export default function Login() {
                         title: "Login realizado",
                         description: "Bem-vindo ao EventHub!",
                       });
-                      navigate("/dashboard");
+                      navigate(from, { replace: true });
                     } catch (error) {
                       toast({
                         title: "Erro ao fazer login com Google",

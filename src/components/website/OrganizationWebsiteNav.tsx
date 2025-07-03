@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ExternalLink, Layout, FileText, Image, HelpCircle, LayoutDashboard } from "lucide-react";
+import { useOrganizationStore } from "@/store/organizationStore";
 
 interface OrganizationWebsiteNavProps {
   isCollapsed: boolean;
@@ -10,6 +11,7 @@ interface OrganizationWebsiteNavProps {
 
 export function OrganizationWebsiteNav({ isCollapsed, onNavItemClick, organizationId }: OrganizationWebsiteNavProps) {
   const location = useLocation();
+  const { currentOrganization } = useOrganizationStore();
 
   return (
     <div className="space-y-1">
@@ -84,7 +86,7 @@ export function OrganizationWebsiteNav({ isCollapsed, onNavItemClick, organizati
       </Link>
 
       <a
-        href={`https://eventhub.com.br/organization/${organizationId}`}
+        href={currentOrganization.url}
         target="_blank"
         rel="noopener noreferrer"
         className={cn(

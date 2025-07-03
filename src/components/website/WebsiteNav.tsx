@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ExternalLink, Layout, FileText, Image, HelpCircle, LayoutDashboard } from "lucide-react";
-
+import { useVenueStore } from "@/store/venueStore";
 interface WebsiteNavProps {
   isCollapsed: boolean;
   onNavItemClick?: () => void;
@@ -9,6 +9,8 @@ interface WebsiteNavProps {
 }
 
 export function WebsiteNav({ isCollapsed, onNavItemClick, venueId }: WebsiteNavProps) {
+  const { selectedVenue } = useVenueStore();
+
   return (
     <div className="space-y-1">
       <Link
@@ -60,7 +62,7 @@ export function WebsiteNav({ isCollapsed, onNavItemClick, venueId }: WebsiteNavP
       </Link>
 
       <a
-        href={`https://eventhub.com.br/venue/${venueId}`}
+        href={`${selectedVenue.url}`}
         target="_blank"
         rel="noopener noreferrer"
         className={cn(
