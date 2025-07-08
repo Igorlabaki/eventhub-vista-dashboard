@@ -202,18 +202,25 @@ export function PersonForm({
         control={form.control}
         name="attendance"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+          <FormItem className="">
             <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
+              <button
+                type="button"
+                className={`px-4 py-2 rounded text-white ${field.value ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
+                disabled={isSubmitting}
+                onClick={async () => {
+                  const newValue = !field.value;
+                  form.setValue('attendance', newValue, { shouldDirty: true });
+                  await handleSubmit({
+                    ...form.getValues(),
+                    attendance: newValue,
+                  });
+                }}
+              >
+                {field.value ? 'Cancelar Presença' : 'Confirmar Presença'}
+              </button>
             </FormControl>
-            <div className="space-y-1 leading-none">
-              <FormLabel>
-                Confirmar Presença
-              </FormLabel>
-            </div>
+           
           </FormItem>
         )}
       />

@@ -96,7 +96,7 @@ export default function VenueExpenses() {
   const showForm = isCreatingExpense || !!selectedExpense;
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Despesas" subtitle="Gerencie as despesas do seu estabelecimento">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <ExpenseHeader
           activeTab={activeTab}

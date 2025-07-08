@@ -39,22 +39,26 @@ export function ScheduleList({
   onCreateClick,
   onEditClick,
 }: ScheduleListProps) {
-  const [scheduleToDelete, setScheduleToDelete] = React.useState<Schedule | null>(null);
+  const [scheduleToDelete, setScheduleToDelete] =
+    React.useState<Schedule | null>(null);
 
   // Link para programação
   const { currentProposal } = useProposalStore();
   const { selectedVenue } = useVenueStore();
   const proposalId = currentProposal?.id;
-  const programacaoLink = proposalId && selectedVenue?.url
-    ? `${selectedVenue.url}/orcamento/programacao/${proposalId}`
-    : undefined;
-  const whatsappMsg = encodeURIComponent(`Olá! Segue o link para acessar a programação do evento: ${programacaoLink}`);
+  const programacaoLink =
+    proposalId && selectedVenue?.url
+      ? `${selectedVenue.url}/orcamento/programacao/${proposalId}`
+      : undefined;
+  const whatsappMsg = encodeURIComponent(
+    `Olá! Segue o link para acessar a programação do evento: ${programacaoLink}`
+  );
   const whatsappUrl = programacaoLink
     ? `https://wa.me/?text=${whatsappMsg}`
     : undefined;
 
   const formatTime = (time: string) => {
-    if (!time) return '';
+    if (!time) return "";
     // Se vier no formato ISO, extrai só o horário
     const match = time.match(/T(\d{2}:\d{2})/);
     if (match) return match[1];
@@ -79,24 +83,11 @@ export function ScheduleList({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Botão de link para programação */}
-      {programacaoLink && (
-        <div className="flex justify-end mb-2">
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition-colors text-sm font-medium"
-          >
-            Link para programação
-          </a>
-        </div>
-      )}
       <Table className="bg-white rounded-md shadow-lg">
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
-           
+
             <TableHead className="w-[150px] text-center">Horário</TableHead>
             <TableHead className="w-[100px] text-center">Ações</TableHead>
           </TableRow>
@@ -111,9 +102,10 @@ export function ScheduleList({
               )}
             >
               <TableCell className="font-medium">{schedule.name}</TableCell>
-           
+
               <TableCell className="w-[150px] text-center">
-                {formatTime(schedule.startHour)} até {formatTime(schedule.endHour)}
+                {formatTime(schedule.startHour)} até{" "}
+                {formatTime(schedule.endHour)}
               </TableCell>
               <TableCell className="text-center">
                 <div className="flex items-center justify-center gap-2">
@@ -159,4 +151,4 @@ export function ScheduleList({
       />
     </div>
   );
-} 
+}
