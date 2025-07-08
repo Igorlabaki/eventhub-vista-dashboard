@@ -7,7 +7,8 @@ import {
   PersonByIdResponse,
   PersonUpdateResponse,
   PersonCreateResponse,
-  PersonDeleteResponse
+  PersonDeleteResponse,
+  PersonCreateManyResponse
 } from '@/types/person';
 
 export const personService = {
@@ -17,7 +18,7 @@ export const personService = {
   },
 
   createManyPersons: async (data: CreatePersonDTO[]) => {
-    const response = await api.post<PersonCreateResponse>('/person/createMany', data);
+    const response = await api.post<PersonListResponse>('/person/createMany', data);
     return response.data;
   },
 

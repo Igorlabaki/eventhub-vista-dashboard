@@ -92,4 +92,12 @@ export interface PersonUpdateResponse {
   data: Person;
   count: number;
   type: string;
+}
+
+export interface PersonCreateManyResponse {
+  success: true;
+  message: string;
+  data: Person[];
+  count: number;
+  type: string;
 } 

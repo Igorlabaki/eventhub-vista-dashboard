@@ -3,7 +3,12 @@ import {
   Person, 
   CreatePersonDTO, 
   UpdatePersonDTO,
-  ListPersonParams
+  ListPersonParams,
+  PersonListResponse,
+  PersonByIdResponse,
+  PersonDeleteResponse,
+  PersonUpdateResponse,
+  PersonCreateResponse
 } from '@/types/person';
 import { personService } from '@/services/person.service';
 import { BackendResponse } from '@/lib/error-handler';
@@ -15,12 +20,12 @@ interface PersonStore {
   error: string | null;
   setPersons: (persons: Person[]) => void;
   setCurrentPerson: (person: Person | null) => void;
-  fetchPersons: (params: ListPersonParams) => Promise<void>;
-  fetchPersonById: (personId: string) => Promise<void>;
-  createPerson: (data: CreatePersonDTO) => Promise<BackendResponse<Person>>;
-  createManyPersons: (data: CreatePersonDTO[]) => Promise<BackendResponse<Person>>;
-  updatePerson: (data: UpdatePersonDTO) => Promise<BackendResponse<Person>>;
-  deletePerson: (id: string) => Promise<BackendResponse<void>>;
+  fetchPersons: (params: ListPersonParams) => Promise<PersonListResponse>;
+  fetchPersonById: (personId: string) => Promise<PersonByIdResponse>;
+  createPerson: (data: CreatePersonDTO) => Promise<PersonCreateResponse>;
+  createManyPersons: (data: CreatePersonDTO[]) => Promise<PersonListResponse>;
+  updatePerson: (data: UpdatePersonDTO) => Promise<PersonUpdateResponse>;
+  deletePerson: (id: string) => Promise<PersonDeleteResponse>;
   addPerson: (person: Person) => void;
   updatePersonInStore: (person: Person) => void;
   removePerson: (id: string) => void;
@@ -48,12 +53,10 @@ export const usePersonStore = create<PersonStore>((set, get) => ({
     try {
       const response = await personService.listPersons(params);
       set({ persons: response.data.personList });
+      return response;
     } catch (err: unknown) {
-      const error = err as ApiError;
-      set({ 
-        error: error?.response?.data?.message || "Não foi possível carregar as pessoas.",
-        persons: [] 
-      });
+      set({ persons: [] });
+      throw err;
     } finally {
       set({ isLoading: false });
     }
@@ -64,12 +67,10 @@ export const usePersonStore = create<PersonStore>((set, get) => ({
     try {
       const response = await personService.getPersonById(personId);
       set({ currentPerson: response.data });
+      return response;
     } catch (err: unknown) {
-      const error = err as ApiError;
-      set({ 
-        error: error?.response?.data?.message || "Não foi possível carregar a pessoa.",
-        currentPerson: null 
-      });
+      set({ currentPerson: null });
+      throw err;
     } finally {
       set({ isLoading: false });
     }
@@ -83,17 +84,9 @@ export const usePersonStore = create<PersonStore>((set, get) => ({
         persons: [...state.persons, response.data],
         isLoading: false 
       }));
-      return {
-        success: true,
-        message: "Pessoa criada com sucesso",
-        data: response.data
-      };
+      return response;
     } catch (err: unknown) {
-      const error = err as ApiError;
-      set({ 
-        error: error?.response?.data?.message || "Não foi possível criar a pessoa.",
-        isLoading: false 
-      });
+      set({ isLoading: false });
       throw err;
     }
   },
@@ -103,20 +96,12 @@ export const usePersonStore = create<PersonStore>((set, get) => ({
     try {
       const response = await personService.createManyPersons(data);
       set((state) => ({ 
-        persons: [...state.persons, response.data],
+        persons: [...state.persons, ...response.data.personList],
         isLoading: false 
       }));
-      return {
-        success: true,
-        message: "Pessoas criadas com sucesso",
-        data: response.data
-      };
+      return response;
     } catch (err: unknown) {
-      const error = err as ApiError;
-      set({ 
-        error: error?.response?.data?.message || "Não foi possível criar as pessoas.",
-        isLoading: false 
-      });
+      set({ isLoading: false });
       throw err;
     }
   },
@@ -130,17 +115,9 @@ export const usePersonStore = create<PersonStore>((set, get) => ({
         currentPerson: state.currentPerson && state.currentPerson.id === response.data.id ? response.data : state.currentPerson,
         isLoading: false
       }));
-      return {
-        success: true,
-        message: "Pessoa atualizada com sucesso",
-        data: response.data
-      };
+      return response;
     } catch (err: unknown) {
-      const error = err as ApiError;
-      set({ 
-        error: error?.response?.data?.message || "Não foi possível atualizar a pessoa.",
-        isLoading: false 
-      });
+      set({ isLoading: false });
       throw err;
     }
   },
@@ -148,23 +125,15 @@ export const usePersonStore = create<PersonStore>((set, get) => ({
   deletePerson: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await personService.deletePerson(id);
+      const response = await personService.deletePerson(id);
       set((state) => ({
         persons: state.persons.filter((p) => p.id !== id),
         currentPerson: state.currentPerson && state.currentPerson.id === id ? null : state.currentPerson,
         isLoading: false
       }));
-      return {
-        success: true,
-        message: "Pessoa excluída com sucesso",
-        data: undefined
-      };
+      return response;
     } catch (err: unknown) {
-      const error = err as ApiError;
-      set({ 
-        error: error?.response?.data?.message || "Não foi possível excluir a pessoa.",
-        isLoading: false 
-      });
+      set({ isLoading: false });
       throw err;
     }
   },

@@ -56,8 +56,8 @@ export function PersonList({
   // Link correto conforme o tipo
   const isGuest = type === PersonType.GUEST;
   const link = isGuest
-    ? `${selectedVenue.url}/orcamento/lista-de-convidados/${proposalId}`
-    : `${selectedVenue.url}/orcamento/lista-de-colaboradores/${proposalId}`;
+    ? `https://event-hub-dashboard.vercel.app/proposal/${proposalId}/guest-list`
+    : `https://event-hub-dashboard.vercel.app/proposal/${proposalId}/staff-list`;
   const whatsappMsg = encodeURIComponent(
     isGuest
       ? `Segue o link para registrar os convidados do seu evento: ${link}`

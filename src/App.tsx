@@ -51,6 +51,7 @@ import SendProposalPage from "./pages/SendProposalPage";
 import ProposalContract from "./pages/ProposalContract";
 import OrganizationWebsiteTexts from "./pages/website/OrganizationWebsiteTexts";
 import OrganizationWebsiteVenues from "./pages/website/OrganizationWebsiteVenues";
+import GuestListPage from "./pages/GuestList";
 
 const queryClient = new QueryClient();
 
@@ -122,6 +123,7 @@ const App = () => {
               <Route path="/proposal/:id/send-message" element={<ProtectedRoute><SendMessagePage /></ProtectedRoute>} />
               <Route path="/proposal/:id/send-proposal" element={<ProtectedRoute><SendProposalPage /></ProtectedRoute>} />
               <Route path="/proposal/:id/contract" element={<ProtectedRoute><ProposalContract /></ProtectedRoute>} />
+              <Route path="/proposal/:id/guest-list" element={<GuestListPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
