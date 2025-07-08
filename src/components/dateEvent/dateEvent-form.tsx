@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useVenueStore } from "@/store/venueStore";
+import { useProposalStore } from "@/store/proposalStore";
 
 interface DateEventFormProps {
   dateEvent?: DateEvent | null;
@@ -55,7 +56,7 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { selectedVenue: currentVenue } = useVenueStore();
-
+  const { currentProposal } = useProposalStore();
   const isOvernight = currentVenue?.hasOvernightStay;
 
 
@@ -147,6 +148,53 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
     onCancel();
   };
 
+  const handleTypeChange = (value: DateEventType) => {
+    form.setValue('type', value as DateEventType);
+    if (value === DateEventType.EVENT && currentProposal) {
+      form.setValue('title', `Evento - ${currentProposal.completeClientName || currentProposal.venue?.name || ''}`);
+      if (currentProposal.startDate && currentProposal.endDate) {
+        const start = new Date(currentProposal.startDate);
+        const end = new Date(currentProposal.endDate);
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const startDay = `${start.getFullYear()}-${pad(start.getMonth()+1)}-${pad(start.getDate())}`;
+        const endDay = `${end.getFullYear()}-${pad(end.getMonth()+1)}-${pad(end.getDate())}`;
+        const startHour = `${pad(start.getHours())}:${pad(start.getMinutes())}`;
+        const endHour = `${pad(end.getHours())}:${pad(end.getMinutes())}`;
+        if (isOvernight) {
+          form.setValue('startDay', startDay);
+          form.setValue('endDay', endDay);
+        } else {
+          form.setValue('startDay', startDay);
+        }
+        form.setValue('startHour', startHour);
+        form.setValue('endHour', endHour);
+      }
+    }
+    else if (value === DateEventType.VISIT && currentProposal) {
+      form.setValue('title', `Visita - ${currentProposal.completeClientName || currentProposal.venue?.name || ''}`);
+      form.setValue('startDay', '');
+      form.setValue('endDay', '');
+      form.setValue('startHour', '');
+      form.setValue('endHour', '');
+    }
+  };
+
+  const handleStartHourChange = (value: string) => {
+    form.setValue('startHour', value);
+    if (form.getValues('type') === DateEventType.VISIT && value) {
+      const [h, m] = value.split(':').map(Number);
+      let endH = h;
+      let endM = m + 30;
+      if (endM >= 60) {
+        endH += 1;
+        endM -= 60;
+      }
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const endHour = `${pad(endH)}:${pad(endM)}`;
+      form.setValue('endHour', endHour);
+    }
+  };
+
   return (
     <FormLayout
       form={form}
@@ -162,31 +210,11 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
     >
       <FormField
         control={form.control}
-        name="title"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Título</FormLabel>
-            <FormControl>
-              <Input
-                type="text"
-                placeholder="Digite o título"
-                required
-                className="mt-1"
-                {...field}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
         name="type"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Tipo de Evento</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={handleTypeChange} defaultValue={field.value} value={field.value}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo de evento" />
@@ -200,6 +228,26 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
                 <SelectItem value={DateEventType.OTHER}>Outro</SelectItem>
               </SelectContent>
             </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="title"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Título</FormLabel>
+            <FormControl>
+              <Input
+                type="text"
+                placeholder="Digite o título"
+                required
+                className="mt-1"
+                {...field}
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -239,6 +287,10 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
                       required
                       className="mt-1"
                       {...field}
+                      onChange={e => {
+                        field.onChange(e);
+                        handleStartHourChange(e.target.value);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -321,6 +373,10 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
                       required
                       className="mt-1"
                       {...field}
+                      onChange={e => {
+                        field.onChange(e);
+                        handleStartHourChange(e.target.value);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />

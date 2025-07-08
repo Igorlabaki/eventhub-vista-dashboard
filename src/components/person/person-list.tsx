@@ -73,11 +73,23 @@ export function PersonList({
 
   if (!persons || persons.length === 0) {
     return (
-      <EmptyState
-        title={emptyMessage}
-        actionText="Nova Pessoa"
-        onAction={onCreateClick}
-      />
+      <div className="flex flex-col items-center justify-center w-full">
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center px-4 py-2  
+          text-blue-600 hover:text:black hover:underline 
+          transition-colors text-sm"
+        >
+          Eviar link para o cliente
+        </a>
+        <EmptyState
+          title={emptyMessage}
+          actionText="Nova Pessoa"
+          onAction={onCreateClick}
+        />
+      </div>
     );
   }
 
