@@ -29,11 +29,14 @@ export default function GuestListPage() {
   // Carrega a lista inicial do backend ao montar
   useEffect(() => {
     if (proposalId) {
-      fetchPersons({ proposalId, type: PersonType.GUEST }).then((res) => {
+      setIsInitialLoading(true);
+      Promise.all([
+        fetchPersons({ proposalId, type: PersonType.GUEST }),
+        fetchProposalById(proposalId)
+      ]).then(([res]) => {
         setGuestList(res.data.personList);
         setIsInitialLoading(false);
       });
-      fetchProposalById(proposalId);
     }
   }, [proposalId, fetchPersons, fetchProposalById]);
 
