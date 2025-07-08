@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { Calendar } from "lucide-react";
 import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
+import { useProposalStore } from "@/store/proposalStore";
 
 export default function GuestListPage() {
   const { id: proposalId } = useParams();
@@ -23,7 +24,8 @@ export default function GuestListPage() {
   const createManyPersons = usePersonStore((s) => s.createManyPersons);
   const deletePerson = usePersonStore((s) => s.deletePerson);
   const { toast } = useToast();
-
+  const fetchProposalById = useProposalStore((s) => s.fetchProposalById);
+  const currentProposal = useProposalStore((s) => s.currentProposal);
   // Carrega a lista inicial do backend ao montar
   useEffect(() => {
     if (proposalId) {
@@ -31,8 +33,9 @@ export default function GuestListPage() {
         setGuestList(res.data.personList);
         setIsInitialLoading(false);
       });
+      fetchProposalById(proposalId);
     }
-  }, [proposalId, fetchPersons]);
+  }, [proposalId, fetchPersons, fetchProposalById]);
 
   if (isInitialLoading) {
     return <AppLoadingScreen />;
@@ -187,7 +190,7 @@ export default function GuestListPage() {
         <div className="bg-white rounded-xl shadow p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4 text-center">
             <span className="text-lg font-bold text-center mb-6 text-eventhub-primary">
-              Lista de Convidados: {savedCount}
+              Lista de Convidados: {savedCount} / {currentProposal?.guestNumber}
             </span>
             <button
               className={`w-full text-center md:w-auto font-semibold px-6 py-2 rounded transition flex items-center  
