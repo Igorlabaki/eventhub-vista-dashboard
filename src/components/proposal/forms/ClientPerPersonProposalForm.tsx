@@ -81,13 +81,41 @@ function formatHourToHalfHour(value: string) {
 }
 
 // Função para gerar opções de horário (hora cheia e meia hora)
-function generateTimeOptions() {
+function generateTimeOptions(openingHour?: string, closingHour?: string) {
   const options = [];
+  
+  // Se não há horários definidos, retorna todas as opções
+  if (!openingHour && !closingHour) {
+    for (let hour = 0; hour <= 23; hour++) {
+      const hourStr = hour.toString().padStart(2, '0');
+      options.push(`${hourStr}:00`);
+      options.push(`${hourStr}:30`);
+    }
+    return options;
+  }
+
+  // Converter horários para minutos para facilitar comparação
+  const openingMinutes = openingHour ? 
+    parseInt(openingHour.split(':')[0]) * 60 + parseInt(openingHour.split(':')[1]) : 0;
+  const closingMinutes = closingHour ? 
+    parseInt(closingHour.split(':')[0]) * 60 + parseInt(closingHour.split(':')[1]) : 24 * 60;
+
   for (let hour = 0; hour <= 23; hour++) {
     const hourStr = hour.toString().padStart(2, '0');
-    options.push(`${hourStr}:00`);
-    options.push(`${hourStr}:30`);
+    
+    // Hora cheia
+    const fullHourMinutes = hour * 60;
+    if (fullHourMinutes >= openingMinutes && fullHourMinutes <= closingMinutes) {
+      options.push(`${hourStr}:00`);
+    }
+    
+    // Meia hora
+    const halfHourMinutes = hour * 60 + 30;
+    if (halfHourMinutes >= openingMinutes && halfHourMinutes <= closingMinutes) {
+      options.push(`${hourStr}:30`);
+    }
   }
+  
   return options;
 }
 
@@ -110,41 +138,19 @@ export function ClientPerPersonProposalForm({
   const getRequiredServices = (guestNumber: number) => {
     const requiredServices: string[] = [];
     
-    // Limpeza sempre é obrigatória
-    const limpezaService = services.find(service => 
-      service.name.toLowerCase().includes('limpeza') || 
-      service.name.toLowerCase().includes('clean')
-    );
-    if (limpezaService) {
-      requiredServices.push(limpezaService.id);
-    }
-    
-    // Recepcionista obrigatória a partir de 40 pessoas
-    if (guestNumber >= 40) {
-      const recepcionistaService = services.find(service => 
-        service.name.toLowerCase().includes('recepcionista') || 
-        service.name.toLowerCase().includes('reception')
-      );
-      if (recepcionistaService) {
-        requiredServices.push(recepcionistaService.id);
+    // Verificar todos os serviços que são obrigatórios baseado nos atributos rpaRequired e rpaMinPeople
+    services.forEach(service => {
+      if (service.rpaRequired && service.rpaMinPeople) {
+        // O serviço é obrigatório apenas quando o número de convidados atinge o mínimo
+        if (guestNumber >= service.rpaMinPeople) {
+          requiredServices.push(service.id);
+        }
       }
-    }
-    
-    // Segurança obrigatória a partir de 50 pessoas
-    if (guestNumber >= 50) {
-      const segurancaService = services.find(service => 
-        service.name.toLowerCase().includes('segurança') || 
-        service.name.toLowerCase().includes('seguranca') ||
-        service.name.toLowerCase().includes('security')
-      );
-      if (segurancaService) {
-        requiredServices.push(segurancaService.id);
-      }
-    }
+    });
     
     return requiredServices;
   };
-
+  
   // Criar schema dinâmico baseado no selectedVenue
   const createFormSchema = () => {
     const baseSchema = z.object({
@@ -171,6 +177,17 @@ export function ClientPerPersonProposalForm({
       }, {
         message: `Número máximo de convidados permitido é ${selectedVenue?.maxGuest || 0}`,
         path: ["guestNumber"],
+      })
+      .refine((data) => {
+        if (!data.startHour || !data.endHour) return true;
+        
+        const startMinutes = parseInt(data.startHour.split(':')[0]) * 60 + parseInt(data.startHour.split(':')[1]);
+        const endMinutes = parseInt(data.endHour.split(':')[0]) * 60 + parseInt(data.endHour.split(':')[1]);
+        
+        return endMinutes > startMinutes;
+      }, {
+        message: "O horário de fim deve ser posterior ao horário de início",
+        path: ["endHour"],
       });
   };
 
@@ -379,7 +396,7 @@ export function ClientPerPersonProposalForm({
                       <SelectValue placeholder="Selecione o horário" />
                     </SelectTrigger>
                     <SelectContent>
-                      {generateTimeOptions().map((time) => (
+                      {generateTimeOptions(selectedVenue?.openingHour, selectedVenue?.closingHour).map((time) => (
                         <SelectItem key={time} value={time}>
                           {time}
                         </SelectItem>
@@ -388,6 +405,11 @@ export function ClientPerPersonProposalForm({
                   </Select>
                 </FormControl>
                 <FormMessage />
+                {selectedVenue?.openingHour && selectedVenue?.closingHour && (
+                  <p className="text-xs text-gray-500">
+                    Horário disponível: {selectedVenue.openingHour} - {selectedVenue.closingHour}
+                  </p>
+                )}
               </FormItem>
             )}
           />
@@ -404,7 +426,7 @@ export function ClientPerPersonProposalForm({
                       <SelectValue placeholder="Selecione o horário" />
                     </SelectTrigger>
                     <SelectContent>
-                      {generateTimeOptions().map((time) => (
+                      {generateTimeOptions(selectedVenue?.openingHour, selectedVenue?.closingHour).map((time) => (
                         <SelectItem key={time} value={time}>
                           {time}
                         </SelectItem>
@@ -413,6 +435,11 @@ export function ClientPerPersonProposalForm({
                   </Select>
                 </FormControl>
                 <FormMessage />
+                {selectedVenue?.openingHour && selectedVenue?.closingHour && (
+                  <p className="text-xs text-gray-500">
+                    Horário disponível: {selectedVenue.openingHour} - {selectedVenue.closingHour}
+                  </p>
+                )}
               </FormItem>
             )}
           />
@@ -495,22 +522,15 @@ export function ClientPerPersonProposalForm({
           {isLoadingServices ? (
             <div>Carregando serviços...</div>
           ) : services && services.length > 0 ? (
-            <div className="flex flex-wrap gap-3 mt-2">
+            <div className="flex flex-col md:flex-row flex-wrap gap-3 mt-2">
               {services.map((service) => {
                 const guestNumber = parseInt(form.watch('guestNumber') || '0');
                 const requiredServices = getRequiredServices(guestNumber);
                 const isRequired = requiredServices.includes(service.id);
-                const isLimpeza = service.name.toLowerCase().includes('limpeza') || service.name.toLowerCase().includes('clean');
-                const isRecepcionista = service.name.toLowerCase().includes('recepcionista') || service.name.toLowerCase().includes('reception');
-                const isSeguranca = service.name.toLowerCase().includes('segurança') || service.name.toLowerCase().includes('seguranca') || service.name.toLowerCase().includes('security');
                 
                 let requiredText = '';
-                if (isLimpeza) {
-                  requiredText = ' (Obrigatório)';
-                } else if (isRecepcionista && guestNumber >= 40) {
-                  requiredText = ' (Obrigatório - 40+ pessoas)';
-                } else if (isSeguranca && guestNumber >= 50) {
-                  requiredText = ' (Obrigatório - 50+ pessoas)';
+                if (service.rpaRequired && service.rpaMinPeople) {
+                  requiredText = ` (Obrigatório - ${service.rpaMinPeople}+ pessoas)`;
                 }
 
                 return (
@@ -531,8 +551,8 @@ export function ClientPerPersonProposalForm({
                         }
                       }}
                     />
-                    <span className={isRequired ? 'font-medium' : ''}>
-                      {service.name}{requiredText}
+                    <span className={isRequired ? 'font-medium text-[13px]' : 'text-[13px]'}>
+                      {service.name}
                     </span>
                     <span className="text-xs text-gray-500">
                       (R$ {service.price.toFixed(2)})

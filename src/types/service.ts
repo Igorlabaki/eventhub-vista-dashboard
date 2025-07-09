@@ -5,12 +5,16 @@ export interface Service {
     venueId: string;
     createdAt: Date;
     updatedAt: Date;
+    rpaRequired: boolean,
+    rpaMinPeople?: number,
 }
 
 export interface CreateServiceDTO {
     name: string;
     price: number;
     venueId: string;
+    rpaRequired?: boolean;
+    rpaMinPeople?: number;
 }
 
 export interface UpdateServiceDTO {
@@ -18,6 +22,8 @@ export interface UpdateServiceDTO {
     data: {
         name?: string;
         price?: number;
+        rpaRequired?: boolean;
+        rpaMinPeople?: number;
     };
 }
 

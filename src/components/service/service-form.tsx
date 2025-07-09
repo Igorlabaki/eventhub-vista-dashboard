@@ -16,11 +16,28 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Service } from "@/types/service";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   price: z.string().min(1, "Preço é obrigatório"),
+  rpaRequired: z.boolean().default(false),
+  rpaMinPeople: z.number().optional(),
+}).refine((data) => {
+  if (data.rpaRequired && (!data.rpaMinPeople || data.rpaMinPeople < 1)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Número mínimo de pessoas é obrigatório quando o serviço é obrigatório",
+  path: ["rpaMinPeople"],
 });
 
 type ServiceFormValues = z.infer<typeof formSchema>;
@@ -36,7 +53,7 @@ function parseCurrency(value: string) {
 
 interface ServiceFormProps {
   service?: Service | null;
-  onSubmit: (data: { name: string; price: number }) => Promise<void>;
+  onSubmit: (data: { name: string; price: number; rpaRequired: boolean; rpaMinPeople?: number }) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -51,6 +68,8 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
     defaultValues: {
       name: service?.name ?? "",
       price: service ? formatCurrency(service.price) : "",
+      rpaRequired: service?.rpaRequired ?? false,
+      rpaMinPeople: service?.rpaMinPeople,
     },
   });
 
@@ -58,9 +77,11 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
     form.reset({
       name: service?.name ?? "",
       price: service ? formatCurrency(service.price) : "",
+      rpaRequired: service?.rpaRequired ?? false,
+      rpaMinPeople: service?.rpaMinPeople,
     });
   }, [service, form]);
-
+  console.log(service)
   const handleDelete = async () => {
     if (!service) return;
     setIsDeleting(true);
@@ -92,10 +113,18 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
 
   const handleSubmit = async (values: ServiceFormValues) => {
     setIsSubmitting(true);
+    console.log({
+      name: values.name,
+      price: parseCurrency(values.price),
+      rpaRequired: values.rpaRequired,
+      rpaMinPeople: values.rpaMinPeople ?? null,
+    })
     try {
       await onSubmit({
         name: values.name,
         price: parseCurrency(values.price),
+        rpaRequired: values.rpaRequired,
+        rpaMinPeople: values.rpaMinPeople ?? null,
       });
     } finally {
       setIsSubmitting(false);
@@ -154,6 +183,58 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
           </FormItem>
         )}
       />
+      <FormField
+        control={form.control}
+        name="rpaRequired"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Este serviço é obrigatório?</FormLabel>
+            <Select onValueChange={(value) => field.onChange(value === "true")} value={field.value ? "true" : "false"}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma opção" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="false">Não</SelectItem>
+                <SelectItem value="true">Sim</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      {form.watch("rpaRequired") && (
+        <FormField
+          control={form.control}
+          name="rpaMinPeople"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>A partir de quantas pessoas este serviço é obrigatório?</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Digite o número mínimo de pessoas"
+                  className="mt-1"
+                  value={field.value || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "") {
+                      field.onChange(undefined);
+                    } else {
+                      const numValue = Number(value);
+                      if (numValue > 0) {
+                        field.onChange(numValue);
+                      }
+                    }
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
     </FormLayout>
   );
 } 

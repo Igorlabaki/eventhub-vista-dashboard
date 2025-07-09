@@ -32,6 +32,20 @@ import { useUserStore } from "@/store/userStore";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
+// Função para gerar opções de horário em intervalos de 30 minutos
+const generateTimeOptions = () => {
+  const options = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      options.push({ value: timeString, label: timeString });
+    }
+  }
+  return options;
+};
+
+const timeOptions = generateTimeOptions();
+
 const pricingModels = [
   { value: "PER_PERSON", label: "Por pessoa" },
   { value: "PER_DAY", label: "Por dia" },
@@ -47,6 +61,8 @@ const createVenueSchema = z.object({
       cep: z.string().min(1, "CEP é obrigatório"),
       email: z.string().email("Email inválido"),
       name: z.string().min(1, "Nome é obrigatório"),
+      openingHour: z.string().optional(),
+      closingHour: z.string().optional(),
       city: z.string().min(1, "Cidade é obrigatória"),
       state: z.string().min(1, "Estado é obrigatório"),
       street: z.string().min(1, "Rua é obrigatória"),
@@ -219,7 +235,9 @@ export function CreateVenueForm({
         checkIn: data.data.checkIn || undefined,
         maxGuest: data.data.maxGuest,
         checkOut: data.data.checkOut || undefined,
-        description: data.data.description || undefined,
+        description: data.data.description || undefined, 
+        openingHour: data.data.openingHour || undefined,
+        closingHour: data.data.closingHour || undefined,
         streetNumber: data.data.streetNumber.replace(/\D/g, ""),
         neighborhood: data.data.neighborhood,
         owners: data.data.owners,
@@ -505,20 +523,28 @@ export function CreateVenueForm({
               control={form.control}
               name="data.hasOvernightStay"
               render={({ field }) => (
-                <FormItem className="flex items-center space-x-2">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel className="mt-0">Permite pernoite</FormLabel>
+                <FormItem>
+                  <FormLabel>Permite pernoite</FormLabel>
+                  <Select 
+                    value={field.value ? "true" : "false"} 
+                    onValueChange={(value) => field.onChange(value === "true")}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma opção" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="true">Sim</SelectItem>
+                      <SelectItem value="false">Não</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {hasOvernightStay && (
+            {hasOvernightStay ? (
               <>
                 <FormField
                   control={form.control}
@@ -526,9 +552,20 @@ export function CreateVenueForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Check-in</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o horário" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -540,9 +577,72 @@ export function CreateVenueForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Check-out</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o horário" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            ) : (
+              <>
+                <FormField
+                  control={form.control}
+                  name="data.openingHour"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Horário de abertura</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o horário" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="data.closingHour"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Horário de fechamento</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o horário" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -32,7 +32,7 @@ export function ServiceSection({
   const { createService, updateService } = useServiceStore();
   const { toast } = useToast();
 
-  const handleSubmit = async (data: { name: string; price: number }) => {
+  const handleSubmit = async (data: Partial<Service>) => {
     try {
       let response;
       if (selectedService) {
@@ -41,6 +41,8 @@ export function ServiceSection({
           data: {
             name: data.name,
             price: data.price,
+            rpaRequired: data.rpaRequired,
+            rpaMinPeople: data.rpaMinPeople,
           },
         });
         const { title, message } = handleBackendSuccess(response, "Serviço atualizado com sucesso!");
@@ -53,6 +55,8 @@ export function ServiceSection({
           name: data.name,
           price: data.price,
           venueId,
+          rpaRequired: data.rpaRequired,
+          rpaMinPeople: data.rpaMinPeople,
         });
         const { title, message } = handleBackendSuccess(response, "Serviço criado com sucesso!");
         showSuccessToast({

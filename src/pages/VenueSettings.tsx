@@ -43,6 +43,20 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Textarea } from "@/components/ui/textarea";
 
+// Função para gerar opções de horário em intervalos de 30 minutos
+const generateTimeOptions = () => {
+  const options = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      options.push({ value: timeString, label: timeString });
+    }
+  }
+  return options;
+};
+
+const timeOptions = generateTimeOptions();
+
 type PricingModel =
   | "PER_PERSON"
   | "PER_DAY"
@@ -65,6 +79,8 @@ const venueSettingsSchema = z.object({
   cep: z.string().min(1, "CEP é obrigatório"),
   checkIn: z.string().optional(),
   checkOut: z.string().optional(),
+  openingHour: z.string().optional(),
+  closingHour: z.string().optional(),
   hasOvernightStay: z.boolean(),
   pricingModel: z.enum([
     "PER_PERSON",
@@ -130,9 +146,11 @@ export default function VenueSettings() {
       minimumPrice: "",
       state: "",
       cep: "",
-      checkIn: "",
-      checkOut: "",
-      hasOvernightStay: false,
+              checkIn: "",
+        checkOut: "",
+        openingHour: "",
+        closingHour: "",
+        hasOvernightStay: false,
       pricingModel: "PER_PERSON",
       pricePerPerson: "",
       pricePerDay: "",
@@ -180,6 +198,8 @@ export default function VenueSettings() {
         cep: selectedVenue.cep || "",
         checkIn: selectedVenue.checkIn || "",
         checkOut: selectedVenue.checkOut || "",
+        openingHour: selectedVenue.openingHour || "",
+        closingHour: selectedVenue.closingHour || "",
         whatsappNumber: selectedVenue.whatsappNumber || "",
         minimumPrice: selectedVenue.minimumPrice
           ? formatCurrency((selectedVenue.minimumPrice * 100).toString())
@@ -298,6 +318,8 @@ export default function VenueSettings() {
         cep: data.cep,
         checkIn: data.checkIn,
         checkOut: data.checkOut,
+        openingHour: data.openingHour,
+        closingHour: data.closingHour,
         hasOvernightStay: data.hasOvernightStay,
         pricingModel: data.pricingModel,
         pricePerPerson: pricePerPerson || undefined,
@@ -819,28 +841,34 @@ export default function VenueSettings() {
                     control={form.control}
                     name="hasOvernightStay"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-2 m-0 p-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={(checked) => {
-                              field.onChange(checked);
-                              if (!checked) {
-                                form.setValue("checkIn", "");
-                                form.setValue("checkOut", "");
-                                form.setValue("minimumNights", "1");
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="m-0 p-0">
-                          Permite pernoite
-                        </FormLabel>
+                      <FormItem>
+                        <FormLabel>Permite pernoite</FormLabel>
+                        <Select 
+                          value={field.value ? "true" : "false"} 
+                          onValueChange={(value) => {
+                            field.onChange(value === "true");
+                            if (value === "false") {
+                              form.setValue("checkIn", "");
+                              form.setValue("checkOut", "");
+                              form.setValue("minimumNights", "1");
+                            }
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione uma opção" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="true">Sim</SelectItem>
+                            <SelectItem value="false">Não</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  {form.watch("hasOvernightStay") && (
+                  {form.watch("hasOvernightStay") ? (
                     <>
                       <FormField
                         control={form.control}
@@ -848,9 +876,20 @@ export default function VenueSettings() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Check-in</FormLabel>
-                            <FormControl>
-                              <Input type="time" {...field} />
-                            </FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione o horário" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {timeOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -861,9 +900,20 @@ export default function VenueSettings() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Check-out</FormLabel>
-                            <FormControl>
-                              <Input type="time" {...field} />
-                            </FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione o horário" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {timeOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -883,6 +933,57 @@ export default function VenueSettings() {
                                 {...field}
                               />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="openingHour"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Horário de abertura</FormLabel>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione o horário" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {timeOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="closingHour"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Horário de fechamento</FormLabel>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione o horário" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {timeOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}

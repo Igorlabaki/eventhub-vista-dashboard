@@ -35,6 +35,8 @@ export interface Venue {
   maxGuest: number;
   whatsappNumber?: string | null;
   minimumPrice?: number | null;
+  openingHour?: string,
+  closingHour?: string,
   showOnOrganization: boolean;
   images: Image[]
   // Relacionamentos (ajuste os tipos conforme seus models)
@@ -88,6 +90,8 @@ export interface CreateVenueDTO {
   owners: string[];
   hasOvernightStay: boolean;
   complement?: string;
+  openingHour?: string;
+  closingHour?: string;
   pricePerDay?: string;
   pricePerPerson?: string;
   pricePerPersonDay?: string;
@@ -113,6 +117,8 @@ export interface UpdateVenueDTO {
   checkIn?: string;
   tiktokUrl?: string;
   instagramUrl?: string;
+  openingHour?: string;
+  closingHour?: string;
   facebookUrl?: string;
   logoUrl?: string;
   logoFile?: File;
