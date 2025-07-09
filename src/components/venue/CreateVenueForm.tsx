@@ -130,7 +130,7 @@ type CreateVenueFormValues = z.infer<typeof createVenueSchema>;
 
 interface CreateVenueFormProps {
   organizationId: string;
-  userId: string;
+  userId?: string;
   onSuccess?: () => void;
   venueId?: string;
   isEditing?: boolean;

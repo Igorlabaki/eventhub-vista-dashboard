@@ -18,6 +18,25 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Rotas públicas que não precisam de autenticação
+const PUBLIC_ROUTES = [
+  '/venue/:id/form',
+  '/proposal/:id/guest-list',
+  '/proposal/:id/worker-list', 
+  '/proposal/:id/schedule-list',
+  '/proposal/:id/view'
+];
+
+// Verifica se a rota atual é pública
+function isPublicRoute() {
+  const currentPath = window.location.pathname;
+  return PUBLIC_ROUTES.some(route => {
+    const routePattern = route.replace(/:[^/]+/g, '[^/]+');
+    const regex = new RegExp(`^${routePattern}$`);
+    return regex.test(currentPath);
+  });
+}
+
 // Interceptor para tratamento de erros e refresh token
 api.interceptors.response.use(
   (response) => response,
@@ -47,7 +66,12 @@ api.interceptors.response.use(
         // Se falhar o refresh, limpa os dados e redireciona para o login
         localStorage.removeItem('@EventHub:token');
         localStorage.removeItem('@EventHub:session');
-        window.location.href = '/login';
+        
+        // Só redireciona para login se não for uma rota pública
+        if (!isPublicRoute()) {
+          window.location.href = '/login';
+        }
+        
         return Promise.reject(refreshError);
       }
     }
