@@ -16,7 +16,7 @@ interface VenueState {
   error: string | null;
   selectedVenue: Venue | null;
   fetchVenues: (params: { organizationId: string, userId: string }) => Promise<void>;
-  fetchVenueById: ( venueId: string, userId: string ) => Promise<void>;
+  fetchVenueById: ( venueId: string, userId?: string ) => Promise<void>;
   createVenue: (data: CreateVenueDTO) => Promise<BackendResponse<Venue>>;
   updateVenue: (data: UpdateVenueDTO) => Promise<BackendResponse<Venue>>;
   deleteVenue: (id: string) => Promise<BackendResponse<void>>;
@@ -43,7 +43,7 @@ export const useVenueStore = create<VenueState>((set) => ({
     }
   },
 
-  fetchVenueById: async (venueId: string, userId: string) => {
+  fetchVenueById: async (venueId: string, userId?: string) => {
     try {
       set({ isLoading: true, error: null });
       const response = await venueService.getVenueById({ venueId, userId });

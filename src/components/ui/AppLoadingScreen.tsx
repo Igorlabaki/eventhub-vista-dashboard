@@ -6,7 +6,7 @@ export function AppLoadingScreen() {
       <div className="flex flex-col items-center">
         <div className="flex items-center gap-3 mb-6">
           <Calendar className="h-14 w-14 text-eventhub-primary animate-pulse" />
-          <span className="font-extrabold text-4xl text-eventhub-primary tracking-wide select-none">EventHub</span>
+          <span className="font-bold text-4xl text-eventhub-primary tracking-wide select-none">EventHub</span>
         </div>
         <div className="flex items-center justify-center mb-4">
           <span className="relative flex h-10 w-10">

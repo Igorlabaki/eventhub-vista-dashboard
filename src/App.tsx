@@ -53,6 +53,7 @@ import OrganizationWebsiteTexts from "./pages/website/OrganizationWebsiteTexts";
 import OrganizationWebsiteVenues from "./pages/website/OrganizationWebsiteVenues";
 import GuestListPage from "./pages/GuestList";
 import WorkerListPage from "./pages/WorkerList";
+import ProposalView from "./pages/ProposalView";
 
 const queryClient = new QueryClient();
 
@@ -126,6 +127,8 @@ const App = () => {
               <Route path="/proposal/:id/contract" element={<ProtectedRoute><ProposalContract /></ProtectedRoute>} />
               <Route path="/proposal/:id/guest-list" element={<GuestListPage />} />
               <Route path="/proposal/:id/worker-list" element={<WorkerListPage />} />
+              <Route path="/proposal/:id/schedule-list" element={<ScheduleListPage />} />
+              <Route path="/proposal/:id/view" element={<ProposalView  />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

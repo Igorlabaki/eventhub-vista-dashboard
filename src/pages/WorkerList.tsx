@@ -9,6 +9,8 @@ import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { Calendar } from "lucide-react";
 import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
 import { useProposalStore } from "@/store/proposalStore";
+import { useVenueStore } from "@/store/venueStore";
+import { ProposalFooter } from "@/components/proposalFooter";
 
 export default function WorkerListPage() {
   const { id: proposalId } = useParams();
@@ -26,6 +28,9 @@ export default function WorkerListPage() {
   const { toast } = useToast();
   const fetchProposalById = useProposalStore((s) => s.fetchProposalById);
   const currentProposal = useProposalStore((s) => s.currentProposal);
+  // Venue
+  const { selectedVenue, fetchVenueById } = useVenueStore();
+  const [venueLoading, setVenueLoading] = useState(false);
   // Carrega a lista inicial do backend ao montar
   useEffect(() => {
     if (proposalId) {
@@ -40,7 +45,14 @@ export default function WorkerListPage() {
     }
   }, [proposalId, fetchPersons, fetchProposalById]);
 
-  if (isInitialLoading) {
+  useEffect(() => {
+    if (currentProposal?.venueId) {
+      setVenueLoading(true);
+      fetchVenueById(currentProposal.venueId).finally(() => setVenueLoading(false));
+    }
+  }, [currentProposal?.venueId, fetchVenueById]);
+
+  if (isInitialLoading || venueLoading) {
     return <AppLoadingScreen />;
   }
 
@@ -144,124 +156,127 @@ export default function WorkerListPage() {
   const savedCount = workerList.filter((g) => g.id).length;
 
   return (
-    <div className="min-h-screen bg-eventhub-background py-8 px-2 md:px-8">
-      <div className="flex items-center w-full justify-center mb-10">
-        <Calendar className="h-8 w-8 text-eventhub-primary" />
-        <span className="ml-2 font-bold text-3xl text-eventhub-primary">
-          EventHub
-        </span>
-      </div>
-      <div className="max-w-6xl mx-auto">
-        {/* Card de adicionar colaborador */}
-        <div className="bg-white rounded-xl shadow p-8 mb-8">
-          <h2 className="text-2xl font-bold text-center mb-6 text-eventhub-primary">
-            Adicionar Colaborador
-          </h2>
-          <div className="flex flex-col gap-4 md:flex-row md:items-end">
-            <div className="flex-1">
-              <label className="block text-gray-600 font-semibold mb-1">Nome</label>
-              <input
-                className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary"
-                placeholder="Nome"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-gray-600 font-semibold mb-1">
-                Email (opcional)
-              </label>
-              <input
-                className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary"
-                placeholder="Email (opcional)"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-              />
-            </div>
-            <button
-              className="bg-eventhub-primary text-white rounded-full p-3 mt-4 md:mt-0 flex items-center justify-center hover:bg-eventhub-secondary transition"
-              onClick={handleAddWorker}
-              title="Adicionar colaborador"
-            >
-              <FiPlus size={24} />
-            </button>
-          </div>
+    <div className="flex flex-col min-h-screen">
+      <main className="flex flex-1 flex-col bg-eventhub-background py-14 px-2 md:px-8">
+        <div className="flex items-center w-full justify-center mb-10">
+          <Calendar className="h-8 w-8 text-eventhub-primary" />
+          <span className="ml-2 font-bold text-3xl text-eventhub-primary">
+            EventHub
+          </span>
         </div>
-
-        {/* Card da lista de colaboradores */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4 text-center">
-            <span className="text-lg font-bold text-center mb-6 text-eventhub-primary">
-              Lista de Colaboradores: {savedCount}
-            </span>
-            <button
-              className={`w-full text-center md:w-auto font-semibold px-6 py-2 rounded transition flex items-center  
-                ${
-                  loading || workerList.length === 0 || workerList.every((g) => g.id)
-                    ? "bg-gray-300 text-center text-gray-400 cursor-not-allowed"
-                    : "bg-[#6C63FF] hover:bg-[#554ee0] text-white cursor-pointer shadow-md"
-                }
-              `}
-              onClick={handleSaveList}
-              disabled={
-                loading || workerList.length === 0 || workerList.every((g) => g.id)
-              }
-            >
-              {loading ? (
-                <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                </svg>
-              ) : (
-                "SALVAR LISTA"
-              )}
-            </button>
-          </div>
-          {/* Barra de pesquisa com ícone dentro */}
-          <div className="mb-4 relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-              <FiSearch size={20} />
-            </span>
-            <input
-              className="w-full border border-gray-300 rounded px-10 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary"
-              placeholder="Buscar colaborador..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2 max-h-[400px] overflow-y-auto">
-            {filteredWorkers.length === 0 ? (
-              <div className="text-gray-400 text-center py-8">
-                Nenhum colaborador adicionado.
+        <div className="max-w-6xl w-full md:mx-auto">
+          {/* Card de adicionar colaborador */}
+          <div className="bg-white rounded-xl shadow py-8 px-4 mb-8">
+            <h2 className="text-2xl font-bold text-center mb-6 text-eventhub-primary">
+              Adicionar Colaborador
+            </h2>
+            <div className="flex flex-col gap-4 md:flex-row md:items-end">
+              <div className="flex-1">
+                <label className="block text-gray-600 font-semibold mb-1">Nome</label>
+                <input
+                  className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary"
+                  placeholder="Nome"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
-            ) : (
-              filteredWorkers.map((g, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between bg-gray-100 rounded px-4 py-3 hover:bg-gray-200 transition"
-                >
-                  <div>
-                    <span className="font-medium">{g.name}</span>
-                    {g.email && (
-                      <span className="text-gray-500 ml-2 text-sm">
-                        {g.email}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    className="text-gray-500 hover:text-red-600 transition"
-                    onClick={() => handleRemoveWorker(g as Person, i)}
-                    title="Remover"
-                  >
-                    <FiTrash2 size={20} />
-                  </button>
+              <div className="flex-1">
+                <label className="block text-gray-600 font-semibold mb-1">
+                  Email (opcional)
+                </label>
+                <input
+                  className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary"
+                  placeholder="Email (opcional)"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
+                />
+              </div>
+              <button
+                className="bg-eventhub-primary text-white rounded-full p-3 mt-4 md:mt-0 flex items-center justify-center hover:bg-eventhub-secondary transition"
+                onClick={handleAddWorker}
+                title="Adicionar colaborador"
+              >
+                <FiPlus size={24} />
+              </button>
+            </div>
+          </div>
+
+          {/* Card da lista de colaboradores */}
+          <div className="bg-white rounded-xl shadow py-8 px-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4 text-center">
+              <span className="text-lg font-bold text-center mb-6 text-eventhub-primary">
+                Lista de Colaboradores: {savedCount}
+              </span>
+              <button
+                className={`w-full text-center md:w-auto font-semibold px-6 py-2 rounded transition flex items-center  
+                  ${
+                    loading || workerList.length === 0 || workerList.every((g) => g.id)
+                      ? "bg-gray-300 text-center text-gray-400 cursor-not-allowed"
+                      : "bg-[#6C63FF] hover:bg-[#554ee0] text-white cursor-pointer shadow-md"
+                  }
+                `}
+                onClick={handleSaveList}
+                disabled={
+                  loading || workerList.length === 0 || workerList.every((g) => g.id)
+                }
+              >
+                {loading ? (
+                  <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                ) : (
+                  "SALVAR LISTA"
+                )}
+              </button>
+            </div>
+            {/* Barra de pesquisa com ícone dentro */}
+            <div className="mb-4 relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                <FiSearch size={20} />
+              </span>
+              <input
+                className="w-full border border-gray-300 rounded px-10 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary"
+                placeholder="Buscar colaborador..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {filteredWorkers.length === 0 ? (
+                <div className="text-gray-400 text-center py-8">
+                  Nenhum colaborador adicionado.
                 </div>
-              ))
-            )}
+              ) : (
+                filteredWorkers.map((g, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between bg-gray-100 rounded px-4 py-3 hover:bg-gray-200 transition"
+                  >
+                    <div>
+                      <span className="font-medium">{g.name}</span>
+                      {g.email && (
+                        <span className="text-gray-500 ml-2 text-sm">
+                          {g.email}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      className="text-gray-500 hover:text-red-600 transition"
+                      onClick={() => handleRemoveWorker(g as Person, i)}
+                      title="Remover"
+                    >
+                      <FiTrash2 size={20} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </main>
+      <ProposalFooter selectedVenue={selectedVenue} />
       {/* Dialog de confirmação de exclusão */}
       <ConfirmDeleteDialog
         open={deleteDialogOpen}

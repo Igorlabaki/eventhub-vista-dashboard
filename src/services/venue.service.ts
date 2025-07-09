@@ -61,8 +61,8 @@ export const venueService = {
     return response.data;
   },
 
-  getVenueById: async ({ venueId, userId }: { venueId: string, userId: string }) => {
-    const response = await api.get<VenueByIdResponse>(`/venue/getById?venueId=${venueId}&userId=${userId}`);
+  getVenueById: async ({ venueId, userId }: { venueId: string, userId?: string }) => {
+    const response = await api.get<VenueByIdResponse>(`/venue/getById?venueId=${venueId}${userId ? `&userId=${userId}` : ''}`);
     return response.data;
   },
 
