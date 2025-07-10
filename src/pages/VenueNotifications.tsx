@@ -55,7 +55,7 @@ export default function VenueNotifications() {
                 filtered.map((notification) => (
                   <Card
                     key={notification.id}
-                    className="bg-white hover:bg-gray-100 transition-colors cursor-pointer border shadow-sm"
+                    className="bg-white hover:bg-gray-100 transition-colors cursor-pointer border shadow-sm mt-2"
                     onClick={() => handleNotificationClick(notification.proposalId)}
                   >
                     <CardContent className="p-4">

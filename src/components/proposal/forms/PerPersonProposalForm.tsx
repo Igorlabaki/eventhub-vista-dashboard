@@ -24,15 +24,57 @@ import { useProposalStore } from "@/store/proposalStore";
 import { ProposalType, TrafficSource } from "@/types/proposal";
 import { PROPOSAL_TYPE_OPTIONS, TRAFFIC_SOURCE_OPTIONS } from "./constants";
 import { useServiceStore } from "@/store/serviceStore";
+import { useVenueStore } from "@/store/venueStore";
 import { useEffect, useState } from "react";
 import { NumericFormat } from 'react-number-format';
-import InputMask from 'react-input-mask';
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import { CreateProposalPerPersonDTO } from "@/types/proposal";
 import { useToast } from "@/hooks/use-toast";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
 import { showSuccessToast } from "@/components/ui/success-toast";
 
-const formSchema = z.object({
+// Função para gerar opções de horário (hora cheia e meia hora)
+function generateTimeOptions(openingHour?: string, closingHour?: string) {
+  const options = [];
+  
+  // Se não há horários definidos, retorna todas as opções
+  if (!openingHour && !closingHour) {
+    for (let hour = 0; hour <= 23; hour++) {
+      const hourStr = hour.toString().padStart(2, '0');
+      options.push(`${hourStr}:00`);
+      options.push(`${hourStr}:30`);
+    }
+    return options;
+  }
+
+  // Converter horários para minutos para facilitar comparação
+  const openingMinutes = openingHour ? 
+    parseInt(openingHour.split(':')[0]) * 60 + parseInt(openingHour.split(':')[1]) : 0;
+  const closingMinutes = closingHour ? 
+    parseInt(closingHour.split(':')[0]) * 60 + parseInt(closingHour.split(':')[1]) : 24 * 60;
+
+  for (let hour = 0; hour <= 23; hour++) {
+    const hourStr = hour.toString().padStart(2, '0');
+    
+    // Hora cheia
+    const fullHourMinutes = hour * 60;
+    if (fullHourMinutes >= openingMinutes && fullHourMinutes <= closingMinutes) {
+      options.push(`${hourStr}:00`);
+    }
+    
+    // Meia hora
+    const halfHourMinutes = hour * 60 + 30;
+    if (halfHourMinutes >= openingMinutes && halfHourMinutes <= closingMinutes) {
+      options.push(`${hourStr}:30`);
+    }
+  }
+  
+  return options;
+}
+
+// Schema base que será usado para criar o schema dinâmico
+const baseFormSchema = z.object({
   completeClientName: z.string().min(1, "Nome do cliente é obrigatório"),
   completeCompanyName: z.string().optional(),
   date: z.string().min(1, "Data do evento é obrigatória"),
@@ -40,24 +82,29 @@ const formSchema = z.object({
   endHour: z.string().min(1, "Horário de término é obrigatório"),
   guestNumber: z.string().min(1, "Número de convidados é obrigatório"),
   email: z.string().email("E-mail inválido"),
-  whatsapp: z.string().min(1, "WhatsApp é obrigatório"),
+  whatsapp: z.string()
+    .min(10, "WhatsApp é obrigatório")
+    .refine((val) => {
+      const onlyNumbers = val.replace(/\D/g, "");
+      // Deve ter entre 10 e 13 dígitos (Brasil)
+      if (onlyNumbers.length < 10 || onlyNumbers.length > 13) return false;
+      // Não pode ser sequência repetida (ex: 99999999999, 11111111111)
+      if (/^(\d)\1{7,}$/.test(onlyNumbers)) return false;
+      // Não pode começar com 0
+      if (/^0/.test(onlyNumbers)) return false;
+      // Não pode ser só DDD (ex: 11999999999 é válido, 1199999999 é inválido)
+      return true;
+    }, {
+      message: "Número de WhatsApp inválido",
+    }),
   description: z.string().min(1, "Descrição é obrigatória"),
   knowsVenue: z.boolean(),
   type: z.nativeEnum(ProposalType),
   trafficSource: z.nativeEnum(TrafficSource),
   totalAmountInput: z.string().optional(),
-}).refine(
-  (data) => data.startHour >= "07:00" && data.startHour <= "22:00",
-  { message: "Horário de início deve ser entre 07:00 e 22:00", path: ["startHour"] }
-).refine(
-  (data) => data.endHour >= "07:00" && data.endHour <= "22:00",
-  { message: "Horário de término deve ser entre 07:00 e 22:00", path: ["endHour"] }
-).refine(
-  (data) => data.startHour <= data.endHour,
-  { message: "Horário de início não pode ser maior que o de término", path: ["endHour"] }
-);
+});
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof baseFormSchema>;
 
 interface PerPersonProposalFormProps {
   venueId: string;
@@ -77,12 +124,7 @@ function formatWhatsapp(value: string) {
   return "";
 }
 
-function clampHour(value: string) {
-  if (!value) return value;
-  if (value < "07:00") return "07:00";
-  if (value > "22:00") return "22:00";
-  return value;
-}
+
 
 export function PerPersonProposalForm({
   venueId,
@@ -91,8 +133,35 @@ export function PerPersonProposalForm({
   const navigate = useNavigate();
   const { createProposalPerPerson } = useProposalStore();
   const { services, fetchServices, isLoading: isLoadingServices } = useServiceStore();
+  const { selectedVenue } = useVenueStore();
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const { toast } = useToast();
+
+  // Criar schema dinâmico baseado no selectedVenue
+  const createFormSchema = () => {
+    return baseFormSchema
+      .refine((data) => {
+        if (!selectedVenue?.maxGuest) return true;
+        const guestNumber = parseInt(data.guestNumber);
+        return guestNumber <= selectedVenue.maxGuest;
+      }, {
+        message: `Número máximo de convidados permitido é ${selectedVenue?.maxGuest || 0}`,
+        path: ["guestNumber"],
+      })
+      .refine((data) => {
+        if (!data.startHour || !data.endHour) return true;
+        
+        const startMinutes = parseInt(data.startHour.split(':')[0]) * 60 + parseInt(data.startHour.split(':')[1]);
+        const endMinutes = parseInt(data.endHour.split(':')[0]) * 60 + parseInt(data.endHour.split(':')[1]);
+        
+        return endMinutes > startMinutes;
+      }, {
+        message: "O horário de fim deve ser posterior ao horário de início",
+        path: ["endHour"],
+      });
+  };
+
+  const formSchema = createFormSchema();
 
   useEffect(() => {
     if (venueId) fetchServices(venueId);
@@ -215,14 +284,16 @@ export function PerPersonProposalForm({
             <FormItem>
               <FormLabel>WhatsApp</FormLabel>
               <FormControl>
-                <InputMask
-                  mask="(99) 99999-9999"
-                  placeholder="(00) 00000-0000"
+                <PhoneInput
+                  country={"br"}
                   value={field.value}
                   onChange={field.onChange}
-                >
-                  {(inputProps) => <Input {...inputProps} />}
-                </InputMask>
+                  inputClass="w-full"
+                  placeholder="Digite o número"
+                  enableSearch={true}
+                  containerClass="w-full"
+                  inputStyle={{ width: "100%" }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -252,16 +323,46 @@ export function PerPersonProposalForm({
             <FormItem>
               <FormLabel>Horário Início</FormLabel>
               <FormControl>
-                <Input
-                  type="time"
-                  min="07:00"
-                  max="22:00"
-                  {...field}
-                  value={field.value}
-                  onChange={e => field.onChange(clampHour(e.target.value))}
-                />
+                <Select 
+                  value={field.value} 
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    
+                    // Calcular horário de fim automaticamente baseado na duração padrão
+                    if (value && selectedVenue?.standardEventDuration) {
+                      const [hours, minutes] = value.split(':').map(Number);
+                      const endHours = hours + selectedVenue.standardEventDuration;
+                      const endTime = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                      
+                      // Verificar se o horário calculado está dentro do horário de funcionamento
+                      const venueClosingMinutes = selectedVenue.closingHour ? 
+                        parseInt(selectedVenue.closingHour.split(':')[0]) * 60 + parseInt(selectedVenue.closingHour.split(':')[1]) : 24 * 60;
+                      const endMinutes = endHours * 60 + minutes;
+                      
+                      if (endMinutes <= venueClosingMinutes) {
+                        form.setValue('endHour', endTime);
+                      }
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o horário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {generateTimeOptions(selectedVenue?.openingHour, selectedVenue?.closingHour).map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
+              {selectedVenue?.openingHour && selectedVenue?.closingHour && (
+                <p className="text-xs text-gray-500">
+                  Horário disponível: {selectedVenue.openingHour} - {selectedVenue.closingHour}
+                </p>
+              )}
             </FormItem>
           )}
         />
@@ -273,16 +374,25 @@ export function PerPersonProposalForm({
             <FormItem>
               <FormLabel>Horário Fim</FormLabel>
               <FormControl>
-                <Input
-                  type="time"
-                  min="07:00"
-                  max="22:00"
-                  {...field}
-                  value={field.value}
-                  onChange={e => field.onChange(clampHour(e.target.value))}
-                />
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o horário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {generateTimeOptions(selectedVenue?.openingHour, selectedVenue?.closingHour).map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
+              {selectedVenue?.openingHour && selectedVenue?.closingHour && (
+                <p className="text-xs text-gray-500">
+                  Horário disponível: {selectedVenue.openingHour} - {selectedVenue.closingHour}
+                </p>
+              )}
             </FormItem>
           )}
         />
@@ -296,9 +406,19 @@ export function PerPersonProposalForm({
             <FormItem>
               <FormLabel>Convidados</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="Ex: 100" {...field} />
+                <Input 
+                  type="number" 
+                  placeholder="Ex: 100" 
+                  max={selectedVenue?.maxGuest || undefined}
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
+              {selectedVenue?.maxGuest && (
+                <p className="text-xs text-gray-500">
+                  Máximo de convidados: {selectedVenue.maxGuest}
+                </p>
+              )}
             </FormItem>
           )}
         />

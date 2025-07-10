@@ -17,7 +17,8 @@ import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useServiceStore } from "@/store/serviceStore";
 import { NumericFormat } from 'react-number-format';
-import InputMask from 'react-input-mask';
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const formSchema = z.object({
   completeClientName: z.string().min(1, "Nome do cliente é obrigatório"),
@@ -301,14 +302,16 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
           <FormItem>
             <FormLabel>WhatsApp</FormLabel>
             <FormControl>
-              <InputMask
-                mask="(99) 99999-9999"
-                placeholder="(00) 00000-0000"
+              <PhoneInput
+                country={"br"}
                 value={field.value}
                 onChange={field.onChange}
-              >
-                {(inputProps) => <Input {...inputProps} />}
-              </InputMask>
+                inputClass="w-full"
+                placeholder="Digite o número"
+                enableSearch={true}
+                containerClass="w-full"
+                inputStyle={{ width: "100%" }}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

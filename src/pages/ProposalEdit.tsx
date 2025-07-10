@@ -27,7 +27,8 @@ import { showSuccessToast } from "@/components/ui/success-toast";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ProposalType, TrafficSource } from "@/types/proposal";
 import { NumericFormat } from 'react-number-format';
-import InputMask from 'react-input-mask';
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import { Textarea } from "@/components/ui/textarea";
 import { useServiceStore } from "@/store/serviceStore";
 import { useVenueStore } from "@/store/venueStore";
@@ -263,16 +264,18 @@ export default function ProposalEdit() {
                 name="data.whatsapp"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Whatsapp</FormLabel>
+                    <FormLabel>WhatsApp</FormLabel>
                     <FormControl>
-                      <InputMask
-                        mask="(99) 99999-9999"
-                        placeholder="(00) 00000-0000"
+                      <PhoneInput
+                        country={"br"}
                         value={field.value}
                         onChange={field.onChange}
-                      >
-                        {(inputProps) => <Input {...inputProps} />}
-                      </InputMask>
+                        inputClass="w-full"
+                        placeholder="Digite o número"
+                        enableSearch={true}
+                        containerClass="w-full"
+                        inputStyle={{ width: "100%" }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

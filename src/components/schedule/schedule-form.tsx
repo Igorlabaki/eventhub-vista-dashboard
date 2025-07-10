@@ -12,9 +12,55 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Schedule } from "@/types/schedule";
 import { Textarea } from "@/components/ui/textarea";
 import { useProposalStore } from "@/store/proposalStore";
+
+// Função para gerar opções de horário (hora cheia e meia hora)
+function generateTimeOptions(startHour?: string, endHour?: string) {
+  const options = [];
+  
+  // Se não há horários definidos, retorna todas as opções
+  if (!startHour && !endHour) {
+    for (let hour = 0; hour <= 23; hour++) {
+      const hourStr = hour.toString().padStart(2, '0');
+      options.push(`${hourStr}:00`);
+      options.push(`${hourStr}:30`);
+    }
+    return options;
+  }
+
+  // Converter horários para minutos para facilitar comparação
+  const startMinutes = startHour ? 
+    parseInt(startHour.split(':')[0]) * 60 + parseInt(startHour.split(':')[1]) : 0;
+  const endMinutes = endHour ? 
+    parseInt(endHour.split(':')[0]) * 60 + parseInt(endHour.split(':')[1]) : 24 * 60;
+
+  for (let hour = 0; hour <= 23; hour++) {
+    const hourStr = hour.toString().padStart(2, '0');
+    
+    // Hora cheia
+    const fullHourMinutes = hour * 60;
+    if (fullHourMinutes >= startMinutes && fullHourMinutes <= endMinutes) {
+      options.push(`${hourStr}:00`);
+    }
+    
+    // Meia hora
+    const halfHourMinutes = hour * 60 + 30;
+    if (halfHourMinutes >= startMinutes && halfHourMinutes <= endMinutes) {
+      options.push(`${hourStr}:30`);
+    }
+  }
+  
+  return options;
+}
 
 const scheduleFormSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -190,7 +236,7 @@ export function ScheduleForm({
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="startHour"
@@ -198,9 +244,47 @@ export function ScheduleForm({
               <FormItem>
                 <FormLabel>Horário de Início</FormLabel>
                 <FormControl>
-                  <Input type="time" {...field} />
+                  <Select 
+                    value={field.value} 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      
+                      // Calcular horário de fim automaticamente (duração padrão de 1 hora)
+                      if (value) {
+                        const [hours, minutes] = value.split(':').map(Number);
+                        const endHours = hours + 1; // Duração padrão de 1 hora
+                        const endTime = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                        
+                        // Verificar se o horário calculado está dentro do horário do evento
+                        if (eventEnd) {
+                          const eventEndMinutes = parseInt(eventEnd.split(':')[0]) * 60 + parseInt(eventEnd.split(':')[1]);
+                          const endMinutes = endHours * 60 + minutes;
+                          
+                          if (endMinutes <= eventEndMinutes) {
+                            form.setValue('endHour', endTime);
+                          }
+                        }
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o horário de início" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateTimeOptions(eventStart, eventEnd).map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
+                {eventStart && eventEnd && (
+                  <p className="text-xs text-gray-500">
+                    Horário do evento: {eventStart} - {eventEnd}
+                  </p>
+                )}
               </FormItem>
             )}
           />
@@ -212,9 +296,25 @@ export function ScheduleForm({
               <FormItem>
                 <FormLabel>Horário de Término</FormLabel>
                 <FormControl>
-                  <Input type="time" {...field} />
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o horário de término" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateTimeOptions(eventStart, eventEnd).map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
+                {eventStart && eventEnd && (
+                  <p className="text-xs text-gray-500">
+                    Horário do evento: {eventStart} - {eventEnd}
+                  </p>
+                )}
               </FormItem>
             )}
           />
