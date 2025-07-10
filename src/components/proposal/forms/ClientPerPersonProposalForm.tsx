@@ -408,7 +408,28 @@ export function ClientPerPersonProposalForm({
               <FormItem>
                 <FormLabel>Horário Início</FormLabel>
                 <FormControl>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select 
+                    value={field.value} 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      
+                      // Calcular horário de fim automaticamente baseado na duração padrão
+                      if (value && selectedVenue?.standardEventDuration) {
+                        const [hours, minutes] = value.split(':').map(Number);
+                        const endHours = hours + selectedVenue.standardEventDuration;
+                        const endTime = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                        
+                        // Verificar se o horário calculado está dentro do horário de funcionamento
+                        const venueClosingMinutes = selectedVenue.closingHour ? 
+                          parseInt(selectedVenue.closingHour.split(':')[0]) * 60 + parseInt(selectedVenue.closingHour.split(':')[1]) : 24 * 60;
+                        const endMinutes = endHours * 60 + minutes;
+                        
+                        if (endMinutes <= venueClosingMinutes) {
+                          form.setValue('endHour', endTime);
+                        }
+                      }
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o horário" />
                     </SelectTrigger>
@@ -427,6 +448,7 @@ export function ClientPerPersonProposalForm({
                     Horário disponível: {selectedVenue.openingHour} - {selectedVenue.closingHour}
                   </p>
                 )}
+      
               </FormItem>
             )}
           />

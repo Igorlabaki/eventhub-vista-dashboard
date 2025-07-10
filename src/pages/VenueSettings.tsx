@@ -48,7 +48,9 @@ const generateTimeOptions = () => {
   const options = [];
   for (let hour = 0; hour < 24; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
-      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      const timeString = `${hour.toString().padStart(2, "0")}:${minute
+        .toString()
+        .padStart(2, "0")}`;
       options.push({ value: timeString, label: timeString });
     }
   }
@@ -112,7 +114,9 @@ const venueSettingsSchema = z.object({
     .or(z.literal("")),
   logoUrl: z.string().url("URL do logo inválida").optional().or(z.literal("")),
   logoFile: z.instanceof(File).optional(),
-  owners: z.array(z.string()).min(1, "Pelo menos um proprietário deve ser selecionado"),
+  owners: z
+    .array(z.string())
+    .min(1, "Pelo menos um proprietário deve ser selecionado"),
 });
 
 type VenueSettingsFormValues = z.infer<typeof venueSettingsSchema>;
@@ -147,12 +151,12 @@ export default function VenueSettings() {
       minimumPrice: "",
       state: "",
       cep: "",
-              checkIn: "",
-        checkOut: "",
-        openingHour: "",
-        closingHour: "",
-        standardEventDuration: "",
-        hasOvernightStay: false,
+      checkIn: "",
+      checkOut: "",
+      openingHour: "",
+      closingHour: "",
+      standardEventDuration: "",
+      hasOvernightStay: false,
       pricingModel: "PER_PERSON",
       pricePerPerson: "",
       pricePerDay: "",
@@ -202,7 +206,9 @@ export default function VenueSettings() {
         checkOut: selectedVenue.checkOut || "",
         openingHour: selectedVenue.openingHour || "",
         closingHour: selectedVenue.closingHour || "",
-        standardEventDuration: selectedVenue.standardEventDuration ? selectedVenue.standardEventDuration.toString() : "",
+        standardEventDuration: selectedVenue.standardEventDuration
+          ? selectedVenue.standardEventDuration.toString()
+          : "",
         whatsappNumber: selectedVenue.whatsappNumber || "",
         minimumPrice: selectedVenue.minimumPrice
           ? formatCurrency((selectedVenue.minimumPrice * 100).toString())
@@ -532,7 +538,44 @@ export default function VenueSettings() {
               )}
             />
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <FormField
+              control={form.control}
+              name="whatsappNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número do WhatsApp</FormLabel>
+                  <FormControl>
+                    <PhoneInput
+                      country={"br"}
+                      value={field.value}
+                      onChange={field.onChange}
+                      inputClass="w-full"
+                      placeholder="Digite o número"
+                      enableSearch={true}
+                      containerClass="w-full"
+                      inputStyle={{ width: "100%" }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
+            <FormField
+              control={form.control}
+              name="maxGuest"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Capacidade máxima (pessoas)*</FormLabel>
+                  <FormControl>
+                    <Input type="number" className="w-full" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           <FormField
             control={form.control}
             name="description"
@@ -540,10 +583,10 @@ export default function VenueSettings() {
               <FormItem>
                 <FormLabel>Descrição</FormLabel>
                 <FormControl>
-                  <Textarea 
-                    placeholder="Descreva o espaço, suas características e diferenciais..." 
+                  <Textarea
+                    placeholder="Descreva o espaço, suas características e diferenciais..."
                     className="min-h-[100px]"
-                    {...field} 
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
@@ -645,31 +688,6 @@ export default function VenueSettings() {
                     <FormLabel>CEP</FormLabel>
                     <FormControl>
                       <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-1 md:grid-2 gap-4 mt-4">
-              <FormField
-                control={form.control}
-                name="whatsappNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número do WhatsApp</FormLabel>
-                    <FormControl>
-                      <PhoneInput
-                        country={"br"}
-                        value={field.value}
-                        onChange={field.onChange}
-                        inputClass="w-full"
-                        placeholder="Digite o número"
-                        enableSearch={true}
-                        containerClass="w-full"
-                        inputStyle={{ width: "100%" }}
-                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -800,24 +818,7 @@ export default function VenueSettings() {
                   />
                 )}
               </div>
-
-              {/* Capacidade sozinha */}
-              <div className="grid grid-cols-1">
-                <FormField
-                  control={form.control}
-                  name="maxGuest"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Capacidade </FormLabel>
-                      <FormControl>
-                        <Input type="number" className="w-full" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-1">
+              <div className="w-full">
                 <FormField
                   control={form.control}
                   name="minimumPrice"
@@ -839,6 +840,9 @@ export default function VenueSettings() {
                   )}
                 />
               </div>
+
+              {/* Capacidade sozinha */}
+
               <div>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center justify-center">
                   <FormField
@@ -847,8 +851,8 @@ export default function VenueSettings() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Permite pernoite</FormLabel>
-                        <Select 
-                          value={field.value ? "true" : "false"} 
+                        <Select
+                          value={field.value ? "true" : "false"}
                           onValueChange={(value) => {
                             field.onChange(value === "true");
                             if (value === "false") {
@@ -880,7 +884,10 @@ export default function VenueSettings() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Check-in</FormLabel>
-                            <Select value={field.value} onValueChange={field.onChange}>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Selecione o horário" />
@@ -888,7 +895,10 @@ export default function VenueSettings() {
                               </FormControl>
                               <SelectContent>
                                 {timeOptions.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                  >
                                     {option.label}
                                   </SelectItem>
                                 ))}
@@ -904,7 +914,10 @@ export default function VenueSettings() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Check-out</FormLabel>
-                            <Select value={field.value} onValueChange={field.onChange}>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Selecione o horário" />
@@ -912,7 +925,10 @@ export default function VenueSettings() {
                               </FormControl>
                               <SelectContent>
                                 {timeOptions.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                  >
                                     {option.label}
                                   </SelectItem>
                                 ))}
@@ -950,7 +966,10 @@ export default function VenueSettings() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Horário de abertura</FormLabel>
-                            <Select value={field.value} onValueChange={field.onChange}>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Selecione o horário" />
@@ -958,7 +977,10 @@ export default function VenueSettings() {
                               </FormControl>
                               <SelectContent>
                                 {timeOptions.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                  >
                                     {option.label}
                                   </SelectItem>
                                 ))}
@@ -974,7 +996,10 @@ export default function VenueSettings() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Horário de fechamento</FormLabel>
-                            <Select value={field.value} onValueChange={field.onChange}>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Selecione o horário" />
@@ -982,36 +1007,11 @@ export default function VenueSettings() {
                               </FormControl>
                               <SelectContent>
                                 {timeOptions.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                  >
                                     {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="standardEventDuration"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              Duração padrão do evento (horas)
-                              <span className="block text-xs text-muted-foreground">    Selecione a quantidade de horas inclusas no valor do aluguel. O que exceder será considerado para o cálculo de horas extras.
-                              </span>
-                            </FormLabel>
-                            <Select value={field.value} onValueChange={field.onChange}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione a duração" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {[...Array(12)].map((_, i) => (
-                                  <SelectItem key={i + 1} value={(i + 1).toString()}>
-                                    {i + 1} hora{i > 0 ? "s" : ""}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -1023,6 +1023,43 @@ export default function VenueSettings() {
                     </>
                   )}
                 </div>
+              </div>
+              <div className="w-full">
+                <FormField
+                  control={form.control}
+                  name="standardEventDuration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Duração padrão do evento (horas)
+                        <span className="block text-xs text-muted-foreground">
+                          {" "}
+                          Selecione a quantidade de horas inclusas no valor do
+                          aluguel. O que exceder será considerado para o cálculo
+                          de horas extras.
+                        </span>
+                      </FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a duração" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {[...Array(12)].map((_, i) => (
+                            <SelectItem key={i + 1} value={(i + 1).toString()}>
+                              {i + 1} hora{i > 0 ? "s" : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               {/* Grid de 2 colunas: URLs (2 por linha no desktop) */}
@@ -1150,7 +1187,10 @@ export default function VenueSettings() {
                   <FormLabel>Selecione os proprietários do espaço</FormLabel>
                   <div className="space-y-3 mt-2">
                     {owners.map((owner) => (
-                      <div key={owner.id} className="flex items-center space-x-2">
+                      <div
+                        key={owner.id}
+                        className="flex items-center space-x-2"
+                      >
                         <Checkbox
                           id={`owner-${owner.id}`}
                           checked={field.value.includes(owner.id)}
@@ -1158,7 +1198,9 @@ export default function VenueSettings() {
                             if (checked) {
                               field.onChange([...field.value, owner.id]);
                             } else {
-                              field.onChange(field.value.filter((id) => id !== owner.id));
+                              field.onChange(
+                                field.value.filter((id) => id !== owner.id)
+                              );
                             }
                           }}
                         />

@@ -37,7 +37,9 @@ const generateTimeOptions = () => {
   const options = [];
   for (let hour = 0; hour < 24; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
-      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      const timeString = `${hour.toString().padStart(2, "0")}:${minute
+        .toString()
+        .padStart(2, "0")}`;
       options.push({ value: timeString, label: timeString });
     }
   }
@@ -72,7 +74,9 @@ const createVenueSchema = z.object({
       description: z.string().optional(),
       streetNumber: z.string().min(1, "Número é obrigatório"),
       neighborhood: z.string().min(1, "Bairro é obrigatório"),
-      owners: z.array(z.string()).min(1, "Pelo menos um proprietário deve ser selecionado"),
+      owners: z
+        .array(z.string())
+        .min(1, "Pelo menos um proprietário deve ser selecionado"),
       hasOvernightStay: z.boolean().default(false),
       complement: z.string().optional(),
       pricePerDay: z.string().optional(),
@@ -89,6 +93,7 @@ const createVenueSchema = z.object({
       whatsappNumber: z.string().optional(),
       minimumPrice: z.string().optional(),
       minimumNights: z.string().optional(),
+      standardEventDuration: z.string().optional(),
       tiktokUrl: z
         .string()
         .url("URL do TikTok inválida")
@@ -195,6 +200,7 @@ export function CreateVenueForm({
         whatsappNumber: "",
         minimumPrice: "",
         minimumNights: "",
+        standardEventDuration: "",
         tiktokUrl: "",
         instagramUrl: "",
         facebookUrl: "",
@@ -235,7 +241,7 @@ export function CreateVenueForm({
         checkIn: data.data.checkIn || undefined,
         maxGuest: data.data.maxGuest,
         checkOut: data.data.checkOut || undefined,
-        description: data.data.description || undefined, 
+        description: data.data.description || undefined,
         openingHour: data.data.openingHour || undefined,
         closingHour: data.data.closingHour || undefined,
         streetNumber: data.data.streetNumber.replace(/\D/g, ""),
@@ -244,14 +250,18 @@ export function CreateVenueForm({
         hasOvernightStay: data.data.hasOvernightStay,
         complement: data.data.complement || undefined,
         pricePerDay: data.data.pricePerDay?.replace(/\D/g, "") || undefined,
-        pricePerPerson: data.data.pricePerPerson?.replace(/\D/g, "") || undefined,
-        pricePerPersonDay: data.data.pricePerPersonDay?.replace(/\D/g, "") || undefined,
-        pricePerPersonHour: data.data.pricePerPersonHour?.replace(/\D/g, "") || undefined,
+        pricePerPerson:
+          data.data.pricePerPerson?.replace(/\D/g, "") || undefined,
+        pricePerPersonDay:
+          data.data.pricePerPersonDay?.replace(/\D/g, "") || undefined,
+        pricePerPersonHour:
+          data.data.pricePerPersonHour?.replace(/\D/g, "") || undefined,
         pricingModel: data.data.pricingModel,
         url: data.data.url || undefined,
         whatsappNumber: data.data.whatsappNumber || undefined,
         minimumPrice: data.data.minimumPrice?.replace(/\D/g, "") || undefined,
         minimumNights: data.data.minimumNights || undefined,
+        standardEventDuration: data.data.standardEventDuration || undefined,
         tiktokUrl: data.data.tiktokUrl || undefined,
         instagramUrl: data.data.instagramUrl || undefined,
         facebookUrl: data.data.facebookUrl || undefined,
@@ -362,7 +372,45 @@ export function CreateVenueForm({
             )}
           />
         </div>
-
+        <div className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="data.whatsappNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número do WhatsApp</FormLabel>
+                  <FormControl>
+                    <PhoneInput
+                      country={"br"}
+                      value={field.value}
+                      onChange={field.onChange}
+                      inputClass="w-full"
+                      placeholder="Digite o número"
+                      enableSearch={true}
+                      containerClass="w-full"
+                      inputStyle={{ width: "100%" }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="data.maxGuest"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Capacidade máxima (pessoas)*</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="Ex: 200" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
         {/* Descrição */}
         <FormField
           control={form.control}
@@ -421,6 +469,7 @@ export function CreateVenueForm({
                 </FormItem>
               )}
             />
+          
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -513,88 +562,110 @@ export function CreateVenueForm({
             />
           </div>
         </div>
-
-        {/* Horários */}
-        <div className="space-y-4">
-          <h3 className="font-semibold text-md">Horários</h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="data.hasOvernightStay"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Permite pernoite</FormLabel>
-                  <Select 
-                    value={field.value ? "true" : "false"} 
-                    onValueChange={(value) => field.onChange(value === "true")}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma opção" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="true">Sim</SelectItem>
-                      <SelectItem value="false">Não</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+        <div className="w-full">
+          <FormField
+            control={form.control}
+            name="data.hasOvernightStay"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Permite pernoite</FormLabel>
+                <Select
+                  value={field.value ? "true" : "false"}
+                  onValueChange={(value) => field.onChange(value === "true")}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma opção" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="true">Sim</SelectItem>
+                    <SelectItem value="false">Não</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* Horários */}
+          <div className="space-y-4 mt-4">
             {hasOvernightStay ? (
               <>
-                <FormField
-                  control={form.control}
-                  name="data.checkIn"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Check-in</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o horário" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {timeOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="data.checkIn"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Check-in</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o horário" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {timeOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="data.checkOut"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Check-out</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                  <FormField
+                    control={form.control}
+                    name="data.checkOut"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Check-out</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o horário" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {timeOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="data.minimumNights"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Noites mínimas</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o horário" />
-                          </SelectTrigger>
+                          <Input
+                            type="number"
+                            min={1}
+                            placeholder="1"
+                            {...field}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          {timeOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </>
             ) : (
               <>
@@ -604,7 +675,10 @@ export function CreateVenueForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Horário de abertura</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione o horário" />
@@ -629,7 +703,10 @@ export function CreateVenueForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Horário de fechamento</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione o horário" />
@@ -639,6 +716,42 @@ export function CreateVenueForm({
                           {timeOptions.map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="data.standardEventDuration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Duração padrão do evento (horas)
+                        <span className="block text-xs text-muted-foreground">
+                          {" "}
+                          Selecione a quantidade de horas inclusas no valor do
+                          aluguel. O que exceder será considerado para o cálculo
+                          de horas extras.
+                        </span>
+                      </FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a duração" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {[...Array(12)].map((_, i) => (
+                            <SelectItem key={i + 1} value={(i + 1).toString()}>
+                              {i + 1} hora{i > 0 ? "s" : ""}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -795,70 +908,8 @@ export function CreateVenueForm({
             )}
           </div>
         </div>
-
-        {/* Capacidade */}
-        <FormField
-          control={form.control}
-          name="data.maxGuest"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Capacidade máxima (pessoas)*</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="Ex: 200" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Informações Adicionais */}
-        <div className="space-y-4">
-          <h3 className="font-semibold text-md">Informações Adicionais</h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="data.url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL do Espaço</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="url"
-                      placeholder="https://exemplo.com"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="data.whatsappNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Número do WhatsApp</FormLabel>
-                  <FormControl>
-                    <PhoneInput
-                      country={"br"}
-                      value={field.value}
-                      onChange={field.onChange}
-                      inputClass="w-full"
-                      placeholder="Digite o número"
-                      enableSearch={true}
-                      containerClass="w-full"
-                      inputStyle={{ width: "100%" }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+     
+          <div className="w-full">
             <FormField
               control={form.control}
               name="data.minimumPrice"
@@ -884,29 +935,16 @@ export function CreateVenueForm({
                 </FormItem>
               )}
             />
-
-            {hasOvernightStay && (
-              <FormField
-                control={form.control}
-                name="data.minimumNights"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Noites mínimas</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={1} placeholder="1" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+          
           </div>
-        </div>
+      
+        {/* Capacidade */}
+       
 
         {/* Redes Sociais */}
         <div className="space-y-4">
           <h3 className="font-semibold text-md">Redes Sociais</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -963,43 +1001,60 @@ export function CreateVenueForm({
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
-              name="data.logoFile"
-              render={({ field: { value, onChange, ...field } }) => (
+              name="data.url"
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Logo do Espaço</FormLabel>
+                  <FormLabel>URL do Espaço</FormLabel>
                   <FormControl>
                     <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleLogoChange(e, onChange)}
+                      type="url"
+                      placeholder="https://exemplo.com"
                       {...field}
                     />
                   </FormControl>
-                  {logoPreview && (
-                    <div className="mt-2">
-                      <img
-                        src={logoPreview}
-                        alt="Logo do espaço"
-                        className="max-h-40 rounded border shadow"
-                        style={{ cursor: "pointer" }}
-                        onClick={() => window.open(logoPreview, "_blank")}
-                      />
-                    </div>
-                  )}
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
         </div>
-
+        <div className="w-full">
+          <FormField
+            control={form.control}
+            name="data.logoFile"
+            render={({ field: { value, onChange, ...field } }) => (
+              <FormItem>
+                <FormLabel>Logo do Espaço</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleLogoChange(e, onChange)}
+                    {...field}
+                  />
+                </FormControl>
+                {logoPreview && (
+                  <div className="mt-2">
+                    <img
+                      src={logoPreview}
+                      alt="Logo do espaço"
+                      className="max-h-40 rounded border shadow"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => window.open(logoPreview, "_blank")}
+                    />
+                  </div>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         {/* Proprietários */}
         <div className="space-y-4">
           <h3 className="font-semibold text-md">Proprietários</h3>
-          
+
           <FormField
             control={form.control}
             name="data.owners"
@@ -1016,7 +1071,9 @@ export function CreateVenueForm({
                           if (checked) {
                             field.onChange([...field.value, owner.id]);
                           } else {
-                            field.onChange(field.value.filter((id) => id !== owner.id));
+                            field.onChange(
+                              field.value.filter((id) => id !== owner.id)
+                            );
                           }
                         }}
                       />
