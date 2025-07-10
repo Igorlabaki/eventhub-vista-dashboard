@@ -4,7 +4,7 @@ import { Calendar } from "lucide-react";
 import { ProposalFooter } from "@/components/proposalFooter";
 import { useVenueStore } from "@/store/venueStore";
 import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
-import { PerDayProposalForm } from "@/components/proposal/forms/PerDayProposalForm";
+import { ClientPerDayProposalForm } from "@/components/proposal/forms/ClientPerDayProposalForm";
 import { PerPersonProposalForm } from "@/components/proposal/forms/PerPersonProposalForm";
 import { ClientPerPersonProposalForm } from "@/components/proposal/forms/ClientPerPersonProposalForm";
 
@@ -59,7 +59,7 @@ export function ProposalForm() {
 
         {/* Renderiza o formulário correto baseado no tipo de venue */}
         {selectedVenue && selectedVenue.hasOvernightStay ? (
-          <PerDayProposalForm venueId={id!} onBack={handleBack} />
+          <ClientPerDayProposalForm venueId={id!} onBack={handleBack} />
         ) : selectedVenue ? (
           <ClientPerPersonProposalForm venueId={id!} onBack={handleBack} />
         ) : (
