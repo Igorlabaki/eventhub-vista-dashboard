@@ -210,7 +210,7 @@ export function ClientPerDayProposalForm({
   return (
     <FormProvider {...form}>
       <form
-        className="space-y-4 bg-white p-4 rounded-lg"
+        className="space-y-4 bg-white p-4 rounded-lg shadow-lg"
         onSubmit={e => {
           e.preventDefault();
           form.handleSubmit(onSubmit)(e);

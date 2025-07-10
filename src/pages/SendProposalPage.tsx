@@ -44,7 +44,11 @@ export default function SendProposalPage() {
       return;
     }
     const numeroLimpo = currentProposal.whatsapp.replace(/\D/g, "");
-    const link = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(
+    
+    // Verifica se o número já tem código do país (55 para Brasil)
+    const numeroComCodigo = numeroLimpo.startsWith("55") ? numeroLimpo : `55${numeroLimpo}`;
+    
+    const link = `https://wa.me/${numeroComCodigo}?text=${encodeURIComponent(
       values.message
     )}`;
     window.open(link, "whatsapp");

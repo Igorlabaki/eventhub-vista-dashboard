@@ -8,7 +8,7 @@ import { useProposalStore } from "@/store/proposalStore";
 import { useUserStore } from "@/store/userStore";
 import { useVenueStore } from "@/store/venueStore";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
-
+import { parsePhoneNumberFromString } from 'libphonenumber-js'
 type FormValues = {
   message: string;
 };
@@ -25,9 +25,17 @@ export default function SendMessagePage() {
   });
 
   const onSubmit = (values: FormValues) => {
-    if (!currentProposal?.whatsapp) return;
-    const numeroLimpo = currentProposal.whatsapp.replace(/\D/g, "");
-    const link = `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(values.message)}`;
+    const numeroOriginal = currentProposal.whatsapp || "";
+    const numeroLimpo = numeroOriginal.replace(/\D/g, "");
+  
+    const numeroComPlus = numeroOriginal.startsWith('+') ? numeroOriginal : `+${numeroLimpo}`;
+    const phoneNumber = parsePhoneNumberFromString(numeroComPlus);
+  
+    const numeroFinal = phoneNumber && phoneNumber.isValid()
+      ? phoneNumber.number.replace('+', '')  // remove "+"
+      : `55${numeroLimpo}`; // fallback to Brazil
+  
+    const link = `https://wa.me/${numeroFinal}?text=${encodeURIComponent(values.message)}`;
     window.open(link, "whatsapp");
   };
 

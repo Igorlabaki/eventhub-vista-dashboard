@@ -79,7 +79,7 @@ export default function ProposalView() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen ">
       <main className="flex justify-start py-14 items-center bg-eventhub-background flex-col px-3 flex-1">
         <div className="flex items-center w-full justify-center mb-10">
           <Calendar className="h-8 w-8 text-eventhub-primary" />

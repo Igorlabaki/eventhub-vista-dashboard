@@ -312,7 +312,7 @@ export function ClientPerPersonProposalForm({
 
   return (
     <FormProvider {...form}>
-      <form className="space-y-4 bg-white p-4 rounded-lg">
+      <form className="space-y-4 bg-white p-4 rounded-lg shadow-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
