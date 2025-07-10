@@ -46,6 +46,7 @@ export function ContactSection({
       if (selectedContact) {
         response = await updateContact(selectedContact.id, {
           ...data,
+          email: data.email || undefined,
           venueId,
         });
         const { title, message } = handleBackendSuccess(response, "Contato atualizado com sucesso!");

@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ContactListSkeleton } from "./contact-list-skeleton";
 import { FilterList } from "@/components/filterList";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Pencil, Trash2 } from "lucide-react";
+import { Edit, Pencil, Trash2, Phone } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 
@@ -49,7 +49,7 @@ export function ContactList({ contacts, isLoading, onCreateClick, onEditClick, o
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Função</TableHead>
-                  <TableHead className="hidden md:table-cell">WhatsApp</TableHead>
+
                   <TableHead className="w-[100px] text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -72,9 +72,21 @@ export function ContactList({ contacts, isLoading, onCreateClick, onEditClick, o
                         {contact.role}
                       </span>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{contact.whatsapp}</TableCell>
+
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
+                      <button
+                          onClick={e => { 
+                            e.stopPropagation(); 
+                            const whatsappNumber = contact.whatsapp.replace(/\D/g, '');
+                            const whatsappUrl = `https://wa.me/${whatsappNumber}`;
+                            window.open(whatsappUrl, '_blank');
+                          }}
+                          className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
+                          title="Entrar em contato via WhatsApp"
+                        >
+                          <Phone className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={e => { e.stopPropagation(); onEditClick(contact); }}
                           className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
@@ -82,6 +94,7 @@ export function ContactList({ contacts, isLoading, onCreateClick, onEditClick, o
                         >
                            <Pencil className="h-4 w-4" />
                         </button>
+                       
                         <button
                           onClick={e => { e.stopPropagation(); setContactToDelete(contact); }}
                           className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"

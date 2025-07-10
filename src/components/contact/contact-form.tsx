@@ -11,12 +11,27 @@ import { useContactStore } from "@/store/contactStore";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useToast } from "@/hooks/use-toast";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
-import InputMask from "react-input-mask";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const contactFormSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   role: z.string().min(1, "Função é obrigatória"),
-  whatsapp: z.string().min(1, "WhatsApp é obrigatório"),
+  whatsapp: z.string()
+    .min(10, "WhatsApp é obrigatório")
+    .refine((val) => {
+      const onlyNumbers = val.replace(/\D/g, "");
+      // Deve ter entre 10 e 13 dígitos (Brasil)
+      if (onlyNumbers.length < 10 || onlyNumbers.length > 13) return false;
+      // Não pode ser sequência repetida (ex: 99999999999, 11111111111)
+      if (/^(\d)\1{7,}$/.test(onlyNumbers)) return false;
+      // Não pode começar com 0
+      if (/^0/.test(onlyNumbers)) return false;
+      // Não pode ser só DDD (ex: 11999999999 é válido, 1199999999 é inválido)
+      return true;
+    }, {
+      message: "Número de WhatsApp inválido",
+    }),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   type: z.nativeEnum(ContactType).optional(),
 });
@@ -36,7 +51,7 @@ export function ContactForm({ contact, onSubmit, onCancel }: ContactFormProps) {
       name: contact?.name || "",
       role: contact?.role || "",
       whatsapp: contact?.whatsapp || "",
-      email: contact?.email || "",
+      email: contact?.email || undefined,
       type: contact?.type || ContactType.TEAM_MEMBER,
     },
   });
@@ -125,15 +140,16 @@ export function ContactForm({ contact, onSubmit, onCancel }: ContactFormProps) {
           <FormItem>
             <FormLabel>WhatsApp</FormLabel>
             <FormControl>
-              <InputMask
-                mask="(99) 99999-9999"
+              <PhoneInput
+                country={"br"}
                 value={field.value}
                 onChange={field.onChange}
-              >
-                {(inputProps: React.InputHTMLAttributes<HTMLInputElement>) => (
-                  <Input placeholder="(00) 00000-0000" {...inputProps} />
-                )}
-              </InputMask>
+                inputClass="w-full"
+                placeholder="Digite o número"
+                enableSearch={true}
+                containerClass="w-full"
+                inputStyle={{ width: "100%" }}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
