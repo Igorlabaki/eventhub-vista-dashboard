@@ -21,6 +21,7 @@ export interface Venue {
   neighborhood: string;
   city: string;
   state: string;
+  standardEventDuration?: number | null;
   checkIn?: string | null;
   checkOut?: string | null;
   cep: string;
@@ -86,6 +87,7 @@ export interface CreateVenueDTO {
   maxGuest: string;
   checkOut?: string;
   streetNumber: string;
+  standardEventDuration?: string;
   neighborhood: string;
   owners: string[];
   hasOvernightStay: boolean;
@@ -121,6 +123,7 @@ export interface UpdateVenueDTO {
   closingHour?: string;
   facebookUrl?: string;
   logoUrl?: string;
+  standardEventDuration?: string;
   logoFile?: File;
   maxGuest?: string;
   checkOut?: string;

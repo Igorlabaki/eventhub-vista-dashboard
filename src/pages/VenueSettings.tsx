@@ -79,6 +79,7 @@ const venueSettingsSchema = z.object({
   cep: z.string().min(1, "CEP é obrigatório"),
   checkIn: z.string().optional(),
   checkOut: z.string().optional(),
+  standardEventDuration: z.string().optional(),
   openingHour: z.string().optional(),
   closingHour: z.string().optional(),
   hasOvernightStay: z.boolean(),
@@ -150,6 +151,7 @@ export default function VenueSettings() {
         checkOut: "",
         openingHour: "",
         closingHour: "",
+        standardEventDuration: "",
         hasOvernightStay: false,
       pricingModel: "PER_PERSON",
       pricePerPerson: "",
@@ -200,6 +202,7 @@ export default function VenueSettings() {
         checkOut: selectedVenue.checkOut || "",
         openingHour: selectedVenue.openingHour || "",
         closingHour: selectedVenue.closingHour || "",
+        standardEventDuration: selectedVenue.standardEventDuration ? selectedVenue.standardEventDuration.toString() : "",
         whatsappNumber: selectedVenue.whatsappNumber || "",
         minimumPrice: selectedVenue.minimumPrice
           ? formatCurrency((selectedVenue.minimumPrice * 100).toString())
@@ -300,39 +303,40 @@ export default function VenueSettings() {
 
     try {
       const response = await updateVenue({
-        venueId: selectedVenue.id,
+        url: data.url,
+        cep: data.cep,
+        city: data.city,
         userId: user.id,
         name: data.name,
-        email: data.email,
-        description: data.description,
-        url: data.url,
-        minimumNights: data.minimumNights,
-        street: data.street,
-        streetNumber: data.streetNumber,
-        complement: data.complement,
-        neighborhood: data.neighborhood,
-        city: data.city,
-        minimumPrice: minimumPrice || undefined,
-        whatsappNumber: data.whatsappNumber,
         state: data.state,
-        cep: data.cep,
+        email: data.email,
+        street: data.street,
+        owners: data.owners,
+        logoUrl: data.logoUrl,
         checkIn: data.checkIn,
         checkOut: data.checkOut,
-        openingHour: data.openingHour,
-        closingHour: data.closingHour,
-        hasOvernightStay: data.hasOvernightStay,
-        pricingModel: data.pricingModel,
-        pricePerPerson: pricePerPerson || undefined,
-        pricePerDay: pricePerDay || undefined,
-        pricePerPersonDay: pricePerPersonDay || undefined,
-        pricePerPersonHour: pricePerPersonHour || undefined,
+        logoFile: data.logoFile,
         maxGuest: data.maxGuest,
         tiktokUrl: data.tiktokUrl,
-        instagramUrl: data.instagramUrl,
+        venueId: selectedVenue.id,
+        complement: data.complement,
         facebookUrl: data.facebookUrl,
-        logoUrl: data.logoUrl,
-        logoFile: data.logoFile,
-        owners: data.owners,
+        description: data.description,
+        openingHour: data.openingHour,
+        closingHour: data.closingHour,
+        streetNumber: data.streetNumber,
+        neighborhood: data.neighborhood,
+        pricingModel: data.pricingModel,
+        instagramUrl: data.instagramUrl,
+        minimumNights: data.minimumNights,
+        whatsappNumber: data.whatsappNumber,
+        pricePerDay: pricePerDay || undefined,
+        minimumPrice: minimumPrice || undefined,
+        hasOvernightStay: data.hasOvernightStay,
+        pricePerPerson: pricePerPerson || undefined,
+        standardEventDuration: data.standardEventDuration,
+        pricePerPersonDay: pricePerPersonDay || undefined,
+        pricePerPersonHour: pricePerPersonHour || undefined,
       });
 
       const { title, message } = handleBackendSuccess(
@@ -836,7 +840,7 @@ export default function VenueSettings() {
                 />
               </div>
               <div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center justify-center">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center justify-center">
                   <FormField
                     control={form.control}
                     name="hasOvernightStay"
@@ -980,6 +984,34 @@ export default function VenueSettings() {
                                 {timeOptions.map((option) => (
                                   <SelectItem key={option.value} value={option.value}>
                                     {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="standardEventDuration"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Duração padrão do evento (horas)
+                              <span className="block text-xs text-muted-foreground">    Selecione a quantidade de horas inclusas no valor do aluguel. O que exceder será considerado para o cálculo de horas extras.
+                              </span>
+                            </FormLabel>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione a duração" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {[...Array(12)].map((_, i) => (
+                                  <SelectItem key={i + 1} value={(i + 1).toString()}>
+                                    {i + 1} hora{i > 0 ? "s" : ""}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
