@@ -24,7 +24,7 @@ interface EmailTabProps {
   venueUrl?: string;
   venueName?: string;
   form: UseFormReturn<{
-    message?: string;
+    message: string;
     file?: File | null;
   }>;
 }

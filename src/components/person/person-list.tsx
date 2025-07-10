@@ -15,6 +15,7 @@ import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { Person, PersonType } from "@/types/person";
 import { useVenueStore } from "@/store/venueStore";
 import { FilterList } from "@/components/filterList";
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 interface PersonListProps {
   persons: Person[];
@@ -63,8 +64,19 @@ export function PersonList({
       ? `Segue o link para registrar os convidados do seu evento: ${link}`
       : `Segue o link para registrar os colaboradores do seu evento: ${link}`
   );
+  
+  // Tratamento do número de WhatsApp usando libphonenumber-js
+  const numeroOriginal = whatsapp || "";
+  const numeroLimpo = numeroOriginal.replace(/\D/g, "");
+  const numeroComPlus = numeroOriginal.startsWith('+') ? numeroOriginal : `+${numeroLimpo}`;
+  const phoneNumber = parsePhoneNumberFromString(numeroComPlus);
+  
+  const numeroFinal = phoneNumber && phoneNumber.isValid()
+    ? phoneNumber.number.replace('+', '')  // remove "+"
+    : `55${numeroLimpo}`; // fallback to Brazil
+  
   const whatsappUrl = whatsapp
-    ? `https://wa.me/+55${whatsapp.replace(/\D/g, "")}?text=${whatsappMsg}`
+    ? `https://wa.me/${numeroFinal}?text=${whatsappMsg}`
     : `https://wa.me/?text=${whatsappMsg}`;
 
   if (isLoading) {

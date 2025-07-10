@@ -55,6 +55,8 @@ import GuestListPage from "./pages/GuestList";
 import WorkerListPage from "./pages/WorkerList";
 import ProposalView from "./pages/ProposalView";
 import { ProposalForm } from "./pages/ProposalForm";
+import { ScheduleSection } from "./components/schedule/schedule-section";
+import ProposalSchedulePage from "./pages/ProposalSchedule";
 
 const queryClient = new QueryClient();
 
@@ -120,9 +122,8 @@ const App = () => {
               <Route path="/proposal/:id/dates" element={<ProtectedRoute><DateEventListPage /></ProtectedRoute>} />
               <Route path="/proposal/:id/payment" element={<ProtectedRoute><ProposalPayment /></ProtectedRoute>} />
               <Route path="/proposal/:id/attendance-list" element={<ProtectedRoute><ProposalAttendanceListPage /></ProtectedRoute>} />
-              <Route path="/proposal/:id/program" element={<ProtectedRoute><ScheduleListPage /></ProtectedRoute>} />
               <Route path="/proposal/:id/documents" element={<ProtectedRoute><ProposalDocuments /></ProtectedRoute>} />
-              <Route path="/proposal/:id/schedule" element={<ProtectedRoute><ScheduleListPage /></ProtectedRoute>} />
+              <Route path="/proposal/:id/schedule" element={<ProtectedRoute><ProposalSchedulePage /></ProtectedRoute>} />
               <Route path="/proposal/:id/send-message" element={<ProtectedRoute><SendMessagePage /></ProtectedRoute>} />
               <Route path="/proposal/:id/send-proposal" element={<ProtectedRoute><SendProposalPage /></ProtectedRoute>} />
               <Route path="/proposal/:id/contract" element={<ProtectedRoute><ProposalContract /></ProtectedRoute>} />

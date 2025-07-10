@@ -15,7 +15,7 @@ import { useProposalStore } from "@/store/proposalStore";
 import { useVenueStore } from "@/store/venueStore";
 import { useUserStore } from "@/store/userStore";
 import { CreateEmailConfigWithFileDTO } from "@/services/emailConfig.service";
-
+import { parsePhoneNumberFromString } from 'libphonenumber-js'
 type FormValues = {
   message: string;
   file?: File | null;
@@ -38,19 +38,18 @@ export default function SendProposalPage() {
     },
   });
 
-  const onSubmitWhatsApp = (values: FormValues) => {
-    if (!currentProposal?.whatsapp) {
-      toast.error("Número de WhatsApp não encontrado");
-      return;
-    }
-    const numeroLimpo = currentProposal.whatsapp.replace(/\D/g, "");
-    
-    // Verifica se o número já tem código do país (55 para Brasil)
-    const numeroComCodigo = numeroLimpo.startsWith("55") ? numeroLimpo : `55${numeroLimpo}`;
-    
-    const link = `https://wa.me/${numeroComCodigo}?text=${encodeURIComponent(
-      values.message
-    )}`;
+  const onSubmit = (values: FormValues) => {
+    const numeroOriginal = currentProposal.whatsapp || "";
+    const numeroLimpo = numeroOriginal.replace(/\D/g, "");
+  
+    const numeroComPlus = numeroOriginal.startsWith('+') ? numeroOriginal : `+${numeroLimpo}`;
+    const phoneNumber = parsePhoneNumberFromString(numeroComPlus);
+  
+    const numeroFinal = phoneNumber && phoneNumber.isValid()
+      ? phoneNumber.number.replace('+', '')  // remove "+"
+      : `55${numeroLimpo}`; // fallback to Brazil
+  
+    const link = `https://wa.me/${numeroFinal}?text=${encodeURIComponent(values.message)}`;
     window.open(link, "whatsapp");
   };
 
@@ -104,7 +103,7 @@ export default function SendProposalPage() {
               form={form}
               title="Mensagem do Orçamento"
               onSubmit={
-                activeTab === "whatsapp" ? onSubmitWhatsApp : onSubmitEmail
+                activeTab === "whatsapp" ? onSubmit : onSubmitEmail
               }
               onCancel={() => window.history.back()}
               submitLabel="Enviar"
