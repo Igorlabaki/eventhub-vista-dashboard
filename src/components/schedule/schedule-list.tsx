@@ -15,7 +15,7 @@ import { Schedule } from "@/types/schedule";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { useProposalStore } from "@/store/proposalStore";
 import { useVenueStore } from "@/store/venueStore";
-
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 interface ScheduleListProps {
   schedules: Schedule[];
   onDeleteSchedule: (schedule: Schedule) => void;
@@ -53,9 +53,20 @@ export function ScheduleList({
   const whatsappMsg = encodeURIComponent(
     `Olá! Segue o link para acessar a programação do evento: ${programacaoLink}`
   );
-  const whatsappUrl = programacaoLink
-    ? `https://wa.me/?text=${whatsappMsg}`
-    : undefined;
+
+    const numeroOriginal = selectedVenue.whatsappNumber || "";
+    const numeroLimpo = numeroOriginal.replace(/\D/g, "");
+    const numeroComPlus = numeroOriginal.startsWith('+') ? numeroOriginal : `+${numeroLimpo}`;
+    const phoneNumber = parsePhoneNumberFromString(numeroComPlus);
+    
+    const numeroFinal = phoneNumber && phoneNumber.isValid()
+      ? phoneNumber.number.replace('+', '')  // remove "+"
+      : `55${numeroLimpo}`; // fallback to Brazil
+    
+    const whatsappUrl = numeroFinal
+      ? `https://wa.me/${numeroFinal}?text=${whatsappMsg}`
+      : `https://wa.me/?text=${whatsappMsg}`;
+  
 
   const formatTime = (time: string) => {
     if (!time) return "";
@@ -72,12 +83,24 @@ export function ScheduleList({
 
   if (!Array.isArray(schedules) || schedules.length === 0) {
     return (
-      <EmptyState
-        title={emptyMessage}
-        description="Crie um novo cronograma para começar a organizar suas atividades."
-        actionText="Novo Cronograma"
-        onAction={onCreateClick || (() => {})}
-      />
+      <div className="flex flex-col items-center justify-center w-full">
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center px-4 py-2  
+        text-blue-600 hover:text:black hover:underline 
+        transition-colors text-sm"
+        >
+          Eviar link para o cliente
+        </a>
+        <EmptyState
+          title={emptyMessage}
+          description="Crie um novo cronograma para começar a organizar suas atividades."
+          actionText="Novo Cronograma"
+          onAction={onCreateClick || (() => {})}
+        />
+      </div>
     );
   }
 
