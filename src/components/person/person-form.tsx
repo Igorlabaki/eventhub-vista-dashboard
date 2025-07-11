@@ -197,33 +197,6 @@ export function PersonForm({
           </FormItem>
         )}
       />
-
-      <FormField
-        control={form.control}
-        name="attendance"
-        render={({ field }) => (
-          <FormItem className="">
-            <FormControl>
-              <button
-                type="button"
-                className={`px-4 py-2 rounded text-white ${field.value ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
-                disabled={isSubmitting}
-                onClick={async () => {
-                  const newValue = !field.value;
-                  form.setValue('attendance', newValue, { shouldDirty: true });
-                  await handleSubmit({
-                    ...form.getValues(),
-                    attendance: newValue,
-                  });
-                }}
-              >
-                {field.value ? 'Cancelar Presença' : 'Confirmar Presença'}
-              </button>
-            </FormControl>
-           
-          </FormItem>
-        )}
-      />
     </FormLayout>
   );
 }
