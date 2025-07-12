@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   Edit,
@@ -14,6 +15,8 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { Proposal } from "@/types/proposal";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { proposalViewPermissions, proposalEditPermissions, Permissions } from "@/types/permissions";
 
 interface ProposalNavProps {
   isCollapsed: boolean;
@@ -26,6 +29,7 @@ interface NavItem {
   href?: string;
   action?: () => void;
   icon: React.ElementType;
+  permissionRequired?: Permissions;
 }
 
 export function ProposalNav({
@@ -34,64 +38,110 @@ export function ProposalNav({
   proposal,
 }: ProposalNavProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentUserPermission } = useUserPermissionStore();
 
   const proposalNavItems: NavItem[] = [
     {
       title: "Visão Geral",
       href: `/proposal/${proposal?.id}`,
       icon: LayoutDashboard,
+      permissionRequired: Permissions.VIEW_PROPOSAL_INFO,
     },
     {
       title: "Editar",
       href: `/proposal/${proposal?.id}/edit`,
       icon: Edit,
+      permissionRequired: Permissions.EDIT_PROPOSAL,
     },
     {
       title: "Ver Histórico",
       href: `/proposal/${proposal?.id}/history`,
       icon: Clock,
+      permissionRequired: Permissions.VIEW_HISTORY,
     },
     {
       title: "Entrar em contato",
       href: `/proposal/${proposal?.id}/send-message`,
       icon: MessageCircle,
+      permissionRequired: Permissions.SEND_CLIENT,
     },
     {
       title: "Enviar Orçamento",
       href: `/proposal/${proposal?.id}/send-proposal`,
       icon: Send,
+      permissionRequired: Permissions.SEND_CLIENT,
     },
     {
       title: "Enviar Contrato",
       href: `/proposal/${proposal?.id}/contract`,
       icon: FileText,
+      permissionRequired: Permissions.SEND_CLIENT,
     },
     {
       title: "Agendar Data",
       href: `/proposal/${proposal?.id}/dates`,
       icon: Calendar,
+      permissionRequired: Permissions.VIEW_DATES,
     },
     {
       title: "Efetuar Pagamento",
       href: `/proposal/${proposal?.id}/payment`,
       icon: DollarSign,
+      permissionRequired: Permissions.VIEW_PAYMENTS,
     },
     {
       title: "Lista de Presença",
       href: `/proposal/${proposal?.id}/attendance-list`,
       icon: Users,
+      permissionRequired: Permissions.VIEW_ATTENDANCE_LIST,
     },
     {
       title: "Programação",
       href: `/proposal/${proposal?.id}/schedule`,
       icon: List,
+      permissionRequired: Permissions.VIEW_SCHEDULE,
     },
     {
       title: "Documentos",
       href: `/proposal/${proposal?.id}/documents`,
       icon: Clipboard,
+      permissionRequired: Permissions.VIEW_DOCUMENTS,
     },
   ];
+
+  // Função para verificar se o usuário tem a permissão necessária
+  const hasPermission = (requiredPermission?: Permissions) => {
+    if (!requiredPermission) return true; // Se não há permissão requerida, permite acesso
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes(requiredPermission);
+  };
+
+  // Filtrar itens baseado nas permissões
+  const filteredNavItems = proposalNavItems.filter(item => 
+    hasPermission(item.permissionRequired)
+  );
+
+  // Verificar se a página atual é acessível e redirecionar se necessário
+  useEffect(() => {
+    if (!proposal?.id || !currentUserPermission?.permissions) return;
+
+    const currentPath = location.pathname;
+    const currentItem = proposalNavItems.find(item => item.href === currentPath);
+    
+    // Se a página atual não existe ou o usuário não tem permissão
+    if (!currentItem || !hasPermission(currentItem.permissionRequired)) {
+      // Encontrar a primeira página disponível
+      const firstAvailableItem = proposalNavItems.find(item => 
+        hasPermission(item.permissionRequired)
+      );
+      
+      // Redirecionar para a primeira página disponível
+      if (firstAvailableItem) {
+        navigate(firstAvailableItem.href);
+      }
+    }
+  }, [location.pathname, currentUserPermission?.permissions, proposal?.id]);
 
   return (
     <div className="pt-3 pb-1">
@@ -101,7 +151,7 @@ export function ProposalNav({
         </div>
       )}
 
-      {proposalNavItems.map((item) =>
+      {filteredNavItems.map((item) =>
         item.href ? (
           <Link
             key={item.href}

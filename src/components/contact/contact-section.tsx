@@ -9,12 +9,14 @@ import { EmptyState } from "@/components/EmptyState";
 import { ContactListSkeleton } from "./contact-list-skeleton";
 import { ContactList } from "./contact-list";
 import { ContactForm } from "./contact-form";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
 
 interface ContactSectionProps {
   contacts?: Contact[];
   venueId: string;
   isLoading: boolean;
   isCreating: boolean;
+  hasPermission: boolean;
   selectedContact: Contact | null | undefined;
   setSelectedContact: (contact: Contact | null | undefined) => void;
   onCreateClick: () => void;
@@ -26,6 +28,7 @@ export function ContactSection({
   venueId,
   isLoading,
   isCreating,
+  hasPermission,
   selectedContact,
   setSelectedContact,
   onCreateClick,
@@ -77,6 +80,7 @@ export function ContactSection({
     }
   };
 
+
   const showForm = isCreating || !!selectedContact;
 
   return (
@@ -85,6 +89,7 @@ export function ContactSection({
         showForm={showForm}
         list={
           <ContactList
+            hasPermission={hasPermission}
             contacts={contacts}
             isLoading={isLoading}
             onCreateClick={onCreateClick}

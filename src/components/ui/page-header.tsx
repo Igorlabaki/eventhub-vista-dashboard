@@ -12,6 +12,7 @@ interface Tab {
 interface PageHeaderProps {
   tabs: Tab[];
   activeTab: string;
+  hasPermission: boolean;
   onTabChange: (tab: string) => void;
   onActionClick: () => void;
   isFormOpen?: boolean;
@@ -23,6 +24,7 @@ export function PageHeader({
   tabs,
   activeTab,
   onTabChange,
+  hasPermission,
   onActionClick,
   isFormOpen = false,
   actionButtonLabel,
@@ -47,7 +49,7 @@ export function PageHeader({
             </TabsTrigger>
           ))}
         </TabsList>
-        {!isFormOpen && (
+        {!isFormOpen && hasPermission && (
           <Button
             className="shadow-lg flex-row items-center gap-2 bg-eventhub-primary hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-all duration-200 hidden md:flex"
             onClick={onActionClick}
@@ -58,7 +60,7 @@ export function PageHeader({
         )}
       </div>
       {/* Botão flutuante mobile via Portal para ficar sempre fixo no viewport */}
-      {!isFormOpen && createPortal(
+      {!isFormOpen && hasPermission && createPortal(
         <button
           className="fixed bottom-6 right-6 z-50 md:hidden bg-eventhub-primary hover:bg-indigo-600 text-white rounded-full shadow-lg p-4 flex items-center justify-center transition-all duration-200"
           onClick={onActionClick}

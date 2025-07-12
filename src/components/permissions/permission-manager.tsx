@@ -25,7 +25,8 @@ import { useUpdateUserPermissionMutations } from "@/hooks/permissions/mutation/u
 import { showSuccessToast } from "../ui/success-toast";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { useDeleteUserPermissionMutations } from "@/hooks/permissions/mutation/delete";
-import { useUserPermissionStore } from '@/store/userPermissionStore';
+import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { generalPermissions } from "@/types/permissions";
 
 // Interface que define a estrutura de uma permissão
 interface Permission {
@@ -39,9 +40,12 @@ interface PermissionManagerProps {
   userName: string; // Nome do usuário para exibição
   venueId: string; // ID do local (venue) onde as permissões serão aplicadas
   venueName: string; // Nome do local para exibição
-  viewPermissions: Permission[]; // Lista de permissões de visualização disponíveis
-  editPermissions: Permission[]; // Lista de permissões de edição disponíveis
-  proposalPermissions: Permission[]; // Lista de permissões relacionadas a eventos/orçamentos
+  venueViewPermissions: Permission[]; // Lista de permissões de visualização disponíveis
+  venueEditPermissions: Permission[]; // Lista de permissões de edição disponíveis
+  proposalViewPermissions: Permission[]; // Lista de permissões relacionadas a eventos/orçamentos
+  proposalEditPermissions: Permission[]; // Lista de permissões relacionadas a eventos/orçamentos
+  organizationPermissions: Permission[];
+  organizationEditPermissions: Permission[];
   userPermissions: {
     [userId: string]: {
       [venueId: string]: {
@@ -62,10 +66,13 @@ export function PermissionManager({
   userName,
   venueId,
   venueName,
-  viewPermissions,
-  editPermissions,
-  proposalPermissions,
+  venueViewPermissions,
+  venueEditPermissions,
+  proposalViewPermissions,
   userPermissions,
+  organizationPermissions,
+  organizationEditPermissions,
+  proposalEditPermissions,
   onGoBack,
   onSavePermissions,
   userPermissionId,
@@ -73,7 +80,12 @@ export function PermissionManager({
   userOrganizationId,
 }: PermissionManagerProps) {
   const { toast } = useToast();
-  const { createUserPermission, updateUserPermission, deleteUserPermission, isLoading } = useUserPermissionStore();
+  const {
+    createUserPermission,
+    updateUserPermission,
+    deleteUserPermission,
+    isLoading,
+  } = useUserPermissionStore();
 
   // Hook que processa e formata as permissões do usuário para o local específico
   const userVenuePermissions = React.useMemo(() => {
@@ -98,10 +110,14 @@ export function PermissionManager({
         permissions = userVenue.permissions;
       }
     }
-    const hasAllPermissions = permissions.length === (
-      viewPermissions.length + editPermissions.length + proposalPermissions.length
-    );
-    return (permissions.includes("admin") || hasAllPermissions) ? "admin" : "user";
+    const hasAllPermissions =
+      permissions.length ===
+      venueViewPermissions.length +
+      venueEditPermissions.length +
+      proposalViewPermissions.length;
+    return permissions.includes("admin") || hasAllPermissions
+      ? "admin"
+      : "user";
   });
 
   // Estado para armazenar as permissões temporárias
@@ -125,9 +141,13 @@ export function PermissionManager({
     if (newRole === "admin") {
       // Se for admin, concede todas as permissões
       const allPermissions = [
-        ...viewPermissions.map((p) => p.enum),
-        ...editPermissions.map((p) => p.enum),
-        ...proposalPermissions.map((p) => p.enum),
+        ...venueViewPermissions.map((p) => p.enum),
+        ...venueEditPermissions.map((p) => p.enum),
+        ...proposalViewPermissions.map((p) => p.enum),
+        ...proposalEditPermissions.map((p) => p.enum),
+        ...generalPermissions.map((p) => p.enum), 
+        ...organizationPermissions.map((p) => p.enum),
+        ...organizationEditPermissions.map((p) => p.enum),
       ];
       setTempPermissions(allPermissions);
     } else {
@@ -170,22 +190,25 @@ export function PermissionManager({
 
   // Função que renderiza uma seção de permissões
   const renderPermissionSection = (
-    sectionTitle: string,
+    mode: "VIEW" | "EDIT",
     permissionsList: Permission[]
   ) => (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800">{sectionTitle}</h3>
-      <Table className="bg-white rounded-md shadow-lg">
-        <TableHeader>
+    <div className="space-y-4 mt-2">
+      <Table className="bg-white rounded-md shadow-lg overflow-hidden">
+        <TableHeader className="bg-eventhub-primary ">
           <TableRow>
-            <TableHead>Permissão</TableHead>
-            <TableHead className="w-[100px] text-center">Status</TableHead>
+            <TableHead className="text-white">
+              {mode === "VIEW" ? "Visualização" : "Edição"}
+            </TableHead>
+            <TableHead className="w-[100px] text-center text-white">
+              Status
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {permissionsList.map((permission) => {
             const isEnabled = hasPermission(permission.enum);
-            
+
             return (
               <TableRow key={permission.enum}>
                 <TableCell className="font-medium">
@@ -223,7 +246,8 @@ export function PermissionManager({
         await updateUserPermission(updateData, organizationId || "");
         showSuccessToast({
           title: "Permissão atualizada!",
-          description: "As permissões do usuário foram atualizadas com sucesso.",
+          description:
+            "As permissões do usuário foram atualizadas com sucesso.",
         });
       } else {
         // CREATE
@@ -310,8 +334,8 @@ export function PermissionManager({
           <CardContent>
             <div className="flex items-center gap-4">
               <Label className="text-sm font-medium">Papel do usuário:</Label>
-              <Select 
-                value={role} 
+              <Select
+                value={role}
                 onValueChange={(value) => {
                   handleRoleChange(value);
                 }}
@@ -329,18 +353,35 @@ export function PermissionManager({
         </Card>
 
         <div className="space-y-8">
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">Organização</h2>
+            {/* View Permissions Section */}
+            {renderPermissionSection("VIEW", organizationPermissions)}
+            {renderPermissionSection("EDIT", organizationEditPermissions)}
+          </div>
+
           {/* View Permissions Section */}
-          {renderPermissionSection("Permissões de Visualização", viewPermissions)}
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">Espaços</h2>
+            {renderPermissionSection("VIEW", venueViewPermissions)}
+            {renderPermissionSection("EDIT", venueEditPermissions)}
+          </div>
+
 
           {/* Edit Permissions Section */}
-          {renderPermissionSection("Permissões de Edição", editPermissions)}
 
           {/* Proposal Permissions Section */}
-          {renderPermissionSection(
-            "Permissões de Eventos / Orçamentos",
-            proposalPermissions
-          )}
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">Orçamentos</h2>
+            {renderPermissionSection("VIEW", proposalViewPermissions)}
+            {renderPermissionSection("EDIT", proposalEditPermissions)}
+          </div>
 
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">Geral</h2>
+            {renderPermissionSection("VIEW", generalPermissions)}
+          </div>
+        
           <div className="mt-8">
             <Button
               className="w-full"

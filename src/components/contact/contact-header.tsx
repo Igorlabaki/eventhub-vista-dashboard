@@ -3,6 +3,7 @@ import React from "react";
 
 interface ContactHeaderProps {
   activeTab: string;
+  hasPermission: boolean;
   onTabChange: (tab: string) => void;
   onActionClick: () => void;
   isFormOpen: boolean;
@@ -11,6 +12,7 @@ interface ContactHeaderProps {
 export function ContactHeader({
   activeTab,
   onTabChange,
+  hasPermission,
   onActionClick,
   isFormOpen = false,
 }: ContactHeaderProps) {
@@ -23,6 +25,7 @@ export function ContactHeader({
   return (
     <PageHeader
       tabs={tabs}
+      hasPermission={hasPermission}
       activeTab={activeTab}
       onTabChange={onTabChange}
       onActionClick={onActionClick}

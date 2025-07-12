@@ -7,7 +7,11 @@ import { PersonType } from "@/types/person";
 import { useParams } from "react-router-dom";
 import { PersonSection } from "../person/person-section";
 
-export function ProposalAttendanceList() {
+interface ProposalAttendanceListProps {
+  hasEditPermission: boolean;
+}
+
+export function ProposalAttendanceList({ hasEditPermission }: ProposalAttendanceListProps) {
   const { id: proposalId } = useParams();
   const [activeTab, setActiveTab] = useState<PersonType>(PersonType.GUEST);
   const [isCreating, setIsCreating] = useState(false);
@@ -63,7 +67,7 @@ export function ProposalAttendanceList() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          {!isCreating && !selectedPerson && (
+          {!isCreating && !selectedPerson && hasEditPermission && (
             <Button
               className="
                 bg-eventhub-primary hover:bg-indigo-600 text-white md:my-0
@@ -77,7 +81,7 @@ export function ProposalAttendanceList() {
           )}
         </div>
         {/* Botão flutuante mobile */}
-        {!isCreating && !selectedPerson && (
+        {!isCreating && !selectedPerson && hasEditPermission && (
           <button
             className="fixed bottom-6 right-6 z-50 md:hidden bg-eventhub-primary hover:bg-indigo-6000 text-white rounded-full shadow-lg p-4 flex items-center justify-center transition-all duration-200"
             onClick={handleCreateClick}

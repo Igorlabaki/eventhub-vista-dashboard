@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Contact as ContactIcon, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { useContactStore } from "@/store/contactStore";
 import { ContactType, type Contact } from "@/types/contact";
 import { ContactSection } from "@/components/contact/contact-section";
 import { ContactHeader } from "@/components/contact/contact-header";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 export default function VenueContacts() {
   const { id: venueId } = useParams<{ id: string }>();
@@ -18,7 +20,8 @@ export default function VenueContacts() {
   const [isCreatingContact, setIsCreatingContact] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null | undefined>(undefined);
   const { contacts, isLoading, fetchContacts } = useContactStore();
-
+  const { currentUserPermission } = useUserPermissionStore();
+  
   useEffect(() => {
     if (venueId) {
       fetchContacts(venueId);
@@ -27,6 +30,16 @@ export default function VenueContacts() {
 
   const handleCreateContact = () => {
     setIsCreatingContact(true);
+  };
+
+  const hasViewPermission = () => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes("VIEW_CONTACTS");
+  };
+
+  const hasEditPermission = () => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes("EDIT_CONTACTS");
   };
 
   const getFilteredContacts = () => {
@@ -48,10 +61,17 @@ export default function VenueContacts() {
     return filtered;
   };
 
+  if(!hasViewPermission()) {
+    return <DashboardLayout title="Contatos" subtitle="Gerencie os contatos do espaço">
+     <AccessDenied />
+    </DashboardLayout>
+  }
+
   return (
     <DashboardLayout title="Contatos" subtitle="Gerencie os contatos do espaço">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <ContactHeader
+          hasPermission={hasEditPermission()}
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onActionClick={handleCreateContact}
@@ -60,6 +80,7 @@ export default function VenueContacts() {
 
         <TabsContent value={activeTab} className="mt-0">
           <ContactSection
+            hasPermission={hasEditPermission()}
             contacts={getFilteredContacts()}
             venueId={venueId || ""}
             isLoading={isLoading}

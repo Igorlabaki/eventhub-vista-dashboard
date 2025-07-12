@@ -13,9 +13,24 @@ import { EventDetails } from "@/components/EventDetails";
 import { EventSidebar } from "@/components/EventSidebar";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { EventFilterList } from "@/components/events/EventFilterList";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 // Month names in Portuguese
-const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+const monthNames = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+];
 
 export default function VenueEvents() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,32 +41,16 @@ export default function VenueEvents() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
 
-  const { 
-    events, 
-    isLoading, 
-    error,
-    fetchEvents,
-    fetchProposalById 
-  } = useProposalStore();
+  const { events, isLoading, error, fetchEvents, fetchProposalById } =
+    useProposalStore();
 
-  // Handle opening event details
-  const handleOpenEventDetails = (event) => {
-    navigate(`/proposal/${event.id}`);
-  };
+  const { currentUserPermission } = useUserPermissionStore();
 
-  // Close event details
-  const handleCloseEventDetails = () => {
-    setSelectedEvent(null);
-    navigate('/venue/events');
-  };
-
-
-  // Effect to handle URL parameters
   useEffect(() => {
-    const eventId = searchParams.get('id');
-    const action = searchParams.get('action');
-    
-    if (eventId && action === 'view') {
+    const eventId = searchParams.get("id");
+    const action = searchParams.get("action");
+
+    if (eventId && action === "view") {
       fetchProposalById(eventId);
     }
   }, [searchParams]);
@@ -61,14 +60,40 @@ export default function VenueEvents() {
     fetchEvents({
       venueId: selectedVenue.id,
       month: (selectedMonth + 1).toString(),
-      year: selectedYear.toString()
+      year: selectedYear.toString(),
     });
   }, [selectedMonth, selectedYear]);
 
+  const hasViewPermission = () => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes("VIEW_EVENTS");
+  };
+
+
+  if (!hasViewPermission()) {
+    return (
+      <DashboardLayout title="Eventos" subtitle="Gerencie os eventos do espaço">
+        <AccessDenied />
+      </DashboardLayout>
+    );
+  }
+
+  // Handle opening event details
+  const handleOpenEventDetails = (event) => {
+    navigate(`/proposal/${event.id}`);
+  };
+
+  // Close event details
+  const handleCloseEventDetails = () => {
+    setSelectedEvent(null);
+    navigate("/venue/events");
+  };
+
+  // Effect to handle URL parameters
+ 
+
   const renderEventList = () => (
     <>
-
-
       <EventMonthYearNavigator
         selectedYear={selectedYear}
         selectedMonth={selectedMonth}
@@ -79,7 +104,7 @@ export default function VenueEvents() {
 
       <EventFilterList
         items={events.filter(
-          event =>
+          (event) =>
             new Date(event.startDate).getMonth() === selectedMonth &&
             new Date(event.startDate).getFullYear() === selectedYear
         )}
@@ -110,14 +135,18 @@ export default function VenueEvents() {
   return (
     <DashboardLayout title="Eventos" subtitle="Gerencie seus eventos">
       {!selectedEvent ? (
-        <>
-         {renderEventList()}
-        </>
+        <>{renderEventList()}</>
       ) : (
         <div className="flex w-full">
-          <EventSidebar onBack={handleCloseEventDetails} event={selectedEvent} />
+          <EventSidebar
+            onBack={handleCloseEventDetails}
+            event={selectedEvent}
+          />
           <div className="flex-1 p-6">
-            <EventDetails event={selectedEvent} onClose={handleCloseEventDetails} />
+            <EventDetails
+              event={selectedEvent}
+              onClose={handleCloseEventDetails}
+            />
           </div>
         </div>
       )}

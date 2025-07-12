@@ -8,6 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
 import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
 import { useEffect } from "react";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { DashboardLayout } from "../DashboardLayout";
+import AccessDenied from "../accessDenied";
 
 interface ScheduleSectionProps {
   proposalId: string;
@@ -97,6 +100,7 @@ export function ScheduleSection({
   };
 
   const showForm = isCreating || !!selectedSchedule;
+
 
   return (
     <div className="animate-fade-in">

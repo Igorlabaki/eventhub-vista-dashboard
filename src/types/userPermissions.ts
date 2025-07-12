@@ -20,6 +20,11 @@ export interface CreateUserPermissionDTO {
   userId: string;
   organizationId: string;
 }
+export interface GetUserPermissionDTO {
+  organizationId: string;
+  venueId: string;
+  userId: string;
+}
 
 export interface UpdateUserPermissionDTO {
   userPermissionId: string;

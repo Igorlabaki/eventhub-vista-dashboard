@@ -12,6 +12,9 @@ import { DateEvent } from "@/types/date-event";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserStore } from "@/store/userStore";
+
 
 export interface VenueCardProps {
   id: string;
@@ -31,8 +34,15 @@ export function VenueCard({
   onEditClick,
 }: VenueCardProps) {
   const navigate = useNavigate();
+  const { fetchCurrentUserPermission } = useUserPermissionStore();
+  const { user } = useUserStore();
 
-  const handleViewVenue = () => {
+  const handleViewVenue = async () => {
+    await fetchCurrentUserPermission({
+      organizationId: organizationId,
+      userId: user?.id,
+      venueId: id,
+    });
     navigate(`/venue/${id}/notifications`);
   };
 

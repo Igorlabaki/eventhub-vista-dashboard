@@ -3,21 +3,39 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { ContactListSkeleton } from "./contact-list-skeleton";
 import { FilterList } from "@/components/filterList";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Edit, Pencil, Trash2, Phone } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
 
 interface ContactListProps {
   contacts: Contact[];
   isLoading: boolean;
+  hasPermission: boolean;
   onCreateClick: () => void;
   onEditClick: (contact: Contact) => void;
   onDeleteClick?: (contact: Contact) => void;
 }
 
-export function ContactList({ contacts, isLoading, onCreateClick, onEditClick, onDeleteClick }: ContactListProps) {
+export function ContactList({
+  contacts,
+  isLoading,
+  hasPermission,
+  onCreateClick,
+  onEditClick,
+  onDeleteClick,
+
+}: ContactListProps) {
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
+
 
   if (isLoading) {
     return <ContactListSkeleton />;
@@ -60,13 +78,17 @@ export function ContactList({ contacts, isLoading, onCreateClick, onEditClick, o
                     className="hover:bg-gray-50 cursor-pointer"
                     onClick={() => onEditClick(contact)}
                   >
-                    <TableCell className="font-medium">{contact.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {contact.name}
+                    </TableCell>
                     <TableCell>
                       <span
                         className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full
-                          ${contact.type === ContactType.TEAM_MEMBER
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-green-100 text-green-800"}
+                          ${
+                            contact.type === ContactType.TEAM_MEMBER
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-green-100 text-green-800"
+                          }
                         `}
                       >
                         {contact.role}
@@ -75,33 +97,46 @@ export function ContactList({ contacts, isLoading, onCreateClick, onEditClick, o
 
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
-                      <button
-                          onClick={e => { 
-                            e.stopPropagation(); 
-                            const whatsappNumber = contact.whatsapp.replace(/\D/g, '');
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const whatsappNumber = contact.whatsapp.replace(
+                              /\D/g,
+                              ""
+                            );
                             const whatsappUrl = `https://wa.me/${whatsappNumber}`;
-                            window.open(whatsappUrl, '_blank');
+                            window.open(whatsappUrl, "_blank");
                           }}
                           className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
                           title="Entrar em contato via WhatsApp"
                         >
                           <Phone className="h-4 w-4" />
                         </button>
-                        <button
-                          onClick={e => { e.stopPropagation(); onEditClick(contact); }}
-                          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                          title="Editar contato"
-                        >
-                           <Pencil className="h-4 w-4" />
-                        </button>
-                       
-                        <button
-                          onClick={e => { e.stopPropagation(); setContactToDelete(contact); }}
-                          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                          title="Remover contato"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {hasPermission && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditClick(contact);
+                              }}
+                              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                              title="Editar contato"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setContactToDelete(contact);
+                              }}
+                              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                              title="Remover contato"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -125,4 +160,4 @@ export function ContactList({ contacts, isLoading, onCreateClick, onEditClick, o
       />
     </>
   );
-} 
+}

@@ -42,6 +42,16 @@ export interface UserOrganizationListResponse {
   count: number,
   type: string
 }
+export interface UserOrganizationListByUserResponse {
+  success: true,
+  message: string,
+  data: {
+    userOrganizationList
+    : UserOrganization[]
+  },
+  count: number,
+  type: string
+}
 
 export interface UserOrganizationCreateResponse {
   success: true,

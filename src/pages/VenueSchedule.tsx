@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, CalendarDays, Clock, Trash } from "lucide-react";
+import { Plus, Users, CalendarDays, Clock, Trash, Pencil } from "lucide-react";
 import { useDateEventStore } from "@/store/dateEventStore";
 import { DateEvent, DateEventType } from "@/types/dateEvent";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
@@ -13,12 +13,12 @@ import { getDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/styles/fullcalendar-google.css"; // Pode ser usado para customização extra
-import { formatInTimeZone } from 'date-fns-tz';
-import { AnimatedFormSwitcher } from '@/components/ui/animated-form-switcher';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { FormLayout } from '@/components/ui/form-layout';
+import { formatInTimeZone } from "date-fns-tz";
+import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FormLayout } from "@/components/ui/form-layout";
 import {
   FormField,
   FormItem,
@@ -26,15 +26,20 @@ import {
   FormControl,
   FormMessage,
   Form,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
-import { handleBackendError, handleBackendSuccess } from '@/lib/error-handler';
-import { showSuccessToast } from '@/components/ui/success-toast';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/use-toast";
+import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
+import { showSuccessToast } from "@/components/ui/success-toast";
 import { useVenueStore } from "@/store/venueStore";
 import { useUserStore } from "@/store/userStore";
-import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog';
+import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { useNavigate } from "react-router-dom";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
+import AccessDenied from "@/components/accessDenied";
+import { PageHeader } from "@/components/PageHeader";
+import { createPortal } from "react-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const locales = {
   "pt-BR": ptBR,
@@ -53,82 +58,86 @@ const eventColors = {
   [DateEventType.OTHER]: "#ef4444",
 };
 
-const eventFormSchema = z.object({
-  title: z.string().min(1, 'Título obrigatório'),
-  startDay: z.string().min(1, 'Data inicial obrigatória'),
-  startHour: z.string().min(1, 'Hora inicial obrigatória'),
-  endDay: z.string().min(1, 'Data final obrigatória'),
-  endHour: z.string().min(1, 'Hora final obrigatória'),
-  type: z.string().default("OTHER"),
-  venueId: z.string(),
-  proposalId: z.string().optional(),
-  userId: z.string(),
-  username: z.string(),
-}).refine(
-  (data) => new Date(data.startDay) <= new Date(data.endDay),
-  {
+const eventFormSchema = z
+  .object({
+    title: z.string().min(1, "Título obrigatório"),
+    startDay: z.string().min(1, "Data inicial obrigatória"),
+    startHour: z.string().min(1, "Hora inicial obrigatória"),
+    endDay: z.string().min(1, "Data final obrigatória"),
+    endHour: z.string().min(1, "Hora final obrigatória"),
+    venueId: z.string(),
+    proposalId: z.string().optional(),
+    userId: z.string(),
+    username: z.string(),
+  })
+  .refine((data) => new Date(data.startDay) <= new Date(data.endDay), {
     message: "A data final deve ser igual ou posterior à data inicial",
     path: ["endDay"],
-  }
-);
+  });
 type EventFormValues = z.infer<typeof eventFormSchema>;
 
+// Adicionar função utilitária para gerar horários de meia em meia hora
+function generateTimeOptions() {
+  const options = [];
+  for (let hour = 0; hour <= 23; hour++) {
+    const hourStr = hour.toString().padStart(2, '0');
+    options.push(`${hourStr}:00`);
+    options.push(`${hourStr}:30`);
+  }
+  return options;
+}
+
 export default function VenueSchedule() {
-  const { dateEvents, fetchDateEvents, isLoading, createOvernightEvent, deleteDateEvent } = useDateEventStore();
+  const {
+    dateEvents,
+    fetchDateEvents,
+    isLoading,
+    createOvernightEvent,
+    updateOvernightEvent,
+    deleteDateEvent,
+  } = useDateEventStore();
   const [selectedEvent, setSelectedEvent] = useState<DateEvent | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const { selectedVenue } = useVenueStore();
   const { user } = useUserStore();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const navigate = useNavigate();
-  useEffect(() => {
-    fetchDateEvents();
-  }, []);
+  const { currentUserPermission } = useUserPermissionStore();
 
-  // Formulário de criação de evento
+  const navigate = useNavigate();
+
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
-      title: '',
-      startDay: '',
-      startHour: '',
-      endDay: '',
-      endHour: '',
-      type: 'OTHER',
+      title: "",
+      startDay: "",
+      startHour: "",
+      endDay: "",
+      endHour: "",
       userId: user?.id,
       username: user?.username,
       venueId: selectedVenue.id,
     },
   });
 
-  async function onSubmit(data: EventFormValues) {
-
-    try {
-      const response = await createOvernightEvent({
-        userId: data.userId,
-        username: data.username,
-        venueId: data.venueId,
-        proposalId: data.proposalId || undefined,
-        data:{
-          title: data.title,
-          startDay: data.startDay,
-          endDay: data.endDay,
-          startHour: data.startHour,
-          endHour: data.endHour,
-          type: data.type as DateEventType,
-        }
-      });
-      const { title, message } = handleBackendSuccess(response, 'Data criada com sucesso!');
-      showSuccessToast({ title, description: message });
-      await fetchDateEvents();
-      setShowForm(false);
-      form.reset();
-    } catch (error: unknown) {
-      const { title, message } = handleBackendError(error, 'Erro ao criar data. Tente novamente mais tarde.');
-      toast({ title, description: message, variant: 'destructive' });
-    }
-  }
+  // Função para preencher o formulário com dados da data selecionada
+  const fillFormWithEventData = (event: DateEvent) => {
+    const startDate = new Date(event.startDate);
+    const endDate = new Date(event.endDate);
+    
+    form.reset({
+      title: event.title,
+      startDay: startDate.toISOString().split('T')[0],
+      endDay: endDate.toISOString().split('T')[0],
+      startHour: startDate.toTimeString().slice(0, 5),
+      endHour: endDate.toTimeString().slice(0, 5),
+      userId: user?.id,
+      username: user?.username,
+      venueId: selectedVenue.id,
+      proposalId: event.proposalId,
+    });
+  };
 
   const events = useMemo(
     () =>
@@ -142,6 +151,97 @@ export default function VenueSchedule() {
       })),
     [dateEvents]
   );
+
+  useEffect(() => {
+    fetchDateEvents();
+  }, []);
+
+  const hasViewPermission = () => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes("VIEW_SCHEDULE");
+  };
+
+  const hasEditPermission = () => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes("EDIT_SCHEDULE");
+  };
+
+  if (!hasViewPermission()) {
+    return (
+      <DashboardLayout
+        title="Agenda"
+        subtitle="Visualize e gerencie sua agenda"
+      >
+        <AccessDenied />
+      </DashboardLayout>
+    );
+  }
+
+  // Formulário de criação de evento
+
+  async function onSubmit(data: EventFormValues) {
+    try {
+      let response;
+      
+      if (isEditing && selectedEvent) {
+        response = await updateOvernightEvent({
+          userId: data.userId,
+          username: data.username,
+          venueId: data.venueId,
+          proposalId: data.proposalId || undefined,
+          data: {
+            title: data.title,
+            startDay: data.startDay,
+            endDay: data.endDay,
+            startHour: data.startHour,
+            endHour: data.endHour,
+            type: DateEventType.OTHER,
+          },
+        });
+      } else {
+        response = await createOvernightEvent({
+          userId: data.userId,
+          username: data.username,
+          venueId: data.venueId,
+          proposalId: data.proposalId || undefined,
+          data: {
+            title: data.title,
+            startDay: data.startDay,
+            endDay: data.endDay,
+            startHour: data.startHour,
+            endHour: data.endHour,
+            type: DateEventType.OTHER,
+          },
+        });
+      }
+      
+      const { title, message } = handleBackendSuccess(
+        response,
+        isEditing ? "Data atualizada com sucesso!" : "Data criada com sucesso!"
+      );
+      showSuccessToast({ title, description: message });
+      await fetchDateEvents();
+      setShowForm(false);
+      setIsEditing(false);
+      setSelectedEvent(null);
+              form.reset({
+          title: "",
+          startDay: "",
+          startHour: "",
+          endDay: "",
+          endHour: "",
+          userId: user?.id,
+          username: user?.username,
+          venueId: selectedVenue.id,
+        });
+    } catch (error: unknown) {
+      const { title, message } = handleBackendError(
+        error,
+        isEditing ? "Erro ao atualizar data. Tente novamente mais tarde." : "Erro ao criar data. Tente novamente mais tarde."
+      );
+      toast({ title, description: message, variant: "destructive" });
+    }
+  }
 
   function eventStyleGetter(event) {
     const color = eventColors[event.resource.type] || "#6b7280";
@@ -159,13 +259,64 @@ export default function VenueSchedule() {
     };
   }
 
-  // Formulário de criação de evento
+  // Formulário de criação/edição de evento
   const eventForm = (
     <FormLayout
-      title="Nova Data"
+      title={isEditing ? "Editar Data" : "Nova Data"}
       onSubmit={onSubmit}
-      onCancel={() => setShowForm(false)}
+      onCancel={() => {
+        setShowForm(false);
+        setIsEditing(false);
+        setSelectedEvent(null);
+        form.reset({
+          title: "",
+          startDay: "",
+          startHour: "",
+          endDay: "",
+          endHour: "",
+          userId: user?.id,
+          username: user?.username,
+          venueId: selectedVenue.id,
+        });
+      }}
+      onDelete={!selectedEvent?.proposalId ? async () => {
+        setIsDeleting(true);
+        try {
+          await deleteDateEvent(selectedEvent.id);
+          const { title, message } = handleBackendSuccess(
+            { success: true, message: "Data excluída com sucesso", data: undefined },
+            "Data excluída com sucesso!"
+          );
+          showSuccessToast({ title, description: message });
+          await fetchDateEvents();
+          setSelectedEvent(null);
+          setShowForm(false);
+          setIsEditing(false);
+          form.reset({
+            title: "",
+            startDay: "",
+            startHour: "",
+            endDay: "",
+            endHour: "",
+            userId: user?.id,
+            username: user?.username,
+            venueId: selectedVenue.id,
+          });
+        } catch (error: unknown) {
+          const { title, message } = handleBackendError(
+            error,
+            "Erro ao excluir data. Tente novamente mais tarde."
+          );
+          toast({ title, description: message, variant: "destructive" });
+        } finally {
+          setIsDeleting(false);
+        }
+      } : undefined}
+      isEditing={isEditing}
+      isDeleting={isDeleting}
       isSubmitting={form.formState.isSubmitting}
+      entityName={selectedEvent?.title}
+      entityType="data"
       form={form}
     >
       <div className="space-y-4">
@@ -182,12 +333,13 @@ export default function VenueSchedule() {
             </FormItem>
           )}
         />
-        <div className="flex gap-2">
+
+        <div className="flex flex-col md:flex-row gap-2">
           <FormField
             control={form.control}
             name="startDay"
             render={({ field }) => (
-              <FormItem className="w-1/2">
+              <FormItem className="w-full md:w-1/2">
                 <FormLabel>Data Inicial</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
@@ -200,22 +352,33 @@ export default function VenueSchedule() {
             control={form.control}
             name="startHour"
             render={({ field }) => (
-              <FormItem className="w-1/2">
+              <FormItem className="w-full md:w-1/2">
                 <FormLabel>Hora Inicial</FormLabel>
                 <FormControl>
-                  <Input type="time" {...field} />
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o horário" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateTimeOptions().map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-2">
           <FormField
             control={form.control}
             name="endDay"
             render={({ field }) => (
-              <FormItem className="w-1/2">
+              <FormItem className="w-full md:w-1/2">
                 <FormLabel>Data Final</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
@@ -228,10 +391,21 @@ export default function VenueSchedule() {
             control={form.control}
             name="endHour"
             render={({ field }) => (
-              <FormItem className="w-1/2">
+              <FormItem className="w-full md:w-1/2">
                 <FormLabel>Hora Final</FormLabel>
                 <FormControl>
-                  <Input type="time" {...field} />
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o horário" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateTimeOptions().map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -244,13 +418,32 @@ export default function VenueSchedule() {
 
   // Calendário + detalhes
   const calendar = (
-    <>
-      <div className="flex justify-end mb-6">
-        <Button className="bg-eventhub-primary hover:bg-eventhub-primary/90 text-white font-semibold shadow-md px-6 py-2 rounded-lg" onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Data
-        </Button>
-      </div>
+    <div className="relative">
+      <>
+        <div className="flex justify-end items-center mb-6 w-full">
+          {!showForm  && (
+            <Button
+              onClick={() => setShowForm(true)}
+              className="shadow-lg flex-row items-center gap-2 bg-eventhub-primary hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-all duration-200 hidden md:flex"
+            >
+              <Plus className="w-7 h-7" />
+              <p>Nova Data</p>
+            </Button>
+          )}
+        </div>
+        {/* Botão flutuante mobile via Portal para ficar sempre fixo no viewport */}
+        {!showForm &&
+          createPortal(
+            <button
+              className="fixed bottom-6 right-6 z-50 md:hidden bg-eventhub-primary hover:bg-indigo-600 text-white rounded-full shadow-2xl p-4 flex items-center justify-center transition-all duration-200"
+              onClick={() => setShowForm(true)}
+              aria-label={"Nova Data"}
+            >
+              <Plus className="w-7 h-7" />
+            </button>,
+            document.body
+          )}
+      </>
       <Card className="shadow-lg border-0">
         <CardContent className="p-4">
           <Calendar
@@ -260,20 +453,20 @@ export default function VenueSchedule() {
             endAccessor="end"
             style={{ height: 600 }}
             messages={{
-              next: 'Próximo',
-              previous: 'Anterior',
-              today: 'Hoje',
-              month: 'Mês',
-              week: 'Semana',
-              day: 'Dia',
-              agenda: 'Agenda',
-              date: 'Data',
-              time: 'Hora',
-              event: 'Evento',
-              noEventsInRange: 'Nenhum evento neste período.'
+              next: "Próximo",
+              previous: "Anterior",
+              today: "Hoje",
+              month: "Mês",
+              week: "Semana",
+              day: "Dia",
+              agenda: "Agenda",
+              date: "Data",
+              time: "Hora",
+              event: "Evento",
+              noEventsInRange: "Nenhum evento neste período.",
             }}
-            views={['month']}
-            onSelectEvent={event => setSelectedEvent(event.resource)}
+            views={["month"]}
+            onSelectEvent={(event) => setSelectedEvent(event.resource)}
             onSelectSlot={() => setSelectedEvent(null)}
             eventPropGetter={eventStyleGetter}
             popup
@@ -283,32 +476,58 @@ export default function VenueSchedule() {
               toolbar: (props) => (
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <button onClick={() => props.onNavigate('PREV')} className="px-2 py-1 rounded hover:bg-gray-100 mr-2">&#8592;</button>
-                    <button onClick={() => props.onNavigate('NEXT')} className="px-2 py-1 rounded hover:bg-gray-100">&#8594;</button>
+                    <button
+                      onClick={() => props.onNavigate("PREV")}
+                      className="px-2 py-1 rounded hover:bg-gray-100 mr-2"
+                    >
+                      &#8592;
+                    </button>
+                    <button
+                      onClick={() => props.onNavigate("NEXT")}
+                      className="px-2 py-1 rounded hover:bg-gray-100"
+                    >
+                      &#8594;
+                    </button>
                   </div>
-                  <div className="text-lg font-bold uppercase tracking-wide">{format(props.label, 'MMMM yyyy', { locale: ptBR })}</div>
+                  <div className="text-lg font-bold uppercase tracking-wide">
+                    {format(props.label, "MMMM yyyy", { locale: ptBR })}
+                  </div>
                   <div></div>
                 </div>
-              )
+              ),
             }}
           />
         </CardContent>
       </Card>
       {/* Detalhes do evento selecionado */}
       {selectedEvent && (
-        <div className="mt-6 flex flex-col items-center" onClick={() => navigate(`/proposal/${selectedEvent.proposalId}`)}>
+        <div
+          className="mt-6 flex flex-col items-center"
+          onClick={() => {
+            if (selectedEvent.proposalId) {
+              navigate(`/proposal/${selectedEvent.proposalId}`);
+            }
+          }}
+        >
           <Card className="w-full bg-white border-0 shadow-lg">
             <CardContent className="p-6 flex flex-col items-center gap-4 relative">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 ">
                 <div className="text-lg font-bold">{selectedEvent.title}</div>
-                <button
-                  type="button"
-                  className="absolute top-3 right-3 ml-2 text-gray-400 hover:text-red-700"
-                  onClick={() => setShowDeleteDialog(true)}
-                  title="Deletar data"
-                >
-                  <Trash className="w-4 h-4" />
-                </button>
+                {!selectedEvent.proposalId && (
+                  <button
+                    type="button"
+                    className="absolute top-3 right-3 ml-2 text-gray-400 hover:bg-gray-100 hover:text-blue-700 z-50 h-8 w-8 rounded-full flex items-center justify-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsEditing(true);
+                      fillFormWithEventData(selectedEvent);
+                      setShowForm(true);
+                    }}
+                    title="Editar data"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                )}
               </div>
               <div className="flex gap-8 text-sm mb-2">
                 <div className="flex items-center gap-2  font-medium">
@@ -318,49 +537,43 @@ export default function VenueSchedule() {
                 <div className="flex items-center gap-2  font-medium">
                   <CalendarDays className="w-5 h-5" />
                   {selectedEvent.startDate
-                    ? formatInTimeZone(selectedEvent.startDate, 'UTC', 'dd/MM/yyyy')
-                    : '--'}
+                    ? formatInTimeZone(
+                        selectedEvent.startDate,
+                        "UTC",
+                        "dd/MM/yyyy"
+                      )
+                    : "--"}
                 </div>
                 <div className="flex items-center gap-2  font-medium">
                   <Clock className="w-5 h-5" />
-                  {(selectedEvent.startDate && selectedEvent.endDate)
-                    ? (
-                      <>
-                        {formatInTimeZone(selectedEvent.startDate, 'UTC', 'HH:mm')}
-                        /
-                        {formatInTimeZone(selectedEvent.endDate, 'UTC', 'HH:mm')}
-                      </>
-                    )
-                    : '--'}
+                  {selectedEvent.startDate && selectedEvent.endDate ? (
+                    <>
+                      {formatInTimeZone(
+                        selectedEvent.startDate,
+                        "UTC",
+                        "HH:mm"
+                      )}
+                      /{formatInTimeZone(selectedEvent.endDate, "UTC", "HH:mm")}
+                    </>
+                  ) : (
+                    "--"
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
-          <ConfirmDeleteDialog
-            open={showDeleteDialog}
-            onOpenChange={setShowDeleteDialog}
-            onConfirm={async () => {
-              setIsDeleting(true);
-              try {
-                await deleteDateEvent(selectedEvent.id);
-                await fetchDateEvents();
-                setSelectedEvent(null);
-              } finally {
-                setIsDeleting(false);
-              }
-            }}
-            entityName={selectedEvent.title}
-            entityType="data"
-            isPending={isDeleting}
-          />
         </div>
       )}
-    </>
+    </div>
   );
 
   return (
     <DashboardLayout title="Agenda" subtitle="Visualize e gerencie sua agenda">
-      <AnimatedFormSwitcher showForm={showForm} list={calendar} form={eventForm} />
+      <AnimatedFormSwitcher
+        showForm={showForm}
+        list={calendar}
+        form={eventForm}
+      />
     </DashboardLayout>
   );
 }

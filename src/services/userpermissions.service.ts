@@ -1,5 +1,14 @@
 import { api } from '@/lib/axios';
-import { UpdateUserPermissionDTO,UserPermissionListResponse, UserPermissionByIdResponse, UserPermissionUpdateResponse, UserPermissionCreateResponse, UserPermissionDeleteResponse, CreateUserPermissionDTO } from '@/types/userPermissions';
+import { 
+  UpdateUserPermissionDTO,
+  UserPermissionListResponse, 
+  UserPermissionByIdResponse, 
+  UserPermissionUpdateResponse, 
+  UserPermissionCreateResponse, 
+  UserPermissionDeleteResponse, 
+  CreateUserPermissionDTO, 
+  GetUserPermissionDTO 
+} from '@/types/userPermissions';
 
 export const userPermissionService = {
   createUserPermission: async (data: CreateUserPermissionDTO) => {
@@ -9,6 +18,16 @@ export const userPermissionService = {
 
   getAllUserPermissions: async (userId: string) => {
     const response = await api.get<UserPermissionListResponse>(`/userPermission/list?userId=${userId}`);
+    return response.data;
+  },
+
+  getUserPermissionById: async (id: string) => {
+    const response = await api.get<UserPermissionByIdResponse>(`/userPermission/${id}`);
+    return response.data;
+  },
+
+  getUserPermission: async (params: GetUserPermissionDTO) => {
+    const response = await api.get<UserPermissionByIdResponse>(`/userPermission/get`, { params });
     return response.data;
   },
 

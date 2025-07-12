@@ -16,6 +16,7 @@ import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { useProposalStore } from "@/store/proposalStore";
 import { useVenueStore } from "@/store/venueStore";
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { useUserPermissionStore } from "@/store/userPermissionStore";
 interface ScheduleListProps {
   schedules: Schedule[];
   onDeleteSchedule: (schedule: Schedule) => void;
@@ -41,7 +42,7 @@ export function ScheduleList({
 }: ScheduleListProps) {
   const [scheduleToDelete, setScheduleToDelete] =
     React.useState<Schedule | null>(null);
-
+    const { currentUserPermission } = useUserPermissionStore();
   // Link para programação
   const { currentProposal } = useProposalStore();
   const { selectedVenue } = useVenueStore();
@@ -104,6 +105,12 @@ export function ScheduleList({
     );
   }
 
+  
+  const hasEditPermission = () => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes("EDIT_SCHEDULES");
+  };
+
   return (
     <div className={cn("space-y-4", className)}>
       <Table className="bg-white rounded-md shadow-lg">
@@ -112,7 +119,9 @@ export function ScheduleList({
             <TableHead>Nome</TableHead>
 
             <TableHead className="w-[150px] text-center">Horário</TableHead>
+            {hasEditPermission() && (
             <TableHead className="w-[100px] text-center">Ações</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -130,6 +139,7 @@ export function ScheduleList({
                 {formatTime(schedule.startHour)} até{" "}
                 {formatTime(schedule.endHour)}
               </TableCell>
+              {hasEditPermission() && (
               <TableCell className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   {onEditClick && (
@@ -154,6 +164,7 @@ export function ScheduleList({
                   </button>
                 </div>
               </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

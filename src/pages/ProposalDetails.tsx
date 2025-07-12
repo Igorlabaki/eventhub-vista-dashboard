@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Users, Calendar, Clock } from "lucide-react";
 import { ProposalServicesSummary } from "@/components/proposal/ProposalServicesSummary";
+import AccessDenied from "@/components/accessDenied";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
 
 function ProposalDetailsSkeleton() {
   return (
@@ -67,12 +69,36 @@ function ProposalDetailsSkeleton() {
 
 export default function ProposalDetails() {
   const { id } = useParams();
-  const { fetchProposalById, currentProposal, isLoading } = useProposalStore();
-
+  const { fetchProposalById, currentProposal, isLoading, setCurrentProposal } = useProposalStore();
+  const { currentUserPermission } = useUserPermissionStore();
+  
   useEffect(() => {
- 
-    if (id) fetchProposalById(id);
-  }, [id, fetchProposalById]);
+    if (id) {
+      fetchProposalById(id);
+    }
+    
+    // Cleanup function para limpar a proposta atual quando o componente for desmontado
+    return () => {
+      setCurrentProposal(null);
+    };
+  }, [id, fetchProposalById, setCurrentProposal]);
+
+  const hasViewPermission = () => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes("VIEW_PROPOSAL_INFO");
+  };
+
+  const hasViewValuesPermission = () => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes("VIEW_AMOUNTS");
+  };
+
+
+    if(!hasViewPermission()) {
+    return <DashboardLayout title="Contatos" subtitle="Gerencie os contatos do espaço">
+     <AccessDenied />
+    </DashboardLayout>
+  }
 
   if (isLoading)
     return (
@@ -134,7 +160,7 @@ export default function ProposalDetails() {
       <div className="mx-auto flex flex-col md:flex-row   gap-2">
         {/* Seção de Conta/Serviços isolada em componente */}
        
-        <ProposalServicesSummary />
+        <ProposalServicesSummary hasViewValuesPermission={hasViewValuesPermission()} />
        
         {/* Informações Pessoais */}
         <div className=" rounded-xl p-6 mb-6 bg-white shadow-md w-full max-w-2xl mx-auto">

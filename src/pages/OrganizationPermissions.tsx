@@ -9,9 +9,12 @@ import { UserOrganizationList } from "@/components/permissions/UserOrganizationL
 import { VenuePermissionsList } from "@/components/permissions/VenuePermissionsList";
 import { UserOrganization } from "@/types/userOrganization";
 import {
-  userViewPermissions,
-  userEditPermissions,
-  userProposalPermissions,
+  venueViewPermissions,
+  proposalViewPermissions,
+  organizationViewPermissions,
+  organizationEditPermissions,
+  venueEditPermissions,
+  proposalEditPermissions,
 } from "@/types/permissions";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
@@ -248,7 +251,14 @@ export default function OrganizationPermissions() {
                                 owners: [],
                                 clauses: [],
                                 contracts: [],
-                                attachments: []
+                                attachments: [],
+                                whatsappNumber: "",
+                                email: "",
+                                facebookUrl: "",
+                                instagramUrl: "",
+                                tiktokUrl: "",
+                                url: "",
+                                logoUrl: "",
                               },
                               userPermissions: []
                             });
@@ -308,15 +318,18 @@ export default function OrganizationPermissions() {
         )}>
           {view === "permissions" && selectedUserOrganization && selectedVenue && (
             <PermissionManager
+              organizationEditPermissions={organizationEditPermissions}
+              organizationPermissions={organizationViewPermissions}
               userId={selectedUserOrganization.user.id}
               userName={selectedUserOrganization.user.username}
               venueId={selectedVenue.id}
               userOrganizationId={selectedUserOrganization.id}
               organizationId={organizationId || ""}
               venueName={selectedVenue.name}
-              viewPermissions={userViewPermissions}
-              editPermissions={userEditPermissions}
-              proposalPermissions={userProposalPermissions}
+              venueViewPermissions={venueViewPermissions}
+              venueEditPermissions={venueEditPermissions  }
+              proposalViewPermissions={proposalViewPermissions}
+              proposalEditPermissions={proposalEditPermissions}
               userPermissions={userPermissions}
               userPermissionId={userPermissions[selectedUserOrganization.user.id]?.[selectedVenue.id]?.id}
               onGoBack={goBack}

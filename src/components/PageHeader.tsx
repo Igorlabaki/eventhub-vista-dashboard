@@ -28,7 +28,7 @@ export function PageHeader({
       {/* Botão flutuante mobile via Portal para ficar sempre fixo no viewport */}
       {!isFormOpen && createPortal(
         <button
-          className="fixed bottom-6 right-6 z-50 md:hidden bg-eventhub-primary hover:bg-indigo-600 text-white rounded-full shadow-lg p-4 flex items-center justify-center transition-all duration-200"
+          className="fixed bottom-6 right-6 z-50 md:hidden bg-eventhub-primary hover:bg-indigo-600 text-white rounded-full shadow-2xl p-4 flex items-center justify-center transition-all duration-200"
           onClick={onCreateClick}
           aria-label={createButtonText}
         >

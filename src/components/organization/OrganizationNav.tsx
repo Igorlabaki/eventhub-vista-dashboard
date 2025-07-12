@@ -8,11 +8,20 @@ import {
   Settings,
   Globe,
 } from "lucide-react";
+import { organizationViewPermissions, Permissions } from "@/types/permissions";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
 
 interface OrganizationNavProps {
   organizationName: string;
   isCollapsed: boolean;
   onNavItemClick: () => void;
+}
+
+interface NavItem {
+  title: string;
+  href: string;
+  icon: React.ElementType;
+  permissionRequired: Permissions;
 }
 
 export function OrganizationNav({
@@ -23,39 +32,58 @@ export function OrganizationNav({
   const location = useLocation();
   const params = useParams();
   const organizationId = params.id;
+  const { currentUserPermission } = useUserPermissionStore();
 
-  const organizationActionItems = [
+  // Mapeamento dos itens de navegação baseado no organizationViewPermissions
+  const organizationActionItems: NavItem[] = [
     {
       title: "Espaços",
       href: `/organization/${organizationId}/venues`,
       icon: Building,
+      permissionRequired: Permissions.VIEW_VENUES,
     },
     {
       title: "Contratos",
       href: `/organization/${organizationId}/contracts`,
       icon: FileText,
+      permissionRequired: Permissions.VIEW_CONTRACTS,
     },
     {
       title: "Permissões",
       href: `/organization/${organizationId}/permissions`,
       icon: ShieldCheck,
+      permissionRequired: Permissions.VIEW_PERMISSIONS,
     },
     {
       title: "Proprietários",
       href: `/organization/${organizationId}/owners`,
       icon: KeyRound,
+      permissionRequired: Permissions.VIEW_OWNERS,
     },
     {
       title: "Site",
       href: `/organization/${organizationId}/website`,
       icon: Globe,
+      permissionRequired: Permissions.VIEW_ORG_SITE,
     },
     {
       title: "Configurações",
       href: `/organization/${organizationId}/settings`,
       icon: Settings,
+      permissionRequired: Permissions.VIEW_ORG_CONFIG,
     },
   ];
+
+  // Função para verificar se o usuário tem a permissão necessária
+  const hasPermission = (requiredPermission: Permissions) => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes(requiredPermission);
+  };
+
+  // Filtrar itens baseado nas permissões
+  const filteredNavItems = organizationActionItems.filter(item => 
+    hasPermission(item.permissionRequired)
+  );
 
   return (
     <div className="pb-1">
@@ -63,7 +91,7 @@ export function OrganizationNav({
         {organizationName}
       </div>
       
-      {organizationActionItems.map((item) => (
+      {filteredNavItems.map((item) => (
         <Link
           key={item.title}
           to={item.href}

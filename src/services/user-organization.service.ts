@@ -1,5 +1,5 @@
 import { api } from '@/lib/axios';
-import { UpdateUserOrganizationDTO, UserOrganizationDeleteResponse, UserOrganizationListResponse, UserOrganizationUpdateResponse } from '@/types/userOrganization';
+import { UpdateUserOrganizationDTO, UserOrganizationDeleteResponse, UserOrganizationListByUserResponse, UserOrganizationListResponse, UserOrganizationUpdateResponse } from '@/types/userOrganization';
 import { CreateUserOrganizationDTO } from '@/types/userOrganization';
 import { UserOrganizationCreateResponse } from '@/types/userOrganization';    
 
@@ -11,6 +11,11 @@ export const userOrganizationService = {
 
   getAllUserOrganizations: async (organizationId: string) => {
     const response = await api.get<UserOrganizationListResponse>(`/userOrganization/byOrganizationlist?organizationId=${organizationId}`);
+    return response.data;
+  },
+
+  getUserOrganizationsByUser: async (userId: string) => {
+    const response = await api.get<UserOrganizationListByUserResponse>(`/userOrganization/list?userId=${userId}`);
     return response.data;
   },
 

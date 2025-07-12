@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Proposal } from "@/types/proposal";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
 
 interface EventTableProps {
   events: Proposal[];
@@ -21,6 +22,8 @@ export function EventTable({
   selectedMonth,
   selectedYear,
 }: EventTableProps) {
+  
+  const { currentUserPermission } = useUserPermissionStore();
   if (isLoading) {
     return (
       <div className="rounded-md border bg-white">
@@ -28,8 +31,8 @@ export function EventTable({
           <TableHeader>
             <TableRow>
               <TableHead>Cliente</TableHead>
-              <TableHead>Data do Evento</TableHead>
-              <TableHead className="text-right">Valor Total</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead className="text-right">Valor</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -52,6 +55,11 @@ export function EventTable({
     );
   }
 
+  const hasViewPermission = () => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes("VIEW_VALUES");
+  };
+
   if (events.length === 0) {
     return (
       <div className="rounded-md border bg-white">
@@ -59,8 +67,10 @@ export function EventTable({
           <TableHeader>
             <TableRow>
               <TableHead>Cliente</TableHead>
-              <TableHead>Data do Evento</TableHead>
-              <TableHead className="text-right">Valor Total</TableHead>
+              <TableHead>Data</TableHead>
+              {hasViewPermission() && (
+                <TableHead className="text-right">Valor</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -81,8 +91,10 @@ export function EventTable({
         <TableHeader>
           <TableRow>
             <TableHead>Cliente</TableHead>
-            <TableHead>Data do Evento</TableHead>
-            <TableHead className="text-right">Valor Total</TableHead>
+            <TableHead>Data</TableHead>
+            {hasViewPermission() && (
+              <TableHead className="text-right">Valor</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -98,12 +110,14 @@ export function EventTable({
                   locale: pt,
                 })}
               </TableCell>
+              {hasViewPermission() && ( 
               <TableCell className="text-right">
                 {new Intl.NumberFormat("pt-BR", {
                   style: "currency",
                   currency: "BRL",
                 }).format(event.totalAmount)}
               </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

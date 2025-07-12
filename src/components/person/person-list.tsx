@@ -16,7 +16,8 @@ import { Person, PersonType } from "@/types/person";
 import { useVenueStore } from "@/store/venueStore";
 import { usePersonStore } from "@/store/personStore";
 import { FilterList } from "@/components/filterList";
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
 
 interface PersonListProps {
   persons: Person[];
@@ -50,9 +51,8 @@ export function PersonList({
   const [personToDelete, setPersonToDelete] = React.useState<Person | null>(
     null
   );
-  const { selectedVenue } = useVenueStore();
   const { updatePerson } = usePersonStore();
-  
+  const { currentUserPermission } = useUserPermissionStore();
   // Cálculo de presenças confirmadas
   const confirmedCount = persons.filter((p) => p.attendance).length;
   const totalCount = persons.length;
@@ -63,11 +63,11 @@ export function PersonList({
       await updatePerson({
         personId: person.id,
         data: {
-          attendance: !person.attendance
-        }
+          attendance: !person.attendance,
+        },
       });
     } catch (error) {
-      console.error('Erro ao atualizar attendance:', error);
+      console.error("Erro ao atualizar attendance:", error);
     }
   };
 
@@ -81,17 +81,20 @@ export function PersonList({
       ? `Segue o link para registrar os convidados do seu evento: ${link}`
       : `Segue o link para registrar os colaboradores do seu evento: ${link}`
   );
-  
+
   // Tratamento do número de WhatsApp usando libphonenumber-js
   const numeroOriginal = whatsapp || "";
   const numeroLimpo = numeroOriginal.replace(/\D/g, "");
-  const numeroComPlus = numeroOriginal.startsWith('+') ? numeroOriginal : `+${numeroLimpo}`;
+  const numeroComPlus = numeroOriginal.startsWith("+")
+    ? numeroOriginal
+    : `+${numeroLimpo}`;
   const phoneNumber = parsePhoneNumberFromString(numeroComPlus);
-  
-  const numeroFinal = phoneNumber && phoneNumber.isValid()
-    ? phoneNumber.number.replace('+', '')  // remove "+"
-    : `55${numeroLimpo}`; // fallback to Brazil
-  
+
+  const numeroFinal =
+    phoneNumber && phoneNumber.isValid()
+      ? phoneNumber.number.replace("+", "") // remove "+"
+      : `55${numeroLimpo}`; // fallback to Brazil
+
   const whatsappUrl = whatsapp
     ? `https://wa.me/${numeroFinal}?text=${whatsappMsg}`
     : `https://wa.me/?text=${whatsappMsg}`;
@@ -121,6 +124,18 @@ export function PersonList({
       </div>
     );
   }
+
+  const hasConfirmPermission = () => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes(
+      "EDIT_CONFIRM_ATTENDANCE_LIST"
+    );
+  };
+
+  const hasEditPermission = () => {
+    if (!currentUserPermission?.permissions) return false;
+    return currentUserPermission.permissions.includes("EDIT_ATTENDANCE_LIST");
+  };
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -182,43 +197,53 @@ export function PersonList({
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleAttendance(person);
-                        }}
-                        className={cn(
-                          "p-2 rounded-full transition-colors",
-                          person.attendance
-                            ? "text-red-500 hover:text-red-700 hover:bg-red-50"
-                            : "text-green-500 hover:text-green-700 hover:bg-green-50"
-                        )}
-                        title={person.attendance ? "Cancelar presença" : "Confirmar presença"}
-                      >
-                        {person.attendance ? (
-                          <X className="h-4 w-4" />
-                        ) : (
-                          <Check className="h-4 w-4" />
-                        )}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditClick(person);
-                        }}
-                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPersonToDelete(person);
-                        }}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {hasConfirmPermission() && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleAttendance(person);
+                          }}
+                          className={cn(
+                            "p-2 rounded-full transition-colors",
+                            person.attendance
+                              ? "text-red-500 hover:text-red-700 hover:bg-red-50"
+                              : "text-green-500 hover:text-green-700 hover:bg-green-50"
+                          )}
+                          title={
+                            person.attendance
+                              ? "Cancelar presença"
+                              : "Confirmar presença"
+                          }
+                        >
+                          {person.attendance ? (
+                            <X className="h-4 w-4" />
+                          ) : (
+                            <Check className="h-4 w-4" />
+                          )}
+                        </button>
+                      )}
+                      {hasEditPermission() && (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditClick(person);
+                            }}
+                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPersonToDelete(person);
+                            }}
+                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

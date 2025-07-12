@@ -9,11 +9,13 @@ import { ptBR } from "date-fns/locale";
 import { EmptyState } from "@/components/EmptyState";
 import { FilterList } from "@/components/filterList";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUserPermissionStore } from "@/store/userPermissionStore";
 
 export default function VenueNotifications() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { id: venueId } = useParams<{ id: string }>();
+  const { currentUserPermission } = useUserPermissionStore();
 
   const { data: notifications = [], isLoading } = useGetNotificationsList(venueId);
 
@@ -34,7 +36,7 @@ export default function VenueNotifications() {
       navigate(`/proposal/${proposalId}`);
     }
   };
-
+  console.log(currentUserPermission);
   return (
     <DashboardLayout title="Notificações" subtitle="Mantenha-se atualizado">
       <div className="space-y-4">
