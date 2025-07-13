@@ -51,6 +51,8 @@ export const useUserPermissionStore = create<UserPermissionState>((set, get) => 
       set({ isLoading: true, error: null });
       const response = await userPermissionService.getUserPermission(params);
       set({ currentUserPermission: response.data, isLoading: false });
+      // Atualiza a lista de userOrganization após buscar a permissão do usuário
+      await useUserOrganizationStore.getState().fetchUserOrganizations(params.organizationId);
     } catch (err: unknown) {
       const error = err as Error;
       set({ 
