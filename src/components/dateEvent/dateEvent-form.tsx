@@ -51,6 +51,17 @@ type DateEventFormValues = {
   type: DateEventType;
 };
 
+// Adiciona a função para gerar opções de horário (hora cheia e meia hora)
+function generateTimeOptions() {
+  const options = [];
+  for (let hour = 0; hour <= 23; hour++) {
+    const hourStr = hour.toString().padStart(2, '0');
+    options.push(`${hourStr}:00`);
+    options.push(`${hourStr}:30`);
+  }
+  return options;
+}
+
 export function DateEventForm({ dateEvent, proposalId, venueId, userId, username, onSubmit, onDelete, onCancel }: DateEventFormProps) {
   const isEditing = !!dateEvent;
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -282,16 +293,24 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
                 <FormItem>
                   <FormLabel>Hora de Início</FormLabel>
                   <FormControl>
-                    <Input
-                      type="time"
-                      required
-                      className="mt-1"
-                      {...field}
-                      onChange={e => {
-                        field.onChange(e);
-                        handleStartHourChange(e.target.value);
+                    <Select
+                      value={field.value}
+                      onValueChange={value => {
+                        field.onChange(value);
+                        handleStartHourChange(value);
                       }}
-                    />
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o horário" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {generateTimeOptions().map((time) => (
+                          <SelectItem key={time} value={time}>
+                            {time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -326,12 +345,21 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
                 <FormItem>
                   <FormLabel>Hora de Fim</FormLabel>
                   <FormControl>
-                    <Input
-                      type="time"
-                      required
-                      className="mt-1"
-                      {...field}
-                    />
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o horário" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {generateTimeOptions().map((time) => (
+                          <SelectItem key={time} value={time}>
+                            {time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -368,16 +396,24 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
                 <FormItem>
                   <FormLabel>Hora de Início</FormLabel>
                   <FormControl>
-                    <Input
-                      type="time"
-                      required
-                      className="mt-1"
-                      {...field}
-                      onChange={e => {
-                        field.onChange(e);
-                        handleStartHourChange(e.target.value);
+                    <Select
+                      value={field.value}
+                      onValueChange={value => {
+                        field.onChange(value);
+                        handleStartHourChange(value);
                       }}
-                    />
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o horário" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {generateTimeOptions().map((time) => (
+                          <SelectItem key={time} value={time}>
+                            {time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -391,12 +427,21 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
                 <FormItem>
                   <FormLabel>Hora de Fim</FormLabel>
                   <FormControl>
-                    <Input
-                      type="time"
-                      required
-                      className="mt-1"
-                      {...field}
-                    />
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o horário" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {generateTimeOptions().map((time) => (
+                          <SelectItem key={time} value={time}>
+                            {time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

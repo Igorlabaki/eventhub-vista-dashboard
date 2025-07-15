@@ -158,12 +158,12 @@ export default function VenueSchedule() {
 
   const hasViewPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_SCHEDULE");
+    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_CALENDAR");
   };
 
   const hasEditPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("EDIT_VENUE_SCHEDULE");
+    return currentUserVenuePermission.permissions.includes("EDIT_VENUE_CALENDAR");
   };
 
   if (!hasViewPermission()) {
