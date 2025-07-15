@@ -19,7 +19,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { Venue } from "@/types";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { venueViewPermissions, Permissions } from "@/types/permissions";
 
 interface VenueNavProps {
@@ -42,7 +42,7 @@ export function VenueNav({
 }: VenueNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUserPermission } = useUserPermissionStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
 
   // Mapeamento dos itens de navegação baseado no venueViewPermissions
   const venueNavItems: NavItem[] = [
@@ -50,7 +50,7 @@ export function VenueNav({
       title: "Notificações",
       href: `/venue/${venue?.id}/notifications`,
       icon: Bell,
-      permissionRequired: Permissions.VIEW_NOTIFICATIONS,
+      permissionRequired: Permissions.VIEW_VENUE_NOTIFICATIONS,
     },
     {
       title: "Visão Geral",
@@ -62,68 +62,68 @@ export function VenueNav({
       title: "Metas/Preços",
       href: `/venue/${venue?.id}/goals`,
       icon: Target,
-      permissionRequired: Permissions.VIEW_PRICES,
+      permissionRequired: Permissions.VIEW_VENUE_PRICES,
     },
     {
       title: "Contatos",
       href: `/venue/${venue?.id}/contacts`,
       icon: Contact,
-      permissionRequired: Permissions.VIEW_CONTACTS,
+      permissionRequired: Permissions.VIEW_VENUE_CONTACTS,
     },
     {
       title: "Site",
       href: `/venue/${venue?.id}/website`,
       icon: Globe,
-      permissionRequired: Permissions.VIEW_VENUE_SITE,
+      permissionRequired: Permissions.VIEW_VENUE_SITES,
     },
     {
       title: "Orçamentos",
       href: `/venue/${venue?.id}/budgets`,
       icon: ClipboardList,
-      permissionRequired: Permissions.VIEW_PROPOSALS,
+      permissionRequired: Permissions.VIEW_VENUE_PROPOSALS,
     },
     {
       title: "Despesas",
       href: `/venue/${venue?.id}/expenses`,
       icon: Receipt,
-      permissionRequired: Permissions.VIEW_EXPENSES,
+      permissionRequired: Permissions.VIEW_VENUE_EXPENSES,
     },
     {
       title: "Serviços",
       href: `/venue/${venue?.id}/services`,
       icon: Wrench,
-      permissionRequired: Permissions.VIEW_SERVICES,
+      permissionRequired: Permissions.VIEW_VENUE_SERVICES,
     },
     {
       title: "Eventos",
       href: `/venue/${venue?.id}/events`,
       icon: Calendar,
-      permissionRequired: Permissions.VIEW_EVENTS,
+      permissionRequired: Permissions.VIEW_VENUE_EVENTS,
     },
     {
       title: "Relatórios",
       href: `/venue/${venue?.id}/reports`,
       icon: BarChart,
-      permissionRequired: Permissions.VIEW_ANALYSIS,
+      permissionRequired: Permissions.VIEW_VENUE_ANALYSIS,
     },
     {
       title: "Agenda",
       href: `/venue/${venue?.id}/schedule`,
       icon: CalendarDays,
-      permissionRequired: Permissions.VIEW_CALENDAR,
+      permissionRequired: Permissions.VIEW_VENUE_CALENDAR,
     },
     {
       title: "Configurações",
       href: `/venue/${venue?.id}/settings`,
       icon: Settings,
-      permissionRequired: Permissions.VIEW_CONFIGURATIONS,
+      permissionRequired: Permissions.VIEW_VENUE_PERMISSIONS,
     },
   ];
 
   // Função para verificar se o usuário tem a permissão necessária
   const hasPermission = (requiredPermission: Permissions) => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes(requiredPermission);
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(requiredPermission);
   };
 
   // Filtrar itens baseado nas permissões
@@ -133,7 +133,7 @@ export function VenueNav({
 
   // Verificar se a página atual é acessível e redirecionar se necessário
   useEffect(() => {
-    if (!venue?.id || !currentUserPermission?.permissions) return;
+    if (!venue?.id || !currentUserVenuePermission?.permissions) return;
 
     const currentPath = location.pathname;
     const currentItem = venueNavItems.find(item => item.href === currentPath);
@@ -150,7 +150,7 @@ export function VenueNav({
         navigate(firstAvailableItem.href);
       }
     }
-  }, [location.pathname, currentUserPermission?.permissions, venue?.id]);
+  }, [location.pathname, currentUserVenuePermission?.permissions, venue?.id]);
 
   return (
     <div className="pt-3 pb-1">

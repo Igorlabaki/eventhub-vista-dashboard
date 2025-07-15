@@ -17,7 +17,7 @@ import { useVenueStore } from "@/store/venueStore";
 import { usePersonStore } from "@/store/personStore";
 import { FilterList } from "@/components/filterList";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 interface PersonListProps {
   persons: Person[];
@@ -52,7 +52,7 @@ export function PersonList({
     null
   );
   const { updatePerson } = usePersonStore();
-  const { currentUserPermission } = useUserPermissionStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
   // Cálculo de presenças confirmadas
   const confirmedCount = persons.filter((p) => p.attendance).length;
   const totalCount = persons.length;
@@ -126,15 +126,15 @@ export function PersonList({
   }
 
   const hasConfirmPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes(
-      "EDIT_CONFIRM_ATTENDANCE_LIST"
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_PROPOSAL_ATTENDANCE_LIST"
     );
   };
 
   const hasEditPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("EDIT_ATTENDANCE_LIST");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_ATTENDANCE_LIST");
   };
 
   return (

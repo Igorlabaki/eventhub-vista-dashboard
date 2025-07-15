@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ContactListSkeleton } from "./contact-list-skeleton";
 import { ContactList } from "./contact-list";
 import { ContactForm } from "./contact-form";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 interface ContactSectionProps {
   contacts?: Contact[];

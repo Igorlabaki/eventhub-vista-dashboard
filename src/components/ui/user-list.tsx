@@ -6,6 +6,7 @@ import { SearchInput } from "@/components/ui/search-input"
 
 export interface User {
   id: string
+  name: string
   username: string
   email: string
 }

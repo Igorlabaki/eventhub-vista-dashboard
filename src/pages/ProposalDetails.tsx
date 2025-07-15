@@ -5,7 +5,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Users, Calendar, Clock } from "lucide-react";
 import { ProposalServicesSummary } from "@/components/proposal/ProposalServicesSummary";
 import AccessDenied from "@/components/accessDenied";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 function ProposalDetailsSkeleton() {
   return (
@@ -70,7 +70,7 @@ function ProposalDetailsSkeleton() {
 export default function ProposalDetails() {
   const { id } = useParams();
   const { fetchProposalById, currentProposal, isLoading, setCurrentProposal } = useProposalStore();
-  const { currentUserPermission } = useUserPermissionStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
   
   useEffect(() => {
     if (id) {
@@ -84,13 +84,13 @@ export default function ProposalDetails() {
   }, [id, fetchProposalById, setCurrentProposal]);
 
   const hasViewPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("VIEW_PROPOSAL_INFO");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_INFO");
   };
 
   const hasViewValuesPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("VIEW_AMOUNTS");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_AMOUNTS");
   };
 
 

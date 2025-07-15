@@ -13,7 +13,7 @@ import { EventDetails } from "@/components/EventDetails";
 import { EventSidebar } from "@/components/EventSidebar";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { EventFilterList } from "@/components/events/EventFilterList";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
 
 // Month names in Portuguese
@@ -44,7 +44,7 @@ export default function VenueEvents() {
   const { events, isLoading, error, fetchEvents, fetchProposalById } =
     useProposalStore();
 
-  const { currentUserPermission } = useUserPermissionStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
 
   useEffect(() => {
     const eventId = searchParams.get("id");
@@ -65,8 +65,8 @@ export default function VenueEvents() {
   }, [selectedMonth, selectedYear]);
 
   const hasViewPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("VIEW_EVENTS");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_EVENTS");
   };
 
 

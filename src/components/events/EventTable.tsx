@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Proposal } from "@/types/proposal";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 interface EventTableProps {
   events: Proposal[];
@@ -23,7 +23,7 @@ export function EventTable({
   selectedYear,
 }: EventTableProps) {
   
-  const { currentUserPermission } = useUserPermissionStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
   if (isLoading) {
     return (
       <div className="rounded-md border bg-white">
@@ -56,8 +56,8 @@ export function EventTable({
   }
 
   const hasViewPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("VIEW_VALUES");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_AMOUNTS");
   };
 
   if (events.length === 0) {

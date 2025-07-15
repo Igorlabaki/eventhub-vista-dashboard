@@ -12,7 +12,6 @@ import { UserOrganization } from "@/types/userOrganization";
 import { UserOrganizationListSkeleton } from "./UserOrganizationListSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { FilterList } from "@/components/filterList";
-import { UserPermission } from "@/types/userPermissions";
 import { useState } from "react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 

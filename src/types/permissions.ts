@@ -1,61 +1,78 @@
 export enum Permissions {
-    VIEW_PROPOSAL_INFO = "VIEW_PROPOSAL_INFO",
-    VIEW_IMAGES = "VIEW_IMAGES",
-    VIEW_CONTACTS = "VIEW_CONTACTS",
-    VIEW_EVENTS = "VIEW_EVENTS",
-    VIEW_PROPOSALS = "VIEW_PROPOSALS",
-    VIEW_ANALYSIS = "VIEW_ANALYSIS",
-    VIEW_CALENDAR = "VIEW_CALENDAR",
-    VIEW_NOTIFICATIONS = "VIEW_NOTIFICATIONS",
-    VIEW_VENUES = "VIEW_VENUES",
-    VIEW_ORGANIZATION = "VIEW_ORGANIZATION",
-    VIEW_CONTRACTS = "VIEW_CONTRACTS",
-    VIEW_PERMISSIONS = "VIEW_PERMISSIONS",
-    EDIT_ORGANIZATION = "EDIT_ORGANIZATION",
-    EDIT_IMAGE = "EDIT_IMAGES",
-    EDIT_EVENT = "EDIT_EVENTS",
-    EDIT_TEXTS = "EDIT_TEXTS",
-    EDIT_PROPOSALS = "EDIT_PROPOSALS",
-    EDIT_CALENDAR = "EDIT_CALENDARS",
-    EDIT_EXPENSES = "EDIT_EXPENSES",
-    EDIT_SERVICES = "EDIT_SERVICES",
-    EDIT_QUESTIONS = "EDIT_QUESTIONS",
-    EDIT_CONFIRM_ATTENDANCE_LIST = "EDIT_CONFIRM_ATTENDANCE_LIST",
-    EDIT_SCHEDULE = "EDIT_SCHEDULE",
-    EDIT_PROPOSAL_OPTIONS = "EDIT_PROPOSAL_OPTIONS",
-    SEND_CLIENT = "SEND_CLIENT",
-    EDIT_DOCUMENTS = "EDIT_DOCUMENTS",
-    EDIT_PAYMENTS = "EDIT_PAYMENTS",
-    EDIT_DATES = "EDIT_DATES",
-    VIEW_AMOUNTS = "VIEW_AMOUNTS",
-    VIEW_PRICES = "VIEW_PRICES",
-    VIEW_SITE = "VIEW_SITE",
-    VIEW_EXPENSES = "VIEW_EXPENSES",
-    VIEW_SERVICES = "VIEW_SERVICES",
-    VIEW_CONFIGURATIONS = "VIEW_CONFIGURATIONS",
-    VIEW_OWNERS = "VIEW_OWNERS",
-    EDIT_ATTENDANCE_LIST = "EDIT_ATTENDANCE_LIST",
-    VIEW_ORG_SITE = "VIEW_ORG_SITE",
-    VIEW_ORG_CONFIG = "VIEW_ORG_CONFIG",
-    EDIT_CONTRACTS = "EDIT_CONTRACTS",
-    EDIT_PERMISSIONS = "EDIT_PERMISSIONS",
-    EDIT_OWNERS = "EDIT_OWNERS",
-    EDIT_ORG_SITE = "EDIT_ORG_SITE",
-    EDIT_ORG_CONFIG = "EDIT_ORG_CONFIG",
-    EDIT_VENUES = "EDIT_VENUES",
-    EDIT_VENUE_CONFIG = "EDIT_VENUE_CONFIG",
-    VIEW_VENUE_SITE = "VIEW_VENUE_SITE",
-    EDIT_PRICES = "EDIT_PRICES",
-    EDIT_CONTACTS = "EDIT_CONTACTS",
-    EDIT_VENUE_SITE = "EDIT_VENUE_SITE",
-    VIEW_VENUE_INFO = "VIEW_VENUE_INFO",
-    VIEW_DOCUMENTS = "VIEW_DOCUMENTS",
-    VIEW_DATES = "VIEW_DATES",
-    VIEW_SCHEDULE = "VIEW_SCHEDULE",
-    VIEW_ATTENDANCE_LIST = "VIEW_ATTENDANCE_LIST",
-    VIEW_PAYMENTS = "VIEW_PAYMENTS",
-    VIEW_HISTORY = "VIEW_HISTORY",
-    EDIT_PROPOSAL = "EDIT_PROPOSAL",
+    /* Proposal */
+
+        /* VIEW */
+            VIEW_PROPOSAL_INFO = "VIEW_PROPOSAL_INFO",
+            VIEW_PROPOSAL_DATES = "VIEW_PROPOSAL_DATES",
+            VIEW_PROPOSAL_HISTORY = "VIEW_PROPOSAL_HISTORY",
+            VIEW_PROPOSAL_SCHEDULE = "VIEW_PROPOSAL_SCHEDULE",
+            VIEW_PROPOSAL_PAYMENTS = "VIEW_PROPOSAL_PAYMENTS",
+            VIEW_PROPOSAL_DOCUMENTS = "VIEW_PROPOSAL_DOCUMENTS",
+            VIEW_PROPOSAL_ATTENDANCE_LIST = "VIEW_PROPOSAL_ATTENDANCE_LIST",
+        /* SEND */
+            SEND_PROPOSAL_INFO = "SEND_PROPOSAL_INFO",
+            SEND_PROPOSAL_TEXT = "SEND_PROPOSAL_TEXT",
+            SEND_PROPOSAL_LINKS = "SEND_PROPOSAL_LINKS",
+            SEND_PROPOSAL_DOCUMENTS = "SEND_PROPOSAL_DOCUMENTS",
+        /* EDIT */
+            EDIT_PROPOSAL_INFO = "EDIT_PROPOSAL_INFO",
+            EDIT_PROPOSAL_DATES = "EDIT_PROPOSAL_DATES",
+            EDIT_PROPOSAL_SCHEDULE = "EDIT_PROPOSAL_SCHEDULE",
+            EDIT_PROPOSAL_PAYMENTS = "EDIT_PROPOSAL_PAYMENTS",
+            EDIT_PROPOSAL_DOCUMENTS = "EDIT_PROPOSAL_DOCUMENTS",
+            EDIT_PROPOSAL_ATTENDANCE_LIST = "EDIT_PROPOSAL_ATTENDANCE_LIST",
+        /* CONFIRM */
+            CONFIRM_PROPOSAL_ATTENDANCE_LIST = "CONFIRM_PROPOSAL_ATTENDANCE_LIST",
+
+    /* Venue */
+
+        /* VIEW */
+            VIEW_VENUE_INFO = "VIEW_VENUE_INFO",
+            VIEW_VENUE_SITES = "VIEW_VENUE_SITES",
+            VIEW_VENUE_PRICES = "VIEW_VENUE_PRICES",
+            VIEW_VENUE_EVENTS = "VIEW_VENUE_EVENTS",
+            VIEW_VENUE_ANALYSIS = "VIEW_VENUE_ANALYSIS",
+            VIEW_VENUE_CALENDAR = "VIEW_VENUE_CALENDAR",
+            VIEW_VENUE_CONTACTS = "VIEW_VENUE_CONTACTS",
+            VIEW_VENUE_SERVICES = "VIEW_VENUE_SERVICES",
+            VIEW_VENUE_EXPENSES = "VIEW_VENUE_EXPENSES",
+            VIEW_VENUE_PROPOSALS = "VIEW_VENUE_PROPOSALS",
+            VIEW_VENUE_PERMISSIONS = "VIEW_VENUE_PERMISSIONS",
+            VIEW_VENUE_NOTIFICATIONS = "VIEW_VENUE_NOTIFICATIONS",
+
+        /* EDIT */
+            EDIT_VENUE_INFO = "EDIT_VENUE_INFO",
+            EDIT_VENUE_SITE = "EDIT_VENUE_SITE",
+            EDIT_VENUE_EVENTS = "EDIT_VENUE_EVENTS",
+            EDIT_VENUE_PRICES = "EDIT_VENUE_PRICES",
+            EDIT_VENUE_CALENDAR = "EDIT_VENUE_CALENDAR",
+            EDIT_VENUE_EXPENSES = "EDIT_VENUE_EXPENSES",
+            EDIT_VENUE_SERVICES = "EDIT_VENUE_SERVICES",
+            EDIT_VENUE_CONTACTS = "EDIT_VENUE_CONTACTS",
+            EDIT_VENUE_PROPOSALS = "EDIT_VENUE_PROPOSALS",
+    
+    /* Organization */
+
+        /* VIEW */
+            VIEW_ORG_INFO = "VIEW_ORG_INFO",
+            VIEW_ORG_SITE = "VIEW_ORG_SITE",
+            VIEW_ORG_VENUES = "VIEW_ORG_VENUES",
+            VIEW_ORG_OWNERS = "VIEW_ORG_OWNERS",
+            VIEW_ORG_CONTRACTS = "VIEW_ORG_CONTRACTS",
+            VIEW_ORG_PERMISSIONS = "VIEW_ORG_PERMISSIONS",
+        /* EDIT */
+            EDIT_ORG_INFO = "EDIT_ORG_INFO",
+            EDIT_ORG_SITE = "EDIT_ORG_SITE",
+            EDIT_ORG_VENUES = "EDIT_ORG_VENUES",
+            EDIT_ORG_OWNERS = "EDIT_ORG_OWNERS",
+            EDIT_ORG_CONTRACTS = "EDIT_ORG_CONTRACTS",
+            EDIT_ORG_PERMISSIONS = "EDIT_ORG_PERMISSIONS",
+
+    /* General */
+
+        /* VIEW */
+            VIEW_AMOUNTS = "VIEW_AMOUNTS",
+
 }
 
 export type PermissionItem = {
@@ -64,70 +81,63 @@ export type PermissionItem = {
 }
 
 export const organizationViewPermissions: PermissionItem[] = [
-    { enum: Permissions.VIEW_VENUES, display: "Espaços" },
-    { enum: Permissions.VIEW_CONTRACTS, display: "Contratos" },
-    { enum: Permissions.VIEW_PERMISSIONS, display: "Permissões" },
-    { enum: Permissions.VIEW_OWNERS, display: "Proprietários" },
     { enum: Permissions.VIEW_ORG_SITE, display: "Site" },
-    { enum: Permissions.VIEW_ORG_CONFIG, display: "Configurações" },
+    { enum: Permissions.VIEW_ORG_VENUES, display: "Espaços" },
+    { enum: Permissions.VIEW_ORG_INFO, display: "Informações" },
+    { enum: Permissions.VIEW_ORG_CONTRACTS, display: "Contratos" },
+    { enum: Permissions.VIEW_ORG_OWNERS, display: "Proprietários" },
+    { enum: Permissions.VIEW_ORG_PERMISSIONS, display: "Permissões" },
 ];
 
 export const organizationEditPermissions: PermissionItem[] = [
-    { enum: Permissions.EDIT_VENUES, display: "Espaços" },
-    { enum: Permissions.EDIT_CONTRACTS, display: "Contratos" },
-    { enum: Permissions.EDIT_PERMISSIONS, display: "Permissões" },
-    { enum: Permissions.EDIT_OWNERS, display: "Proprietários" },
     { enum: Permissions.EDIT_ORG_SITE, display: "Site" },
-    { enum: Permissions.EDIT_ORG_CONFIG, display: "Configurações" },
+    { enum: Permissions.EDIT_ORG_VENUES, display: "Espaços" },
+    { enum: Permissions.EDIT_ORG_OWNERS, display: "Proprietários" },
+    { enum: Permissions.EDIT_ORG_CONTRACTS, display: "Contratos" },
+    { enum: Permissions.EDIT_ORG_PERMISSIONS, display: "Permissões" },
 ];
 
 export const venueViewPermissions: PermissionItem[] = [
-    { enum: Permissions.VIEW_NOTIFICATIONS, display: "Notificacoes" },
+    { enum: Permissions.VIEW_VENUE_SITES, display: "Site" },
+    { enum: Permissions.VIEW_VENUE_PRICES, display: "Preços" },
     { enum: Permissions.VIEW_VENUE_INFO, display: "Informacoes" },
-    { enum: Permissions.VIEW_PRICES, display: "Preços" },
-    { enum: Permissions.VIEW_CONTACTS, display: "Contatos" },
-    { enum: Permissions.VIEW_PROPOSALS, display: "Orcamentos" },
-    { enum: Permissions.VIEW_VENUE_SITE, display: "Site" },
-    { enum: Permissions.VIEW_EXPENSES, display: "Despesas" },
-    { enum: Permissions.VIEW_SERVICES, display: "Serviços" },
-    { enum: Permissions.VIEW_EVENTS, display: "Eventos" },
-    { enum: Permissions.VIEW_ANALYSIS, display: "Análises" },
-    { enum: Permissions.VIEW_CALENDAR, display: "Calendário" },
-    { enum: Permissions.VIEW_CONFIGURATIONS, display: "Configurações" },
+    { enum: Permissions.VIEW_VENUE_EXPENSES, display: "Despesas" },
+    { enum: Permissions.VIEW_VENUE_SERVICES, display: "Serviços" },
+    { enum: Permissions.VIEW_VENUE_CONTACTS, display: "Contatos" },
+    { enum: Permissions.VIEW_VENUE_PROPOSALS, display: "Orcamentos" },
+    { enum: Permissions.VIEW_VENUE_NOTIFICATIONS, display: "Notificacoes" },
 ];
 export const venueEditPermissions: PermissionItem[] = [
-    { enum: Permissions.EDIT_VENUE_CONFIG, display: "Espaço" },
-    { enum: Permissions.EDIT_CALENDAR, display: "Calendário" },
-    { enum: Permissions.EDIT_EXPENSES, display: "Despesas" },
-    { enum: Permissions.EDIT_SERVICES, display: "Serviços" },
-    { enum: Permissions.EDIT_PRICES, display: "Preços" },
-    { enum: Permissions.EDIT_CONTACTS, display: "Contatos" },
-    { enum: Permissions.EDIT_PROPOSALS, display: "Orçamentos" },
-    { enum: Permissions.EDIT_PAYMENTS, display: "Pagamento" },
-    { enum: Permissions.EDIT_DATES, display: "Datas" },
     { enum: Permissions.EDIT_VENUE_SITE, display: "Site" },
+    { enum: Permissions.EDIT_VENUE_PRICES, display: "Preços" },
+    { enum: Permissions.EDIT_VENUE_EVENTS, display: "Eventos" },
+    { enum: Permissions.EDIT_VENUE_INFO, display: "Informacoes" },
+    { enum: Permissions.EDIT_VENUE_EXPENSES, display: "Despesas" },
+    { enum: Permissions.EDIT_VENUE_SERVICES, display: "Serviços" },
+    { enum: Permissions.EDIT_VENUE_CONTACTS, display: "Contatos" },
+    { enum: Permissions.EDIT_VENUE_CALENDAR, display: "Calendário" },
+    { enum: Permissions.EDIT_VENUE_PROPOSALS, display: "Orcamentos" },
 ];
 
 export const proposalViewPermissions: PermissionItem[] = [
+    { enum: Permissions.VIEW_PROPOSAL_DATES, display: "Datas" },
     { enum: Permissions.VIEW_PROPOSAL_INFO, display: "Informacoes" },
-    { enum: Permissions.VIEW_DOCUMENTS, display: "Documentos" },
-    { enum: Permissions.VIEW_DATES, display: "Datas" },
-    { enum: Permissions.VIEW_SCHEDULE, display: "Programacao do evento" },
-    { enum: Permissions.VIEW_ATTENDANCE_LIST, display: "Lista de presenca" },
-    { enum: Permissions.VIEW_PAYMENTS, display: "Pagamento" },
-    { enum: Permissions.VIEW_HISTORY, display: "Historico" },
+    { enum: Permissions.VIEW_PROPOSAL_HISTORY, display: "Historico" },
+    { enum: Permissions.VIEW_PROPOSAL_PAYMENTS, display: "Pagamento" },
+    { enum: Permissions.VIEW_PROPOSAL_DOCUMENTS, display: "Documentos" },
+    { enum: Permissions.VIEW_PROPOSAL_SCHEDULE, display: "Programacao do evento" },
+    { enum: Permissions.VIEW_PROPOSAL_ATTENDANCE_LIST, display: "Lista de presenca" },
 
 ];
 
 export const proposalEditPermissions: PermissionItem[] = [
-    { enum: Permissions.EDIT_PROPOSAL, display: "Orçamento" },
-    { enum: Permissions.EDIT_DOCUMENTS, display: "Documentos" },
-    { enum: Permissions.EDIT_SCHEDULE, display: "Programação do evento" },
-    { enum: Permissions.EDIT_PAYMENTS, display: "Pagamento" },
-    { enum: Permissions.EDIT_DATES, display: "Datas" },
-    { enum: Permissions.SEND_CLIENT, display: "Enviar (orc,contratos,msg,links,etc)" },
-    { enum: Permissions.EDIT_ATTENDANCE_LIST, display: "Lista de presença" },
-    { enum: Permissions.EDIT_CONFIRM_ATTENDANCE_LIST, display: "Confirmar/Cancelar presença" },
+    { enum: Permissions.EDIT_PROPOSAL_INFO, display: "Informacoes" },
+    { enum: Permissions.EDIT_PROPOSAL_DATES, display: "Datas" },
+    { enum: Permissions.EDIT_PROPOSAL_PAYMENTS, display: "Pagamento" },
+    { enum: Permissions.EDIT_PROPOSAL_DOCUMENTS, display: "Documentos" },
+    { enum: Permissions.EDIT_PROPOSAL_SCHEDULE, display: "Programacao do evento" },
+    { enum: Permissions.EDIT_PROPOSAL_ATTENDANCE_LIST, display: "Lista de presenca" },
+    { enum: Permissions.CONFIRM_PROPOSAL_ATTENDANCE_LIST, display: "Confirmar/Cancelar presenca" },
 ];
 
 export const generalPermissions: PermissionItem[] = [

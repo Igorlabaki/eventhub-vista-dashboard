@@ -1,11 +1,12 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUserStore } from "@/store/userStore";
 import { useProposalStore } from "@/store/proposalStore";
 import { useVenueStore } from "@/store/venueStore";
 import { useOrganizationStore } from "@/store/organizationStore";
-
-import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
+import { AppLoadingScreen, AppErrorScreen } from "@/components/ui/AppLoadingScreen";
 
 export function ProtectedRoute({ children }: { children: JSX.Element }) {
   const navigate = useNavigate();
@@ -17,20 +18,34 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { fetchProposalById } = useProposalStore();
   const { fetchVenueById } = useVenueStore();
   const { fetchOrganizationById } = useOrganizationStore();
+  const { fetchCurrentUserVenuePermission } = useUserVenuePermissionStore();
+  const { fetchCurrentUserOrganizationPermission } = useUserOrganizationPermissionStore();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const pathname = location.pathname;
 
-  function extractIdFromPath(pattern: RegExp): string | null {
+  const extractIdFromPath = (pattern: RegExp): string | null => {
     const match = pathname.match(pattern);
     return match ? match[1] : null;
-  }
+  };
 
   const proposalId = useMemo(() => extractIdFromPath(/^\/proposal\/([^/]+)/), [pathname]);
   const venueId = useMemo(() => extractIdFromPath(/^\/venue\/([^/]+)/), [pathname]);
   const organizationId = useMemo(() => extractIdFromPath(/^\/organization\/([^/]+)/), [pathname]);
+
+  const fetchUserPermissions = useCallback(
+    async (orgId: string, venueId?: string) => {
+      if (!userId) return;
+      await fetchCurrentUserVenuePermission({
+        organizationId: orgId,
+        venueId: venueId || "",
+        userId,
+      });
+    },
+    [userId, fetchCurrentUserVenuePermission]
+  );
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -40,69 +55,61 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
 
     let cancelled = false;
 
-    async function preloadEntities() {
+    const preloadEntities = async () => {
       setLoading(true);
       setError(null);
 
       try {
         if (proposalId) {
-          // Sempre buscar a proposal se temos um ID
           await fetchProposalById(proposalId);
-          
-          // Aguardar um pouco para garantir que os dados foram atualizados
-          await new Promise(resolve => setTimeout(resolve, 100));
-          
-          // Buscar venue e organization baseado na proposal
+
           const proposal = useProposalStore.getState().currentProposal;
-          if (proposal && proposal.id === proposalId) {
-            await fetchVenueById(proposal.venueId, userId ?? "");
-            
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            const venue = useVenueStore.getState().selectedVenue;
-            if (venue && venue.id === proposal.venueId) {
-              await fetchOrganizationById(venue.organizationId);
-            }
-          }
-        } else if (venueId) {
-          // Sempre buscar a venue se temos um ID
-          await fetchVenueById(venueId, userId ?? "");
-          
-          await new Promise(resolve => setTimeout(resolve, 100));
-          
-          // Buscar organization baseado na venue
+          if (!proposal || proposal.id !== proposalId) throw new Error("Proposta não encontrada");
+
+          await fetchVenueById(proposal.venueId, userId ?? "");
           const venue = useVenueStore.getState().selectedVenue;
-          if (venue && venue.id === venueId) {
-            await fetchOrganizationById(venue.organizationId);
-          }
+          if (!venue || venue.id !== proposal.venueId) throw new Error("Venue não encontrada");
+
+          await fetchOrganizationById(venue.organizationId);
+          await fetchCurrentUserVenuePermission({
+            organizationId: venue.organizationId,
+            venueId: venue.id,
+            userId,
+          });
+        } else if (venueId) {
+          await fetchVenueById(venueId, userId ?? "");
+          const venue = useVenueStore.getState().selectedVenue;
+          if (!venue || venue.id !== venueId) throw new Error("Venue não encontrada");
+
+          await fetchOrganizationById(venue.organizationId);
+          await fetchCurrentUserVenuePermission({
+            organizationId: venue.organizationId,
+            venueId: venue.id,
+            userId,
+          });
         } else if (organizationId) {
-          // Sempre buscar a organization se temos um ID
           await fetchOrganizationById(organizationId);
+          await fetchCurrentUserOrganizationPermission({ organizattionId: organizationId, userId });
         }
       } catch (err) {
         if (!cancelled) {
-          if (err instanceof Error) {
-            setError(err.message || "Erro ao carregar dados");
-          } else {
-            setError("Erro ao carregar dados");
-          }
+          setError(err instanceof Error ? err.message : "Erro ao carregar dados");
         }
       } finally {
         if (!cancelled) setLoading(false);
       }
-    }
+    };
 
     preloadEntities();
+
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, proposalId, venueId, organizationId, userId]);
-
-
+  }, [isAuthenticated, proposalId, venueId, organizationId, userId, fetchProposalById, fetchVenueById, fetchOrganizationById, fetchCurrentUserVenuePermission, fetchCurrentUserOrganizationPermission]);
 
   if (!isAuthenticated) return null;
   if (loading) return <AppLoadingScreen />;
-  if (error) return <div>Erro: {error}</div>;
+  if (error) return <AppErrorScreen message={error} />;
 
   return children;
 }

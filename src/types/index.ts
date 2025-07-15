@@ -17,6 +17,6 @@ export type {
 
 export type {
   CreateUserPermissionDTO as CreateUserPermissionDTO
-} from './userPermissions';
+} from './userVenuePermissions';
 
 export * from './userOrganization'; 

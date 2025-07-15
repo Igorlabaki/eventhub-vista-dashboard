@@ -9,7 +9,7 @@ import {
   Globe,
 } from "lucide-react";
 import { organizationViewPermissions, Permissions } from "@/types/permissions";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 interface OrganizationNavProps {
   organizationName: string;
@@ -32,7 +32,7 @@ export function OrganizationNav({
   const location = useLocation();
   const params = useParams();
   const organizationId = params.id;
-  const { currentUserPermission } = useUserPermissionStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
 
   // Mapeamento dos itens de navegação baseado no organizationViewPermissions
   const organizationActionItems: NavItem[] = [
@@ -40,25 +40,25 @@ export function OrganizationNav({
       title: "Espaços",
       href: `/organization/${organizationId}/venues`,
       icon: Building,
-      permissionRequired: Permissions.VIEW_VENUES,
+      permissionRequired: Permissions.VIEW_ORG_VENUES    ,
     },
     {
       title: "Contratos",
       href: `/organization/${organizationId}/contracts`,
       icon: FileText,
-      permissionRequired: Permissions.VIEW_CONTRACTS,
+      permissionRequired: Permissions.VIEW_ORG_CONTRACTS,
     },
     {
       title: "Permissões",
       href: `/organization/${organizationId}/permissions`,
       icon: ShieldCheck,
-      permissionRequired: Permissions.VIEW_PERMISSIONS,
+      permissionRequired: Permissions.VIEW_ORG_PERMISSIONS,
     },
     {
       title: "Proprietários",
       href: `/organization/${organizationId}/owners`,
       icon: KeyRound,
-      permissionRequired: Permissions.VIEW_OWNERS,
+      permissionRequired: Permissions.VIEW_ORG_OWNERS,
     },
     {
       title: "Site",
@@ -70,14 +70,14 @@ export function OrganizationNav({
       title: "Configurações",
       href: `/organization/${organizationId}/settings`,
       icon: Settings,
-      permissionRequired: Permissions.VIEW_ORG_CONFIG,
+      permissionRequired: Permissions.VIEW_ORG_INFO,
     },
   ];
-
+  
   // Função para verificar se o usuário tem a permissão necessária
   const hasPermission = (requiredPermission: Permissions) => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes(requiredPermission);
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(requiredPermission);
   };
 
   // Filtrar itens baseado nas permissões

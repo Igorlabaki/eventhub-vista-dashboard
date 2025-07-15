@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UserList, User } from "@/components/ui/user-list";
 import { VenueList, Venue } from "@/components/ui/venue-list";
 import { PermissionManager } from "@/components/permissions/permission-manager";
-import { userViewPermissions, userEditPermissions, userProposalPermissions } from "@/types/permissions";
+import { venueViewPermissions, venueEditPermissions, proposalViewPermissions } from "@/types/permissions";
 
 // Mock data
 const mockUsers = [
@@ -51,7 +51,7 @@ export function PermissionsManager({ organizationId, open, onClose }: Permission
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
-  const [userPermissions, setUserPermissions] = useState(mockUserPermissions);
+  const [userVenuePermissions, setUserVenuePermissions] = useState(null);
   const [view, setView] = useState<"users" | "venues" | "permissions">("users");
 
   const handleUserClick = (user: User) => {
@@ -67,7 +67,7 @@ export function PermissionsManager({ organizationId, open, onClose }: Permission
   const handleSavePermissions = (newPermissions: string[]) => {
     if (!selectedUser || !selectedVenue) return;
     
-    setUserPermissions(prev => {
+    setUserVenuePermissions(prev => {
       const updated = { ...prev };
       
       // Initialize if needed
@@ -110,8 +110,8 @@ export function PermissionsManager({ organizationId, open, onClose }: Permission
           users={mockUsers}
           onUserClick={handleUserClick}
           renderBadge={(user) => {
-            const hasAnyPermission = Object.keys(userPermissions).includes(user.id) && 
-                                   Object.keys(userPermissions[user.id] || {}).length > 0;
+            const hasAnyPermission = Object.keys(userVenuePermissions).includes(user.id) && 
+                                   Object.keys(userVenuePermissions[user.id] || {}).length > 0;
             
             return hasAnyPermission ? (
               <span className="text-xs font-medium bg-green-100 text-green-800 rounded-full px-2 py-1">
@@ -132,9 +132,9 @@ export function PermissionsManager({ organizationId, open, onClose }: Permission
           title={`Permissões para ${selectedUser.name}`}
           subtitle="Selecione um espaço para gerenciar as permissões:"
           renderBadge={(venue) => {
-            const hasAnyPermissions = userPermissions[selectedUser.id] && 
-                                    userPermissions[selectedUser.id][venue.id] &&
-                                    userPermissions[selectedUser.id][venue.id].length > 0;
+            const hasAnyPermissions = userVenuePermissions[selectedUser.id] && 
+                                    userVenuePermissions[selectedUser.id][venue.id] &&
+                                    userVenuePermissions[selectedUser.id][venue.id].length > 0;
             
             return hasAnyPermissions ? (
               <span className="text-xs font-medium bg-green-100 text-green-800 rounded-full px-2 py-1">
@@ -150,17 +150,17 @@ export function PermissionsManager({ organizationId, open, onClose }: Permission
     if (view === "permissions" && selectedUser && selectedVenue) {
       return (
         <PermissionManager
+          organizationId={organizationId}
           userId={selectedUser.id}
           userName={selectedUser.name}
           venueId={selectedVenue.id}
           venueName={selectedVenue.name}
-          viewPermissions={userViewPermissions}
-          editPermissions={userEditPermissions}
-          proposalPermissions={userProposalPermissions}
-          userPermissions={userPermissions}
+          venueViewPermissions={venueViewPermissions}
+          venueEditPermissions={venueEditPermissions}
+          proposalViewPermissions={proposalViewPermissions}
+          userVenuePermissions={userVenuePermissions}
           onGoBack={goBack}
-          onSavePermissions={handleSavePermissions}
-        />
+          onSavePermissions={handleSavePermissions} proposalEditPermissions={[]} organizationPermissions={[]} organizationEditPermissions={[]}        />
       );
     }
     

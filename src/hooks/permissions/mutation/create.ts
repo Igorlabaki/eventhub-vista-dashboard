@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useMutationWithError } from '@/hooks/useMutationWithError';
-import { userPermissionService } from '@/services/userpermissions.service';
+import { userPermissionService } from '@/services/userVenuePermissions.service';
 import { CreateUserPermissionDTO } from '@/types';
 
 export const useCreateUserPermissionMutations = ( userOrganizationId: string) => {

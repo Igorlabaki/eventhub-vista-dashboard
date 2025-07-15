@@ -35,7 +35,7 @@ import { useVenueStore } from "@/store/venueStore";
 import { useUserStore } from "@/store/userStore";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { useNavigate } from "react-router-dom";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
 import { PageHeader } from "@/components/PageHeader";
 import { createPortal } from "react-dom";
@@ -103,7 +103,7 @@ export default function VenueSchedule() {
   const { user } = useUserStore();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { currentUserPermission } = useUserPermissionStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
 
   const navigate = useNavigate();
 
@@ -157,13 +157,13 @@ export default function VenueSchedule() {
   }, []);
 
   const hasViewPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("VIEW_SCHEDULE");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_SCHEDULE");
   };
 
   const hasEditPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("EDIT_SCHEDULE");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_VENUE_SCHEDULE");
   };
 
   if (!hasViewPermission()) {

@@ -1,6 +1,6 @@
 import { Organization } from "./organization";
 import { User } from "@/components/ui/user-list";
-import { UserPermission } from "./userPermissions";
+import { UserPermission } from "./userVenuePermissions";
 
 export type UserOrganization = {
   id: string;

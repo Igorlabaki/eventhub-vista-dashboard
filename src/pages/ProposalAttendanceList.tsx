@@ -1,22 +1,22 @@
 import AccessDenied from "@/components/accessDenied";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ProposalAttendanceList } from "@/components/proposal/proposal-attendance-list";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 
 export default function ProposalAttendanceListPage() {
-  const { currentUserPermission } = useUserPermissionStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
 
   const hasViewPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("VIEW_ATTENDANCE_LIST");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_ATTENDANCE_LIST");
   };
 
 
 
   const hasEditPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("EDIT_ATTENDANCE_LIST");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_ATTENDANCE_LIST");
   };
 
   if(!hasViewPermission()) {

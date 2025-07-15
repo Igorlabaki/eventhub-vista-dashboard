@@ -25,7 +25,7 @@ import { useUpdateUserPermissionMutations } from "@/hooks/permissions/mutation/u
 import { showSuccessToast } from "../ui/success-toast";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { useDeleteUserPermissionMutations } from "@/hooks/permissions/mutation/delete";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { generalPermissions } from "@/types/permissions";
 
 // Interface que define a estrutura de uma permissão
@@ -46,7 +46,7 @@ interface PermissionManagerProps {
   proposalEditPermissions: Permission[]; // Lista de permissões relacionadas a eventos/orçamentos
   organizationPermissions: Permission[];
   organizationEditPermissions: Permission[];
-  userPermissions: {
+  userVenuePermissions: {
     [userId: string]: {
       [venueId: string]: {
         id: string;
@@ -69,7 +69,6 @@ export function PermissionManager({
   venueViewPermissions,
   venueEditPermissions,
   proposalViewPermissions,
-  userPermissions,
   organizationPermissions,
   organizationEditPermissions,
   proposalEditPermissions,
@@ -81,15 +80,15 @@ export function PermissionManager({
 }: PermissionManagerProps) {
   const { toast } = useToast();
   const {
-    createUserPermission,
-    updateUserPermission,
-    deleteUserPermission,
+    createUserVenuePermission,
+    updateUserVenuePermission,
+    deleteUserVenuePermission,
     isLoading,
-  } = useUserPermissionStore();
+  } = useUserVenuePermissionStore ();
 
   // Hook que processa e formata as permissões do usuário para o local específico
   const userVenuePermissions = React.useMemo(() => {
-    const userVenue = userPermissions[userId]?.[venueId];
+    const userVenue = userVenuePermissions[userId]?.[venueId];
     if (!userVenue) return [];
     const permissions = userVenue.permissions;
     if (!permissions) return [];
@@ -97,11 +96,11 @@ export function PermissionManager({
       return permissions.replace(/\s+/g, "").split(",");
     }
     return permissions;
-  }, [userId, venueId, userPermissions]);
+  }, [userId, venueId]);
 
   // Estado que controla o papel do usuário (admin/user)
   const [role, setRole] = React.useState<string>(() => {
-    const userVenue = userPermissions[userId]?.[venueId];
+    const userVenue = userVenuePermissions[userId]?.[venueId];
     let permissions: string[] = [];
     if (userVenue) {
       if (typeof userVenue.permissions === "string") {
@@ -141,11 +140,11 @@ export function PermissionManager({
     if (newRole === "admin") {
       // Se for admin, concede todas as permissões
       const allPermissions = [
+        ...generalPermissions.map((p) => p.enum), 
         ...venueViewPermissions.map((p) => p.enum),
         ...venueEditPermissions.map((p) => p.enum),
         ...proposalViewPermissions.map((p) => p.enum),
         ...proposalEditPermissions.map((p) => p.enum),
-        ...generalPermissions.map((p) => p.enum), 
         ...organizationPermissions.map((p) => p.enum),
         ...organizationEditPermissions.map((p) => p.enum),
       ];
@@ -177,8 +176,8 @@ export function PermissionManager({
   };
 
   // Hook para pegar o userPermissionId da venue selecionada
-  const currentUserPermissionId = React.useMemo(() => {
-    const userVenue = userPermissions[userId]?.[venueId];
+  const currentUserVenuePermissionId = React.useMemo(() => {
+    const userVenue = userVenuePermissions[userId]?.[venueId];
     if (!userVenue) return undefined;
     // Se userVenue for objeto, pega o id
     if (typeof userVenue === "object" && "id" in userVenue) {
@@ -186,7 +185,7 @@ export function PermissionManager({
     }
     // Se não tiver id, retorna undefined
     return undefined;
-  }, [userId, venueId, userPermissions]);
+  }, [userId, venueId, userVenuePermissions]);
 
   // Função que renderiza uma seção de permissões
   const renderPermissionSection = (
@@ -235,15 +234,14 @@ export function PermissionManager({
     try {
       const flatPermissions = tempPermissions;
 
-      if (userPermissionId && userPermissionId !== "") {
+      if (currentUserVenuePermissionId && currentUserVenuePermissionId !== "") {
         // UPDATE
         const updateData = {
-          userPermissionId,
-          role,
+          userVenuePermissionId: currentUserVenuePermissionId,
           venueId,
           permissions: flatPermissions,
         };
-        await updateUserPermission(updateData, organizationId || "");
+        await updateUserVenuePermission(updateData, organizationId || "");
         showSuccessToast({
           title: "Permissão atualizada!",
           description:
@@ -259,7 +257,7 @@ export function PermissionManager({
           organizationId: organizationId || "",
           permissions: flatPermissions,
         };
-        await createUserPermission(createData);
+        await createUserVenuePermission(createData);
         showSuccessToast({
           title: "Permissão criada!",
           description: "As permissões do usuário foram criadas com sucesso.",
@@ -277,7 +275,7 @@ export function PermissionManager({
 
   const handleDelete = async () => {
     try {
-      await deleteUserPermission(userPermissionId, organizationId || "");
+      await deleteUserVenuePermission(userPermissionId, organizationId || "");
       showSuccessToast({
         title: "Permissão removida!",
         description: "As permissões do usuário foram removidas com sucesso.",
@@ -314,7 +312,7 @@ export function PermissionManager({
               </p>
             </div>
           </div>
-          {currentUserPermissionId && (
+          {currentUserVenuePermissionId && (
             <Button
               variant="ghost"
               size="icon"

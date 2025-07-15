@@ -1,76 +1,71 @@
 import { UserOrganization } from "./userOrganization";
 import { Venue } from "./venue";
 
-export type UserPermission = {
+export type UserVenuePermission = {
   id: string;
   userOrganizationId: string;
   permissions: string;
   venueId?: string | null;
-  role: string;
   // Relacionamentos (ajuste os tipos conforme seus models)
   userOrganization: UserOrganization; 
   venue?: Venue;    
 };
 
-export interface CreateUserPermissionDTO {
+export interface CreateUserVenuePermissionDTO {
   userOrganizationId: string;
-  role: string;
+  permissions: string[];
   venueId: string;
-  permissions: string[]; 
-  userId: string;
-  organizationId: string;
 }
-export interface GetUserPermissionDTO {
+export interface GetUserVenuePermissionDTO {
   organizationId: string;
   venueId: string;
   userId: string;
 }
 
-export interface UpdateUserPermissionDTO {
-  userPermissionId: string;
-  role?: string;
-  venueId?: string;
+export interface UpdateUserVenuePermissionDTO {
+  userVenuePermissionId: string;
   permissions?: string[];
+  venueId?: string;
 }
 
-export interface UserPermissionByIdResponse {
+export interface UserVenuePermissionByIdResponse {
   success: true,
   message: string,
-  data: UserPermission,
+  data: UserVenuePermission,
   count: number,
   type: string
 }
 
-export interface UserPermissionListResponse {
+export interface UserVenuePermissionListResponse {
   success: true,
   message: string,
   data: {
-    userPermissionList: UserPermission[]
+    userVenuePermissionList: UserVenuePermission[]
   },
   count: number,
   type: string
 }
 
-export interface UserPermissionCreateResponse {
+export interface UserVenuePermissionCreateResponse {
   success: true,
   message: string,
-  data: UserPermission,
+  data: UserVenuePermission,
   count: number,
   type: string
 }
 
-export interface UserPermissionDeleteResponse {
+export interface UserVenuePermissionDeleteResponse {
   success: true,
   message: string,
-  data: UserPermission,
+  data: UserVenuePermission,
   count: number,
   type: string
 }
 
-export interface UserPermissionUpdateResponse {
+export interface UserVenuePermissionUpdateResponse {
   success: true,
   message: string,
-  data: UserPermission,
+  data: UserVenuePermission,
   count: number,
   type: string
 }

@@ -15,7 +15,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { Proposal } from "@/types/proposal";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { proposalViewPermissions, proposalEditPermissions, Permissions } from "@/types/permissions";
 
 interface ProposalNavProps {
@@ -39,7 +39,7 @@ export function ProposalNav({
 }: ProposalNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUserPermission } = useUserPermissionStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
 
   const proposalNavItems: NavItem[] = [
     {
@@ -52,69 +52,69 @@ export function ProposalNav({
       title: "Editar",
       href: `/proposal/${proposal?.id}/edit`,
       icon: Edit,
-      permissionRequired: Permissions.EDIT_PROPOSAL,
+      permissionRequired: Permissions.EDIT_VENUE_PROPOSALS,
     },
     {
       title: "Ver Histórico",
       href: `/proposal/${proposal?.id}/history`,
       icon: Clock,
-      permissionRequired: Permissions.VIEW_HISTORY,
+      permissionRequired: Permissions.VIEW_PROPOSAL_HISTORY,
     },
     {
       title: "Entrar em contato",
       href: `/proposal/${proposal?.id}/send-message`,
       icon: MessageCircle,
-      permissionRequired: Permissions.SEND_CLIENT,
+      permissionRequired: Permissions.SEND_PROPOSAL_TEXT,
     },
     {
       title: "Enviar Orçamento",
       href: `/proposal/${proposal?.id}/send-proposal`,
       icon: Send,
-      permissionRequired: Permissions.SEND_CLIENT,
+      permissionRequired: Permissions.SEND_PROPOSAL_INFO,
     },
     {
       title: "Enviar Contrato",
       href: `/proposal/${proposal?.id}/contract`,
       icon: FileText,
-      permissionRequired: Permissions.SEND_CLIENT,
+      permissionRequired: Permissions.SEND_PROPOSAL_INFO,
     },
     {
       title: "Agendar Data",
       href: `/proposal/${proposal?.id}/dates`,
       icon: Calendar,
-      permissionRequired: Permissions.VIEW_DATES,
+      permissionRequired: Permissions.VIEW_PROPOSAL_DATES,
     },
     {
       title: "Efetuar Pagamento",
       href: `/proposal/${proposal?.id}/payment`,
       icon: DollarSign,
-      permissionRequired: Permissions.VIEW_PAYMENTS,
+      permissionRequired: Permissions.VIEW_PROPOSAL_PAYMENTS,
     },
     {
       title: "Lista de Presença",
       href: `/proposal/${proposal?.id}/attendance-list`,
       icon: Users,
-      permissionRequired: Permissions.VIEW_ATTENDANCE_LIST,
+      permissionRequired: Permissions.VIEW_PROPOSAL_ATTENDANCE_LIST,
     },
     {
       title: "Programação",
       href: `/proposal/${proposal?.id}/schedule`,
       icon: List,
-      permissionRequired: Permissions.VIEW_SCHEDULE,
+      permissionRequired: Permissions.VIEW_PROPOSAL_SCHEDULE,
     },
     {
       title: "Documentos",
       href: `/proposal/${proposal?.id}/documents`,
       icon: Clipboard,
-      permissionRequired: Permissions.VIEW_DOCUMENTS,
+      permissionRequired: Permissions.VIEW_PROPOSAL_DOCUMENTS,
     },
   ];
 
   // Função para verificar se o usuário tem a permissão necessária
   const hasPermission = (requiredPermission?: Permissions) => {
     if (!requiredPermission) return true; // Se não há permissão requerida, permite acesso
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes(requiredPermission);
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(requiredPermission);
   };
 
   // Filtrar itens baseado nas permissões
@@ -124,7 +124,7 @@ export function ProposalNav({
 
   // Verificar se a página atual é acessível e redirecionar se necessário
   useEffect(() => {
-    if (!proposal?.id || !currentUserPermission?.permissions) return;
+    if (!proposal?.id || !currentUserVenuePermission?.permissions) return;
 
     const currentPath = location.pathname;
     const currentItem = proposalNavItems.find(item => item.href === currentPath);
@@ -141,7 +141,7 @@ export function ProposalNav({
         navigate(firstAvailableItem.href);
       }
     }
-  }, [location.pathname, currentUserPermission?.permissions, proposal?.id]);
+  }, [location.pathname, currentUserVenuePermission?.permissions, proposal?.id]);
 
   return (
     <div className="pt-3 pb-1">

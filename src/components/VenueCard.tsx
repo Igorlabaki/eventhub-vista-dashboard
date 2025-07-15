@@ -12,7 +12,7 @@ import { DateEvent } from "@/types/date-event";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { useUserStore } from "@/store/userStore";
 
 
@@ -34,13 +34,13 @@ export function VenueCard({
   onEditClick,
 }: VenueCardProps) {
   const navigate = useNavigate();
-  const { fetchCurrentUserPermission } = useUserPermissionStore();
+  const { fetchCurrentUserVenuePermission } = useUserVenuePermissionStore();
   const { user } = useUserStore();
 
   const handleViewVenue = async () => {
-    await fetchCurrentUserPermission({
+    await fetchCurrentUserVenuePermission({
       organizationId: organizationId,
-      userId: user?.id,
+      userId: user?.id || "",
       venueId: id,
     });
     navigate(`/venue/${id}/notifications`);

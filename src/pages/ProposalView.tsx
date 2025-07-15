@@ -7,7 +7,7 @@ import { FiUsers, FiClock } from "react-icons/fi";
 import { Calendar } from "lucide-react";
 import NotFound from "./NotFound";
 import { ProposalFooter } from "@/components/proposalFooter";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 function formatCurrency(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

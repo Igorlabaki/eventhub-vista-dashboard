@@ -10,7 +10,7 @@ import { useContactStore } from "@/store/contactStore";
 import { ContactType, type Contact } from "@/types/contact";
 import { ContactSection } from "@/components/contact/contact-section";
 import { ContactHeader } from "@/components/contact/contact-header";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
 
 export default function VenueContacts() {
@@ -20,7 +20,7 @@ export default function VenueContacts() {
   const [isCreatingContact, setIsCreatingContact] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null | undefined>(undefined);
   const { contacts, isLoading, fetchContacts } = useContactStore();
-  const { currentUserPermission } = useUserPermissionStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
   
   useEffect(() => {
     if (venueId) {
@@ -33,13 +33,13 @@ export default function VenueContacts() {
   };
 
   const hasViewPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("VIEW_CONTACTS");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_CONTACTS");
   };
 
   const hasEditPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("EDIT_CONTACTS");
+      if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_VENUE_CONTACTS");
   };
 
   const getFilteredContacts = () => {

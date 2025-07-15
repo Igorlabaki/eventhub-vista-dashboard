@@ -74,7 +74,7 @@ export function ProposalServicesSummary({
           </span>
         </div>
       </div>
-      {hasViewValuesPermission && (
+    
         <div className="flex flex-col gap-2">
           <div className="flex justify-between  text-gray-600">
             <span>Valor Base</span>
@@ -151,7 +151,7 @@ export function ProposalServicesSummary({
             </div>
           </div>
         </div>
-      )}
+     
       <div className="mb-6 max-w-2xl mx-auto">
         <span className="block text-sm text-gray-500 font-medium mb-1">
           Descrição:

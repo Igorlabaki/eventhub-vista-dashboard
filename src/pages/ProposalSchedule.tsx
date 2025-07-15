@@ -6,7 +6,7 @@ import { Schedule } from "@/types/schedule";
 import { useParams } from "react-router-dom";
 import { useProposalStore } from "@/store/proposalStore";
 import { PageHeader } from "@/components/PageHeader";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
 import { Button } from "@/components/ui/button";
 import { createPortal } from "react-dom";
@@ -19,19 +19,19 @@ export default function ProposalSchedulePage() {
     Schedule | null | undefined
   >(null);
   const { currentProposal } = useProposalStore();
-  const { currentUserPermission } = useUserPermissionStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
   if (!proposalId || !currentProposal) {
     return null;
   }
 
   const hasViewPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("VIEW_SCHEDULE");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_SCHEDULE");
   };
 
   const hasEditPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("EDIT_SCHEDULE");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_SCHEDULE");
   };
 
   const showCreateButton = !isCreating && !selectedSchedule && hasEditPermission();

@@ -16,7 +16,7 @@ import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { useProposalStore } from "@/store/proposalStore";
 import { useVenueStore } from "@/store/venueStore";
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 interface ScheduleListProps {
   schedules: Schedule[];
   onDeleteSchedule: (schedule: Schedule) => void;
@@ -42,7 +42,7 @@ export function ScheduleList({
 }: ScheduleListProps) {
   const [scheduleToDelete, setScheduleToDelete] =
     React.useState<Schedule | null>(null);
-    const { currentUserPermission } = useUserPermissionStore();
+    const { currentUserVenuePermission } = useUserVenuePermissionStore();
   // Link para programação
   const { currentProposal } = useProposalStore();
   const { selectedVenue } = useVenueStore();
@@ -107,8 +107,8 @@ export function ScheduleList({
 
   
   const hasEditPermission = () => {
-    if (!currentUserPermission?.permissions) return false;
-    return currentUserPermission.permissions.includes("EDIT_SCHEDULES");
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_SCHEDULE");
   };
 
   return (

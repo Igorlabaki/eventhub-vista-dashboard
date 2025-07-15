@@ -14,7 +14,7 @@ import {
 import { Edit, Pencil, Trash2, Phone } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
-import { useUserPermissionStore } from "@/store/userPermissionStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 interface ContactListProps {
   contacts: Contact[];

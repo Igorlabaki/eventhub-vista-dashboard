@@ -1,4 +1,4 @@
-import { userPermissionService } from '@/services/userpermissions.service';
+import { userPermissionService } from '@/services/userVenuePermissions.service';
 import { useQuery } from '@tanstack/react-query';
 
 export const useGetOrganizationUserPermissionsList = (organizationId: string) => {
