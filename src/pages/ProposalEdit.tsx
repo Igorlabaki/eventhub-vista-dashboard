@@ -32,6 +32,7 @@ import "react-phone-input-2/lib/style.css";
 import { Textarea } from "@/components/ui/textarea";
 import { useServiceStore } from "@/store/serviceStore";
 import { useVenueStore } from "@/store/venueStore";
+import ProposalEditSkeleton from "@/components/proposal/ProposalEditSkeleton";
 
 const proposalTypes = [
   { value: ProposalType.EVENT, label: "Evento" },
@@ -202,9 +203,7 @@ export default function ProposalEdit() {
   return (
     <DashboardLayout title="Editar Orçamento">
       {!currentProposal ? (
-        <div className="flex justify-center items-center h-40 text-destructive text-lg font-medium">
-          Carregando orçamento...
-        </div>
+        <ProposalEditSkeleton />
       ) : (
         <FormLayout
           form={form}
