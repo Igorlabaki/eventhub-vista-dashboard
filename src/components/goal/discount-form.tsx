@@ -22,6 +22,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale/pt-BR";
 import type { SeasonalFeeType } from "@/types/seasonalFee";
+import InputMask from "react-input-mask";
 
 const formSchema = z.object({
   title: z.string().min(1, "Obrigatório"),
@@ -235,19 +236,14 @@ export function DiscountForm({ discount, onCancel, onDelete }: DiscountFormProps
                 <FormItem className="flex flex-col">
                   <FormLabel>Data Inicial</FormLabel>
                   <FormControl>
-                    <ReactDatePicker
-                      locale="pt-BR"
-                      dateFormat="dd/MM"
-                      showMonthDropdown
-                      showPopperArrow={false}
-                      selected={ddmmToDate(field.value)}
-                      onChange={(date: Date | null) => field.onChange(date ? dateToDDMM(date) : "")}
-                      placeholderText="dd/mm"
-                      customInput={<Input />}
-                      showYearDropdown={false}
-                      minDate={new Date(new Date().getFullYear(), 0, 1)}
-                      maxDate={new Date(new Date().getFullYear(), 11, 31)}
-                    />
+                    <InputMask
+                      mask="99/99"
+                      value={field.value}
+                      onChange={e => field.onChange(e.target.value)}
+                      placeholder="DD/MM"
+                    >
+                      {(inputProps: React.ComponentProps<typeof Input>) => <Input {...inputProps} />}
+                    </InputMask>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -260,19 +256,14 @@ export function DiscountForm({ discount, onCancel, onDelete }: DiscountFormProps
                 <FormItem className="flex flex-col">
                   <FormLabel>Data Final</FormLabel>
                   <FormControl>
-                    <ReactDatePicker
-                      locale="pt-BR"
-                      dateFormat="dd/MM"
-                      showMonthDropdown
-                      showPopperArrow={false}
-                      selected={ddmmToDate(field.value)}
-                      onChange={(date: Date | null) => field.onChange(date ? dateToDDMM(date) : "")}
-                      placeholderText="dd/mm"
-                      customInput={<Input />}
-                      showYearDropdown={false}
-                      minDate={new Date(new Date().getFullYear(), 0, 1)}
-                      maxDate={new Date(new Date().getFullYear(), 11, 31)}
-                    />
+                    <InputMask
+                      mask="99/99"
+                      value={field.value}
+                      onChange={e => field.onChange(e.target.value)}
+                      placeholder="DD/MM"
+                    >
+                      {(inputProps: React.ComponentProps<typeof Input>) => <Input {...inputProps} />}
+                    </InputMask>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

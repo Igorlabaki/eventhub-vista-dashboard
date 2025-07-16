@@ -22,6 +22,7 @@ import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale/pt-BR";
+import InputMask from "react-input-mask";
 
 const formSchema = z.object({
   title: z.string().min(1, "Obrigatório"),
@@ -152,8 +153,8 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
         fee: Number(data.fee),
         venueId: venue?.id,
         type: fee?.type || "SURCHARGE",
-        startDay: tipoSelecao === "periodo" && data.startDay ? formatDateToDDMM(data.startDay) : undefined,
-        endDay: tipoSelecao === "periodo" && data.endDay ? formatDateToDDMM(data.endDay) : undefined,
+        startDay: tipoSelecao === "periodo" && data.startDay ? data.startDay : undefined,
+        endDay: tipoSelecao === "periodo" && data.endDay ? data.endDay : undefined,
         affectedDays: tipoSelecao === "dias" ? diasSelecionados.join(",") : undefined,
       };
       let response;
@@ -240,7 +241,7 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
           )}
         />
 
-        {/* Campos dinâmicos */}
+       {/* Campos dinâmicos */}
         {tipoSelecao === "periodo" && (
           <div className="grid grid-cols-2 gap-4">
             <FormField
@@ -250,19 +251,14 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
                 <FormItem className="flex flex-col">
                   <FormLabel>Data Inicial</FormLabel>
                   <FormControl>
-                    <ReactDatePicker
-                      locale="pt-BR"
-                      dateFormat="dd/MM"
-                      showMonthDropdown
-                      showPopperArrow={false}
-                      selected={ddmmToDate(field.value)}
-                      onChange={(date: Date | null) => field.onChange(date ? dateToDDMM(date) : "")}
-                      placeholderText="dd/mm"
-                      customInput={<Input />}
-                      showYearDropdown={false}
-                      minDate={new Date(new Date().getFullYear(), 0, 1)}
-                      maxDate={new Date(new Date().getFullYear(), 11, 31)}
-                    />
+                    <InputMask
+                      mask="99/99"
+                      value={field.value}
+                      onChange={e => field.onChange(e.target.value)}
+                      placeholder="DD/MM"
+                    >
+                      {(inputProps: React.ComponentProps<typeof Input>) => <Input {...inputProps} />}
+                    </InputMask>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -275,19 +271,14 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
                 <FormItem className="flex flex-col">
                   <FormLabel>Data Final</FormLabel>
                   <FormControl>
-                    <ReactDatePicker
-                      locale="pt-BR"
-                      dateFormat="dd/MM"
-                      showMonthDropdown
-                      showPopperArrow={false}
-                      selected={ddmmToDate(field.value)}
-                      onChange={(date: Date | null) => field.onChange(date ? dateToDDMM(date) : "")}
-                      placeholderText="dd/mm"
-                      customInput={<Input />}
-                      showYearDropdown={false}
-                      minDate={new Date(new Date().getFullYear(), 0, 1)}
-                      maxDate={new Date(new Date().getFullYear(), 11, 31)}
-                    />
+                    <InputMask
+                      mask="99/99"
+                      value={field.value}
+                      onChange={e => field.onChange(e.target.value)}
+                      placeholder="DD/MM"
+                    >
+                      {(inputProps: React.ComponentProps<typeof Input>) => <Input {...inputProps} />}
+                    </InputMask>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
