@@ -24,7 +24,7 @@ export function SidebarNav({
   const params = useParams();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const { currentOrganization } = useOrganizationStore();
+  const { currentOrganization, fetchOrganizationById } = useOrganizationStore();
 
   // Determine if we're in a venue section
   const isInVenue = location.pathname.startsWith("/venue");
@@ -61,7 +61,22 @@ export function SidebarNav({
   }, [venueId, user?.id, isInVenue]);
 
   const isInProposal = location.pathname.includes("/proposal/");
-  const { currentProposal } = useProposalStore();
+  const { currentProposal, fetchProposalById } = useProposalStore();
+  const proposalId = params.id; // pode ser id de proposal ou venue, depende da rota
+
+  useEffect(() => {
+    if (proposalId && isInProposal) {
+      fetchProposalById(proposalId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposalId, isInProposal]);
+
+  useEffect(() => {
+    if (organizationId && isInOrg) {
+      fetchOrganizationById(organizationId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organizationId, isInOrg]);
 
   return (
     <div

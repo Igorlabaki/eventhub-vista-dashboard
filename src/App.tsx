@@ -57,6 +57,7 @@ import ProposalView from "./pages/ProposalView";
 import { ProposalForm } from "./pages/ProposalForm";
 import { ScheduleSection } from "./components/schedule/schedule-section";
 import ProposalSchedulePage from "./pages/ProposalSchedule";
+import OrganizationPermissionsV2 from "./pages/OrganizationPermissionsv2";
 
 const queryClient = new QueryClient();
 
@@ -89,7 +90,7 @@ const App = () => {
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/organization/:id/venues" element={<ProtectedRoute><OrganizationVenues /></ProtectedRoute>} />
               <Route path="/organization/:id/owners" element={<ProtectedRoute><OrganizationOwners /></ProtectedRoute>} />
-              <Route path="/organization/:id/permissions" element={<ProtectedRoute><OrganizationPermissions /></ProtectedRoute>} />
+              <Route path="/organization/:id/permissions" element={<ProtectedRoute><OrganizationPermissionsV2 /></ProtectedRoute>} />
               <Route path="/organization/:id/contracts" element={<ProtectedRoute><OrganizationContracts /></ProtectedRoute>} />
               <Route path="/organization/:id/settings" element={<ProtectedRoute><OrganizationSettings /></ProtectedRoute>} />
               <Route path="/organization/:id/website" element={<ProtectedRoute><OrganizationWebsite /></ProtectedRoute>} />

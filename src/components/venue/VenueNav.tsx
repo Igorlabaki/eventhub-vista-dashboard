@@ -116,7 +116,7 @@ export function VenueNav({
       title: "Configurações",
       href: `/venue/${venue?.id}/settings`,
       icon: Settings,
-      permissionRequired: Permissions.VIEW_VENUE_PERMISSIONS,
+      permissionRequired: Permissions.VIEW_VENUE_CONFIG,
     },
   ];
 

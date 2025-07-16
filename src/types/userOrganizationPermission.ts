@@ -6,6 +6,7 @@ export type UserOrganizationPermission = {
   userOrganizationId?: string;
   userId: string;
   permissions: string[];
+  role: string;
   userOrganization?: UserOrganization;
 };
 

@@ -57,7 +57,7 @@ export function EventTable({
 
   const hasViewPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_AMOUNTS");
+    return currentUserVenuePermission.permissions.includes("VIEW_AMOUNTS");
   };
 
   if (events.length === 0) {

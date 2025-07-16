@@ -124,7 +124,7 @@ export function ProposalNav({
 
   // Verificar se a página atual é acessível e redirecionar se necessário
   useEffect(() => {
-    if (!proposal?.id || !currentUserVenuePermission?.permissions) return;
+    if (!proposal?.id ) return;
 
     const currentPath = location.pathname;
     const currentItem = proposalNavItems.find(item => item.href === currentPath);
@@ -143,6 +143,10 @@ export function ProposalNav({
     }
   }, [location.pathname, currentUserVenuePermission?.permissions, proposal?.id]);
 
+  if (!proposal) {
+    return null;
+  }
+  console.log(proposal)
   return (
     <div className="pt-3 pb-1">
       {!isCollapsed && (

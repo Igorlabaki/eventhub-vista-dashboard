@@ -14,51 +14,27 @@ import { FilterList } from "@/components/filterList";
 
 interface VenuePermissionsListProps {
   venues: Venue[];
-  onVenueClick: (venue: Venue) => void;
-  onBackClick: () => void;
-  userPermissions: {
+  onVenueClick: (venue: Venue, venuePermission: {
+    id: string;
+    permissions: string[];
+    role: string;
+  }) => void;
+  userVenuePermissions: {
     [venueId: string]: {
+      id: string;
       permissions: string[];
       role: string;
     };
   };
-  title?: string;
-  subtitle?: string;
 }
 
 export function VenuePermissionsList({
   venues,
   onVenueClick,
-  onBackClick,
-  userPermissions,
-  title,
-  subtitle
+  userVenuePermissions,
 }: VenuePermissionsListProps) {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBackClick}
-          className="hover:bg-gray-100"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        
-        {title && (
-          <h2 className="text-xl font-semibold text-gray-800">
-            {title}
-          </h2>
-        )}
-      </div>
-      
-      {subtitle && (
-        <p className="text-sm text-gray-500 mb-4">
-          {subtitle}
-        </p>
-      )}
-
+    <div className="">
       <FilterList
         items={venues}
         filterBy={(venue, query) => 
@@ -67,7 +43,7 @@ export function VenuePermissionsList({
         placeholder="Buscar espaço..."
       >
         {(filteredVenues) => (
-          <Table className="bg-white rounded-md shadow-lg">
+          <Table className=" shadow-lg">
             <TableHeader>
               <TableRow>
                 <TableHead>Nome do Espaço</TableHead>
@@ -76,24 +52,22 @@ export function VenuePermissionsList({
             </TableHeader>
             <TableBody>
               {filteredVenues.map((venue) => {
-                const venuePermission = userPermissions[venue.id];
+                const venuePermission = userVenuePermissions[venue.id];
                 const permissions = venuePermission?.permissions || [];
-                const role = venuePermission?.role || "user";
-                
+                const role = venuePermission?.role;
                 // Verifica se é admin baseado na role
                 const isAdmin = role === "admin";
-                
                 return (
                   <TableRow 
                     key={venue.id}
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => onVenueClick(venue)}
+                    onClick={() => onVenueClick(venue,  venuePermission)}
                   >
                     <TableCell className="font-medium">
                       {venue.name}
                     </TableCell>
                     <TableCell className="text-center">
-                      {permissions.length > 0 ? (
+                      {role ? (
                         <span className={cn(
                           "text-xs font-medium rounded-full px-2 py-1",
                           isAdmin 

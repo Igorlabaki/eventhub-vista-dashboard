@@ -17,6 +17,7 @@ export type User = {
   id: string;
   email: string;
   username: string;
+  name: string;
   password: string;
   avatarUrl?: string | null;
   googleId?: string | null;

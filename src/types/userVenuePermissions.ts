@@ -6,6 +6,7 @@ export type UserVenuePermission = {
   userOrganizationId: string;
   permissions: string;
   venueId?: string | null;
+  role: string;
   // Relacionamentos (ajuste os tipos conforme seus models)
   userOrganization: UserOrganization; 
   venue?: Venue;    

@@ -82,8 +82,14 @@ export const useUserOrganizationPermissionStore = create<UserOrganizationPermiss
     updateUserOrganizationPermission: async (data: UpdateUserOrganizationPermissionDTO) => {
         try {
             set({ isLoading: true, error: null });
-            await userOrganizationPermissionService.updateUserOrganizationPermission(data);
-            set({ isLoading: false });
+            const response = await userOrganizationPermissionService.updateUserOrganizationPermission(data);
+            set((state) => ({
+                userOrganizationPermissions: state.userOrganizationPermissions.map((perm) =>
+                    perm.id === data.userOrganizationPermissionId ? response.data : perm
+                ),
+                currentUserOrganizationPermission: response.data,
+                isLoading: false
+            }));
         } catch (err: unknown) {
             const error = err as Error;
             set({

@@ -9,7 +9,7 @@ import {
   Globe,
 } from "lucide-react";
 import { organizationViewPermissions, Permissions } from "@/types/permissions";
-import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 
 interface OrganizationNavProps {
   organizationName: string;
@@ -32,7 +32,7 @@ export function OrganizationNav({
   const location = useLocation();
   const params = useParams();
   const organizationId = params.id;
-  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
 
   // Mapeamento dos itens de navegação baseado no organizationViewPermissions
   const organizationActionItems: NavItem[] = [
@@ -40,7 +40,7 @@ export function OrganizationNav({
       title: "Espaços",
       href: `/organization/${organizationId}/venues`,
       icon: Building,
-      permissionRequired: Permissions.VIEW_ORG_VENUES    ,
+      permissionRequired: Permissions.VIEW_ORG_VENUES,
     },
     {
       title: "Contratos",
@@ -76,8 +76,8 @@ export function OrganizationNav({
   
   // Função para verificar se o usuário tem a permissão necessária
   const hasPermission = (requiredPermission: Permissions) => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes(requiredPermission);
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(requiredPermission);
   };
 
   // Filtrar itens baseado nas permissões

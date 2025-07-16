@@ -21,12 +21,12 @@ export function ProposalServicesSummary({
 }: ProposalServicesSummaryProps) {
   const { currentProposal } = useProposalStore();
   const { selectedVenue } = useVenueStore();
-  
+
   // Verificação de segurança
   if (!currentProposal) {
     return null;
   }
-  
+
   const servicosAdicionais =
     currentProposal?.proposalServices?.map((ps) => ({
       name: ps.service?.name,
@@ -64,94 +64,109 @@ export function ProposalServicesSummary({
         <div className="flex flex-col items-center text-primary gap-2  rounded-lg px-4 pb-2">
           <Clock className="" size={18} />
           <span className="font-semibold text-sm md:text-base flex">
-            <p>{currentProposal?.startDate ? `${new Date(currentProposal.startDate)
-              .toISOString()
-              .substring(11, 16)}` : "-"}</p>
-            <p>{currentProposal?.startDate && currentProposal?.endDate ? " - " : ""}</p>
-            <p>{currentProposal?.endDate ? `${new Date(currentProposal.endDate)
-              .toISOString()
-              .substring(11, 16)}` : ""}</p>
+            <p>
+              {currentProposal?.startDate
+                ? `${new Date(currentProposal.startDate)
+                    .toISOString()
+                    .substring(11, 16)}`
+                : "-"}
+            </p>
+            <p>
+              {currentProposal?.startDate && currentProposal?.endDate
+                ? " - "
+                : ""}
+            </p>
+            <p>
+              {currentProposal?.endDate
+                ? `${new Date(currentProposal.endDate)
+                    .toISOString()
+                    .substring(11, 16)}`
+                : ""}
+            </p>
           </span>
         </div>
       </div>
-    
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between  text-gray-600">
-            <span>Valor Base</span>
-            <span className="font-medium">
-              {currentProposal?.basePrice?.toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              }) || "-"}
-            </span>
-          </div>
-          {currentProposal?.extraHourPrice > 0 &&
-            currentProposal?.extraHoursQty > 0 && (
-              <div className="flex justify-between  text-gray-600">
-                <span>Hora Extra</span>
-                <span className="font-medium">
-                  {(
-                    (currentProposal.extraHourPrice || 0) *
-                    (currentProposal.extraHoursQty || 0)
-                  ).toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
-                </span>
-              </div>
-            )}
-          {(servicosAdicionais || []).map((serv, idx) => (
-            <div className="flex justify-between  text-gray-600" key={idx}>
-              <span>{serv.name}</span>
+      {hasViewValuesPermission && (
+        <>
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between  text-gray-600">
+              <span>Valor Base</span>
               <span className="font-medium">
-                {serv.price?.toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                })}
-              </span>
-            </div>
-          ))}
-          <div className="flex justify-between mt-4 text-lg ">
-            <span className="font-bold text-gray-600">Total:</span>
-            <span className="font-bold text-gray-600">
-              {currentProposal?.totalAmount?.toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              }) || "-"}
-            </span>
-          </div>
-          <div className="flex flex-col sm:flex-row justify-center gap-6 mb-6 text-sm text-gray-600 mt-4">
-            <div>
-              * Valor por pessoa:{" "}
-              <span className="font-semibold">
-                {currentProposal?.guestNumber && currentProposal?.basePrice
-                  ? (
-                      (currentProposal?.basePrice || 0) / (currentProposal?.guestNumber || 1)
-                    ).toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    })
-                  : "-"}
-              </span>
-            </div>
-            <div>
-              * Valor da hora extra:{" "}
-              <span className="font-semibold">
-                {currentProposal?.extraHourPrice?.toLocaleString("pt-BR", {
+                {currentProposal?.basePrice?.toLocaleString("pt-BR", {
                   style: "currency",
                   currency: "BRL",
                 }) || "-"}
               </span>
             </div>
-            <div>
-              * Qtde horas extra:{" "}
-              <span className="font-semibold">
-                {currentProposal?.extraHoursQty || 0}
+            {currentProposal?.extraHourPrice > 0 &&
+              currentProposal?.extraHoursQty > 0 && (
+                <div className="flex justify-between  text-gray-600">
+                  <span>Hora Extra</span>
+                  <span className="font-medium">
+                    {(
+                      (currentProposal.extraHourPrice || 0) *
+                      (currentProposal.extraHoursQty || 0)
+                    ).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
+                  </span>
+                </div>
+              )}
+            {(servicosAdicionais || []).map((serv, idx) => (
+              <div className="flex justify-between  text-gray-600" key={idx}>
+                <span>{serv.name}</span>
+                <span className="font-medium">
+                  {serv.price?.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </span>
+              </div>
+            ))}
+            <div className="flex justify-between mt-4 text-lg ">
+              <span className="font-bold text-gray-600">Total:</span>
+              <span className="font-bold text-gray-600">
+                {currentProposal?.totalAmount?.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                }) || "-"}
               </span>
             </div>
+            <div className="flex flex-col sm:flex-row justify-center gap-6 mb-6 text-sm text-gray-600 mt-4">
+              <div>
+                * Valor por pessoa:{" "}
+                <span className="font-semibold">
+                  {currentProposal?.guestNumber && currentProposal?.basePrice
+                    ? (
+                        (currentProposal?.basePrice || 0) /
+                        (currentProposal?.guestNumber || 1)
+                      ).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })
+                    : "-"}
+                </span>
+              </div>
+              <div>
+                * Valor da hora extra:{" "}
+                <span className="font-semibold">
+                  {currentProposal?.extraHourPrice?.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  }) || "-"}
+                </span>
+              </div>
+              <div>
+                * Qtde horas extra:{" "}
+                <span className="font-semibold">
+                  {currentProposal?.extraHoursQty || 0}
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-     
+        </>
+      )}
       <div className="mb-6 max-w-2xl mx-auto">
         <span className="block text-sm text-gray-500 font-medium mb-1">
           Descrição:

@@ -61,34 +61,59 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
 
       try {
         if (proposalId) {
-          await fetchProposalById(proposalId);
-
+          // Proposal
+          const currentProposal = useProposalStore.getState().currentProposal;
+          if (!currentProposal || currentProposal.id !== proposalId) {
+            await fetchProposalById(proposalId);
+          }
           const proposal = useProposalStore.getState().currentProposal;
           if (!proposal || proposal.id !== proposalId) throw new Error("Proposta não encontrada");
 
-          await fetchVenueById(proposal.venueId, userId ?? "");
+          // Venue
+          const currentVenue = useVenueStore.getState().selectedVenue;
+          if (!currentVenue || currentVenue.id !== proposal.venueId) {
+            await fetchVenueById(proposal.venueId, userId ?? "");
+          }
           const venue = useVenueStore.getState().selectedVenue;
           if (!venue || venue.id !== proposal.venueId) throw new Error("Venue não encontrada");
 
-          await fetchOrganizationById(venue.organizationId);
+          // Organization
+          const currentOrg = useOrganizationStore.getState().currentOrganization;
+          if (!currentOrg || currentOrg.id !== venue.organizationId) {
+            await fetchOrganizationById(venue.organizationId);
+          }
+
           await fetchCurrentUserVenuePermission({
             organizationId: venue.organizationId,
             venueId: venue.id,
             userId,
           });
         } else if (venueId) {
-          await fetchVenueById(venueId, userId ?? "");
+          // Venue
+          const currentVenue = useVenueStore.getState().selectedVenue;
+          if (!currentVenue || currentVenue.id !== venueId) {
+            await fetchVenueById(venueId, userId ?? "");
+          }
           const venue = useVenueStore.getState().selectedVenue;
           if (!venue || venue.id !== venueId) throw new Error("Venue não encontrada");
 
-          await fetchOrganizationById(venue.organizationId);
+          // Organization
+          const currentOrg = useOrganizationStore.getState().currentOrganization;
+          if (!currentOrg || currentOrg.id !== venue.organizationId) {
+            await fetchOrganizationById(venue.organizationId);
+          }
+
           await fetchCurrentUserVenuePermission({
             organizationId: venue.organizationId,
             venueId: venue.id,
             userId,
           });
         } else if (organizationId) {
-          await fetchOrganizationById(organizationId);
+          // Organization
+          const currentOrg = useOrganizationStore.getState().currentOrganization;
+          if (!currentOrg || currentOrg.id !== organizationId) {
+            await fetchOrganizationById(organizationId);
+          }
           await fetchCurrentUserOrganizationPermission({ organizattionId: organizationId, userId });
         }
       } catch (err) {

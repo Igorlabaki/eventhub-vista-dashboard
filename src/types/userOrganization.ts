@@ -1,6 +1,7 @@
 import { Organization } from "./organization";
 import { User } from "@/components/ui/user-list";
-import { UserPermission } from "./userVenuePermissions";
+import { UserVenuePermission } from "./userVenuePermissions";
+import { UserOrganizationPermission } from "./userOrganizationPermission";
 
 export type UserOrganization = {
   id: string;
@@ -9,7 +10,8 @@ export type UserOrganization = {
   joinedAt: Date;
   user: User;
   organization: Organization;
-  userPermissions: UserPermission[];
+  userOrganizationPermission: UserOrganizationPermission;
+  userVenuePermissions: UserVenuePermission[];
 };
 
 export interface CreateUserOrganizationDTO {

@@ -8,6 +8,7 @@ export enum Permissions {
             VIEW_PROPOSAL_SCHEDULE = "VIEW_PROPOSAL_SCHEDULE",
             VIEW_PROPOSAL_PAYMENTS = "VIEW_PROPOSAL_PAYMENTS",
             VIEW_PROPOSAL_DOCUMENTS = "VIEW_PROPOSAL_DOCUMENTS",
+            VIEW_PROPOSAL_PERSONAL_INFO = "VIEW_PROPOSAL_PERSONAL_INFO",
             VIEW_PROPOSAL_ATTENDANCE_LIST = "VIEW_PROPOSAL_ATTENDANCE_LIST",
         /* SEND */
             SEND_PROPOSAL_INFO = "SEND_PROPOSAL_INFO",
@@ -39,6 +40,7 @@ export enum Permissions {
             VIEW_VENUE_PROPOSALS = "VIEW_VENUE_PROPOSALS",
             VIEW_VENUE_PERMISSIONS = "VIEW_VENUE_PERMISSIONS",
             VIEW_VENUE_NOTIFICATIONS = "VIEW_VENUE_NOTIFICATIONS",
+            VIEW_VENUE_CONFIG = "VIEW_VENUE_CONFIG",
 
         /* EDIT */
             EDIT_VENUE_INFO = "EDIT_VENUE_INFO",
@@ -106,6 +108,10 @@ export const venueViewPermissions: PermissionItem[] = [
     { enum: Permissions.VIEW_VENUE_CONTACTS, display: "Contatos" },
     { enum: Permissions.VIEW_VENUE_PROPOSALS, display: "Orcamentos" },
     { enum: Permissions.VIEW_VENUE_NOTIFICATIONS, display: "Notificacoes" },
+    { enum: Permissions.VIEW_VENUE_CALENDAR, display: "Calendario" },
+    { enum: Permissions.VIEW_VENUE_EVENTS, display: "Eventos" },
+    { enum: Permissions.VIEW_VENUE_ANALYSIS, display: "Analise" },
+    { enum: Permissions.VIEW_VENUE_CONFIG, display: "Configuracoes" },
 ];
 export const venueEditPermissions: PermissionItem[] = [
     { enum: Permissions.EDIT_VENUE_SITE, display: "Site" },
@@ -121,7 +127,8 @@ export const venueEditPermissions: PermissionItem[] = [
 
 export const proposalViewPermissions: PermissionItem[] = [
     { enum: Permissions.VIEW_PROPOSAL_DATES, display: "Datas" },
-    { enum: Permissions.VIEW_PROPOSAL_INFO, display: "Informacoes" },
+    { enum: Permissions.VIEW_PROPOSAL_INFO, display: "Informacoes do Evento" },
+    { enum: Permissions.VIEW_PROPOSAL_PERSONAL_INFO, display: "Informacoes do Pessoais" },
     { enum: Permissions.VIEW_PROPOSAL_HISTORY, display: "Historico" },
     { enum: Permissions.VIEW_PROPOSAL_PAYMENTS, display: "Pagamento" },
     { enum: Permissions.VIEW_PROPOSAL_DOCUMENTS, display: "Documentos" },

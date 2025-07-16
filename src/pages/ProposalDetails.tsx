@@ -93,6 +93,10 @@ export default function ProposalDetails() {
     return currentUserVenuePermission.permissions.includes("VIEW_AMOUNTS");
   };
 
+  const hasViewPersonalInfoPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_PERSONAL_INFO");
+  };
 
     if(!hasViewPermission()) {
     return <DashboardLayout title="Contatos" subtitle="Gerencie os contatos do espaço">
@@ -160,9 +164,10 @@ export default function ProposalDetails() {
       <div className="mx-auto flex flex-col md:flex-row   gap-2">
         {/* Seção de Conta/Serviços isolada em componente */}
        
-        <ProposalServicesSummary hasViewValuesPermission={hasViewValuesPermission()} />
+        <ProposalServicesSummary hasViewValuesPermission={hasViewValuesPermission()}/>
        
         {/* Informações Pessoais */}
+        {hasViewPersonalInfoPermission() && (
         <div className=" rounded-xl p-6 mb-6 bg-white shadow-md w-full max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-center text-primary mb-10">Informações Pessoais</h1>
           <div className="flex flex-col gap-3 items-center w-full">
@@ -206,6 +211,7 @@ export default function ProposalDetails() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </DashboardLayout>
   );
