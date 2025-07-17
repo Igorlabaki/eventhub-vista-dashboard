@@ -107,10 +107,10 @@ export function ProposalContractForm() {
       subtitle="Envie ou gerencie o contrato desta proposta."
     >
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex justify-between items-center">
+        <div className="flex md:flex-row flex-col justify-between items-center">
 
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-2">
+        <div className="mb-4 ">
+          <h3 className="text-lg font-semibold mb-2 w-full md:w-auto text-center md:text-left">
             Qual o tipo de contrato?
           </h3>
           <div className="flex gap-4">
