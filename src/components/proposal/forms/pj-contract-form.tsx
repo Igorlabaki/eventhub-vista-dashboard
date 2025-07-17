@@ -141,7 +141,7 @@ export default function PJContractForm() {
 
   return (
     <FormLayout
-      title="Formulário de Pessoa Jurídica"
+      title="Pessoa Jurídica"
       onSubmit={onSubmit}
       form={form}
       submitLabel="Salvar Alterações"

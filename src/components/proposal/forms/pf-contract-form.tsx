@@ -152,7 +152,7 @@ export default function PFContractForm() {
     
   return (
     <FormLayout
-            title="Formulário de Pessoa Física"
+            title="Pessoa Física"
             onSubmit={onSubmit}
             form={form}
             submitLabel="Salvar Alterações"
