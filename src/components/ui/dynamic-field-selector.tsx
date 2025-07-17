@@ -48,6 +48,7 @@ const fieldGroups: DynamicFieldGroup[] = [
       { id: "client.street", label: "Rua", display: "RUA_CLIENTE" },
       { id: "client.streetNumber", label: "Número", display: "NUMERO_CLIENTE" },
       { id: "client.email", label: "Email", display: "EMAIL_CLIENTE" },
+      { id: "client.adressComplement", label: "Complemento", display: "COMPLEMENTO_CLIENTE" },
     ]
   },
   {

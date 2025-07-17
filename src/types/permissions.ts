@@ -134,7 +134,10 @@ export const proposalViewPermissions: PermissionItem[] = [
     { enum: Permissions.VIEW_PROPOSAL_DOCUMENTS, display: "Documentos" },
     { enum: Permissions.VIEW_PROPOSAL_SCHEDULE, display: "Programacao do evento" },
     { enum: Permissions.VIEW_PROPOSAL_ATTENDANCE_LIST, display: "Lista de presenca" },
-
+    { enum: Permissions.SEND_PROPOSAL_DOCUMENTS, display: "Enviar Documentos" },
+    { enum: Permissions.SEND_PROPOSAL_LINKS, display: "Enviar Links" },
+    { enum: Permissions.SEND_PROPOSAL_TEXT, display: "Enviar Mensagem" },
+    { enum: Permissions.SEND_PROPOSAL_INFO, display: "Enviar Orcamento" },
 ];
 
 export const proposalEditPermissions: PermissionItem[] = [

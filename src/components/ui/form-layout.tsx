@@ -10,7 +10,7 @@ interface FormLayoutProps<T extends FieldValues = FieldValues> {
   title: string;
   children: React.ReactNode;
   onSubmit: (values: T) => void | Promise<void>;
-  onCancel: () => void;
+  onCancel?: () => void;
   submitLabel?: string;
   isSubmitting?: boolean;
   isEditing?: boolean;
@@ -53,9 +53,13 @@ export function FormLayout<T extends FieldValues = FieldValues>({
         <h2 className="text-xl font-semibold">
           {title}
         </h2>
-        <Button variant="outline" size="sm" onClick={onCancel}>
-          Voltar
-        </Button>
+        {
+          onCancel && (
+            <Button variant="outline" size="sm" onClick={onCancel}>
+              Voltar
+            </Button>
+          )
+        }
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

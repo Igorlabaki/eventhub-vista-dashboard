@@ -111,6 +111,7 @@ export type DynamicField =
   | "client.cnpj"
   | "client.street"
   | "client.streetNumber"
+  | "client.adressComplement"
   | "client.email"
   | "proposal.checkIn"
   | "proposal.checkOut"

@@ -73,7 +73,7 @@ export function ProposalNav({
       permissionRequired: Permissions.SEND_PROPOSAL_INFO,
     },
     {
-      title: "Enviar Contrato",
+      title: "Gerar Contrato",
       href: `/proposal/${proposal?.id}/contract`,
       icon: FileText,
       permissionRequired: Permissions.SEND_PROPOSAL_INFO,

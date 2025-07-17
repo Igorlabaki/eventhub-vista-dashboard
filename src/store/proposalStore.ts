@@ -22,7 +22,7 @@ interface ProposalStore {
   setCurrentProposal: (proposal: Proposal | null) => void;
   fetchProposals: (params: ListProposalParams) => Promise<void>;
   fetchEvents: (params: ListProposalParams) => Promise<void>;
-  fetchProposalById: (proposalId: string) => Promise<void>;
+  fetchProposalById: (proposalId: string) => Promise<Proposal>;
   createProposalPerPerson: (data: CreateProposalPerPersonDTO) => Promise<BackendResponse<Proposal>>;
   createProposalPerDay: (data: CreateProposalPerDayDTO) => Promise<BackendResponse<Proposal>>;
   updateProposalPerPerson: (data: UpdateProposalPerPersonDTO) => Promise<BackendResponse<Proposal>>;
@@ -90,6 +90,7 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
     try {
       const response = await proposalService.getProposalById(proposalId);
       set({ currentProposal: response.data });
+      return response.data;
     } catch (err: unknown) {
       const error = err as ApiError;
       set({ 

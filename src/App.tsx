@@ -58,6 +58,8 @@ import { ProposalForm } from "./pages/ProposalForm";
 import { ScheduleSection } from "./components/schedule/schedule-section";
 import ProposalSchedulePage from "./pages/ProposalSchedule";
 import OrganizationPermissionsV2 from "./pages/OrganizationPermissionsv2";
+import { ContarctPjFormPage } from "./pages/ContarctPjForm";
+import { ContarctPFFormPage } from "./pages/ContarctPFForm";
 
 const queryClient = new QueryClient();
 
@@ -133,6 +135,8 @@ const App = () => {
               <Route path="/proposal/:id/schedule-list" element={<ScheduleListPage />} />
               <Route path="/proposal/:id/view" element={<ProposalView  />} />
               <Route path="/venue/:id/form" element={<ProposalForm />} />
+              <Route path="/proposal/:id/b2b-contract" element={<ContarctPjFormPage />} />
+              <Route path="/proposal/:id/person-contract" element={<ContarctPFFormPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

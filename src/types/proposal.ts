@@ -54,6 +54,7 @@ export interface Proposal {
   trafficSource: TrafficSource;
   guestNumber: number;
   knowsVenue: boolean;
+  adressComplement?: string;
   startDate: Date;
   endDate: Date;
   email: string;
@@ -146,6 +147,7 @@ export interface UpdateProposalPersonalInfoDTO {
     cnpj?: string;
     completeClientName: string;
     completeCompanyName?: string;
+    adressComplement?: string;
   }
 }
 
@@ -169,6 +171,7 @@ export interface UpdateProposalPerDayDTO {
     serviceIds: string[];
     type: ProposalType;
     trafficSource: TrafficSource;
+    adressComplement?: string;
   }
 }
 

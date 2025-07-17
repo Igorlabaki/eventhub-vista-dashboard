@@ -133,7 +133,6 @@ export default function PFContractForm() {
         return (
           values.completeClientName &&
           values.cpf &&
-          values.rg &&
           values.street &&
           values.streetNumber &&
           values.neighborhood &&
@@ -155,7 +154,6 @@ export default function PFContractForm() {
     <FormLayout
             title="Formulário de Pessoa Física"
             onSubmit={onSubmit}
-            onCancel={() => {}}
             form={form}
             submitLabel="Salvar Alterações"
             customSubmitButton={
