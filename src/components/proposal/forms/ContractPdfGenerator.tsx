@@ -2,9 +2,10 @@ import jsPDF from "jspdf";
 import extenso from "extenso";
 import { parseISO, isValid, format } from "date-fns";
 import { Venue } from "@/types/venue";
-import { Clause, Contract, Owner } from "@/types";
+import { Clause, Contract } from "@/types/contract";
 import { Proposal } from "@/types/proposal";
 import { Attachment } from "@/types/attachment";
+import { Owner } from "@/types/owner";
 
 
 export function generateContractPdf({
@@ -27,6 +28,7 @@ export function generateContractPdf({
     paymentValue: string,
     signalAmount: string,
     numberPayments: string,
+    perPersonPrice: string,
   },
   formValues: Record<string, unknown>,
   toast: (args: { title: string; description: string; variant?: string }) => void
@@ -50,11 +52,13 @@ export function generateContractPdf({
       proposal: currentProposal || {},
       paymentInfo: paymentInfo || {},
     };
+
+  
     return text.replace(/\{\{(.*?)\}\}/g, (match, p1) => {
       const [obj, prop] = p1.trim().split('.');
       const value = values[obj] && typeof values[obj] === 'object' && values[obj] !== null && (values[obj] as Record<string, unknown>)[prop] !== undefined ? (values[obj] as Record<string, unknown>)[prop] : undefined;
       if (value !== undefined) {
-        if (["totalAmount", "signalAmount", "paymentValue"].includes(prop)) {
+        if (["totalAmount", "signalAmount", "paymentValue", "perPersonPrice"].includes(prop)) {
           const numericValue = Number(value);
           const formattedValue = numericValue.toLocaleString("pt-BR", {
             style: "currency",
@@ -141,9 +145,10 @@ export function generateContractPdf({
         y += 8;
       });
       // Garante padding no fim da última página
-      if (y < pageHeight - bottomPadding) {
-        y = pageHeight - bottomPadding;
-      }
+      // Removido para evitar espaçamento excessivo
+      // if (y < pageHeight - bottomPadding) {
+      //   y = pageHeight - bottomPadding;
+      // }
     }
 
     // Bloco de assinaturas ao final do contrato

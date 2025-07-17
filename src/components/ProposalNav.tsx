@@ -146,7 +146,7 @@ export function ProposalNav({
   if (!proposal) {
     return null;
   }
-  console.log(proposal)
+
   return (
     <div className="pt-3 pb-1">
       {!isCollapsed && (

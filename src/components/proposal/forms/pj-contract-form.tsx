@@ -79,6 +79,7 @@ export default function PJContractForm() {
       formValues.completeClientName === currentProposal.completeClientName &&
       formValues.cpf === currentProposal.cpf &&
       formValues.rg === currentProposal.rg &&
+      formValues.adressComplement === currentProposal.adressComplement &&
       formValues.street === currentProposal.street &&
       formValues.streetNumber === currentProposal.streetNumber &&
       formValues.neighborhood === currentProposal.neighborhood &&
@@ -179,6 +180,7 @@ export default function PJContractForm() {
                   paymentValue: String(currentProposal?.totalAmount / Number(form.getValues().paymentInfo.numberPayments)),
                   numberPayments: form.getValues().paymentInfo.numberPayments,
                   signalAmount: form.getValues().paymentInfo.signalAmount,
+                  perPersonPrice: String(currentProposal?.totalAmount / currentProposal?.guestNumber),
                 },
               })
             }

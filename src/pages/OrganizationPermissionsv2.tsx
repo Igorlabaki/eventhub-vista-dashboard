@@ -21,8 +21,6 @@ import { toast } from "@/components/ui/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { VenuePermissionsList } from "@/components/permissions/VenuePermissionsList";
-import { Venue } from "@/types";
 import { PermissionVenueManager } from "@/components/permissions/PermissionVenueManager";
 import { UserOrganizationSection } from "@/components/permissions/userOrganizationSection";
 import { VenuePermissionSection } from "@/components/permissions/VenuePermissionSection";

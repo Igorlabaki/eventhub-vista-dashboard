@@ -5,6 +5,7 @@ import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
 import { ContractForm } from "./contract-form";
 import { Clause } from "@/types/clause";
 import { Venue } from "@/components/ui/venue-list";
+import { PageHeader } from "@/components/PageHeader";
 
 type ContractClausePayload = { text: string; title: string; position: number };
 type ContractPayload = {
@@ -50,6 +51,7 @@ export default function ContractSection({
   
   return (
     <div className="animate-fade-in">
+      <PageHeader onCreateClick={onCreateClick} isFormOpen={showForm}  createButtonText="Novo Contrato"/>
       {isLoading ? (
         <ContractListSkeleton />
       ) : (

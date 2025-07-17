@@ -32,10 +32,10 @@ export const useScheduleStore = create<ScheduleStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await scheduleService.listSchedules({ proposalId });
-      console.log(response.data.scheduleList,"response");
+     
       set({ schedules: response.data.scheduleList || [], isLoading: false });
     } catch (error) {
-      console.log(error,"error");
+     
       set({ error: "Erro ao carregar cronogramas", isLoading: false });
       throw error;
     }

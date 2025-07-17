@@ -81,7 +81,7 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
       rpaMinPeople: service?.rpaMinPeople,
     });
   }, [service, form]);
-  console.log(service)
+ 
   const handleDelete = async () => {
     if (!service) return;
     setIsDeleting(true);
@@ -113,12 +113,7 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
 
   const handleSubmit = async (values: ServiceFormValues) => {
     setIsSubmitting(true);
-    console.log({
-      name: values.name,
-      price: parseCurrency(values.price),
-      rpaRequired: values.rpaRequired,
-      rpaMinPeople: values.rpaMinPeople ?? null,
-    })
+
     try {
       await onSubmit({
         name: values.name,

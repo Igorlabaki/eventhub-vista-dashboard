@@ -72,7 +72,7 @@ export default function OrganizationVenues() {
     setShowForm(false);
     setSelectedVenueId(undefined);
   };
-  console.log(currentOrganization)
+ 
   return (
     <DashboardLayout
       title="Espaços"

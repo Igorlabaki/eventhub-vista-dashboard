@@ -23,7 +23,7 @@ export default function SendMessagePage() {
       message: `Olá, sou ${user?.username}, do espaço ${venue?.name}! Tudo bem com você?`,
     },
   });
-  console.log(currentProposal, "currentProposal")
+  
   const onSubmit = (values: FormValues) => {
     const numeroOriginal = currentProposal.whatsapp || "";
     const numeroLimpo = numeroOriginal.replace(/\D/g, "");

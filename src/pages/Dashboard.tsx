@@ -21,7 +21,7 @@ export default function Dashboard() {
       fetchOrganizations(user.id);
     }
   }, [user?.id, fetchOrganizations]);
-  console.log(user?.id, "userId")
+
   useEffect(() => {
     if (error) {
       toast({

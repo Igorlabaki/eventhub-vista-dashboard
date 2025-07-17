@@ -88,6 +88,7 @@ export default function PFContractForm() {
           formValues.rg === currentProposal.rg &&
           formValues.street === currentProposal.street &&
           formValues.streetNumber === currentProposal.streetNumber &&
+          formValues.adressComplement === currentProposal.adressComplement &&
           formValues.neighborhood === currentProposal.neighborhood &&
           formValues.cep === currentProposal.cep &&
           formValues.city === currentProposal.city &&
@@ -103,6 +104,7 @@ export default function PFContractForm() {
           street: currentProposal?.street || "",
           streetNumber: currentProposal?.streetNumber || "",
           neighborhood: currentProposal?.neighborhood || "",
+          adressComplement: currentProposal?.adressComplement || "",
           cep: currentProposal?.cep || "",
           city: currentProposal?.city || "São Paulo",
           state: currentProposal?.state || "SP",
@@ -149,7 +151,7 @@ export default function PFContractForm() {
              values.paymentInfo.dueDate))
         );
       };
-    
+   
   return (
     <FormLayout
             title="Pessoa Física"
@@ -181,6 +183,7 @@ export default function PFContractForm() {
                       amount: currentProposal?.totalAmount || 0,
                       dueDate: form.getValues().paymentInfo.dueDate,
                       paymentMethod: form.getValues().paymentMethod,
+                      perPersonPrice: String(currentProposal?.totalAmount / currentProposal?.guestNumber),
                       paymentValue: String(currentProposal?.totalAmount - Number(form.getValues().paymentInfo.signalAmount) / Number(form.getValues().paymentInfo.numberPayments)),
                       numberPayments: form.getValues().paymentInfo.numberPayments,
                       signalAmount: form.getValues().paymentInfo.signalAmount,

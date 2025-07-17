@@ -5,7 +5,7 @@ import * as z from "zod";
 import { FormLayout } from "@/components/ui/form-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { VenueImageItem } from "./VenueImageItem";
-import { ItemListVenueResponse, Venue } from "@/types";
+import { ItemListVenueResponse } from "@/types/venue";
 import { Image } from "@/types/image";
 import { toast } from "@/components/ui/use-toast";
 import { useOrganizationStore } from "@/store/organizationStore";
@@ -75,7 +75,7 @@ export function SelectVenueImagesForm({
       />
     );
   }
-  console.log("safeImages", safeImages);
+
   if (loading) {
     // Renderiza skeletons de carregamento
     return (

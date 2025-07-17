@@ -7,6 +7,7 @@ import { showSuccessToast } from "@/components/ui/success-toast";
 import { useToast } from "@/hooks/use-toast";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
 import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
+import { PageHeader } from "@/components/PageHeader";
 
 interface ClauseSectionProps {
   clauses: Clause[];
@@ -77,6 +78,7 @@ export function ClauseSection({
 
   return (
     <div className="animate-fade-in">
+       <PageHeader onCreateClick={onCreateClick} isFormOpen={showForm}  createButtonText="Novo Clausula"/>
       {isLoading ? (
         <ClauseListSkeleton />
       ) : (

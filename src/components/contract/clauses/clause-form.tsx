@@ -5,7 +5,7 @@ import * as z from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { showSuccessToast } from "@/components/ui/success-toast";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useClauseStore } from "@/store/clauseStore";
 import { useToast } from "@/hooks/use-toast";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Clause } from "@/types/clause";
+import { DynamicFieldGroup, fieldGroups } from "@/types/contract";
 
 const formSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
@@ -33,6 +34,32 @@ interface ClauseFormProps {
   onCancel: () => void;
 }
 
+// Função utilitária para transformar {{ id }} em [DISPLAY]
+function transformDynamicFieldsToDisplay(text: string, fieldGroups: DynamicFieldGroup[]): string {
+  if (!text) return "";
+  // Regex para pegar todos os {{ ... }}
+  return text.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, id) => {
+    for (const group of fieldGroups) {
+      const field = group.fields.find(f => f.id === id);
+      if (field) return `[${field.display}]`;
+    }
+    return match; // Se não encontrar, mantém o original
+  });
+}
+
+// Função utilitária para transformar [DISPLAY] em {{ id }}
+function transformDisplayToDynamicFields(text: string, fieldGroups: DynamicFieldGroup[]): string {
+  if (!text) return "";
+  // Regex para pegar todos os [DISPLAY]
+  return text.replace(/\[([A-Z0-9_]+)\]/g, (match, display) => {
+    for (const group of fieldGroups) {
+      const field = group.fields.find(f => f.display === display);
+      if (field) return `{{${field.id}}}`;
+    }
+    return match; // Se não encontrar, mantém o original
+  });
+}
+
 export function ClauseForm({ clause, onSubmit, onCancel }: ClauseFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -44,17 +71,32 @@ export function ClauseForm({ clause, onSubmit, onCancel }: ClauseFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: clause?.title ?? "",
-      text: clause?.text ?? "",
+      text: clause && clause.text
+        ? transformDynamicFieldsToDisplay(clause.text, fieldGroups)
+        : "",
     },
   });
-
+ 
+  // Atualiza os valores do formulário quando a cláusula mudar
   React.useEffect(() => {
-    form.reset({
-      title: clause?.title ?? "",
-      text: clause?.text ?? "",
-    });
-  }, [clause, form]);
+    if (clause) {
+      form.reset({
+        title: clause.title ?? "",
+        text: clause.text
+          ? transformDynamicFieldsToDisplay(clause.text, fieldGroups)
+          : "",
+      });
+    }
+  }, [clause]);
 
+  // Ref callback para garantir que ambos refs funcionem
+  const setContentRef = useCallback((el: HTMLTextAreaElement | null) => {
+    contentRef.current = el;
+    if (el) {
+      form.register("text").ref(el);
+    }
+  }, [form]);
+  
   const handleDelete = async () => {
     if (!clause) return;
     setIsDeleting(true);
@@ -81,7 +123,12 @@ export function ClauseForm({ clause, onSubmit, onCancel }: ClauseFormProps) {
   const handleSubmit = async (values: ClauseFormValues) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(values);
+      // Converte os campos [DISPLAY] para {{id}} antes de enviar
+      const convertedValues = {
+        ...values,
+        text: transformDisplayToDynamicFields(values.text, fieldGroups),
+      };
+      await onSubmit(convertedValues);
     } finally {
       setIsSubmitting(false);
     }
@@ -98,7 +145,8 @@ export function ClauseForm({ clause, onSubmit, onCancel }: ClauseFormProps) {
       currentContent.substring(0, start) +
       `[${display}]` +
       currentContent.substring(end);
-    form.setValue("text", newContent);
+    form.setValue("text", newContent, { shouldDirty: true, shouldTouch: true });
+    form.trigger("text");
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(start + display.length + 2, start + display.length + 2);
@@ -144,12 +192,15 @@ export function ClauseForm({ clause, onSubmit, onCancel }: ClauseFormProps) {
             <FormLabel>Texto</FormLabel>
             <FormControl>
               <Textarea
+                {...field}
                 placeholder="Digite o texto da cláusula"
                 required
                 className="mt-1"
                 rows={10}
-                ref={contentRef}
-                {...field}
+                ref={el => {
+                  field.ref(el);
+                  contentRef.current = el;
+                }}
               />
             </FormControl>
             <FormMessage />
@@ -161,10 +212,7 @@ export function ClauseForm({ clause, onSubmit, onCancel }: ClauseFormProps) {
           Inserir campos dinâmicos
         </h4>
         <DynamicFieldSelector
-          onSelectField={(field, display) => {
-            handleInsertDynamicField(field, display);
-            return false;
-          }}
+          onSelectField={handleInsertDynamicField}
         />
       </div>
     </FormLayout>
