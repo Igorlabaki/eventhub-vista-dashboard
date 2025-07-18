@@ -16,7 +16,7 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
   const userId = useUserStore((state) => state.user?.id);
 
   const { fetchProposalById } = useProposalStore();
-  const { fetchVenueById } = useVenueStore();
+  const { fetchVenueById, clearSelectedVenue } = useVenueStore();
   const { fetchOrganizationById } = useOrganizationStore();
   const { fetchCurrentUserVenuePermission } = useUserVenuePermissionStore();
   const { fetchCurrentUserOrganizationPermission } = useUserOrganizationPermissionStore();
@@ -92,6 +92,7 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
           // Venue
           const currentVenue = useVenueStore.getState().selectedVenue;
           if (!currentVenue || currentVenue.id !== venueId) {
+            clearSelectedVenue();
             await fetchVenueById(venueId, userId ?? "");
           }
           const venue = useVenueStore.getState().selectedVenue;

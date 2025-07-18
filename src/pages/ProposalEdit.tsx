@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useServiceStore } from "@/store/serviceStore";
 import { useVenueStore } from "@/store/venueStore";
 import ProposalEditSkeleton from "@/components/proposal/ProposalEditSkeleton";
+import { generateTimeOptions } from "@/components/proposal/forms/PerPersonProposalForm";
 
 const proposalTypes = [
   { value: ProposalType.EVENT, label: "Evento" },
@@ -303,7 +304,30 @@ export default function ProposalEdit() {
                   <FormItem>
                     <FormLabel>Horário Início</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <Select 
+                        value={field.value} 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Calcular horário de fim automaticamente baseado na duração padrão
+                          if (value && selectedVenue?.standardEventDuration) {
+                            const [hours, minutes] = value.split(":").map(Number);
+                            const endHours = hours + selectedVenue.standardEventDuration;
+                            const endTime = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                            form.setValue('data.endHour', endTime);
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o horário" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {generateTimeOptions().map((time) => (
+                            <SelectItem key={time} value={time}>
+                              {time}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -316,7 +340,18 @@ export default function ProposalEdit() {
                   <FormItem>
                     <FormLabel>Horário Fim</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o horário" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {generateTimeOptions().map((time) => (
+                            <SelectItem key={time} value={time}>
+                              {time}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

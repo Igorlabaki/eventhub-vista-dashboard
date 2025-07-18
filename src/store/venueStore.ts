@@ -20,6 +20,7 @@ interface VenueState {
   createVenue: (data: CreateVenueDTO) => Promise<BackendResponse<Venue>>;
   updateVenue: (data: UpdateVenueDTO) => Promise<BackendResponse<Venue>>;
   deleteVenue: (id: string) => Promise<BackendResponse<void>>;
+  clearSelectedVenue: () => void;
 }
 
 export const useVenueStore = create<VenueState>((set) => ({
@@ -123,5 +124,7 @@ export const useVenueStore = create<VenueState>((set) => ({
       });
       throw err;
     }
-  }
+  },
+
+  clearSelectedVenue: () => set({ selectedVenue: null }),
 })); 

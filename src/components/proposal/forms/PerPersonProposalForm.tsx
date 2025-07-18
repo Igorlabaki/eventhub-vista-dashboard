@@ -35,41 +35,13 @@ import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
 import { showSuccessToast } from "@/components/ui/success-toast";
 
 // Função para gerar opções de horário (hora cheia e meia hora)
-function generateTimeOptions(openingHour?: string, closingHour?: string) {
+export function generateTimeOptions() {
   const options = [];
-  
-  // Se não há horários definidos, retorna todas as opções
-  if (!openingHour && !closingHour) {
-    for (let hour = 0; hour <= 23; hour++) {
-      const hourStr = hour.toString().padStart(2, '0');
-      options.push(`${hourStr}:00`);
-      options.push(`${hourStr}:30`);
-    }
-    return options;
-  }
-
-  // Converter horários para minutos para facilitar comparação
-  const openingMinutes = openingHour ? 
-    parseInt(openingHour.split(':')[0]) * 60 + parseInt(openingHour.split(':')[1]) : 0;
-  const closingMinutes = closingHour ? 
-    parseInt(closingHour.split(':')[0]) * 60 + parseInt(closingHour.split(':')[1]) : 24 * 60;
-
   for (let hour = 0; hour <= 23; hour++) {
     const hourStr = hour.toString().padStart(2, '0');
-    
-    // Hora cheia
-    const fullHourMinutes = hour * 60;
-    if (fullHourMinutes >= openingMinutes && fullHourMinutes <= closingMinutes) {
-      options.push(`${hourStr}:00`);
-    }
-    
-    // Meia hora
-    const halfHourMinutes = hour * 60 + 30;
-    if (halfHourMinutes >= openingMinutes && halfHourMinutes <= closingMinutes) {
-      options.push(`${hourStr}:30`);
-    }
+    options.push(`${hourStr}:00`);
+    options.push(`${hourStr}:30`);
   }
-  
   return options;
 }
 
@@ -334,14 +306,8 @@ export function PerPersonProposalForm({
                       const endHours = hours + selectedVenue.standardEventDuration;
                       const endTime = `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
                       
-                      // Verificar se o horário calculado está dentro do horário de funcionamento
-                      const venueClosingMinutes = selectedVenue.closingHour ? 
-                        parseInt(selectedVenue.closingHour.split(':')[0]) * 60 + parseInt(selectedVenue.closingHour.split(':')[1]) : 24 * 60;
-                      const endMinutes = endHours * 60 + minutes;
-                      
-                      if (endMinutes <= venueClosingMinutes) {
-                        form.setValue('endHour', endTime);
-                      }
+                      // Não precisa mais checar horário de funcionamento
+                      form.setValue('endHour', endTime);
                     }
                   }}
                 >
@@ -349,7 +315,7 @@ export function PerPersonProposalForm({
                     <SelectValue placeholder="Selecione o horário" />
                   </SelectTrigger>
                   <SelectContent>
-                    {generateTimeOptions(selectedVenue?.openingHour, selectedVenue?.closingHour).map((time) => (
+                    {generateTimeOptions().map((time) => (
                       <SelectItem key={time} value={time}>
                         {time}
                       </SelectItem>
@@ -358,11 +324,6 @@ export function PerPersonProposalForm({
                 </Select>
               </FormControl>
               <FormMessage />
-              {selectedVenue?.openingHour && selectedVenue?.closingHour && (
-                <p className="text-xs text-gray-500">
-                  Horário disponível: {selectedVenue.openingHour} - {selectedVenue.closingHour}
-                </p>
-              )}
             </FormItem>
           )}
         />
@@ -379,7 +340,7 @@ export function PerPersonProposalForm({
                     <SelectValue placeholder="Selecione o horário" />
                   </SelectTrigger>
                   <SelectContent>
-                    {generateTimeOptions(selectedVenue?.openingHour, selectedVenue?.closingHour).map((time) => (
+                    {generateTimeOptions().map((time) => (
                       <SelectItem key={time} value={time}>
                         {time}
                       </SelectItem>
@@ -388,11 +349,6 @@ export function PerPersonProposalForm({
                 </Select>
               </FormControl>
               <FormMessage />
-              {selectedVenue?.openingHour && selectedVenue?.closingHour && (
-                <p className="text-xs text-gray-500">
-                  Horário disponível: {selectedVenue.openingHour} - {selectedVenue.closingHour}
-                </p>
-              )}
             </FormItem>
           )}
         />
