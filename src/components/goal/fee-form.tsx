@@ -63,7 +63,6 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
   const [diasSelecionados, setDiasSelecionados] = useState<string[]>(
     fee?.affectedDays ? fee.affectedDays.split(",") : []
   );
-
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: fee ? {
@@ -129,8 +128,8 @@ export function FeeForm({ fee, venueId, onCancel, onDelete }: FeeFormProps) {
       form.reset({
         title: fee.title,
         fee: fee.fee.toString(),
-        startDay: fee.startDay ? formatDateToYYYYMMDD(fee.startDay) : "",
-        endDay: fee.endDay ? formatDateToYYYYMMDD(fee.endDay) : "",
+        startDay: fee.startDay || "",
+        endDay: fee.endDay || "",
         affectedDays: fee.affectedDays || "",
       });
     } else {

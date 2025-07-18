@@ -24,7 +24,7 @@ export function GoalHeader({
             <TabsTrigger
               value="panel"
               className={
-                `px-4 py-2 text-sm font-semibold transition-all duration-200
+                `px-4 py-2 text-[12px] md:text-sm text-center font-semibold transition-all duration-200
                 ${activeTab === "panel"
                   ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
                   : "border-b-4 border-transparent"}`
@@ -35,7 +35,7 @@ export function GoalHeader({
             <TabsTrigger
               value="metas"
               className={
-                `px-4 py-2 text-sm font-semibold transition-all duration-200
+                `px-4 py-2 text-[12px] md:text-sm font-semibold transition-all duration-200
                 ${activeTab === "metas"
                   ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
                   : "border-b-4 border-transparent"}`
@@ -46,7 +46,7 @@ export function GoalHeader({
             <TabsTrigger
               value="adicionais"
               className={
-                `px-4 py-2 text-sm font-semibold transition-all duration-200
+                `px-4 py-2 text-[12px] md:text-sm font-semibold transition-all duration-200
                 ${activeTab === "adicionais"
                   ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
                   : "border-b-4 border-transparent"}`
@@ -57,7 +57,7 @@ export function GoalHeader({
             <TabsTrigger
               value="descontos"
               className={
-                `px-4 py-2 text-sm font-semibold transition-all duration-200
+                `px-4 py-2 text-[12px] md:text-sm font-semibold transition-all duration-200
                 ${activeTab === "descontos"
                   ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
                   : "border-b-4 border-transparent"}`
@@ -72,7 +72,7 @@ export function GoalHeader({
             className="
               bg-eventhub-primary hover:bg-indigo-600 text-white md:my-0
               font-semibold px-3 py-2 rounded-lg shadow mx-2 md:mx-0 hidden md:flex
-               md:w-auto text-sm hover:scale-105 active:scale-95 transition-all duration-200"
+               md:w-auto text-[12px] md:text-sm hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={onActionClick}
           >
             <Plus className="w-7 h-7" />

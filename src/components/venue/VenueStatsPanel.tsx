@@ -38,6 +38,12 @@ export function VenueStatsPanel({
       currency: 'BRL'
     }).format(value);
   };
+
+  // Título e valor dinâmicos para receita
+  const receitaTitulo = selectedMonth === "all" ? "Receita Anual" : "Receita Mensal";
+  const receitaValor = selectedMonth === "all"
+    ? (data?.monthlyRevenueList?.reduce((acc, curr) => acc + (curr.revenue || 0), 0) || 0)
+    : (data?.monthlyRevenue || 0);
     
   return (
     <div>
@@ -82,10 +88,10 @@ export function VenueStatsPanel({
           icon={<Users className="h-5 w-5 text-eventhub-primary" />}
         />
         <StatCard
-          title="Receita Mensal"
+          title={receitaTitulo}
           value={
             <NumericFormat
-              value={data?.monthlyRevenue || 0}
+              value={receitaValor}
               displayType="text"
               thousandSeparator="."
               decimalSeparator=","

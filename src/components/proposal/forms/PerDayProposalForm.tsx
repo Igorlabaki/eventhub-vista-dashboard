@@ -19,6 +19,7 @@ import { useServiceStore } from "@/store/serviceStore";
 import { NumericFormat } from 'react-number-format';
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { useVenueStore } from "@/store/venueStore";
 
 const formSchema = z.object({
   completeClientName: z.string().min(1, "Nome do cliente é obrigatório"),
@@ -72,12 +73,28 @@ function clampHour(value: string) {
   return value;
 }
 
+// Função para gerar opções de horário (hora cheia e meia hora)
+function generateTimeOptions() {
+  const options = [];
+  for (let hour = 0; hour <= 23; hour++) {
+    const hourStr = hour.toString().padStart(2, '0');
+    options.push(`${hourStr}:00`);
+    options.push(`${hourStr}:30`);
+  }
+  return options;
+}
+
 export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps) {
   const navigate = useNavigate();
   const { createProposalPerDay } = useProposalStore();
   const { services, fetchServices, isLoading: isLoadingServices } = useServiceStore();
+  const { selectedVenue } = useVenueStore();
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const { toast } = useToast();
+  
+  // Definir valores iniciais dos horários com base na venue
+  const initialStartHour = selectedVenue?.checkIn || "";
+  const initialEndHour = selectedVenue?.checkOut || "";
   
   useEffect(() => {
     if (venueId) fetchServices(venueId);
@@ -89,8 +106,8 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
       completeClientName: "",
       startDay: "",
       endDay: "",
-      startHour: "",
-      endHour: "",
+      startHour: initialStartHour,
+      endHour: initialEndHour,
       guestNumber: "",
       email: "",
       whatsapp: "",
@@ -229,14 +246,21 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
             <FormItem>
               <FormLabel>Horário de Check-in</FormLabel>
               <FormControl>
-                <Input
-                  type="time"
-                  min="07:00"
-                  max="22:00"
-                  {...field}
-                  value={field.value}
-                  onChange={e => field.onChange(clampHour(e.target.value))}
-                />
+                <Select 
+                  value={field.value} 
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o horário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {generateTimeOptions().map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -250,14 +274,21 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
             <FormItem>
               <FormLabel>Horário de Check-out</FormLabel>
               <FormControl>
-                <Input
-                  type="time"
-                  min="07:00"
-                  max="22:00"
-                  {...field}
-                  value={field.value}
-                  onChange={e => field.onChange(clampHour(e.target.value))}
-                />
+                <Select 
+                  value={field.value} 
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o horário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {generateTimeOptions().map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
