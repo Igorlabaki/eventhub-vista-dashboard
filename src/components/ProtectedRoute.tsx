@@ -47,6 +47,14 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
     [userId, fetchCurrentUserVenuePermission]
   );
 
+  // Limpa o selectedVenue sempre que o venueId mudar
+  useEffect(() => {
+    if (venueId) {
+      clearSelectedVenue();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [venueId]);
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login", { replace: true, state: { from: location } });
@@ -92,7 +100,6 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
           // Venue
           const currentVenue = useVenueStore.getState().selectedVenue;
           if (!currentVenue || currentVenue.id !== venueId) {
-            clearSelectedVenue();
             await fetchVenueById(venueId, userId ?? "");
           }
           const venue = useVenueStore.getState().selectedVenue;
@@ -131,7 +138,7 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, proposalId, venueId, organizationId, userId, fetchProposalById, fetchVenueById, fetchOrganizationById, fetchCurrentUserVenuePermission, fetchCurrentUserOrganizationPermission]);
+  }, [isAuthenticated, proposalId, venueId, organizationId, userId, fetchProposalById, fetchVenueById, fetchOrganizationById, fetchCurrentUserVenuePermission, fetchCurrentUserOrganizationPermission, navigate, location]);
 
   if (!isAuthenticated) return null;
   if (loading) return <AppLoadingScreen />;
