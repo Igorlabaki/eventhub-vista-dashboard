@@ -49,7 +49,7 @@ export function ScheduleList({
   const proposalId = currentProposal?.id;
   const programacaoLink =
     proposalId && selectedVenue?.url
-      ? `${selectedVenue.url}/orcamento/programacao/${proposalId}`
+      ? `https://event-hub-dashboard.vercel.app/proposal/${proposalId}/schedule`
       : undefined;
   const whatsappMsg = encodeURIComponent(
     `Olá! Segue o link para acessar a programação do evento: ${programacaoLink}`

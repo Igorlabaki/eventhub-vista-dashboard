@@ -9,7 +9,6 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import OrganizationVenues from "./pages/OrganizationVenues";
 import OrganizationOwners from "./pages/OrganizationOwners";
-import OrganizationPermissions from "./pages/OrganizationPermissions";
 import OrganizationContracts from "./pages/OrganizationContracts";
 import OrganizationWebsite from "./pages/OrganizationWebsite";
 import VenueDashboard from "./pages/VenueDashboard";
@@ -131,7 +130,7 @@ const App = () => {
               <Route path="/proposal/:id/send-proposal" element={<ProtectedRoute><SendProposalPage /></ProtectedRoute>} />
               <Route path="/proposal/:id/contract" element={<ProtectedRoute><ProposalContract /></ProtectedRoute>} />
               <Route path="/proposal/:id/guest-list" element={<GuestListPage />} />
-              <Route path="/proposal/:id/worker-list" element={<WorkerListPage />} />
+              <Route path="/proposal/:id/staff-list" element={<WorkerListPage />} />
               <Route path="/proposal/:id/schedule-list" element={<ScheduleListPage />} />
               <Route path="/proposal/:id/view" element={<ProposalView  />} />
               <Route path="/venue/:id/form" element={<ProposalForm />} />
