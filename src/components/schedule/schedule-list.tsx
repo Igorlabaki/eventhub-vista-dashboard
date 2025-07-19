@@ -78,6 +78,13 @@ export function ScheduleList({
     return time.split(":").slice(0, 2).join(":");
   };
 
+  const hasSendLinksPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "SEND_PROPOSAL_LINKS"
+    );
+  };
+
   if (isLoading) {
     return null;
   }
@@ -85,6 +92,7 @@ export function ScheduleList({
   if (!Array.isArray(schedules) || schedules.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center w-full">
+        {hasSendLinksPermission() && (
         <a
           href={whatsappUrl}
           target="_blank"
@@ -95,6 +103,7 @@ export function ScheduleList({
         >
           Eviar link para o cliente
         </a>
+        )}
         <EmptyState
           title={emptyMessage}
           description="Crie um novo cronograma para começar a organizar suas atividades."

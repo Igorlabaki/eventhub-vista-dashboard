@@ -9,9 +9,10 @@ import { PersonSection } from "../person/person-section";
 
 interface ProposalAttendanceListProps {
   hasEditPermission: boolean;
+  hasConfirmPermission: boolean;
 }
 
-export function ProposalAttendanceList({ hasEditPermission }: ProposalAttendanceListProps) {
+export function ProposalAttendanceList({ hasEditPermission, hasConfirmPermission }: ProposalAttendanceListProps) {
   const { id: proposalId } = useParams();
   const [activeTab, setActiveTab] = useState<PersonType>(PersonType.GUEST);
   const [isCreating, setIsCreating] = useState(false);

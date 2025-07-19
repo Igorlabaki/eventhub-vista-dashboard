@@ -99,6 +99,27 @@ export function PersonList({
     ? `https://wa.me/${numeroFinal}?text=${whatsappMsg}`
     : `https://wa.me/?text=${whatsappMsg}`;
 
+  const hasConfirmPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "CONFIRM_PROPOSAL_ATTENDANCE_LIST"
+    );
+  };
+
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_PROPOSAL_ATTENDANCE_LIST"
+    );
+  };
+
+  const hasSendLinksPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "SEND_PROPOSAL_LINKS"
+    );
+  };
+
   if (isLoading) {
     return <PersonListSkeleton />;
   }
@@ -106,16 +127,18 @@ export function PersonList({
   if (!persons || persons.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center w-full">
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center px-4 py-2  
+        {hasSendLinksPermission() && (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2  
           text-blue-600 hover:text:black hover:underline 
           transition-colors text-sm"
-        >
-          Eviar link para o cliente
-        </a>
+          >
+            Eviar link para o cliente
+          </a>
+        )}
         <EmptyState
           title={emptyMessage}
           actionText="Nova Pessoa"
@@ -125,18 +148,6 @@ export function PersonList({
     );
   }
 
-  const hasConfirmPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes(
-      "EDIT_PROPOSAL_ATTENDANCE_LIST"
-    );
-  };
-
-  const hasEditPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_ATTENDANCE_LIST");
-  };
-
   return (
     <div className={cn("space-y-4", className)}>
       {/* Botão de link para o cliente */}
@@ -145,16 +156,18 @@ export function PersonList({
           Presenças confirmadas:{" "}
           <span className="font-bold">{confirmedCount}</span> / {totalCount}
         </div>
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center px-4 py-2  
+        {hasSendLinksPermission() && (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2  
           text-blue-600 hover:text:black hover:underline 
           transition-colors text-sm"
-        >
-          Eviar link para o cliente
-        </a>
+          >
+            Eviar link para o cliente
+          </a>
+        )}
       </div>
       {/* Campo de busca e tabela filtrada */}
       <FilterList

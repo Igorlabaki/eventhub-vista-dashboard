@@ -19,6 +19,11 @@ export default function ProposalAttendanceListPage() {
     return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_ATTENDANCE_LIST");
   };
 
+  const hasConfirmPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("CONFIRM_PROPOSAL_ATTENDANCE_LIST");
+  };
+
   if(!hasViewPermission()) {
     return <DashboardLayout title="Lista de Presença" subtitle="Gerencie a lista de presença da proposta">
      <AccessDenied  />
@@ -29,7 +34,7 @@ export default function ProposalAttendanceListPage() {
       title="Lista de Presença" 
       subtitle="Gerencie a lista de presença da proposta"
     >
-      <ProposalAttendanceList hasEditPermission={hasEditPermission()} />
+      <ProposalAttendanceList hasEditPermission={hasEditPermission()} hasConfirmPermission={hasConfirmPermission()} />
     </DashboardLayout>
   );
 } 
