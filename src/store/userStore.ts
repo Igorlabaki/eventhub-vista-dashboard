@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { userService } from '@/services/user.service';
-import { UpdateUserResponse } from '@/types';
 import { AxiosError } from 'axios';
+import { UpdateUserResponse } from '@/types/user';
 
 interface User {
   id: string;
@@ -32,6 +32,7 @@ interface UpdatePasswordData {
   newPassword: string;
   confirmPassword: string;
 }
+
 
 interface ErrorResponse {
   message: string;

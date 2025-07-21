@@ -13,7 +13,8 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
   const location = useLocation();
 
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
-  const userId = useUserStore((state) => state.user?.id);
+  const user = useUserStore((state) => state.user);
+  const userId = user?.id;
 
   const { fetchProposalById } = useProposalStore();
   const { fetchVenueById, clearSelectedVenue } = useVenueStore();
@@ -58,6 +59,12 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login", { replace: true, state: { from: location } });
+      return;
+    }
+
+    // Aguarda o carregamento do usuário
+    if (!userId) {
+      setLoading(true);
       return;
     }
 
@@ -140,7 +147,7 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
     };
   }, [isAuthenticated, proposalId, venueId, organizationId, userId, fetchProposalById, fetchVenueById, fetchOrganizationById, fetchCurrentUserVenuePermission, fetchCurrentUserOrganizationPermission, navigate, location]);
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated || !userId) return <AppLoadingScreen />;
   if (loading) return <AppLoadingScreen />;
   if (error) return <AppErrorScreen message={error} />;
 
