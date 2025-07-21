@@ -31,7 +31,7 @@ export default function ProposalView() {
     useProposalStore();
   const { selectedVenue, fetchVenueById } = useVenueStore();
   const [venueLoading, setVenueLoading] = useState(false);
- 
+
   useEffect(() => {
     if (id) {
       fetchProposalById(id);
@@ -78,7 +78,7 @@ export default function ProposalView() {
   const durationHours = Math.round(
     (end.getTime() - start.getTime()) / (1000 * 60 * 60)
   );
-
+  console.log(selectedVenue);
   return (
     <div className="flex flex-col min-h-screen ">
       <main className="flex justify-start py-14 items-center bg-eventhub-background flex-col px-3 flex-1">
@@ -92,17 +92,36 @@ export default function ProposalView() {
           <h2 className="text-2xl font-bold text-center mb-6 text-gray-600">
             Proposta
           </h2>
-          <div className="flex items-center justify-center gap-6 text-gray-700 mb-6">
+          <div className="flex items-center justify-center gap-3 text-gray-700 mb-6">
             <span className="flex items-center gap-1 text-sm sm:text-base">
               <FiUsers /> ({guestNumber})
             </span>
-            <span className="flex items-center gap-1 text-sm sm:text-base">
-              <FiClock /> {formatHour(start)} - {formatHour(end)} (
-              {durationHours}
-              hrs)
-            </span>
-            <span className="flex items-center gap-1 text-sm sm:text-base">
-              <Calendar className="w-4 h-4" /> {formatDate(start)}
+            {!selectedVenue?.hasOvernightStay && (
+              <span className="flex items-center gap-1 text-sm sm:text-base">
+                <FiClock /> {formatHour(start)} - {formatHour(end)} (
+                {durationHours}
+                hrs)
+              </span>
+            )}
+            <span className="flex items-center gap-1 text-[12px] sm:text-base ">
+              <Calendar className="w-4 h-4" />
+              {selectedVenue?.hasOvernightStay ? (
+                <span className="flex flex-row justify-center items-center gap-x-1 leading-tight text-center">
+                  <div className="flex flex-row justify-center items-center gap-x-1">
+                    <p>{formatDate(start)}</p>
+                    <p>({`${formatHour(start)}hrs`})</p>
+                  </div>
+                  <span className="mx-auto">até</span>
+                  <span className="flex flex-row justify-center items-center gap-x-1 leading-tight text-center">
+                    <div className="flex flex-row justify-center items-center gap-x-1">
+                      <p>{formatDate(end)}</p> 
+                      <p>({`${formatHour(end)}hrs`})</p>{" "}
+                    </div>
+                  </span>
+                </span>
+              ) : (
+                formatDate(start)
+              )}
             </span>
           </div>
           <div className="space-y-2 mb-6">
