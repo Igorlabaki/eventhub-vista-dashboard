@@ -32,6 +32,8 @@ import { useContractStore } from "@/store/contractStore";
 import { Venue } from "@/components/ui/venue-list";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
 import { useUserStore } from "@/store/userStore";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 type ContractClausePayload = { text: string; title: string; position: number };
 type ContractPayload = {
@@ -55,7 +57,7 @@ export default function OrganizationContracts() {
   const { venues, isLoading: isLoadingVenues, fetchVenues } = useVenueStore();
   const { user } = useUserStore();
   const [isCreatingContract, setIsCreatingContract] = useState(false);
-
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
   const { contracts, isLoading: isLoadingContracts, fetchContracts, createContract, updateContract, deleteContract } = useContractStore();
 
   useEffect(() => {
@@ -139,6 +141,24 @@ export default function OrganizationContracts() {
       toast({ title, description: message, variant: "destructive" });
     }
   };
+
+  const hasViewPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "VIEW_ORG_CONTRACTS"
+    );
+  };
+
+  if (!hasViewPermission()) {
+    return (
+      <DashboardLayout
+        title="Contratos"
+        subtitle="Gerencie os contratos da sua organização"
+      >
+        <AccessDenied />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Contratos" subtitle="Gerencie os contratos da sua organização">

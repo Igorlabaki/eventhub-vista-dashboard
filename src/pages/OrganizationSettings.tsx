@@ -6,6 +6,8 @@ import { useUserStore } from "@/store/userStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditOrganizationForm } from "@/components/organization/EditOrganizationForm";
 import { useOrganizationStore } from "@/store/organizationStore";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 export default function OrganizationSettings() {
   const { toast } = useToast();
@@ -13,7 +15,7 @@ export default function OrganizationSettings() {
   const navigate = useNavigate();
   const { user } = useUserStore();
   const { currentOrganization, fetchOrganizationById, isLoading } = useOrganizationStore();
-
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
   useEffect(() => {
     if (organizationId) {
       fetchOrganizationById(organizationId);
@@ -27,6 +29,24 @@ export default function OrganizationSettings() {
   const handleCancel = () => {
     navigate(-1);
   };
+
+  const hasViewPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "VIEW_ORG_INFO"
+    );
+  };
+
+  if (!hasViewPermission()) {
+    return (
+      <DashboardLayout
+        title="Configurações"
+        subtitle="Gerencie as configurações da sua organização"
+      >
+        <AccessDenied />    
+      </DashboardLayout>
+    );
+  }
 
   if (isLoading || !currentOrganization) {
     return (
@@ -55,6 +75,7 @@ export default function OrganizationSettings() {
     >
       <div className="max-w-2xl mx-auto mt-8">
         <EditOrganizationForm
+          organizationId={organizationId}
           organization={currentOrganization}
           onCancel={handleCancel}
           onSuccess={handleSuccess}

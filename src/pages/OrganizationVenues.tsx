@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useUserStore } from "@/store/userStore";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 
 export default function OrganizationVenues() {
   const { id: organizationId } = useParams<{ id: string }>();
@@ -34,7 +35,7 @@ export default function OrganizationVenues() {
 
   useEffect(() => {
     if (organizationId) {
-      fetchVenues({organizationId, userId: user?.id || ""});
+      fetchVenues({ organizationId, userId: user?.id || "" });
       fetchOrganizationById(organizationId);
     }
   }, [organizationId, fetchVenues, fetchOrganizationById]);
@@ -72,19 +73,28 @@ export default function OrganizationVenues() {
     setShowForm(false);
     setSelectedVenueId(undefined);
   };
- 
+  const { currentUserOrganizationPermission } =
+    useUserOrganizationPermissionStore();
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_VENUES"
+    );
+  };
   return (
     <DashboardLayout
       title="Espaços"
       subtitle="Gerenciar espaços da organização"
     >
       <div className="flex flex-col h-full">
-        <PageHeader
-          isFormOpen={showForm}
-          count={venues.length}
-          onCreateClick={() => setShowForm(true)}
-          createButtonText="Novo Espaço"
-        />
+        {hasEditPermission() && (
+          <PageHeader
+            isFormOpen={showForm}
+            count={venues.length}
+            onCreateClick={() => setShowForm(true)}
+            createButtonText="Novo Espaço"
+          />
+        )}
 
         <div className="flex-1 overflow-hidden">
           <AnimatedFormSwitcher
@@ -108,7 +118,7 @@ export default function OrganizationVenues() {
               />
             }
           />
-        </div>      
+        </div>
       </div>
     </DashboardLayout>
   );

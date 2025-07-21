@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 interface EmptyStateProps {
   title: string;
   description?: string;
+  hasEditPermission: boolean;
   actionText: string;
   onAction: () => void;
 }
@@ -10,6 +11,7 @@ interface EmptyStateProps {
 export function EmptyState({
   title,
   description,
+  hasEditPermission,
   actionText,
   onAction,
 }: EmptyStateProps) {
@@ -19,13 +21,15 @@ export function EmptyState({
       {description && (
         <p className="text-gray-400 text-sm mt-1">{description}</p>
       )}
+      {hasEditPermission && (
       <Button
         variant="link"
         onClick={onAction}
         className="mt-2"
       >
-        {actionText}
-      </Button>
+          {actionText}
+        </Button>
+      )}
     </div>
   );
 } 

@@ -84,6 +84,7 @@ export default function VenueNotifications() {
                 ))
               ) : (
                 <EmptyState
+                  hasEditPermission={false}
                   title="Sem notificações"
                   description="Você não possui notificações no momento."
                   actionText="Atualizar"

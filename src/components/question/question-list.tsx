@@ -18,6 +18,7 @@ import { useQuestionStore } from "@/store/questionStore";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useToast } from "@/hooks/use-toast";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 interface QuestionListProps {
   questions: Question[];
@@ -47,7 +48,7 @@ export function QuestionList({
   const [questionToDelete, setQuestionToDelete] = React.useState<Question | null>(null);
   const { deleteQuestion } = useQuestionStore();
   const { toast } = useToast();
-
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
   const handleDelete = async (questionId: string) => {
     try {
       const response = await deleteQuestion(questionId);
@@ -71,6 +72,11 @@ export function QuestionList({
     return <QuestionListSkeleton />;
   }
 
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_VENUE_SITE");
+  };
+
   return (
     <>
       <div className={cn("space-y-4", className)}>
@@ -84,6 +90,7 @@ export function QuestionList({
           {(filteredQuestions) =>
             filteredQuestions?.length === 0 ? (
               <EmptyState
+                hasEditPermission={hasEditPermission()}
                 title={emptyMessage}
                 actionText="Nova Pergunta"
                 onAction={onCreateClick}

@@ -32,6 +32,7 @@ interface ClauseListProps {
   isDeleting?: boolean
   onCreateClick: () => void
   onEditClick: (clause: Clause) => void
+  hasEditPermission: boolean
 }
 
 export function ClauseList({
@@ -44,7 +45,8 @@ export function ClauseList({
   isLoading = false,
   isDeleting = false,
   onCreateClick,
-  onEditClick
+  onEditClick,
+  hasEditPermission
 }: ClauseListProps) {
   const [clauseToDelete, setClauseToDelete] = React.useState<Clause | null>(null);
   const { deleteClause } = useClauseStore();
@@ -87,6 +89,7 @@ export function ClauseList({
           {(filteredClauses) =>
             filteredClauses?.length === 0 ? (
               <EmptyState
+                hasEditPermission={hasEditPermission}
                 title={emptyMessage}
                 actionText="Nova Cláusula"
                 onAction={onCreateClick}

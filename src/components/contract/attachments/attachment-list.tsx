@@ -8,6 +8,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Attachment } from "@/types/attachment";
 import { useAttachmentStore } from "@/store/attachmentStore";
 import { AttachmentListSkeleton } from "./attachment-skeleton";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 
 interface AttachmentListProps {
   venues: { id: string; name: string }[];
@@ -24,7 +25,7 @@ export function AttachmentList({
 }: AttachmentListProps) {
   const [attachmentToDelete, setAttachmentToDelete] = useState<Attachment | null>(null);
   const { attachments, isLoading, fetchAttachments, deleteAttachment } = useAttachmentStore();
-
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
   useEffect(() => {
     fetchAttachments(organizationId);
   }, [organizationId, fetchAttachments]);
@@ -43,6 +44,13 @@ export function AttachmentList({
     return <AttachmentListSkeleton />;
   }
 
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_CONTRACTS"
+    );
+  };
+
   return (
     <div className="space-y-4">
       <FilterList
@@ -55,6 +63,7 @@ export function AttachmentList({
         {(filteredAttachments) =>
           filteredAttachments.length === 0 ? (
             <EmptyState
+              hasEditPermission={hasEditPermission()}
               title="Nenhum anexo encontrado"
               actionText="Novo Anexo"
               onAction={() => onEdit(null)}

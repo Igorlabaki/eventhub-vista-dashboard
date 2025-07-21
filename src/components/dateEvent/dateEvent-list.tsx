@@ -14,6 +14,8 @@ import { DateEventListSkeleton } from "@/components/dateEvent/dateEvent-list-ske
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog"
 import { DateEvent } from "@/types/dateEvent"
 import { formatDate } from "@/lib/utils"
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore"
+
 
 interface DateEventListProps {
   dateEvents: DateEvent[]
@@ -40,14 +42,20 @@ export function DateEventList({
 }: DateEventListProps) {
   const [dateEventToDelete, setDateEventToDelete] = React.useState<DateEvent | null>(null);
 
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+
   if (isLoading) {
     return <DateEventListSkeleton />;
   }
 
   if (!dateEvents || dateEvents.length === 0) {
-    return <EmptyState title={emptyMessage} actionText="Nova Data" onAction={onCreateClick} />;
+    return <EmptyState title={emptyMessage} actionText="Nova Data" onAction={onCreateClick}/>;
   }
 
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_DATES");
+  };
   return (
     <div className={cn("space-y-4", className)}>
       <Table className="bg-white rounded-md shadow-lg ">
@@ -55,7 +63,9 @@ export function DateEventList({
           <TableRow>
             <TableHead>Título</TableHead>
             <TableHead>Data</TableHead>
-            <TableHead className="w-[100px] text-center">Ações</TableHead>
+            {hasEditPermission() && (
+              <TableHead className="w-[100px] text-center">Ações</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -73,6 +83,7 @@ export function DateEventList({
               <TableCell>
                 {formatDate(dateEvent.startDate)}
               </TableCell>
+              {hasEditPermission() && (
               <TableCell className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <button
@@ -93,8 +104,9 @@ export function DateEventList({
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
-                </div>
-              </TableCell>
+                  </div>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

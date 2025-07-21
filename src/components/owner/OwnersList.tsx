@@ -19,6 +19,7 @@ import { useVenueStore } from "@/store/venueStore";
 import { showSuccessToast } from "../ui/success-toast";
 import { useOwnerStore } from "@/store/ownerStore";
 import { useUserStore } from "@/store/userStore";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 
 interface OwnersListProps {
   owners: Owner[];
@@ -46,7 +47,7 @@ export function OwnersList({
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
   const { venues, isLoading: isLoadingVenues, fetchVenues } = useVenueStore();
   const { user } = useUserStore();
-
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
   useEffect(() => {
     if (organizationId && user?.id) {
       fetchVenues({ organizationId, userId: user.id });
@@ -89,12 +90,20 @@ export function OwnersList({
     setVenueDialogOpen(true);
   };
 
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_OWNERS"
+    );
+  };
+
   return (
     <>
       {/* Owner List */}
       <div className="mt-4">
         {filteredOwners.length === 0 ? (
           <EmptyState
+            hasEditPermission={hasEditPermission()}
             title={searchTerm ? "Nenhum proprietário encontrado" : "Nenhum proprietário cadastrado"}
             description={searchTerm ? "Tente buscar com outros termos" : "Comece cadastrando seu primeiro proprietário"}
             actionText="Cadastrar proprietário"

@@ -15,6 +15,7 @@ import { Goal } from "@/types/goal";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { monthsList } from "./GoalsTab";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 const monthLabels = [
   "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"
@@ -45,10 +46,13 @@ export function GoalList({
   onCreateClick,
   onEditClick
 }: GoalListProps) {
-  if (isLoading) {
-    // Use GoalListSkeleton se quiser
-    return null;
-  }
+
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+   
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_VENUE_PRICES");
+  };
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -74,7 +78,9 @@ export function GoalList({
                   <TableHead>Meta</TableHead>
                   <TableHead>Meses</TableHead>
                   <TableHead>Taxa de Aumento (%)</TableHead>
-                  <TableHead className="w-[100px] text-center">Ações</TableHead>
+                  {hasEditPermission() && (
+                    <TableHead className="w-[100px] text-center">Ações</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -102,6 +108,7 @@ export function GoalList({
                       </TableCell>
                       <TableCell>{monthNames}</TableCell>
                       <TableCell>{goal.increasePercent}%</TableCell>
+                      {hasEditPermission() && (
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -122,8 +129,9 @@ export function GoalList({
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
-                        </div>
-                      </TableCell>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })}

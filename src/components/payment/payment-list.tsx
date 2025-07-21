@@ -20,6 +20,7 @@ import { showSuccessToast } from "@/components/ui/success-toast"
 import { useToast } from "@/hooks/use-toast"
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler"
 import { formatCurrency } from "@/lib/utils"
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore"
 
 interface PaymentListProps {
   payments: Payment[]
@@ -67,12 +68,21 @@ export function PaymentList({
     }
   };
 
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_PROPOSAL_PAYMENTS"
+    );
+  };
+
   if (isLoading) {
     return <PaymentListSkeleton />;
   }
 
   if (!payments || payments.length === 0) {
-    return <EmptyState title={emptyMessage} actionText="Novo Pagamento" onAction={onCreateClick} />;
+    return <EmptyState title={emptyMessage} actionText="Novo Pagamento" onAction={onCreateClick} hasEditPermission={hasEditPermission()} />;
   }
 
   return (
@@ -82,7 +92,9 @@ export function PaymentList({
           <TableRow>
             <TableHead>Valor</TableHead>
             <TableHead className="">Data</TableHead>
-            <TableHead className="w-[100px] text-center">Ações</TableHead>
+            {hasEditPermission() && (
+              <TableHead className="w-[100px] text-center">Ações</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -100,6 +112,7 @@ export function PaymentList({
               <TableCell>
                 {new Date(payment.paymentDate).toLocaleDateString('pt-BR')}
               </TableCell>
+              {hasEditPermission() && (
               <TableCell className="text-center">
                 <div className="flex items-center justify-center gap-2">
                   <button
@@ -120,8 +133,9 @@ export function PaymentList({
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
-                </div>
-              </TableCell>
+                  </div>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

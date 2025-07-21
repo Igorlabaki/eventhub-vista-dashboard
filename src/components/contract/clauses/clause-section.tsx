@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
 import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
 import { PageHeader } from "@/components/PageHeader";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 
 interface ClauseSectionProps {
   clauses: Clause[];
@@ -32,6 +33,14 @@ export function ClauseSection({
 }: ClauseSectionProps) {
   const { createClause, updateClause } = useClauseStore();
   const { toast } = useToast();
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
+
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_CONTRACTS"
+    );
+  };
 
   const handleSubmit = async (data: { title: string; text: string }) => {
     try {
@@ -78,7 +87,9 @@ export function ClauseSection({
 
   return (
     <div className="animate-fade-in">
-       <PageHeader onCreateClick={onCreateClick} isFormOpen={showForm}  createButtonText="Novo Clausula"/>
+      {hasEditPermission() && (
+        <PageHeader onCreateClick={onCreateClick} isFormOpen={showForm}  createButtonText="Novo Clausula"  />
+      )}
       {isLoading ? (
         <ClauseListSkeleton />
       ) : (
@@ -86,6 +97,7 @@ export function ClauseSection({
           showForm={showForm}
           list={
             <ClauseList
+              hasEditPermission={hasEditPermission()}
               clauses={clauses || []}
               onCreateClick={onCreateClick}
               onEditClick={setSelectedClause}

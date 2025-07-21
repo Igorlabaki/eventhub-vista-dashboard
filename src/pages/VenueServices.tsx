@@ -6,6 +6,9 @@ import { useParams } from "react-router-dom";
 import { useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useVenueStore } from "@/store/venueStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { PageHeader } from "@/components/PageHeader";
+import AccessDenied from "@/components/accessDenied";
 
 export default function VenueServices() {
   const { selectedVenue: venue } = useVenueStore();
@@ -19,8 +22,36 @@ export default function VenueServices() {
     }
   }, [venue.id, fetchServices]);
 
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_VENUE_SERVICES"
+    );
+  };
+
+  const hasViewPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_SERVICES");
+  };
+
+  if(!hasViewPermission()) {
+    return <DashboardLayout title="Serviços" subtitle="Gerencie os serviços do seu espaço">
+     <AccessDenied />
+    </DashboardLayout>
+  }
+
+
   return (
     <DashboardLayout title="Serviços" subtitle="Gerencie os serviços do seu espaço">
+      {hasEditPermission() && (
+      <PageHeader
+        onCreateClick={() => setIsCreating(true)}
+        isFormOpen={isCreating}
+          createButtonText="Novo Serviço"
+        />
+      )}
       <ServiceSection
         services={services}
         venueId={venue.id}
@@ -31,17 +62,6 @@ export default function VenueServices() {
         onCreateClick={() => setIsCreating(true)}
         onCancelCreate={() => setIsCreating(false)}
       />
-            {/* Botão flutuante para mobile */}
-            <div className="md:hidden">
-        <button
-          onClick={() => setIsCreating(true)}
-          className={`bottom-6 right-6 bg-[#8854D0] ${isCreating ? 'hidden' : 'fixed'} text-white rounded-full shadow-lg w-14 h-14 flex items-center
-           justify-center text-3xl hover:bg-[#6c3fc9] transition-colors`}
-          aria-label="Novo Serviço"
-        >
-          <Plus className="h-7 w-7" />
-        </button>
-      </div>
     </DashboardLayout>
   );
 }

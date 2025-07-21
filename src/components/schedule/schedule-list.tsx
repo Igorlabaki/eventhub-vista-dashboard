@@ -85,6 +85,11 @@ export function ScheduleList({
     );
   };
 
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_SCHEDULE");
+  };
+
   if (isLoading) {
     return null;
   }
@@ -105,6 +110,7 @@ export function ScheduleList({
         </a>
         )}
         <EmptyState
+          hasEditPermission={hasEditPermission()}
           title={emptyMessage}
           description="Crie um novo cronograma para começar a organizar suas atividades."
           actionText="Novo Cronograma"
@@ -113,12 +119,6 @@ export function ScheduleList({
       </div>
     );
   }
-
-  
-  const hasEditPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_SCHEDULE");
-  };
 
   return (
     <div className={cn("space-y-4", className)}>

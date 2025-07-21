@@ -21,6 +21,15 @@ interface VenueState {
   updateVenue: (data: UpdateVenueDTO) => Promise<BackendResponse<Venue>>;
   deleteVenue: (id: string) => Promise<BackendResponse<void>>;
   clearSelectedVenue: () => void;
+  updateVenuePaymentInfo: (data: {
+    venueId: string;
+    userId: string;
+    pricePerDay?: string;
+    pricePerPerson?: string;
+    pricePerPersonDay?: string;
+    pricePerPersonHour?: string;
+    pricingModel: "PER_PERSON" | "PER_DAY" | "PER_PERSON_DAY" | "PER_PERSON_HOUR";
+  }) => Promise<BackendResponse<Venue>>;
 }
 
 export const useVenueStore = create<VenueState>((set) => ({
@@ -96,6 +105,35 @@ export const useVenueStore = create<VenueState>((set) => ({
       set({ 
         error: error?.response?.data?.message || "Não foi possível atualizar o espaço.",
         isLoading: false 
+      });
+      throw err;
+    }
+  },
+
+  updateVenuePaymentInfo: async (data: {
+    venueId: string;
+    userId: string;
+    pricePerDay?: string;
+    pricePerPerson?: string;
+    pricePerPersonDay?: string;
+    pricePerPersonHour?: string;
+    pricingModel: "PER_PERSON" | "PER_DAY" | "PER_PERSON_DAY" | "PER_PERSON_HOUR";
+  }) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await venueService.updateVenuePaymentInfo(data);
+      set((state) => ({
+        isLoading: false,
+        venues: state.venues.map(v =>
+          v.id === response.data.id ? { ...v, ...response.data } : v
+        )
+      }));
+      return response;
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      set({
+        error: error?.response?.data?.message || "Não foi possível atualizar as informações de pagamento do espaço.",
+        isLoading: false
       });
       throw err;
     }

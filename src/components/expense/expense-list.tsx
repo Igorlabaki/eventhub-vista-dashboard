@@ -21,6 +21,7 @@ import { showSuccessToast } from "@/components/ui/success-toast"
 import { useToast } from "@/hooks/use-toast"
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler"
 import { formatCurrency } from "@/lib/utils"
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore"
 
 interface ExpenseListProps {
   expenses: Expense[]
@@ -72,6 +73,16 @@ export function ExpenseList({
     }
   };
 
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_VENUE_EXPENSES"
+    );
+  };
+
+
   if (isLoading) {
     return <ExpenseListSkeleton />;
   }
@@ -101,7 +112,9 @@ export function ExpenseList({
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Valor</TableHead>
-                    <TableHead className="w-[100px] text-center">Ações</TableHead>
+                    {hasEditPermission() && (
+                      <TableHead className="w-[100px] text-center">Ações</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -120,6 +133,7 @@ export function ExpenseList({
                         {expense.name}
                       </TableCell>
                       <TableCell>{formatCurrency(expense.amount)}</TableCell>
+                      {hasEditPermission() && ( 
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -142,6 +156,7 @@ export function ExpenseList({
                           </button>
                         </div>
                       </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

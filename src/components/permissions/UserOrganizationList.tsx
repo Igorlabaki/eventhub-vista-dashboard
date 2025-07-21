@@ -19,6 +19,7 @@ interface UserOrganizationListProps {
   userOrganizations: UserOrganization[];
   onUserClick: (userOrganization: UserOrganization) => void;
   isLoading?: boolean;
+  hasEditPermission?: boolean;
   onCreateClick?: () => void;
   onDeleteUserOrganization?: (userOrganization: UserOrganization) => void;
 }
@@ -27,6 +28,7 @@ export function UserOrganizationList({
   userOrganizations,
   onUserClick,
   isLoading = false,
+  hasEditPermission = false,
   onCreateClick,
   onDeleteUserOrganization
 }: UserOrganizationListProps) {
@@ -38,11 +40,12 @@ export function UserOrganizationList({
 
   if (!userOrganizations.length) {
     return (
-      <EmptyState
+      <EmptyState 
         title="Nenhum usuário encontrado"
         description="Adicione usuários para gerenciar suas permissões"
         actionText="Adicionar Usuário"
         onAction={onCreateClick || (() => {})}
+        hasEditPermission={hasEditPermission || false}
       />
     );
   }
@@ -62,7 +65,9 @@ export function UserOrganizationList({
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead className="w-[100px] text-center">Ações</TableHead>
+                {hasEditPermission && (
+                  <TableHead className="w-[100px] text-center">Ações</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -75,6 +80,7 @@ export function UserOrganizationList({
                   <TableCell className="font-medium">
                     {userOrganization.user.username}
                   </TableCell>
+                  {hasEditPermission && (
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-2">
                       <button
@@ -91,8 +97,9 @@ export function UserOrganizationList({
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
-                    </div>
-                  </TableCell>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

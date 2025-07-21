@@ -43,6 +43,8 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Textarea } from "@/components/ui/textarea";
 import { useOrganizationStore } from "@/store/organizationStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 // Função para gerar opções de horário em intervalos de 30 minutos
 const generateTimeOptions = () => {
@@ -398,6 +400,22 @@ export default function VenueSettings() {
       setIsLoading(false);
     }
   };
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+  const hasViewPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_CONFIG");
+  };
+
+  if (!hasViewPermission()) {
+    return (
+      <DashboardLayout
+        title="Agenda"
+        subtitle="Visualize e gerencie sua agenda"
+      >
+        <AccessDenied />
+      </DashboardLayout>
+    );
+  }
 
   if (isLoading) {
     return (

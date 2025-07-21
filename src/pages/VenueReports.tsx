@@ -10,6 +10,8 @@ import { EventsReport } from "@/components/reports/EventsReport";
 import { BudgetsReport } from "@/components/reports/BudgetsReport";
 import { FinancialBalanceReport } from "@/components/reports/FinancialBalanceReport";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 export default function VenueReports() {
   const { id: venueId } = useParams<{ id: string }>();
@@ -25,6 +27,17 @@ export default function VenueReports() {
   const {
     isLoading: isLoadingReports,
   } = useVenueReportsStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+  const hasViewPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_ANALYSIS");
+  };
+
+  if(!hasViewPermission()) {
+    return <DashboardLayout title="Relatórios" subtitle="Analise o desempenho do seu espaço">
+     <AccessDenied />
+    </DashboardLayout>
+  } 
 
   if (isLoadingVenue || isLoadingReports) {
     return (

@@ -5,18 +5,41 @@ import { useState } from "react";
 import { DateEvent } from "@/types/dateEvent";
 import { useProposalStore } from "@/store/proposalStore";
 import { PageHeader } from "@/components/PageHeader";
+import AccessDenied from "@/components/accessDenied";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 export function DateEventListPage() {
   const { id: proposalId } = useParams();
   const [isCreating, setIsCreating] = useState(false);
   const [selectedDateEvent, setSelectedDateEvent] = useState<DateEvent | null | undefined>(null);
   const { currentProposal } = useProposalStore();
-
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
   if (!proposalId || !currentProposal) {
     return null;
   }
 
   const showCreateButton = !isCreating && !selectedDateEvent;
+
+  const hasViewPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_DATES");
+  };
+
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_DATES");
+  };
+
+  if (!hasViewPermission()) {
+    return (
+      <DashboardLayout
+        title="Histórico"
+        subtitle="Veja todas as ações realizadas neste orçamento"
+      >
+        <AccessDenied  />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout
@@ -24,12 +47,13 @@ export function DateEventListPage() {
       subtitle="Gerencie os eventos do seu cronograma"
     >
       <div className="space-y-6">
+        {hasEditPermission() && (
         <PageHeader
           onCreateClick={() => setIsCreating(true)}
           createButtonText="Nova Data"
           isFormOpen={!showCreateButton}
         />
-
+        )}
         <DateEventSection
           proposalId={proposalId}
           venueId={currentProposal.venueId}

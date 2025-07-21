@@ -6,6 +6,7 @@ import { ContractForm } from "./contract-form";
 import { Clause } from "@/types/clause";
 import { Venue } from "@/components/ui/venue-list";
 import { PageHeader } from "@/components/PageHeader";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 
 type ContractClausePayload = { text: string; title: string; position: number };
 type ContractPayload = {
@@ -48,10 +49,20 @@ export default function ContractSection({
   onDeleteContract,
 }: ContractSectionProps) {
   const showForm = isCreating || !!selectedContract;
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
   
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_CONTRACTS"
+    );
+  };
+
   return (
     <div className="animate-fade-in">
-      <PageHeader onCreateClick={onCreateClick} isFormOpen={showForm}  createButtonText="Novo Contrato"/>
+      {hasEditPermission() && (
+        <PageHeader onCreateClick={onCreateClick} isFormOpen={showForm}  createButtonText="Novo Contrato"/>
+      )}
       {isLoading ? (
         <ContractListSkeleton />
       ) : (

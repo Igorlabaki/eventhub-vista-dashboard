@@ -4,6 +4,8 @@ import { FilterList } from "@/components/filterList";
 import { EmptyState } from "@/components/EmptyState";
 import type { ItemListVenueResponse } from "@/types/venue";
 import type { DateEvent } from "@/types/date-event";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 
 interface VenuesListProps {
   venues: ItemListVenueResponse[];
@@ -14,6 +16,7 @@ interface VenuesListProps {
 }
 
 export function VenuesList({ venues, isLoading, onCreateClick, organizationId, onEditClick }: VenuesListProps) {
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -24,9 +27,16 @@ export function VenuesList({ venues, isLoading, onCreateClick, organizationId, o
     );
   }
 
+ 
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes("EDIT_ORG_VENUES");
+  };
+
   if (venues.length === 0) {
     return (
       <EmptyState
+        hasEditPermission={hasEditPermission()}
         title="Nenhum espaço encontrado"
         description="Crie seu primeiro espaço para começar a gerenciar eventos"
         actionText="Criar Espaço"

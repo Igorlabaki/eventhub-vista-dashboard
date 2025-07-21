@@ -1,8 +1,20 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate, useParams, Navigate } from "react-router-dom";
+import {
+  useSearchParams,
+  useNavigate,
+  useParams,
+  Navigate,
+} from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
@@ -19,9 +31,24 @@ import { PerDayProposalForm } from "@/components/proposal/forms/PerDayProposalFo
 import { PerPersonProposalForm } from "@/components/proposal/forms/PerPersonProposalForm";
 import { PageHeader } from "@/components/PageHeader";
 import { useUserStore } from "@/store/userStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 // Month names in Portuguese
-const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+const monthNames = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+];
 
 const TableSkeleton = () => {
   return (
@@ -93,13 +120,8 @@ export default function VenueBudgets() {
   const { id: venueIdParam } = useParams();
   const { user } = useUserStore();
 
-  const { 
-    proposals, 
-    isLoading, 
-    error,
-    fetchProposals,
-    fetchProposalById 
-  } = useProposalStore();
+  const { proposals, isLoading, error, fetchProposals, fetchProposalById } =
+    useProposalStore();
 
   // Handle opening proposal details
   const handleOpenProposalDetails = (proposal) => {
@@ -109,7 +131,7 @@ export default function VenueBudgets() {
   // Close proposal details
   const handleCloseProposalDetails = () => {
     setSelectedProposal(null);
-    navigate('/venue/budgets');
+    navigate("/venue/budgets");
   };
 
   // Create a new proposal
@@ -121,12 +143,21 @@ export default function VenueBudgets() {
     setShowForm(false);
   };
 
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_VENUE_PROPOSALS"
+    );
+  };
+
   // Effect to handle URL parameters
   useEffect(() => {
-    const proposalId = searchParams.get('id');
-    const action = searchParams.get('action');
-    
-    if (proposalId && action === 'view') {
+    const proposalId = searchParams.get("id");
+    const action = searchParams.get("action");
+
+    if (proposalId && action === "view") {
       fetchProposalById(proposalId);
     }
   }, [searchParams]);
@@ -136,7 +167,7 @@ export default function VenueBudgets() {
     fetchProposals({
       venueId: selectedVenue.id,
       month: (selectedMonth + 1).toString(),
-      year: selectedYear.toString()
+      year: selectedYear.toString(),
     });
   }, [selectedMonth, selectedYear]);
 
@@ -147,14 +178,27 @@ export default function VenueBudgets() {
     }
   }, [selectedVenue, venueIdParam, user?.id, fetchVenueById]);
 
+  const hasViewPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_PROPOSALS");
+  };
+
+  if(!hasViewPermission()) {
+    return <DashboardLayout title="Orçamentos" subtitle="Gerencie os orçamentos do seu estabelecimento">
+     <AccessDenied />
+    </DashboardLayout>
+  }
+
+
   const renderProposalList = () => (
     <>
-      <PageHeader
-        onCreateClick={handleCreateNewProposal}
-        createButtonText="Novo Orçamento"
-        isFormOpen={showForm}
-      />
-
+      {hasEditPermission() && (
+        <PageHeader
+          onCreateClick={handleCreateNewProposal}
+          createButtonText="Novo Orçamento"
+          isFormOpen={showForm}
+        />
+      )}
       <MonthYearNavigator
         selectedYear={selectedYear}
         selectedMonth={selectedMonth}
@@ -165,12 +209,14 @@ export default function VenueBudgets() {
 
       <FilterList
         items={proposals.filter(
-          proposal =>
+          (proposal) =>
             new Date(proposal.startDate).getMonth() === selectedMonth &&
             new Date(proposal.startDate).getFullYear() === selectedYear
         )}
         filterBy={(proposal, query) =>
-          proposal.completeClientName.toLowerCase().includes(query.toLowerCase())
+          proposal.completeClientName
+            .toLowerCase()
+            .includes(query.toLowerCase())
         }
         placeholder="Buscar orçamentos..."
       >
@@ -194,14 +240,28 @@ export default function VenueBudgets() {
 
   const renderProposalForm = () => {
     if (selectedVenue.hasOvernightStay) {
-      return <PerDayProposalForm venueId={selectedVenue.id} onBack={handleBackToList} />;
+      return (
+        <PerDayProposalForm
+          venueId={selectedVenue.id}
+          onBack={handleBackToList}
+        />
+      );
     }
-    return <PerPersonProposalForm venueId={selectedVenue.id} onBack={handleBackToList} />;
+    return (
+      <PerPersonProposalForm
+        venueId={selectedVenue.id}
+        onBack={handleBackToList}
+      />
+    );
   };
 
   // Se ainda não carregou o selectedVenue, mostra loading
   if (!selectedVenue) {
-    return <div className="text-center py-16 text-gray-500">Carregando informações do espaço...</div>;
+    return (
+      <div className="text-center py-16 text-gray-500">
+        Carregando informações do espaço...
+      </div>
+    );
   }
 
   return (
@@ -216,9 +276,15 @@ export default function VenueBudgets() {
         </>
       ) : (
         <div className="flex w-full">
-          <BudgetSidebar onBack={handleCloseProposalDetails} proposal={selectedProposal} />
+          <BudgetSidebar
+            onBack={handleCloseProposalDetails}
+            proposal={selectedProposal}
+          />
           <div className="flex-1 p-6">
-            <BudgetDetails proposal={selectedProposal} onClose={handleCloseProposalDetails} />
+            <BudgetDetails
+              proposal={selectedProposal}
+              onClose={handleCloseProposalDetails}
+            />
           </div>
         </div>
       )}

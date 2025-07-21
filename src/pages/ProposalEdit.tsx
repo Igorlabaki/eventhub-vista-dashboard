@@ -34,6 +34,8 @@ import { useServiceStore } from "@/store/serviceStore";
 import { useVenueStore } from "@/store/venueStore";
 import ProposalEditSkeleton from "@/components/proposal/ProposalEditSkeleton";
 import { generateTimeOptions } from "@/components/proposal/forms/PerPersonProposalForm";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 const proposalTypes = [
   { value: ProposalType.EVENT, label: "Evento" },
@@ -200,6 +202,22 @@ export default function ProposalEdit() {
       });
     }
   };
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+  const hasViewPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_INFO");
+  };
+
+  if (!hasViewPermission()) {
+    return (
+      <DashboardLayout
+        title="Editar Orçamento"
+        subtitle="Edite as informações do orçamento"
+      >
+        <AccessDenied />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Editar Orçamento">

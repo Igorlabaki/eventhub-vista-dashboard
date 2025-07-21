@@ -35,11 +35,17 @@ export function ContactList({
 
 }: ContactListProps) {
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
-
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
 
   if (isLoading) {
     return <ContactListSkeleton />;
-  }
+  } 
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_VENUE_CONTACTS"
+    );
+  };
 
   return (
     <>
@@ -56,6 +62,7 @@ export function ContactList({
         {(filteredContacts) =>
           filteredContacts.length === 0 ? (
             <EmptyState
+              hasEditPermission={hasEditPermission()}
               title="Nenhum contato encontrado"
               description="Os contatos do espaço serão exibidos aqui."
               actionText="Criar Contato"

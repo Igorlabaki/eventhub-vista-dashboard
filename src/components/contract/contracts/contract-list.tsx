@@ -14,6 +14,7 @@ import {
 import { ContractListSkeleton } from "./contract-list-skeleton";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { Contract } from "@/types/contract";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 
 interface ContractListProps {
   contracts: Contract[];
@@ -41,11 +42,17 @@ export function ContractList({
   onEditClick,
 }: ContractListProps) {
   const [contractToDelete, setContractToDelete] = React.useState<Contract | null>(null);
-
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
   if (isLoading) {
     return <ContractListSkeleton />;
   }
 
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission  ?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_CONTRACTS"
+    );
+  };
   return (
     <>
       <div className={cn("space-y-4", className)}>
@@ -58,7 +65,8 @@ export function ContractList({
         >
           {(filteredContracts) =>
             filteredContracts?.length === 0 ? (
-              <EmptyState
+              <EmptyState 
+                hasEditPermission={hasEditPermission()}
                 title={emptyMessage}
                 actionText="Novo Contrato"
                 onAction={onCreateClick}

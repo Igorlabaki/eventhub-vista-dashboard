@@ -3,6 +3,8 @@ import { AttachmentForm } from "./attachment-form";
 import { AttachmentList } from "./attachment-list";
 import { Attachment } from "@/types/attachment";
 import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
+import { PageHeader } from "@/components/PageHeader";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 
 interface AttachmentsSectionProps {
   organizationId: string;
@@ -31,8 +33,19 @@ export function AttachmentsSection({
   const handleCancel = () => {
     setSelectedAttachment(undefined);
   };
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_CONTRACTS"
+    );
+  };
 
   return (
+    <div className="animate-fade-in">
+      {hasEditPermission() && (
+        <PageHeader onCreateClick={() => setSelectedAttachment(null)} isFormOpen={showForm}  createButtonText="Novo Clausula"  />
+      )}
     <AnimatedFormSwitcher
       showForm={showForm}
       list={
@@ -52,5 +65,6 @@ export function AttachmentsSection({
         />
       }
     />
+    </div>
   );
 }

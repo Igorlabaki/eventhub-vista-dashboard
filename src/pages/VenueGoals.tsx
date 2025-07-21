@@ -61,6 +61,9 @@ import { useToast } from "@/hooks/use-toast";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useUserStore } from "@/store/userStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { Permissions } from "@/types/permissions";
+import AccessDenied from "@/components/accessDenied";
 type SeasonalFeeType = "SEASONAL" | "WEEKDAY" | "SURCHARGE" | "DISCOUNT";
 type ViewModeType = "card" | "panel";
 interface SeasonalFee {
@@ -160,7 +163,7 @@ export default function VenueGoals() {
       setViewMode("card");
     }
   };
-  const { selectedVenue: venue, fetchVenueById, isLoading, updateVenue } = useVenueStore();
+  const { selectedVenue: venue, fetchVenueById, isLoading, updateVenuePaymentInfo } = useVenueStore();
 
   const pricingType = () => {
     if (venue?.pricingModel === "PER_DAY") {
@@ -268,7 +271,7 @@ export default function VenueGoals() {
           break;
       }
 
-      const response = await updateVenue({
+      const response = await updateVenuePaymentInfo({
         venueId: venueId!,
         userId: user?.id,
         pricingModel: values.pricingModel as PricingModel,
@@ -305,6 +308,25 @@ export default function VenueGoals() {
     setActiveTab(tabId);
     setViewMode("card");
   };
+
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+   
+  const hasViewPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_PRICES");
+  };
+
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_VENUE_PRICES");
+  };
+
+  if(!hasViewPermission()) {
+    return <DashboardLayout title="Contatos" subtitle="Gerencie os contatos do espaço">
+     <AccessDenied />
+    </DashboardLayout>
+  }
+
 
   return (
     <DashboardLayout
@@ -449,6 +471,7 @@ export default function VenueGoals() {
                   <div className="col-span-3 text-center text-gray-500">Carregando metas...</div>
                 ) : goals.length === 0 ? (
                   <EmptyState
+                    hasEditPermission={hasEditPermission()}
                     title="Nenhuma meta cadastrada"
                     description="Cadastre uma meta para começar a acompanhar o desempenho do seu espaço"
                     actionText="Nova Meta"
@@ -512,6 +535,7 @@ export default function VenueGoals() {
                   <div className="text-center text-gray-500">Carregando adicionais...</div>
                 ) : surcharges.length === 0 ? (
                     <EmptyState
+                      hasEditPermission={hasEditPermission()}
                       title="Nenhum adicional cadastrado"
                       description="Cadastre um adicional para começar a definir taxas extras para seu espaço"
                       actionText="Novo Adicional"
@@ -564,6 +588,7 @@ export default function VenueGoals() {
                   <div className="text-center text-gray-500">Carregando descontos...</div>
                 ) : discounts.length === 0 ? (
                     <EmptyState
+                      hasEditPermission={hasEditPermission()}
                       title="Nenhum desconto cadastrado"
                       description="Cadastre um desconto para começar a definir reduções de preço para seu espaço"
                       actionText="Novo Desconto"

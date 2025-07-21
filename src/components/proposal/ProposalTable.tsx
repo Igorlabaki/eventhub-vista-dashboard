@@ -82,7 +82,7 @@ export function ProposalTable({
                 className="cursor-pointer hover:bg-gray-50" 
                 onClick={() => handleProposalClick(proposal.id)}
               >
-                <TableCell className="font-medium">{proposal.completeClientName}</TableCell>
+                <TableCell className="font-medium max-w-[120px]">{proposal.completeClientName}</TableCell>
                 <TableCell>
                   {format(proposal.startDate, "dd/MM/yyyy", {
                     locale: pt

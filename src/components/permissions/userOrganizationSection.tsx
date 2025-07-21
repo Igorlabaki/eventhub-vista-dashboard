@@ -1,12 +1,20 @@
 import { PageHeader } from "@/components/PageHeader";
 import { UserOrganizationList } from "@/components/permissions/UserOrganizationList";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import React from "react";
 import { UserOrganization } from "@/types/userOrganization";
 import { User } from "@/components/ui/user-list";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
+import { DashboardLayout } from "../DashboardLayout";
+import AccessDenied from "../accessDenied";
 
 interface UserOrganizationSectionProps {
   addUserDialogOpen: boolean;
@@ -20,12 +28,18 @@ interface UserOrganizationSectionProps {
   isUserLoading: boolean;
   searchedUser: User | null;
   selectedUser: User | null;
-  setView: React.Dispatch<React.SetStateAction<"venues" | "users" | "venue-permissions" | "organization-permissions">>
+  setView: React.Dispatch<
+    React.SetStateAction<
+      "venues" | "users" | "venue-permissions" | "organization-permissions"
+    >
+  >;
   organizationId: string | undefined;
   setTempUserOganization: (userOrganization: UserOrganization) => void;
 }
 
-export const UserOrganizationSection: React.FC<UserOrganizationSectionProps> = ({
+export const UserOrganizationSection: React.FC<
+  UserOrganizationSectionProps
+> = ({
   addUserDialogOpen,
   setAddUserDialogOpen,
   userOrganizations,
@@ -41,27 +55,41 @@ export const UserOrganizationSection: React.FC<UserOrganizationSectionProps> = (
   setTempUserOganization,
   setView,
 }) => {
+  const { currentUserOrganizationPermission } =
+    useUserOrganizationPermissionStore();
+
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_PERMISSIONS"
+    );
+  };
+
   return (
     <div
       className={
         "transition-all duration-300 ease-in-out opacity-100 scale-100 w-full"
       }
     >
-      <PageHeader
-        isFormOpen={addUserDialogOpen}
-        count={userOrganizations?.length || 0}
-        onCreateClick={() => setAddUserDialogOpen(true)}
-        createButtonText="Adicionar Usuário"
-      />
+      {hasEditPermission() && (
+        <PageHeader
+          isFormOpen={addUserDialogOpen}
+          count={userOrganizations?.length || 0}
+          onCreateClick={() => setAddUserDialogOpen(true)}
+          createButtonText="Adicionar Usuário"
+        />
+      )}
 
       <UserOrganizationList
+        hasEditPermission={hasEditPermission()}
         userOrganizations={userOrganizations || []}
         onUserClick={handleUserClick}
         isLoading={isLoadingUsers}
         onCreateClick={() => setAddUserDialogOpen(true)}
         onDeleteUserOrganization={handleDeleteUserOrganization}
       />
-      {addUserDialogOpen && (
+    
+      {addUserDialogOpen &&  (
         <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
           <DialogContent className="w-[90%] md:w-[50%] rounded-md">
             <DialogHeader>
@@ -82,7 +110,8 @@ export const UserOrganizationSection: React.FC<UserOrganizationSectionProps> = (
             {searchedUser && !selectedUser && (
               <div className="border rounded p-3 flex flex-col gap-2 mt-2 bg-gray-50 transition-all duration-300 animate-fade-in">
                 <div>
-                  <strong>{searchedUser.username}</strong> ({searchedUser.email})
+                  <strong>{searchedUser.username}</strong> ({searchedUser.email}
+                  )
                 </div>
                 <Button
                   onClick={() => {
@@ -125,7 +154,7 @@ export const UserOrganizationSection: React.FC<UserOrganizationSectionProps> = (
                         logoUrl: "",
                       },
                     });
-                    setView("venues")
+                    setView("venues");
                   }}
                 >
                   Selecionar este usuário

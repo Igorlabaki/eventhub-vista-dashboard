@@ -140,6 +140,7 @@ export function PersonList({
           </a>
         )}
         <EmptyState
+          hasEditPermission={hasEditPermission()}
           title={emptyMessage}
           actionText="Nova Pessoa"
           onAction={onCreateClick}

@@ -18,6 +18,7 @@ import { useServiceStore } from "@/store/serviceStore"
 import { showSuccessToast } from "@/components/ui/success-toast"
 import { useToast } from "@/hooks/use-toast"
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler"
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore"
 
 interface ServiceListProps {
   services: Service[]
@@ -67,22 +68,21 @@ export function ServiceList({
     }
   };
 
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_VENUE_SERVICES"
+    );
+  };
+
   if (isLoading) {
     return <ServiceListSkeleton />;
   }
 
   return (
     <>
-      {/* Botão web no topo direito */}
-      <div className="hidden md:flex justify-end mb-4">
-        <button
-          onClick={onCreateClick}
-          className="flex items-center gap-2 bg-[#8854D0] text-white font-medium px-5 py-2 rounded-lg shadow hover:bg-[#6c3fc9] transition-colors"
-        >
-          <Plus className="h-5 w-5" />
-          Novo Serviço
-        </button>
-      </div>
 
       <div className={cn("space-y-4", className)}>
         <FilterList
@@ -95,6 +95,7 @@ export function ServiceList({
           {(filteredServices) =>
             filteredServices?.length === 0 ? (
               <EmptyState
+                hasEditPermission={hasEditPermission()}
                 title={emptyMessage}
                 actionText="Novo Serviço"
                 onAction={onCreateClick}
@@ -105,7 +106,9 @@ export function ServiceList({
                   <TableRow>
                     <TableHead>Nome do Serviço</TableHead>
                     <TableHead>Preço</TableHead>
-                    <TableHead className="w-[100px] text-center">Ações</TableHead>
+                    {hasEditPermission() && (
+                      <TableHead className="w-[100px] text-center">Ações</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -126,6 +129,7 @@ export function ServiceList({
                       <TableCell>
                         R$ {service.price.toFixed(2)}
                       </TableCell>
+                      {hasEditPermission() && (
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -148,7 +152,8 @@ export function ServiceList({
                           </button>
                         </div>
                       </TableCell>
-                    </TableRow>
+                      )}
+                      </TableRow>
                   ))}
                 </TableBody>
               </Table>

@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DiscountItem } from "./discount-item";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 interface Discount {
   id: string;
@@ -26,6 +27,12 @@ interface DiscountListProps {
 }
 
 export function DiscountList({ discounts, traduzirDiasSemana, onEdit, onDelete }: DiscountListProps) {
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+   
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_VENUE_PRICES");
+  };
   return (
     <div className="space-y-4">
       <div className="rounded-md border bg-white">
@@ -34,12 +41,15 @@ export function DiscountList({ discounts, traduzirDiasSemana, onEdit, onDelete }
             <TableRow className="bg-gray-50">
               <TableHead className="font-medium">Título</TableHead>
               <TableHead className="font-medium text-center">Desconto</TableHead>
-              <TableHead className="w-[100px] text-center">Ações</TableHead>
+              {hasEditPermission() && (
+                <TableHead className="w-[100px] text-center">Ações</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {discounts.map((discount) => (
               <DiscountItem
+                hasEditPermission={hasEditPermission()}
                 key={discount.id}
                 discount={discount}
                 traduzirDiasSemana={traduzirDiasSemana}

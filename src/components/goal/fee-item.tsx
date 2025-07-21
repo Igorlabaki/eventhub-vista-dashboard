@@ -8,17 +8,19 @@ interface FeeItemProps {
   traduzirDiasSemana: (dias: string) => string;
   onEdit: (fee: SeasonalFee) => void;
   onDelete: (fee: SeasonalFee) => void;
+  hasEditPermission: boolean;
 }
 
 export function FeeItem({
   fee,
   traduzirDiasSemana,
+  hasEditPermission,
   onEdit,
   onDelete,
 }: FeeItemProps) {
   const hasPeriodo = !!(fee.startDay && fee.endDay);
   const hasDiasAfetados = !!fee.affectedDays && !hasPeriodo;
-
+ 
   return (
     <TableRow
       className="hover:bg-gray-50 cursor-pointer"
@@ -26,6 +28,7 @@ export function FeeItem({
     >
       <TableCell className="font-medium">{fee.title}</TableCell>
       <TableCell className="text-green-600 font-semibold text-center">+ {fee.fee}%</TableCell>
+      {hasEditPermission && ( 
       <TableCell className="text-center">
         <div className="flex items-center justify-center gap-2">
           <button
@@ -48,6 +51,7 @@ export function FeeItem({
           </button>
         </div>
       </TableCell>
+      )}
     </TableRow>
   );
 }

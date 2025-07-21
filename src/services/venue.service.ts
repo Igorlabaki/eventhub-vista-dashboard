@@ -94,6 +94,32 @@ export const venueService = {
     return response.data;
   },
 
+  updateVenuePaymentInfo: async (data: {
+    venueId: string;
+    userId: string;
+    pricePerDay?: string;
+    pricePerPerson?: string;
+    pricePerPersonDay?: string;
+    pricePerPersonHour?: string;
+    pricingModel: "PER_PERSON" | "PER_DAY" | "PER_PERSON_DAY" | "PER_PERSON_HOUR";
+  }) => {
+    const response = await api.put<VenueUpdateResponse>(
+      '/venue/update/payment-info',
+      {
+        venueId: data.venueId,
+        userId: data.userId,
+        data: {
+          pricePerDay: data.pricePerDay,
+          pricePerPerson: data.pricePerPerson,
+          pricePerPersonDay: data.pricePerPersonDay,
+          pricePerPersonHour: data.pricePerPersonHour,
+          pricingModel: data.pricingModel,
+        },
+      }
+    );
+    return response.data;
+  },
+
   deleteVenue: async (id: string) => {
     const response = await api.delete<VenueDeleteResponse>(`/venue/delete/${id}`);
     return response.data;

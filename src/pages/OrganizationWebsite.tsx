@@ -6,13 +6,15 @@ import { useVenueStore } from "@/store/venueStore";
 import { useUserStore } from "@/store/userStore";
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 export default function OrganizationWebsite() {
   const { venues, fetchVenues, isLoading } = useVenueStore();
   const { user } = useUserStore();
   const navigate = useNavigate();
   const { id: organizationId } = useParams();
-
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
   useEffect(() => {
     if (organizationId && user?.id) {
       fetchVenues({ organizationId, userId: user.id });
@@ -26,6 +28,24 @@ export default function OrganizationWebsite() {
   const handleManageSEO = () => {
     navigate(`/organization/${organizationId}/website/seo`);
   };
+
+  const hasViewPermission = () => {
+    if (!currentUserOrganizationPermission  ?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "VIEW_ORG_INFO"
+    );
+  };      
+
+  if (!hasViewPermission()) {
+    return (
+      <DashboardLayout
+        title="Site da Organização"
+        subtitle="Gerencie sua presença online"
+      >
+        <AccessDenied />        
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout

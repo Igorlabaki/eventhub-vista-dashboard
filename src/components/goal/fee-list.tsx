@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table";
 import { SeasonalFee } from "@/types/seasonalFee";
 import { FeeItem } from "./fee-item";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 interface FeeListProps {
   fees: SeasonalFee[];
@@ -17,6 +18,13 @@ interface FeeListProps {
 }
 
 export function FeeList({ fees, traduzirDiasSemana, onEdit, onDelete }: FeeListProps) {
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+   
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("EDIT_VENUE_PRICES");
+  };
+  
   return (
     <div className="space-y-4">
       <div className="rounded-md border bg-white">
@@ -25,12 +33,15 @@ export function FeeList({ fees, traduzirDiasSemana, onEdit, onDelete }: FeeListP
             <TableRow className="bg-gray-50">
               <TableHead className="font-medium">Título</TableHead>
               <TableHead className="font-medium text-center">Adicional</TableHead>
-              <TableHead className="w-[100px] text-center">Ações</TableHead>
+              {hasEditPermission() && (
+                <TableHead className="w-[100px] text-center">Ações</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {fees.map((fee) => (
               <FeeItem
+                hasEditPermission={hasEditPermission()}
                 key={fee.id}
                 fee={fee}
                 traduzirDiasSemana={traduzirDiasSemana}

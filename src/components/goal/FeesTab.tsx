@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
 import { SeasonalFee } from "@/types/seasonalFee";
 import { FeeList } from "./fee-list";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 interface FeesTabProps {
   fees: SeasonalFee[];
@@ -46,6 +47,7 @@ export function FeesTab({ fees, isLoading, traduzirDiasSemana, venueId, showForm
       });
     }
   };
+
 
   return (
     <div className="animate-fade-in">

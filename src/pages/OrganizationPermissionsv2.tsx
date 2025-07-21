@@ -27,6 +27,8 @@ import { VenuePermissionSection } from "@/components/permissions/VenuePermission
 import { OrganizationPermissionSection } from "@/components/permissions/OrganizationPermissionSection";
 import { useOrganizationStore } from "@/store/organizationStore";
 import { PermissionOrganizationManager } from "@/components/permissions/PermissionOrganizationManager";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 type UserPermissionState = {
   [userId: string]: {
@@ -84,6 +86,7 @@ export default function OrganizationPermissionsV2() {
 
   const { venues } = useVenueStore();
   const { currentOrganization } = useOrganizationStore();
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
   // Derive os objetos completos a partir dos IDs e listas
   const selectedUserOrganization =
     userOrganizations?.find((uo) => uo.id === selectedUserOrganizationId) ||
@@ -180,6 +183,23 @@ export default function OrganizationPermissionsV2() {
       fetchVenues({ organizationId, userId: user?.id || "" });
     }
   }, []);
+
+  const hasViewPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes("VIEW_ORG_PERMISSIONS");
+  };
+ 
+  if (!hasViewPermission()) {
+    return (
+      <DashboardLayout
+        title="Permissões"
+        subtitle="Gerencie as permissões dos usuários"
+      >
+        <AccessDenied />  
+      </DashboardLayout>
+    );
+  }
+
 
   return (
     <>

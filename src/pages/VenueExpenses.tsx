@@ -15,6 +15,8 @@ import { ExpenseListSkeleton } from "@/components/expense/expense-list-skeleton"
 import { useVenueStore } from "@/store/venueStore";
 import { parseCurrencyStringToNumber } from "@/utils/currency";
 import { ExpenseFormValues } from "@/components/expense/expense-form";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 // Tipo correto para payload do backend
 type ExpensePayload = {
@@ -94,6 +96,19 @@ export default function VenueExpenses() {
   });
 
   const showForm = isCreatingExpense || !!selectedExpense;
+
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+
+  const hasViewPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_EXPENSES");
+  };
+
+  if(!hasViewPermission()) {
+    return <DashboardLayout title="Despesas" subtitle="Gerencie as despesas do seu estabelecimento">
+     <AccessDenied />
+    </DashboardLayout>
+  }
 
   return (
     <DashboardLayout title="Despesas" subtitle="Gerencie as despesas do seu estabelecimento">

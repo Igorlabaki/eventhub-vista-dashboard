@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Owner } from "@/types/owner";
 import { FilterList } from "@/components/filterList";
 import { useOwnerStore } from "@/store/ownerStore";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
+import AccessDenied from "@/components/accessDenied";
 
 export default function OrganizationOwners() {
   const { id: organizationId } = useParams<{ id: string }>();
@@ -17,7 +19,7 @@ export default function OrganizationOwners() {
     isLoading, 
     fetchOrganizationOwners 
   } = useOwnerStore();
-  
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentOwner, setCurrentOwner] = useState<Owner | null>(null);
@@ -58,18 +60,45 @@ export default function OrganizationOwners() {
     );
   };
 
+
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_OWNERS"
+    );
+  };
+
+  const hasViewPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "VIEW_ORG_OWNERS"
+    );
+  };
+
+  if (!hasViewPermission()) {
+    return (
+      <DashboardLayout
+        title="Proprietários"
+        subtitle="Gerenciar proprietários da organização"
+      >
+        <AccessDenied />  
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout
       title="Proprietários"
       subtitle="Gerenciar proprietários da organização"
     >
+      {hasEditPermission() && (
       <PageHeader
         isFormOpen={isCreating || isEditing}
         count={owners?.length}
         onCreateClick={handleCreateClick}
         createButtonText="Novo Proprietário"
       />
-
+      )}  
       {/* Lista de Proprietários */}
       {!isCreating && !isEditing && (
         <div className="animate-fade-in">

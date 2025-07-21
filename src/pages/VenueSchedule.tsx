@@ -161,10 +161,6 @@ export default function VenueSchedule() {
     return currentUserVenuePermission.permissions.includes("VIEW_VENUE_CALENDAR");
   };
 
-  const hasEditPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("EDIT_VENUE_CALENDAR");
-  };
 
   if (!hasViewPermission()) {
     return (
@@ -419,31 +415,13 @@ export default function VenueSchedule() {
   // Calendário + detalhes
   const calendar = (
     <div className="relative">
-      <>
-        <div className="flex justify-end items-center mb-6 w-full">
-          {!showForm  && (
-            <Button
-              onClick={() => setShowForm(true)}
-              className="shadow-lg flex-row items-center gap-2 bg-eventhub-primary hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-all duration-200 hidden md:flex"
-            >
-              <Plus className="w-7 h-7" />
-              <p>Nova Data</p>
-            </Button>
-          )}
-        </div>
-        {/* Botão flutuante mobile via Portal para ficar sempre fixo no viewport */}
-        {!showForm &&
-          createPortal(
-            <button
-              className="fixed bottom-6 right-6 z-50 md:hidden bg-eventhub-primary hover:bg-indigo-600 text-white rounded-full shadow-2xl p-4 flex items-center justify-center transition-all duration-200"
-              onClick={() => setShowForm(true)}
-              aria-label={"Nova Data"}
-            >
-              <Plus className="w-7 h-7" />
-            </button>,
-            document.body
-          )}
-      </>
+      {hasViewPermission() && (
+      <PageHeader
+        onCreateClick={() => setShowForm(true)}
+          createButtonText="Nova Data"
+          isFormOpen={showForm}
+        />
+      )}
       <Card className="shadow-lg border-0">
         <CardContent className="p-4">
           <Calendar
