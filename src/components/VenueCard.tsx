@@ -93,7 +93,7 @@ export function VenueCard({
             className="w-full bg-eventhub-primary hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={handleViewVenue}
           >
-            Gerenciar Venue
+            Gerenciar Espaço
           </Button>
         </div>
       </CardContent>

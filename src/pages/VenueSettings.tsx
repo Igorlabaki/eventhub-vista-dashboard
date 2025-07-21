@@ -42,6 +42,7 @@ import {
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Textarea } from "@/components/ui/textarea";
+import { useOrganizationStore } from "@/store/organizationStore";
 
 // Função para gerar opções de horário em intervalos de 30 minutos
 const generateTimeOptions = () => {
@@ -125,9 +126,17 @@ export default function VenueSettings() {
   const { toast } = useToast();
   const { venueId } = useParams();
   const navigate = useNavigate();
+  const { currentOrganization } = useOrganizationStore();
   const { user } = useUserStore();
   const { selectedVenue, updateVenue, deleteVenue } = useVenueStore();
   const { owners, fetchOrganizationOwners } = useOwnerStore();
+
+  useEffect(() => {
+    if (currentOrganization.id) {
+      fetchOrganizationOwners(currentOrganization.id);
+    }
+  }, [fetchOrganizationOwners, currentOrganization.id]);
+
   const [logoPreview, setLogoPreview] = useState<string | null>(
     selectedVenue?.logoUrl || null
   );
