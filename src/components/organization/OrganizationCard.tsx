@@ -101,25 +101,6 @@ export function OrganizationCard({
               <Building className="h-5 w-5 text-eventhub-primary mr-2" />
               <h3 className="eventhub-subheading">{name}</h3>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">Menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleEditOrganization}>
-                  Editar
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-red-600"
-                  onClick={handleDeleteOrganization}
-                >
-                  Excluir
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </CardHeader>
         <CardContent>
@@ -140,30 +121,6 @@ export function OrganizationCard({
           </div>
         </CardContent>
       </Card>
-
-      {/* Edit Organization Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="w-[90%] md:w-[50%] rounded-md">
-          <DialogHeader>
-            <DialogTitle>Editar Organização</DialogTitle>
-          </DialogHeader>
-          <EditOrganizationForm
-            organizationId={id}
-            initialName={name}
-            onCancel={() => setEditDialogOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Organization Dialog */}
-      <ConfirmDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleConfirmDelete}
-        entityName={name}
-        entityType="organização"
-        isPending={isLoading}
-      />
     </>
   );
 }
