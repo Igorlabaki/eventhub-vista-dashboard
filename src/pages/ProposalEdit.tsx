@@ -202,22 +202,6 @@ export default function ProposalEdit() {
       });
     }
   };
-  const { currentUserVenuePermission } = useUserVenuePermissionStore();
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_INFO");
-  };
-
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout
-        title="Editar Orçamento"
-        subtitle="Edite as informações do orçamento"
-      >
-        <AccessDenied />
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout title="Editar Orçamento">

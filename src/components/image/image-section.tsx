@@ -11,6 +11,7 @@ import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
 interface ImageSectionProps {
   images: Image[];
   venueId?: string;
+  hasPermission: boolean;
   organizationId?: string;
   isLoading: boolean;
   isCreating: boolean;
@@ -27,6 +28,7 @@ export function ImageSection({
   organizationId,
   isLoading,
   isCreating,
+  hasPermission,
   selectedImage,
   setSelectedImage,
   onCreateClick,
@@ -138,6 +140,7 @@ export function ImageSection({
           showForm={showForm}
           list={
             <ImageList
+              hasPermission={hasPermission}
               images={images || []}
               onCreateClick={onCreateClick}
               onEditClick={setSelectedImage}

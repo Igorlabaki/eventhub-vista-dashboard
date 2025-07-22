@@ -31,18 +31,6 @@ export default function VenueServices() {
     );
   };
 
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_SERVICES");
-  };
-
-  if(!hasViewPermission()) {
-    return <DashboardLayout title="Serviços" subtitle="Gerencie os serviços do seu espaço">
-     <AccessDenied />
-    </DashboardLayout>
-  }
-
-
   return (
     <DashboardLayout title="Serviços" subtitle="Gerencie os serviços do seu espaço">
       {hasEditPermission() && (

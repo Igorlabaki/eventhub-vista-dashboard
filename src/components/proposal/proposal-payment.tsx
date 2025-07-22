@@ -18,12 +18,6 @@ const ProposalPayment = () => {
 
   const showCreateButton = !isCreating && !selectedPayment;
 
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes(
-      "VIEW_PROPOSAL_PAYMENTS"
-    );
-  };
 
   const hasEditPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
@@ -32,16 +26,6 @@ const ProposalPayment = () => {
     );
   };
 
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout
-        title="Histórico"
-        subtitle="Veja todas as ações realizadas neste orçamento"
-      >
-        <AccessDenied />
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout

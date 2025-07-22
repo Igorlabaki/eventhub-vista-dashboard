@@ -43,7 +43,12 @@ interface PermissionOrganizationManagerProps {
   onSavePermissions: (permissions: string[]) => void;
   initialPermissions?: string[] | string;
   initialRole?: string;
-  createUserOrganization?: (data: { userId: string; organizationId: string; role: string; permissions: string[] }) => Promise<{ id: string }>; // nova prop opcional
+  createUserOrganization?: (data: {
+    userId: string;
+    organizationId: string;
+    role: string;
+    permissions: string[];
+  }) => Promise<{ id: string }>; // nova prop opcional
 }
 
 export function PermissionOrganizationManager({
@@ -59,6 +64,8 @@ export function PermissionOrganizationManager({
   createUserOrganization,
 }: PermissionOrganizationManagerProps) {
   const { toast } = useToast();
+  const { currentUserOrganizationPermission } =
+    useUserOrganizationPermissionStore();
   const {
     createUserOrganizationPermission,
     updateUserOrganizationPermission,
@@ -71,14 +78,22 @@ export function PermissionOrganizationManager({
     Array.isArray(initialPermissions)
       ? initialPermissions
       : typeof initialPermissions === "string"
-      ? initialPermissions.split(",").map(p => p.trim()).filter(Boolean)
+      ? initialPermissions
+          .split(",")
+          .map((p) => p.trim())
+          .filter(Boolean)
       : []
   );
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (typeof initialPermissions === "string") {
-      setTempPermissions(initialPermissions.split(",").map(p => p.trim()).filter(Boolean));
+      setTempPermissions(
+        initialPermissions
+          .split(",")
+          .map((p) => p.trim())
+          .filter(Boolean)
+      );
     } else if (Array.isArray(initialPermissions)) {
       setTempPermissions(initialPermissions);
     } else {
@@ -113,7 +128,14 @@ export function PermissionOrganizationManager({
     }
     setTempPermissions(currentPermissions);
   };
- 
+
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_WEBSITE_IMAGES"
+    );
+  };
+
   const renderPermissionSection = (
     mode: "VIEW" | "EDIT",
     permissionsList: Permission[]
@@ -135,12 +157,16 @@ export function PermissionOrganizationManager({
             const isEnabled = hasPermission(permission.enum);
             return (
               <TableRow key={permission.enum} className="cursor-pointer">
-                <TableCell className="font-medium">{permission.display}</TableCell>
+                <TableCell className="font-medium">
+                  {permission.display}
+                </TableCell>
                 <TableCell className="text-center">
                   <div className="flex justify-center">
                     <Switch
                       checked={isEnabled}
-                      onCheckedChange={() => togglePermission(permission.enum)}
+                      onCheckedChange={() =>
+                        hasEditPermission() && togglePermission(permission.enum)
+                      }
                       className="data-[state=checked]:bg-primary"
                     />
                   </div>
@@ -178,7 +204,8 @@ export function PermissionOrganizationManager({
         await fetchUserOrganizations(organizationId);
         showSuccessToast({
           title: "Permissão atualizada!",
-          description: "As permissões do usuário foram atualizadas com sucesso.",
+          description:
+            "As permissões do usuário foram atualizadas com sucesso.",
         });
       } else {
         // CREATE
@@ -208,7 +235,9 @@ export function PermissionOrganizationManager({
 
   const handleDelete = async () => {
     try {
-      await deleteUserOrganizationPermission(userOrganizationPermissionId || "");
+      await deleteUserOrganizationPermission(
+        userOrganizationPermissionId || ""
+      );
       showSuccessToast({
         title: "Permissão removida!",
         description: "As permissões do usuário foram removidas com sucesso.",
@@ -243,7 +272,7 @@ export function PermissionOrganizationManager({
           <p className="text-sm text-gray-500 md:ml-11 md:w-full text-center md:text-left">
             Gerenciar permissões de {userName}
           </p>
-          {userOrganizationPermissionId && (
+          {hasEditPermission() && userOrganizationPermissionId && (
             <Button
               variant="ghost"
               size="icon"
@@ -258,25 +287,33 @@ export function PermissionOrganizationManager({
         <div className="mt-4 w-full mx-auto flex justify-center md:justify-start">
           <div className="flex items-center gap-4">
             <Label className="text-sm font-medium">Papel do usuário:</Label>
-            <Select
-              value={role}
-              onValueChange={(value) => {
-                handleRoleChange(value);
-              }}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Selecione o papel" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="user">User</SelectItem>
-              </SelectContent>
-            </Select>
+            {hasEditPermission() ? (
+              <Select
+                value={role}
+                onValueChange={(value) => {
+                  handleRoleChange(value);
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Selecione o papel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="user">User</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="w-[180px]">
+                <p className="text-sm font-medium">{role}</p>
+              </div>
+            )}
           </div>
         </div>
         <div className="space-y-8">
           <div>
-            <h2 className="text-lg font-bold text-gray-800 mt-10">Organização</h2>
+            <h2 className="text-lg font-bold text-gray-800 mt-10">
+              Organização
+            </h2>
             {renderPermissionSection("VIEW", organizationViewPermissions)}
             {renderPermissionSection("EDIT", organizationEditPermissions)}
           </div>
@@ -284,7 +321,7 @@ export function PermissionOrganizationManager({
             <Button
               className="w-full"
               onClick={handleSave}
-              disabled={isLoading}
+              disabled={!hasEditPermission() || isLoading}
             >
               {isLoading ? "Salvando..." : "Atualizar"}
             </Button>

@@ -74,13 +74,15 @@ export function AttachmentList({
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead className="hidden md:block">Locação</TableHead>
-                  <TableHead className="w-[100px] text-center">Ações</TableHead>
+                  {hasEditPermission() && (
+                    <TableHead className="w-[100px] text-center">Ações</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAttachments.map((attachment) => (
-                  <TableRow key={attachment.id} className="hover:bg-gray-50 cursor-pointer transition">
-                    <TableCell className="font-medium" onClick={() => onEdit(attachment)}>
+                  <TableRow key={attachment.id} onClick={() => hasEditPermission() && onEdit(attachment)} className="hover:bg-gray-50 cursor-pointer transition">
+                    <TableCell className="font-medium" >
                       {attachment.title}
                     </TableCell>
                     <TableCell className="hidden md:block">
@@ -92,6 +94,7 @@ export function AttachmentList({
                         <span className="text-gray-400 text-xs">Sem locação</span>
                       )}
                     </TableCell>
+                    {hasEditPermission() && (
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
@@ -108,6 +111,7 @@ export function AttachmentList({
                         </button>
                       </div>
                     </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

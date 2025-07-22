@@ -64,21 +64,7 @@ export default function VenueEvents() {
     });
   }, [selectedMonth, selectedYear]);
 
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_EVENTS");
-  };
-
-
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout title="Eventos" subtitle="Gerencie os eventos do espaço">
-        <AccessDenied />
-      </DashboardLayout>
-    );
-  }
-
-  // Handle opening event details
+ // Handle opening event details
   const handleOpenEventDetails = (event) => {
     navigate(`/proposal/${event.id}`);
   };

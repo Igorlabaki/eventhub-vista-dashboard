@@ -86,6 +86,7 @@ export function ExpenseList({
   if (isLoading) {
     return <ExpenseListSkeleton />;
   }
+  console.log(hasEditPermission(), "hasEditPermission");
 
   return (
     <>
@@ -102,6 +103,7 @@ export function ExpenseList({
           {(filteredExpenses) =>
             filteredExpenses?.length === 0 ? (
               <EmptyState
+                hasEditPermission={hasEditPermission()}
                 title={emptyMessage}
                 actionText="Nova Despesa"
                 onAction={onCreateClick}
@@ -121,6 +123,7 @@ export function ExpenseList({
                   {filteredExpenses.map((expense) => (
                     <TableRow 
                       key={expense.id}
+                      onClick={() => hasEditPermission() && onEditClick(expense)  }
                       className={cn(
                         "hover:bg-gray-50",
                         selectedExpenseIds.includes(expense.id) && "bg-violet-100"
@@ -128,7 +131,6 @@ export function ExpenseList({
                     >
                       <TableCell 
                         className="font-medium cursor-pointer"
-                        onClick={() => onEditClick(expense)}
                       >
                         {expense.name}
                       </TableCell>

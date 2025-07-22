@@ -107,6 +107,7 @@ export function QuestionList({
                   {filteredQuestions.map((question) => (
                     <TableRow 
                       key={question.id}
+                      onClick={() => hasEditPermission() && onEditClick(question)}
                       className={cn(
                         "hover:bg-gray-50",
                         selectedQuestionIds.includes(question.id) && "bg-violet-100"
@@ -114,11 +115,12 @@ export function QuestionList({
                     >
                       <TableCell 
                         className="font-medium cursor-pointer"
-                        onClick={() => onEditClick(question)}
+                        onClick={() => hasEditPermission() && onEditClick(question)}
                       >
                         {question.question}
                       </TableCell>
                       <TableCell className="text-center">
+                        {hasEditPermission() && (
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={(e) => {
@@ -139,6 +141,7 @@ export function QuestionList({
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

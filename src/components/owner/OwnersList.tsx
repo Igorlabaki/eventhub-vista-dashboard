@@ -116,7 +116,9 @@ export function OwnersList({
                 <TableHead>Nome</TableHead>
                 <TableHead className="hidden md:flex md:items-center">CPF</TableHead>
                 <TableHead>Espaços</TableHead>
-                <TableHead className="w-[100px]  text-center">Ações</TableHead>
+                {hasEditPermission() && (
+                  <TableHead className="w-[100px]  text-center">Ações</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -126,8 +128,8 @@ export function OwnersList({
                 return (
                   <TableRow 
                     key={owner.id}
+                    onClick={() => hasEditPermission() && onEditClick(owner)}
                     className="hover:bg-gray-50 cursor-pointer transition"
-                    onClick={() => onEditClick(owner)}
                   >
                     <TableCell className="font-medium">{owner.completeName}</TableCell>
                     <TableCell className="hidden md:block">{owner.cpf}</TableCell>
@@ -135,11 +137,18 @@ export function OwnersList({
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={e => { e.stopPropagation(); handleVenueClick(owner); }}
+
+                        onClick={e => {
+                          if(hasEditPermission()){
+                            e.stopPropagation() 
+                            handleVenueClick(owner);
+                          }}
+                        }
                       >
                         {ownerVenueCount} {ownerVenueCount === 1 ? 'espaço' : 'espaços'}
                       </Button>
                     </TableCell>
+                    {hasEditPermission() && (
                     <TableCell>
                       <div className="flex items-center justify-center gap-2">
                         <button
@@ -154,8 +163,9 @@ export function OwnersList({
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
-                      </div>
-                    </TableCell>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })}

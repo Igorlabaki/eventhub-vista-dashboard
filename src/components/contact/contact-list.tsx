@@ -83,7 +83,7 @@ export function ContactList({
                   <TableRow
                     key={contact.id}
                     className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => onEditClick(contact)}
+                    onClick={() => hasEditPermission() && onEditClick(contact)}
                   >
                     <TableCell className="font-medium">
                       {contact.name}

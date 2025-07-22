@@ -19,9 +19,9 @@ export function ReportsHeader({
 }: ReportsHeaderProps) {
   return (
     <div className="mb-6 w-full">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between w-full">
         <div className="flex items-center gap-4 ">
-          <Tabs value={activeTab} onValueChange={onTabChange}>
+          <Tabs value={activeTab} onValueChange={onTabChange} className="w-full"> 
             <TabsList className="bg-white/80 shadow-sm rounded-lg flex gap-1">
               <TabsTrigger
                 value="orcamentos"
@@ -43,12 +43,12 @@ export function ReportsHeader({
               </TabsTrigger>
               <TabsTrigger
                 value="balanco"
-                className={`px-4 py-2 text-sm font-semibold transition-all duration-200
+                className={`w-full py-2 text-sm font-semibold transition-all duration-200
                   ${activeTab === "balanco"
                     ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
                     : "border-b-4 border-transparent"}`}
               >
-                BALANÇO FINANCEIRO
+                FINANCEIRO
               </TabsTrigger>
             </TabsList>
           </Tabs>

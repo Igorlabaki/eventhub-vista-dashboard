@@ -29,24 +29,6 @@ export default function OrganizationWebsite() {
     navigate(`/organization/${organizationId}/website/seo`);
   };
 
-  const hasViewPermission = () => {
-    if (!currentUserOrganizationPermission  ?.permissions) return false;
-    return currentUserOrganizationPermission.permissions.includes(
-      "VIEW_ORG_INFO"
-    );
-  };      
-
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout
-        title="Site da Organização"
-        subtitle="Gerencie sua presença online"
-      >
-        <AccessDenied />        
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout
       title="Site da Organização"

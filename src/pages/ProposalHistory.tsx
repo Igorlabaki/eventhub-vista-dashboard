@@ -22,23 +22,6 @@ export default function ProposalHistory() {
 
   const histories = (currentProposal?.histories || []) as History[];
 
-  const { currentUserVenuePermission } = useUserVenuePermissionStore();
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_HISTORY");
-  };
-
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout
-        title="Histórico"
-        subtitle="Veja todas as ações realizadas neste orçamento"
-      >
-        <AccessDenied  />
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout title="Histórico" subtitle="Veja todas as ações realizadas neste orçamento">
       <div className="mx-auto bg-white rounded-xl shadow p-6 mt-4">

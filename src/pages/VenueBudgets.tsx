@@ -178,18 +178,6 @@ export default function VenueBudgets() {
     }
   }, [selectedVenue, venueIdParam, user?.id, fetchVenueById]);
 
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_PROPOSALS");
-  };
-
-  if(!hasViewPermission()) {
-    return <DashboardLayout title="Orçamentos" subtitle="Gerencie os orçamentos do seu estabelecimento">
-     <AccessDenied />
-    </DashboardLayout>
-  }
-
-
   const renderProposalList = () => (
     <>
       {hasEditPermission() && (

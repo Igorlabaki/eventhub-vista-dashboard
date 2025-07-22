@@ -71,7 +71,7 @@ export function OrganizationWebsiteNav({ isCollapsed, onNavItemClick, organizati
         {!isCollapsed && <span>Imagens</span>}
       </Link>
 
-      <Link
+ {/*      <Link
         to={`/organization/${organizationId}/website/faq`}
         className={cn(
           "flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
@@ -84,7 +84,7 @@ export function OrganizationWebsiteNav({ isCollapsed, onNavItemClick, organizati
         <HelpCircle className="h-5 w-5 mr-2" />
         {!isCollapsed && <span>FAQ</span>}
       </Link>
-
+ */}
       <a
         href={currentOrganization.url}
         target="_blank"

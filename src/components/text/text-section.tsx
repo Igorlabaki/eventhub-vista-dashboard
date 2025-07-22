@@ -11,6 +11,7 @@ import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
 interface TextSectionProps {
   texts: Text[];
   venueId?: string;
+  hasPermission: boolean;
   organizationId?: string;
   isLoading: boolean;
   isCreating: boolean;
@@ -24,6 +25,7 @@ interface TextSectionProps {
 export function TextSection({
   texts,
   venueId,
+  hasPermission,
   organizationId,
   isLoading,
   isCreating,
@@ -115,6 +117,7 @@ export function TextSection({
           showForm={showForm}
           list={
             <TextList
+              hasPermission={hasPermission}
               texts={texts || []}
               onCreateClick={onCreateClick}
               onEditClick={setSelectedText}

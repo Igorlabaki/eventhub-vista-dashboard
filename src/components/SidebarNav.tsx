@@ -147,6 +147,7 @@ export function SidebarNav({
             </Link>
           )}
 
+
           { isInVenue && selectedVenue   &&(
             <Link
               to={`/organization/${currentOrganization.id}/venues`}
@@ -161,7 +162,7 @@ export function SidebarNav({
             </Link>
           )}
 
-          {selectedVenue && isInProposal && (
+          {selectedVenue && isInProposal || isInWebsite && selectedVenue  ? (
             <Link
               to={`/venue/${selectedVenue.id}/notifications`}
               className={cn(
@@ -173,7 +174,7 @@ export function SidebarNav({
               <House className="h-5 w-5 mr-2" />
               {!isCollapsed && <span>{selectedVenue.name}</span>}
             </Link>
-          )}
+          ): null}
 
           {isInOrg && !isCollapsed && !isInOrgWebsite && (
             <OrganizationNav

@@ -5,9 +5,11 @@ import { useTextStore } from "@/store/textStore";
 import { Text } from "@/types/text";
 import { useVenueStore } from "@/store/venueStore";
 import { PageHeader } from "@/components/PageHeader";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 export default function VenueWebsiteTexts() {
   const { selectedVenue: venue } = useVenueStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
   const { texts, isLoading, fetchTexts } = useTextStore();
   const [isCreating, setIsCreating] = useState(false);
   const [selectedText, setSelectedText] = useState<Text | null | undefined>(
@@ -30,19 +32,29 @@ export default function VenueWebsiteTexts() {
     }
   }, [venue.id, fetchTexts]);
 
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_VENUE_SITE"
+    );
+  };
+
   return (
     <DashboardLayout
       title="Textos do Site"
       subtitle="Gerencie os textos do seu site"
     >
       <div className="space-y-6">
-        <PageHeader
-          onCreateClick={handleCreateClick}
-          createButtonText="Novo Texto"
-          isFormOpen={isCreating || !!selectedText}
-        />
+        {hasEditPermission() && (
+          <PageHeader
+            onCreateClick={handleCreateClick}
+            createButtonText="Novo Texto"
+            isFormOpen={isCreating || !!selectedText}
+          />
+        )}
 
         <TextSection
+          hasPermission={hasEditPermission()}
           type="venue"
           texts={texts}
           venueId={venue.id || ""}
@@ -58,4 +70,4 @@ export default function VenueWebsiteTexts() {
       </div>
     </DashboardLayout>
   );
-} 
+}

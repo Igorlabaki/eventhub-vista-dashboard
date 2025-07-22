@@ -137,6 +137,7 @@ export function ScheduleList({
           {schedules.map((schedule) => (
             <TableRow
               key={schedule.id}
+              onClick={() => hasEditPermission() && onEditClick(schedule)}
               className={cn(
                 "hover:bg-gray-50",
                 selectedScheduleIds.includes(schedule.id) && "bg-violet-100"

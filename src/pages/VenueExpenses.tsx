@@ -97,19 +97,6 @@ export default function VenueExpenses() {
 
   const showForm = isCreatingExpense || !!selectedExpense;
 
-  const { currentUserVenuePermission } = useUserVenuePermissionStore();
-
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_EXPENSES");
-  };
-
-  if(!hasViewPermission()) {
-    return <DashboardLayout title="Despesas" subtitle="Gerencie as despesas do seu estabelecimento">
-     <AccessDenied />
-    </DashboardLayout>
-  }
-
   return (
     <DashboardLayout title="Despesas" subtitle="Gerencie as despesas do seu estabelecimento">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

@@ -68,24 +68,6 @@ export default function OrganizationOwners() {
     );
   };
 
-  const hasViewPermission = () => {
-    if (!currentUserOrganizationPermission?.permissions) return false;
-    return currentUserOrganizationPermission.permissions.includes(
-      "VIEW_ORG_OWNERS"
-    );
-  };
-
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout
-        title="Proprietários"
-        subtitle="Gerenciar proprietários da organização"
-      >
-        <AccessDenied />  
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout
       title="Proprietários"

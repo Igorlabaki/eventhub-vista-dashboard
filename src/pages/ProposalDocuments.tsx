@@ -4,12 +4,13 @@ import { Document } from "@/types/document";
 import { DocumentSection } from "@/components/document/document-section";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 export default function ProposalDocuments() {
   const { id: proposalId } = useParams<{ id: string }>();
   const [isCreating, setIsCreating] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
   const handleCreateClick = () => {
     setIsCreating(true);
     setSelectedDocument(null);
@@ -26,14 +27,23 @@ export default function ProposalDocuments() {
 
   const showCreateButton = !isCreating && !selectedDocument;
 
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_PROPOSAL_DOCUMENTS"
+    );
+  };
+
   return (
     <DashboardLayout title="Documentos" subtitle="Gerencie os documentos deste orçamento">
       <div className="space-y-6">
+        {hasEditPermission() && (
         <PageHeader
           onCreateClick={handleCreateClick}
           createButtonText="Novo Documento"
-          isFormOpen={!showCreateButton}
-        />
+            isFormOpen={!showCreateButton}
+          />
+        )}
 
         <DocumentSection
           proposalId={proposalId}

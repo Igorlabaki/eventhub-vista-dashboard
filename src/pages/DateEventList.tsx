@@ -20,26 +20,11 @@ export function DateEventListPage() {
 
   const showCreateButton = !isCreating && !selectedDateEvent;
 
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_DATES");
-  };
 
   const hasEditPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
     return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_DATES");
   };
-
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout
-        title="Histórico"
-        subtitle="Veja todas as ações realizadas neste orçamento"
-      >
-        <AccessDenied  />
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout

@@ -122,7 +122,7 @@ export function ServiceList({
                     >
                       <TableCell 
                         className="font-medium cursor-pointer"
-                        onClick={() => onEditClick(service)}
+                        onClick={() => hasEditPermission() && onEditClick(service)}
                       >
                         {service.name}
                       </TableCell>

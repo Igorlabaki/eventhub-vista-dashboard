@@ -6,7 +6,7 @@ import { Image } from "@/types/image";
 import { PageHeader } from "@/components/PageHeader";
 import { ImageSection } from "@/components/image/image-section";
 import { useParams } from "react-router-dom";
-
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 export default function VenueWebsiteImages() {
   const params = useParams();
   const venueId = params.id;
@@ -20,6 +20,8 @@ export default function VenueWebsiteImages() {
     organizationImages,
     fetchOrganizationImages
   } = useImageStore();
+
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
 
   const [isCreating, setIsCreating] = useState(false);
   const [selectedImage, setSelectedImage] = useState<Image | null | undefined>(undefined);
@@ -42,16 +44,26 @@ export default function VenueWebsiteImages() {
     }
   }, [isOrganization, organizationId, venueId, fetchImages, fetchOrganizationImages]);
 
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission?.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_VENUE_SITE"
+    );
+  };
+
   return (
     <DashboardLayout title="Imagens do Site" subtitle="Gerencie as imagens do seu site">
       <div className="space-y-6">
-        <PageHeader
-          onCreateClick={handleCreateClick}
-          createButtonText="Nova Imagem"
-          isFormOpen={isCreating || !!selectedImage}
-        />
+        {hasEditPermission() && (
+          <PageHeader
+            onCreateClick={handleCreateClick}
+            createButtonText="Nova Imagem"
+            isFormOpen={isCreating || !!selectedImage}
+          />
+        )}
 
         <ImageSection
+          hasPermission={hasEditPermission()}
           contextType={isOrganization ? "organization" : "venue"}
           images={isOrganization ? organizationImages : images}
           venueId={venueId}

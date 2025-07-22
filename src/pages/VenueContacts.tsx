@@ -32,11 +32,6 @@ export default function VenueContacts() {
     setIsCreatingContact(true);
   };
 
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_CONTACTS");
-  };
-
   const hasEditPermission = () => {
       if (!currentUserVenuePermission?.permissions) return false;
     return currentUserVenuePermission.permissions.includes("EDIT_VENUE_CONTACTS");
@@ -60,12 +55,6 @@ export default function VenueContacts() {
 
     return filtered;
   };
-
-  if(!hasViewPermission()) {
-    return <DashboardLayout title="Contatos" subtitle="Gerencie os contatos do espaço">
-     <AccessDenied />
-    </DashboardLayout>
-  }
 
   return (
     <DashboardLayout title="Contatos" subtitle="Gerencie os contatos do espaço">

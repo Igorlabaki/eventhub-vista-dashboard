@@ -184,22 +184,6 @@ export default function OrganizationPermissionsV2() {
     }
   }, []);
 
-  const hasViewPermission = () => {
-    if (!currentUserOrganizationPermission?.permissions) return false;
-    return currentUserOrganizationPermission.permissions.includes("VIEW_ORG_PERMISSIONS");
-  };
- 
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout
-        title="Permissões"
-        subtitle="Gerencie as permissões dos usuários"
-      >
-        <AccessDenied />  
-      </DashboardLayout>
-    );
-  }
-
 
   return (
     <>

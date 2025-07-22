@@ -76,13 +76,16 @@ export function ContractList({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome do Contrato</TableHead>
-                    <TableHead className="w-[100px] text-center">Ações</TableHead>
+                    {hasEditPermission() && (
+                      <TableHead className="w-[100px] text-center">Ações</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredContracts.map((contract) => (
                     <TableRow
                       key={contract.id}
+                      onClick={() => hasEditPermission() && onEditClick(contract)}
                       className={cn(
                         "hover:bg-gray-50",
                         selectedContractIds.includes(contract.id) && "bg-violet-100"
@@ -90,10 +93,11 @@ export function ContractList({
                     >
                       <TableCell
                         className="font-medium cursor-pointer"
-                        onClick={() => onEditClick(contract)}
+                      
                       >
                         {contract.name}
                       </TableCell>
+                      {hasEditPermission() && (
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -116,6 +120,7 @@ export function ContractList({
                           </button>
                         </div>
                       </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

@@ -83,10 +83,6 @@ export default function ProposalDetails() {
     };
   }, [id, fetchProposalById, setCurrentProposal]);
 
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_INFO");
-  };
 
   const hasViewValuesPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
@@ -97,12 +93,6 @@ export default function ProposalDetails() {
     if (!currentUserVenuePermission?.permissions) return false;
     return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_PERSONAL_INFO");
   };
-
-    if(!hasViewPermission()) {
-    return <DashboardLayout title="Contatos" subtitle="Gerencie os contatos do espaço">
-     <AccessDenied />
-    </DashboardLayout>
-  }
 
   if (isLoading)
     return (

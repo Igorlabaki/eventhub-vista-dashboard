@@ -27,17 +27,6 @@ export default function VenueReports() {
   const {
     isLoading: isLoadingReports,
   } = useVenueReportsStore();
-  const { currentUserVenuePermission } = useUserVenuePermissionStore();
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_ANALYSIS");
-  };
-
-  if(!hasViewPermission()) {
-    return <DashboardLayout title="Relatórios" subtitle="Analise o desempenho do seu espaço">
-     <AccessDenied />
-    </DashboardLayout>
-  } 
 
   if (isLoadingVenue || isLoadingReports) {
     return (

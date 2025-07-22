@@ -6,6 +6,7 @@ import { Image } from "@/types/image";
 import { Camera, Instagram, Facebook, Edit, EyeOff } from "lucide-react";
 import { FaTiktok, FaInstagram, FaFacebook } from "react-icons/fa";
 import { Text } from "@/types/text";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 
 interface VenuesListProps {
   venues: ItemListVenueResponse[];
@@ -23,6 +24,14 @@ export function VenuesList({
   onSelectVenue,
   onEditVenue,
 }: VenuesListProps) {
+  const { currentUserOrganizationPermission } =
+    useUserOrganizationPermissionStore();
+  const hasEditPermission = () => {
+    if (!currentUserOrganizationPermission?.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_WEBSITE_VENUES"
+    );
+  };
 
   return (
     <div>
@@ -43,7 +52,7 @@ export function VenuesList({
                   ? "opacity-60 border-2 border-eventhub-tertiary"
                   : ""
               }`}
-              onClick={() => onEditVenue(venue)}
+              onClick={() => hasEditPermission() && onEditVenue && onEditVenue(venue)}
             >
               {/* Aviso de espaço inativo */}
               {!venue.isShowOnOrganization && (
@@ -86,16 +95,18 @@ export function VenuesList({
                   <span className="absolute top-4 left-4 bg-eventhub-primary hover:bg-indigo-600 text-white  text-sm font-semibold px-4 py-1 rounded-lg shadow">
                     {venue.name}
                   </span>
-                  <Button
-                    variant="outline"
-                    className=" bg-gray-200 absolute top-1 right-1 w-10 h-10 rounded-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectVenue(venue);
-                    }}
-                  >
-                    <Camera className="w-5 h-5" />
-                  </Button>
+                  {hasEditPermission() && (
+                    <Button
+                      variant="outline"
+                      className=" bg-gray-200 absolute top-1 right-1 w-10 h-10 rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectVenue(venue);
+                      }}
+                    >
+                      <Camera className="w-5 h-5" />
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div
@@ -110,7 +121,7 @@ export function VenuesList({
                 <p className="text-gray-500 mb-1 font-medium">
                   {venue.city} / {venue.state}
                 </p>
-                {onEditVenue && (
+                {hasEditPermission() && onEditVenue && (
                   <button
                     className="  absolute top-2 right-2"
                     onClick={(e) => {

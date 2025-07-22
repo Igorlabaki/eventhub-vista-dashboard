@@ -70,7 +70,7 @@ export function PermissionVenueManager({
   initialRole = "user",
 }: PermissionManagerProps) {
   const { toast } = useToast();
-
+  const { currentUserVenuePermission } = useUserVenuePermissionStore(); 
   const {
     createUserVenuePermission,
     updateUserVenuePermission,
@@ -142,6 +142,13 @@ export function PermissionVenueManager({
 
     // Atualiza apenas o estado temporário
     setTempPermissions(currentPermissions);
+  };  
+
+  const hasEditPermission = () => {
+    if (!currentUserVenuePermission || !currentUserVenuePermission.permissions) return false;
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_VENUE_WEBSITE_IMAGES"
+    );
   };
 
   // Função que renderiza uma seção de permissões
@@ -174,7 +181,7 @@ export function PermissionVenueManager({
                   <div className="flex justify-center">
                     <Switch
                       checked={isEnabled}
-                      onCheckedChange={() => togglePermission(permission.enum)}
+                      onCheckedChange={() => hasEditPermission() && togglePermission(permission.enum)}
                       className="data-[state=checked]:bg-primary"
                     />
                   </div>
@@ -273,7 +280,7 @@ export function PermissionVenueManager({
             Gerenciar permissões de {userName}
           </p>
 
-          {userVenuePermissionId && (
+          {hasEditPermission() && userVenuePermissionId && (
             <Button
               variant="ghost"
               size="icon"
@@ -289,7 +296,9 @@ export function PermissionVenueManager({
         <div className="mt-4 w-full mx-auto flex justify-center md:justify-start">
           <div className="flex items-center gap-4">
             <Label className="text-sm font-medium">Papel do usuário:</Label>
-            <Select
+            {
+              hasEditPermission() ?
+              <Select
               value={role}
               onValueChange={(value) => {
                 handleRoleChange(value);
@@ -303,6 +312,14 @@ export function PermissionVenueManager({
                 <SelectItem value="user">User</SelectItem>
               </SelectContent>
             </Select>
+              :
+              <div className="w-[180px]">
+                <p className="text-sm font-medium">
+                  {role}
+                </p>
+              </div>
+            }
+            
           </div>
         </div>
 
@@ -330,11 +347,11 @@ export function PermissionVenueManager({
 
           <div className="mt-8">
             <Button
+              disabled={!hasEditPermission() || isLoading}
               className="w-full"
               onClick={() => {
                 handleSave();
               }}
-              disabled={isLoading}
             >
               {isLoading ? "Salvando..." : "Atualizar"}
             </Button>

@@ -142,23 +142,6 @@ export default function OrganizationContracts() {
     }
   };
 
-  const hasViewPermission = () => {
-    if (!currentUserOrganizationPermission?.permissions) return false;
-    return currentUserOrganizationPermission.permissions.includes(
-      "VIEW_ORG_CONTRACTS"
-    );
-  };
-
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout
-        title="Contratos"
-        subtitle="Gerencie os contratos da sua organização"
-      >
-        <AccessDenied />
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout title="Contratos" subtitle="Gerencie os contratos da sua organização">

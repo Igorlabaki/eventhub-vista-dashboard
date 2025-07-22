@@ -48,14 +48,15 @@ export function DateEventList({
     return <DateEventListSkeleton />;
   }
 
-  if (!dateEvents || dateEvents.length === 0) {
-    return <EmptyState title={emptyMessage} actionText="Nova Data" onAction={onCreateClick}/>;
-  }
-
   const hasEditPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
     return currentUserVenuePermission.permissions.includes("EDIT_PROPOSAL_DATES");
   };
+
+  if (!dateEvents || dateEvents.length === 0) {
+    return <EmptyState hasEditPermission={hasEditPermission()} title={emptyMessage} actionText="Nova Data" onAction={onCreateClick}/>;
+  }
+
   return (
     <div className={cn("space-y-4", className)}>
       <Table className="bg-white rounded-md shadow-lg ">
@@ -72,6 +73,7 @@ export function DateEventList({
           {dateEvents.map((dateEvent) => (
             <TableRow 
               key={dateEvent.id}
+              onClick={() => hasEditPermission() && onEditClick(dateEvent)}
               className={cn(
                 "hover:bg-gray-50",
                 selectedDateEventIds.includes(dateEvent.id) && "bg-violet-100"

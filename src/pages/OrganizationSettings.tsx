@@ -30,24 +30,6 @@ export default function OrganizationSettings() {
     navigate(-1);
   };
 
-  const hasViewPermission = () => {
-    if (!currentUserOrganizationPermission?.permissions) return false;
-    return currentUserOrganizationPermission.permissions.includes(
-      "VIEW_ORG_INFO"
-    );
-  };
-
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout
-        title="Configurações"
-        subtitle="Gerencie as configurações da sua organização"
-      >
-        <AccessDenied />    
-      </DashboardLayout>
-    );
-  }
-
   if (isLoading || !currentOrganization) {
     return (
       <DashboardLayout

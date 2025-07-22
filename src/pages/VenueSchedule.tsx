@@ -39,7 +39,13 @@ import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
 import { PageHeader } from "@/components/PageHeader";
 import { createPortal } from "react-dom";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const locales = {
   "pt-BR": ptBR,
@@ -80,7 +86,7 @@ type EventFormValues = z.infer<typeof eventFormSchema>;
 function generateTimeOptions() {
   const options = [];
   for (let hour = 0; hour <= 23; hour++) {
-    const hourStr = hour.toString().padStart(2, '0');
+    const hourStr = hour.toString().padStart(2, "0");
     options.push(`${hourStr}:00`);
     options.push(`${hourStr}:30`);
   }
@@ -125,11 +131,11 @@ export default function VenueSchedule() {
   const fillFormWithEventData = (event: DateEvent) => {
     const startDate = new Date(event.startDate);
     const endDate = new Date(event.endDate);
-    
+
     form.reset({
       title: event.title,
-      startDay: startDate.toISOString().split('T')[0],
-      endDay: endDate.toISOString().split('T')[0],
+      startDay: startDate.toISOString().split("T")[0],
+      endDay: endDate.toISOString().split("T")[0],
       startHour: startDate.toTimeString().slice(0, 5),
       endHour: endDate.toTimeString().slice(0, 5),
       userId: user?.id,
@@ -156,29 +162,19 @@ export default function VenueSchedule() {
     fetchDateEvents();
   }, []);
 
-  const hasViewPermission = () => {
+  const hasEditPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_CALENDAR");
-  };
-
-
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout
-        title="Agenda"
-        subtitle="Visualize e gerencie sua agenda"
-      >
-        <AccessDenied />
-      </DashboardLayout>
+    return currentUserVenuePermission.permissions.includes(
+      "EDIT_VENUE_CALENDAR"
     );
-  }
+  };
 
   // Formulário de criação de evento
 
   async function onSubmit(data: EventFormValues) {
     try {
       let response;
-      
+
       if (isEditing && selectedEvent) {
         response = await updateOvernightEvent({
           userId: data.userId,
@@ -210,7 +206,7 @@ export default function VenueSchedule() {
           },
         });
       }
-      
+
       const { title, message } = handleBackendSuccess(
         response,
         isEditing ? "Data atualizada com sucesso!" : "Data criada com sucesso!"
@@ -220,20 +216,22 @@ export default function VenueSchedule() {
       setShowForm(false);
       setIsEditing(false);
       setSelectedEvent(null);
-              form.reset({
-          title: "",
-          startDay: "",
-          startHour: "",
-          endDay: "",
-          endHour: "",
-          userId: user?.id,
-          username: user?.username,
-          venueId: selectedVenue.id,
-        });
+      form.reset({
+        title: "",
+        startDay: "",
+        startHour: "",
+        endDay: "",
+        endHour: "",
+        userId: user?.id,
+        username: user?.username,
+        venueId: selectedVenue.id,
+      });
     } catch (error: unknown) {
       const { title, message } = handleBackendError(
         error,
-        isEditing ? "Erro ao atualizar data. Tente novamente mais tarde." : "Erro ao criar data. Tente novamente mais tarde."
+        isEditing
+          ? "Erro ao atualizar data. Tente novamente mais tarde."
+          : "Erro ao criar data. Tente novamente mais tarde."
       );
       toast({ title, description: message, variant: "destructive" });
     }
@@ -275,39 +273,47 @@ export default function VenueSchedule() {
           venueId: selectedVenue.id,
         });
       }}
-      onDelete={!selectedEvent?.proposalId ? async () => {
-        setIsDeleting(true);
-        try {
-          await deleteDateEvent(selectedEvent.id);
-          const { title, message } = handleBackendSuccess(
-            { success: true, message: "Data excluída com sucesso", data: undefined },
-            "Data excluída com sucesso!"
-          );
-          showSuccessToast({ title, description: message });
-          await fetchDateEvents();
-          setSelectedEvent(null);
-          setShowForm(false);
-          setIsEditing(false);
-          form.reset({
-            title: "",
-            startDay: "",
-            startHour: "",
-            endDay: "",
-            endHour: "",
-            userId: user?.id,
-            username: user?.username,
-            venueId: selectedVenue.id,
-          });
-        } catch (error: unknown) {
-          const { title, message } = handleBackendError(
-            error,
-            "Erro ao excluir data. Tente novamente mais tarde."
-          );
-          toast({ title, description: message, variant: "destructive" });
-        } finally {
-          setIsDeleting(false);
-        }
-      } : undefined}
+      onDelete={
+        !selectedEvent?.proposalId
+          ? async () => {
+              setIsDeleting(true);
+              try {
+                await deleteDateEvent(selectedEvent.id);
+                const { title, message } = handleBackendSuccess(
+                  {
+                    success: true,
+                    message: "Data excluída com sucesso",
+                    data: undefined,
+                  },
+                  "Data excluída com sucesso!"
+                );
+                showSuccessToast({ title, description: message });
+                await fetchDateEvents();
+                setSelectedEvent(null);
+                setShowForm(false);
+                setIsEditing(false);
+                form.reset({
+                  title: "",
+                  startDay: "",
+                  startHour: "",
+                  endDay: "",
+                  endHour: "",
+                  userId: user?.id,
+                  username: user?.username,
+                  venueId: selectedVenue.id,
+                });
+              } catch (error: unknown) {
+                const { title, message } = handleBackendError(
+                  error,
+                  "Erro ao excluir data. Tente novamente mais tarde."
+                );
+                toast({ title, description: message, variant: "destructive" });
+              } finally {
+                setIsDeleting(false);
+              }
+            }
+          : undefined
+      }
       isEditing={isEditing}
       isDeleting={isDeleting}
       isSubmitting={form.formState.isSubmitting}
@@ -415,9 +421,9 @@ export default function VenueSchedule() {
   // Calendário + detalhes
   const calendar = (
     <div className="relative">
-      {hasViewPermission() && (
-      <PageHeader
-        onCreateClick={() => setShowForm(true)}
+      {hasEditPermission() && (
+        <PageHeader
+          onCreateClick={() => setShowForm(true)}
           createButtonText="Nova Data"
           isFormOpen={showForm}
         />

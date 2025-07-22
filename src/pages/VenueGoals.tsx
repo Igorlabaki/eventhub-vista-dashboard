@@ -311,22 +311,10 @@ export default function VenueGoals() {
 
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
    
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_PRICES");
-  };
-
   const hasEditPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
     return currentUserVenuePermission.permissions.includes("EDIT_VENUE_PRICES");
   };
-
-  if(!hasViewPermission()) {
-    return <DashboardLayout title="Contatos" subtitle="Gerencie os contatos do espaço">
-     <AccessDenied />
-    </DashboardLayout>
-  }
-
 
   return (
     <DashboardLayout
@@ -378,6 +366,7 @@ export default function VenueGoals() {
                             </p>
                           </div>
                         </div>
+                        {hasEditPermission() && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -385,6 +374,7 @@ export default function VenueGoals() {
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
+                        )}
                       </div>
                     </div>
                   ) : (

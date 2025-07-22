@@ -7,12 +7,6 @@ import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 export default function ProposalAttendanceListPage() {
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
 
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_ATTENDANCE_LIST");
-  };
-
-
 
   const hasEditPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
@@ -24,11 +18,6 @@ export default function ProposalAttendanceListPage() {
     return currentUserVenuePermission.permissions.includes("CONFIRM_PROPOSAL_ATTENDANCE_LIST");
   };
 
-  if(!hasViewPermission()) {
-    return <DashboardLayout title="Lista de Presença" subtitle="Gerencie a lista de presença da proposta">
-     <AccessDenied  />
-    </DashboardLayout>
-  }
   return (
     <DashboardLayout 
       title="Lista de Presença" 

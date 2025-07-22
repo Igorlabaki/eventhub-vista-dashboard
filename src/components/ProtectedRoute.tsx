@@ -7,8 +7,15 @@ import { useOrganizationStore } from "@/store/organizationStore";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 import { AppLoadingScreen, AppErrorScreen } from "@/components/ui/AppLoadingScreen";
+import AccessDenied from "./accessDenied";
+import { UserVenuePermissionByIdResponse } from "@/types/userVenuePermissions";
 
-export function ProtectedRoute({ children }: { children: JSX.Element }) {
+interface ProtectedRouteProps {
+  children: JSX.Element;
+  requiredPermission?: string;
+}
+
+export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -19,11 +26,12 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { fetchProposalById } = useProposalStore();
   const { fetchVenueById, clearSelectedVenue } = useVenueStore();
   const { fetchOrganizationById } = useOrganizationStore();
-  const { fetchCurrentUserVenuePermission } = useUserVenuePermissionStore();
-  const { fetchCurrentUserOrganizationPermission } = useUserOrganizationPermissionStore();
+  const { fetchCurrentUserVenuePermission, currentUserVenuePermission } = useUserVenuePermissionStore();
+  const { fetchCurrentUserOrganizationPermission, currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasPermission, setHasPermission] = useState(true);
 
   const pathname = location.pathname;
 
@@ -35,18 +43,6 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
   const proposalId = useMemo(() => extractIdFromPath(/^\/proposal\/([^/]+)/), [pathname]);
   const venueId = useMemo(() => extractIdFromPath(/^\/venue\/([^/]+)/), [pathname]);
   const organizationId = useMemo(() => extractIdFromPath(/^\/organization\/([^/]+)/), [pathname]);
-
-  const fetchUserPermissions = useCallback(
-    async (orgId: string, venueId?: string) => {
-      if (!userId) return;
-      await fetchCurrentUserVenuePermission({
-        organizationId: orgId,
-        venueId: venueId || "",
-        userId,
-      });
-    },
-    [userId, fetchCurrentUserVenuePermission]
-  );
 
   // Limpa o selectedVenue sempre que o venueId mudar
   useEffect(() => {
@@ -73,6 +69,7 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
     const preloadEntities = async () => {
       setLoading(true);
       setError(null);
+      setHasPermission(true); // por padrão
 
       try {
         if (proposalId) {
@@ -98,11 +95,13 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
             await fetchOrganizationById(venue.organizationId);
           }
 
-          await fetchCurrentUserVenuePermission({
-            organizationId: venue.organizationId,
-            venueId: venue.id,
-            userId,
-          });
+          if (requiredPermission) {
+            await fetchCurrentUserVenuePermission({
+              organizationId: venue.organizationId,
+              venueId: venue.id,
+              userId,
+            });
+          }
         } else if (venueId) {
           // Venue
           const currentVenue = useVenueStore.getState().selectedVenue;
@@ -118,18 +117,24 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
             await fetchOrganizationById(venue.organizationId);
           }
 
-          await fetchCurrentUserVenuePermission({
-            organizationId: venue.organizationId,
-            venueId: venue.id,
-            userId,
-          });
+          if (requiredPermission) {
+            await fetchCurrentUserVenuePermission({
+              organizationId: venue.organizationId,
+              venueId: venue.id,
+              userId,
+            });
+          }
         } else if (organizationId) {
           // Organization
           const currentOrg = useOrganizationStore.getState().currentOrganization;
           if (!currentOrg || currentOrg.id !== organizationId) {
             await fetchOrganizationById(organizationId);
           }
-          await fetchCurrentUserOrganizationPermission({ organizattionId: organizationId, userId });
+          if (requiredPermission) {
+            await fetchCurrentUserOrganizationPermission({ organizattionId: organizationId, userId });
+          }
+        } else {
+          setHasPermission(true); // rota sem contexto de permissão específica
         }
       } catch (err) {
         if (!cancelled) {
@@ -145,11 +150,31 @@ export function ProtectedRoute({ children }: { children: JSX.Element }) {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, proposalId, venueId, organizationId, userId, fetchProposalById, fetchVenueById, fetchOrganizationById, fetchCurrentUserVenuePermission, fetchCurrentUserOrganizationPermission, navigate, location]);
+  }, [isAuthenticated, proposalId, venueId, organizationId, userId, fetchProposalById, fetchVenueById, fetchOrganizationById, fetchCurrentUserVenuePermission, fetchCurrentUserOrganizationPermission, navigate, location, requiredPermission]);
+
+  // Checagem de permissão após o carregamento
+  useEffect(() => {
+    if (requiredPermission) {
+      if (venueId || proposalId) {
+        if (currentUserVenuePermission && !currentUserVenuePermission.permissions.includes(requiredPermission)) {
+          setHasPermission(false);
+        } else if (currentUserVenuePermission) {
+          setHasPermission(true);
+        }
+      } else if (organizationId) {
+        if (currentUserOrganizationPermission && !currentUserOrganizationPermission.permissions.includes(requiredPermission)) {
+          setHasPermission(false);
+        } else if (currentUserOrganizationPermission) {
+          setHasPermission(true);
+        }
+      }
+    }
+  }, [currentUserVenuePermission, currentUserOrganizationPermission, requiredPermission, venueId, proposalId, organizationId]);
 
   if (!isAuthenticated || !userId) return <AppLoadingScreen />;
   if (loading) return <AppLoadingScreen />;
   if (error) return <AppErrorScreen message={error} />;
+  if (!hasPermission) return <AccessDenied />;
 
   return children;
 }

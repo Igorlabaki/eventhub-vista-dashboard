@@ -20,6 +20,7 @@ import { useClauseStore } from "@/store/clauseStore"
 import { showSuccessToast } from "@/components/ui/success-toast"
 import { useToast } from "@/hooks/use-toast"
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler"
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore"
 
 interface ClauseListProps {
   clauses: Clause[]
@@ -51,7 +52,7 @@ export function ClauseList({
   const [clauseToDelete, setClauseToDelete] = React.useState<Clause | null>(null);
   const { deleteClause } = useClauseStore();
   const { toast } = useToast();
-
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
   const handleDelete = async (clauseId: string) => {
     try {
       const response = await deleteClause(clauseId);
@@ -99,13 +100,16 @@ export function ClauseList({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome da Cláusula</TableHead>
-                    <TableHead className="w-[100px] text-center">Ações</TableHead>
+                    {hasEditPermission && (
+                      <TableHead className="w-[100px] text-center">Ações</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredClauses.map((clause) => (
                     <TableRow 
                       key={clause.id}
+                      onClick={() => hasEditPermission && onEditClick(clause)}
                       className={cn(
                         "hover:bg-gray-50",
                         selectedClauseIds.includes(clause.id) && "bg-violet-100"
@@ -113,10 +117,11 @@ export function ClauseList({
                     >
                       <TableCell 
                         className="font-medium cursor-pointer"
-                        onClick={() => onEditClick(clause)}
+                        
                       >
                         {clause.title}
                       </TableCell>
+                      {hasEditPermission && (
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -139,6 +144,7 @@ export function ClauseList({
                           </button>
                         </div>
                       </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

@@ -25,6 +25,7 @@ interface TextListProps {
   searchPlaceholder?: string
   emptyMessage?: string
   className?: string
+  hasPermission: boolean
   selectedTextIds?: string[]
   isLoading?: boolean
   isDeleting?: boolean
@@ -35,6 +36,7 @@ interface TextListProps {
 export function TextList({
   texts,
   onDeleteText,
+  hasPermission,  
   searchPlaceholder = "Filtrar textos...",
   emptyMessage = "Nenhum texto encontrado",
   className,
@@ -87,6 +89,7 @@ export function TextList({
           {(filteredTexts) =>
             filteredTexts?.length === 0 ? (
               <EmptyState
+                hasEditPermission={hasPermission}
                 title={emptyMessage}
                 actionText="Novo Texto"
                 onAction={onCreateClick}
@@ -98,7 +101,7 @@ export function TextList({
                     <TableHead>Área</TableHead>
                     <TableHead>Título</TableHead>
                     <TableHead>Posição</TableHead>
-                    <TableHead className="w-[100px] text-center">Ações</TableHead>
+                    {hasPermission && <TableHead className="w-[100px] text-center">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -112,7 +115,7 @@ export function TextList({
                     >
                       <TableCell 
                         className="font-medium cursor-pointer"
-                        onClick={() => onEditClick(text)}
+                        onClick={() => hasPermission && onEditClick(text)}
                       >
                         {text.area}
                       </TableCell>
@@ -122,6 +125,7 @@ export function TextList({
                       <TableCell>
                         {text.position}
                       </TableCell>
+                      {hasPermission && ( 
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -144,6 +148,7 @@ export function TextList({
                           </button>
                         </div>
                       </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

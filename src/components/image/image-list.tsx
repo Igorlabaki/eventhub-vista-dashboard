@@ -26,6 +26,7 @@ interface ImageListProps {
   emptyMessage?: string;
   className?: string;
   selectedImageIds?: string[];
+  hasPermission: boolean;
   isLoading?: boolean;
   isDeleting?: boolean;
   onCreateClick: () => void;
@@ -38,6 +39,7 @@ export function ImageList({
   searchPlaceholder = "Filtrar imagens...",
   emptyMessage = "Nenhuma imagem encontrada",
   className,
+  hasPermission,
   selectedImageIds = [],
   isLoading = false,
   isDeleting = false,
@@ -85,6 +87,7 @@ export function ImageList({
           {(filteredImages) =>
             filteredImages?.length === 0 ? (
               <EmptyState
+                hasEditPermission={hasPermission}
                 title={emptyMessage}
                 actionText="Nova Imagem"
                 onAction={onCreateClick}
@@ -97,7 +100,7 @@ export function ImageList({
                     <TableHead>Tag</TableHead>
                     <TableHead className="hidden md:table-cell">Descrição</TableHead>
                     <TableHead>Posição</TableHead>
-                    <TableHead className="w-[100px] text-center">Ações</TableHead>
+                    {hasPermission && <TableHead className="w-[100px] text-center">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -121,6 +124,7 @@ export function ImageList({
                       <TableCell  className="text-center">
                         {image.position}
                       </TableCell>
+                      {hasPermission && (
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -143,6 +147,7 @@ export function ImageList({
                           </button>
                         </div>
                       </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

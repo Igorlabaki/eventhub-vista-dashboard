@@ -33,7 +33,7 @@ export const OrganizationPermissionSection: React.FC<
 }) => {
   const isAdmin =
     userOrganizationPermission && userOrganizationPermission.role === "admin";
-    console.log(userOrganizationPermission)
+    
   return (
     <div className="bg-white rounded-md shadow-lg overflow-hidden">
       <div className="bg-eventhub-primary text-white px-2  font-semibold py-2">

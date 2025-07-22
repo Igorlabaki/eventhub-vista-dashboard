@@ -59,6 +59,7 @@ import ProposalSchedulePage from "./pages/ProposalSchedule";
 import OrganizationPermissionsV2 from "./pages/OrganizationPermissionsv2";
 import { ContarctPjFormPage } from "./pages/ContarctPjForm";
 import { ContarctPFFormPage } from "./pages/ContarctPFForm";
+import OrganizationWebsiteImages from "./pages/website/OrganizationWebsiteImages";
 
 const queryClient = new QueryClient();
 
@@ -82,61 +83,65 @@ const App = () => {
           <BrowserRouter>
             <AppInitializer />
             <Routes>
-              <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="/index" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/organization/:id/venues" element={<ProtectedRoute><OrganizationVenues /></ProtectedRoute>} />
-              <Route path="/organization/:id/owners" element={<ProtectedRoute><OrganizationOwners /></ProtectedRoute>} />
-              <Route path="/organization/:id/permissions" element={<ProtectedRoute><OrganizationPermissionsV2 /></ProtectedRoute>} />
-              <Route path="/organization/:id/contracts" element={<ProtectedRoute><OrganizationContracts /></ProtectedRoute>} />
-              <Route path="/organization/:id/settings" element={<ProtectedRoute><OrganizationSettings /></ProtectedRoute>} />
-              <Route path="/organization/:id/website" element={<ProtectedRoute><OrganizationWebsite /></ProtectedRoute>} />
-              <Route path="/organization/:id/website/venues" element={<ProtectedRoute><OrganizationWebsiteVenues /></ProtectedRoute>} />
-              <Route path="/venue/:id/notifications" element={<ProtectedRoute><VenueNotifications /></ProtectedRoute>} />
-              <Route path="/venue/:id" element={<ProtectedRoute><VenueDashboard /></ProtectedRoute>} />
-              <Route path="/venue/:id/website" element={<ProtectedRoute><VenueWebsite /></ProtectedRoute>} />
-              <Route path="/venue/:id/website/texts" element={<ProtectedRoute><VenueWebsiteTexts /></ProtectedRoute>} />
-              <Route path="/organization/:id/website/texts" element={<ProtectedRoute><OrganizationWebsiteTexts /></ProtectedRoute>} />
-              <Route path="/venue/:id/website/images" element={<ProtectedRoute><VenueWebsiteImages /></ProtectedRoute>} />
-              <Route path="/organization/:organizationId/website/images" element={<ProtectedRoute><VenueWebsiteImages /></ProtectedRoute>} />
-              <Route path="/venue/:id/website/faq" element={<ProtectedRoute><VenueWebsiteFaq /></ProtectedRoute>} />
-              <Route path="/venue/:id/budgets" element={<ProtectedRoute><VenueBudgets /></ProtectedRoute>} />
-              <Route path="/venue/:id/expenses" element={<ProtectedRoute><VenueExpenses /></ProtectedRoute>} />
-              <Route path="/venue/:id/new-budget" element={<ProtectedRoute><NewBudget /></ProtectedRoute>} />
-              <Route path="/venue/:id/services" element={<ProtectedRoute><VenueServices /></ProtectedRoute>} />
-              <Route path="/venue/:id/events" element={<ProtectedRoute><VenueEvents /></ProtectedRoute>} />
-              <Route path="/venue/:id/reports" element={<ProtectedRoute><VenueReports /></ProtectedRoute>} />
-              <Route path="/venue/:id/schedule" element={<ProtectedRoute><VenueSchedule /></ProtectedRoute>} />
-              <Route path="/venue/:id/settings" element={<ProtectedRoute><VenueSettings /></ProtectedRoute>} />
-              <Route path="/venue/:id/goals" element={<ProtectedRoute><VenueGoals /></ProtectedRoute>} />
-              <Route path="/venue/:id/contacts" element={<ProtectedRoute><VenueContacts /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/proposal/:id" element={<ProtectedRoute><ProposalDetails /></ProtectedRoute>} />
-              <Route path="/proposal/:id/edit" element={<ProtectedRoute><ProposalEdit /></ProtectedRoute>} />
-              <Route path="/proposal/:id/history" element={<ProtectedRoute><ProposalHistory /></ProtectedRoute>} />
-              <Route path="/proposal/:id/contact" element={<ProtectedRoute><ProposalContact /></ProtectedRoute>} />
-              <Route path="/proposal/:id/send" element={<ProtectedRoute><ProposalSend /></ProtectedRoute>} />
-              <Route path="/proposal/:id/contract" element={<ProtectedRoute><ProposalContract /></ProtectedRoute>} />
-              <Route path="/proposal/:id/dates" element={<ProtectedRoute><DateEventListPage /></ProtectedRoute>} />
-              <Route path="/proposal/:id/payment" element={<ProtectedRoute><ProposalPayment /></ProtectedRoute>} />
-              <Route path="/proposal/:id/attendance-list" element={<ProtectedRoute><ProposalAttendanceListPage /></ProtectedRoute>} />
-              <Route path="/proposal/:id/documents" element={<ProtectedRoute><ProposalDocuments /></ProtectedRoute>} />
-              <Route path="/proposal/:id/schedule" element={<ProtectedRoute><ProposalSchedulePage /></ProtectedRoute>} />
-              <Route path="/proposal/:id/send-message" element={<ProtectedRoute><SendMessagePage /></ProtectedRoute>} />
-              <Route path="/proposal/:id/send-proposal" element={<ProtectedRoute><SendProposalPage /></ProtectedRoute>} />
-              <Route path="/proposal/:id/contract" element={<ProtectedRoute><ProposalContract /></ProtectedRoute>} />
-              <Route path="/proposal/:id/guest-list" element={<GuestListPage />} />
-              <Route path="/proposal/:id/staff-list" element={<WorkerListPage />} />
-              <Route path="/proposal/:id/schedule-list" element={<ScheduleListPage />} />
-              <Route path="/proposal/:id/view" element={<ProposalView  />} />
-              <Route path="/venue/:id/form" element={<ProposalForm />} />
-              <Route path="/proposal/:id/b2b-contract" element={<ContarctPjFormPage />} />
-              <Route path="/proposal/:id/person-contract" element={<ContarctPFFormPage />} />
-              <Route path="*" element={<NotFound />} />
+              {/* Public */}
+                <Route path="/index" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="*" element={<NotFound />} />
+                <Route path="/" element={<Navigate to="/login" replace />} />
+              {/* Organization */}
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/organization/:id/venues" element={<ProtectedRoute requiredPermission="VIEW_ORG_VENUES"><OrganizationVenues /></ProtectedRoute>} />
+                <Route path="/organization/:id/owners" element={<ProtectedRoute requiredPermission="VIEW_ORG_OWNERS"><OrganizationOwners /></ProtectedRoute>} />
+                <Route path="/organization/:id/website" element={<ProtectedRoute requiredPermission="VIEW_ORG_SITE"><OrganizationWebsite /></ProtectedRoute>} />
+                <Route path="/organization/:id/settings" element={<ProtectedRoute requiredPermission="VIEW_ORG_INFO"><OrganizationSettings /></ProtectedRoute>} />
+                <Route path="/organization/:id/website/texts" element={<ProtectedRoute requiredPermission="VIEW_ORG_SITE"><OrganizationWebsiteTexts /></ProtectedRoute>} />
+                <Route path="/organization/:id/contracts" element={<ProtectedRoute requiredPermission="VIEW_ORG_CONTRACTS"><OrganizationContracts /></ProtectedRoute>} />
+                <Route path="/organization/:id/website/venues" element={<ProtectedRoute requiredPermission="VIEW_ORG_SITE"><OrganizationWebsiteVenues /></ProtectedRoute>} />
+                <Route path="/organization/:id/permissions" element={<ProtectedRoute requiredPermission="VIEW_ORG_PERMISSIONS"><OrganizationPermissionsV2 /></ProtectedRoute>} />
+                <Route path="/organization/:id/website/images" element={<ProtectedRoute requiredPermission="VIEW_ORG_SITE"><OrganizationWebsiteImages /></ProtectedRoute>} />
+              {/* Venue */}
+                <Route path="/venue/:id/goals" element={<ProtectedRoute requiredPermission="VIEW_VENUE_PRICES"><VenueGoals /></ProtectedRoute>} />
+                <Route path="/venue/:id" element={<ProtectedRoute requiredPermission="VIEW_VENUE_INFO"><VenueDashboard /></ProtectedRoute>} />
+                <Route path="/venue/:id/events" element={<ProtectedRoute requiredPermission="VIEW_VENUE_EVENTS"><VenueEvents /></ProtectedRoute>} />
+                <Route path="/venue/:id/budgets" element={<ProtectedRoute requiredPermission="VIEW_VENUE_PROPOSALS"><VenueBudgets /></ProtectedRoute>} />
+                <Route path="/venue/:id/reports" element={<ProtectedRoute requiredPermission="VIEW_VENUE_ANALYSIS"><VenueReports /></ProtectedRoute>} />
+                <Route path="/venue/:id/website" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueWebsite /></ProtectedRoute>} />
+                <Route path="/venue/:id/expenses" element={<ProtectedRoute requiredPermission="VIEW_VENUE_EXPENSES"><VenueExpenses /></ProtectedRoute>} />
+                <Route path="/venue/:id/new-budget" element={<ProtectedRoute requiredPermission="VIEW_VENUE_NEW_BUDGET"><NewBudget /></ProtectedRoute>} />
+                <Route path="/venue/:id/services" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SERVICES"><VenueServices /></ProtectedRoute>} />
+                <Route path="/venue/:id/contacts" element={<ProtectedRoute requiredPermission="VIEW_VENUE_CONTACTS"><VenueContacts /></ProtectedRoute>} />
+                <Route path="/venue/:id/schedule" element={<ProtectedRoute requiredPermission="VIEW_VENUE_CALENDAR"><VenueSchedule /></ProtectedRoute>} />
+                <Route path="/venue/:id/settings" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SETTINGS"><VenueSettings /></ProtectedRoute>} />
+                <Route path="/venue/:id/website/faq" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueWebsiteFaq /></ProtectedRoute>} />
+                <Route path="/venue/:id/website/texts" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueWebsiteTexts /></ProtectedRoute>} />
+                <Route path="/venue/:id/notifications" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueNotifications /></ProtectedRoute>} />
+                <Route path="/venue/:id/website/images" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueWebsiteImages /></ProtectedRoute>} />
+              {/* Proposal */}
+                <Route path="/proposal/:id/view" element={<ProposalView  />} />
+                <Route path="/proposal/:id/guest-list" element={<GuestListPage />} />
+                <Route path="/proposal/:id/staff-list" element={<WorkerListPage />} />
+                <Route path="/proposal/:id/schedule-list" element={<ScheduleListPage />} />
+                <Route path="/proposal/:id/send" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_SEND"><ProposalSend /></ProtectedRoute>} />
+                <Route path="/proposal/:id/edit" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_EDIT"><ProposalEdit /></ProtectedRoute>} />
+                <Route path="/proposal/:id" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_INFO"><ProposalDetails /></ProtectedRoute>} />
+                <Route path="/proposal/:id/dates" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_DATES"><DateEventListPage /></ProtectedRoute>} />
+                <Route path="/proposal/:id/history" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_HISTORY"><ProposalHistory /></ProtectedRoute>} />
+                <Route path="/proposal/:id/contact" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_CONTACT"><ProposalContact /></ProtectedRoute>} />
+                <Route path="/proposal/:id/payment" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_PAYMENT"><ProposalPayment /></ProtectedRoute>} />
+                <Route path="/proposal/:id/contract" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_CONTRACT"><ProposalContract /></ProtectedRoute>} />
+                <Route path="/proposal/:id/contract" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_CONTRACT"><ProposalContract /></ProtectedRoute>} />
+                <Route path="/proposal/:id/documents" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_DOCUMENTS"><ProposalDocuments /></ProtectedRoute>} />
+                <Route path="/proposal/:id/schedule" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_SCHEDULE"><ProposalSchedulePage /></ProtectedRoute>} />
+                <Route path="/proposal/:id/send-message" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_SEND_MESSAGE"><SendMessagePage /></ProtectedRoute>} />
+                <Route path="/proposal/:id/send-proposal" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_SEND_PROPOSAL"><SendProposalPage /></ProtectedRoute>} />
+                <Route path="/proposal/:id/attendance-list" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_ATTENDANCE_LIST"><ProposalAttendanceListPage /></ProtectedRoute>} />
+              {/* Public Form */}
+                <Route path="/venue/:id/form" element={<ProposalForm />} />
+                <Route path="/proposal/:id/b2b-contract" element={<ContarctPjFormPage />} />
+                <Route path="/proposal/:id/person-contract" element={<ContarctPFFormPage />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>

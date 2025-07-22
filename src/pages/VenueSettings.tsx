@@ -401,21 +401,6 @@ export default function VenueSettings() {
     }
   };
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
-  const hasViewPermission = () => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_VENUE_CONFIG");
-  };
-
-  if (!hasViewPermission()) {
-    return (
-      <DashboardLayout
-        title="Agenda"
-        subtitle="Visualize e gerencie sua agenda"
-      >
-        <AccessDenied />
-      </DashboardLayout>
-    );
-  }
 
   if (isLoading) {
     return (
