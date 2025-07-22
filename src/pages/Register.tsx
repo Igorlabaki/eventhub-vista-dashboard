@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { Calendar } from "lucide-react";
+import { Calendar, EyeIcon, EyeOffIcon } from "lucide-react";
 import { authService } from "@/services/auth.service";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -22,6 +22,8 @@ export default function Register() {
     confirmPassword: "",
   });
   const queryClient = useQueryClient();
+  const [isPasswordHide, setIsPasswordHide] = useState(true);
+  const [isConfirmPasswordHide, setIsConfirmPasswordHide] = useState(true);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -77,14 +79,14 @@ export default function Register() {
         <div className="text-center mb-8">
           <div className="flex justify-center items-center gap-2 mb-2">
             <Calendar className="h-8 w-8 text-eventhub-primary" />
-            <h1 className="text-3xl font-bold text-gray-900">EventHub</h1>
+            <h1 className="text-3xl font-bold text-eventhub-primary">EventHub</h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-eventhub-primary font-semibold">
             Seu hub central para gestão de eventos
           </p>
         </div>
 
-        <Card className="eventhub-card">
+        <Card className="eventhub-card shadow-lg">
           <CardHeader>
             <CardTitle className="text-center">Criar Conta</CardTitle>
           </CardHeader>
@@ -127,16 +129,29 @@ export default function Register() {
                 <label htmlFor="password" className="text-sm font-medium">
                   Senha
                 </label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={isPasswordHide ? "password" : "text"}
+                    placeholder="••••••••"
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  {!isPasswordHide ? (
+                    <EyeIcon
+                      className="w-4 h-4 text-gray-600 absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer"
+                      onClick={() => setIsPasswordHide(!isPasswordHide)}
+                    />
+                  ) : (
+                    <EyeOffIcon
+                      className="w-4 h-4 text-gray-600 absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer"
+                      onClick={() => setIsPasswordHide(!isPasswordHide)}
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -146,16 +161,18 @@ export default function Register() {
                 >
                   Confirmar senha
                 </label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="w-full"
-                />
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={isPasswordHide ? "password" : "text"}
+                    placeholder="••••••••"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                </div>
               </div>
 
               <Button

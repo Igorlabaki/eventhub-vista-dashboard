@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { api } from "@/lib/axios";
 import { Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -25,6 +26,7 @@ type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPassword() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<ForgotPasswordFormValues>({
@@ -40,6 +42,7 @@ export default function ForgotPassword() {
         description:
           "Se o e-mail existir, enviaremos instruções para redefinir a senha.",
       });
+      navigate("/login");
     } catch (error) {
       toast({
         title: "Erro ao solicitar redefinição",
@@ -59,15 +62,15 @@ export default function ForgotPassword() {
         <div className="text-center mb-8">
           <div className="flex justify-center items-center gap-2 mb-2">
             <Calendar className="h-8 w-8 text-eventhub-primary" />
-            <h1 className="text-3xl font-bold text-gray-900">EventHub</h1>
+            <h1 className="text-3xl font-bold text-eventhub-primary">EventHub</h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-eventhub-primary font-semibold">
             Seu hub central para gestão de eventos
           </p>
         </div>
-        <Card>
+        <Card className="eventhub-card shadow-lg">
           <CardHeader>
-            <CardTitle className="text-center">Esqueci minha senha</CardTitle>
+            <CardTitle className="text-center">Redefinir senha</CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>

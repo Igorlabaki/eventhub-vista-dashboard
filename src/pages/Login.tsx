@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { Calendar } from "lucide-react";
+import { Calendar, EyeIcon, EyeOffIcon } from "lucide-react";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import { z } from "zod";
 import { authService } from "@/services/auth.service";
@@ -37,7 +37,7 @@ export default function Login() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const setUser = useUserStore((state) => state.setUser);
   const setIsAuthenticated = useUserStore((state) => state.setIsAuthenticated);
-
+  const [isPasswordHide, setIsPasswordHide] = useState(true);
   // Pega a rota de origem, se houver
   const from = location.state?.from?.pathname || "/dashboard";
 
@@ -106,14 +106,16 @@ export default function Login() {
         <div className="text-center mb-8">
           <div className="flex justify-center items-center gap-2 mb-2">
             <Calendar className="h-8 w-8 text-eventhub-primary" />
-            <h1 className="text-3xl font-bold text-gray-900">EventHub</h1>
+            <h1 className="text-3xl text-eventhub-primary font-bold">
+              EventHub
+            </h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-eventhub-primary font-semibold">
             Seu hub central para gestão de eventos
           </p>
         </div>
 
-        <Card className="eventhub-card">
+        <Card className="eventhub-card shadow-lg">
           <CardHeader>
             <CardTitle className="text-center">Entrar</CardTitle>
           </CardHeader>
@@ -151,16 +153,31 @@ export default function Login() {
                     Esqueceu sua senha?
                   </a>
                 </div>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={isPasswordHide ? "password" : "text"}
+                    placeholder="••••••••"
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                  {
+                    !isPasswordHide ? (
+                      <EyeIcon
+                        className="w-4 h-4 text-gray-600 absolute right-2 top-1/2 -translate-y-1/2"
+                        onClick={() => setIsPasswordHide(!isPasswordHide)}
+                      />
+                    ) : (
+                      <EyeOffIcon
+                        className="w-4 h-4 text-gray-600 absolute right-2 top-1/2 -translate-y-1/2"
+                        onClick={() => setIsPasswordHide(!isPasswordHide)}
+                      />
+                    )
+                  }
+                </div>
                 {errors.password && (
                   <p className="text-sm text-red-500">{errors.password}</p>
                 )}
