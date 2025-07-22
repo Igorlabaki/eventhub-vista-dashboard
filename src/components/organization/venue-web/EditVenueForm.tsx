@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { FormLayout } from "@/components/ui/form-layout";
 import { useForm } from "react-hook-form";
-import { ItemListVenueResponse, UpdateVenueDTO } from "@/types/venue";
+import { ItemListVenueResponse, UpdateVenueInfoDTO } from "@/types/venue";
 import { FC, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,7 +35,7 @@ interface FormData {
 }
 
 export const EditVenueForm: FC<EditVenueFormProps> = ({ venue, onCancel }) => {
-  const { updateVenue, isLoading } = useVenueStore();
+  const { updateVenueInfo, isLoading } = useVenueStore();
   const { user } = useUserStore();
   const { toast } = useToast();
   const { createText, fetchTexts, texts, isLoading: isLoadingTexts, updateText, deleteText } = useTextStore();
@@ -70,7 +70,7 @@ export const EditVenueForm: FC<EditVenueFormProps> = ({ venue, onCancel }) => {
     }
 
     try {
-      const updateData: UpdateVenueDTO = {
+      const updateData: UpdateVenueInfoDTO = {
         userId: user.id,
         venueId: venue.id,
         name: values.name,
@@ -81,11 +81,10 @@ export const EditVenueForm: FC<EditVenueFormProps> = ({ venue, onCancel }) => {
         description: values.description || undefined,
         state: values.state,
         city: values.city,
-        pricingModel: "PER_PERSON", // Valor padrão, pode ser ajustado conforme necessário
         isShowOnOrganization: values.isShowOnOrganization,
       };
 
-      const response = await updateVenue(updateData);
+      const response = await updateVenueInfo(updateData);
       const successResult = handleBackendSuccess(response, "Espaço atualizado com sucesso!");
       toast({
         title: successResult.title,

@@ -162,7 +162,7 @@ export function SidebarNav({
             </Link>
           )}
 
-          {selectedVenue && isInProposal || isInWebsite && selectedVenue  ? (
+          {selectedVenue && isInProposal || isInWebsite && selectedVenue && !isInOrgWebsite ? (
             <Link
               to={`/venue/${selectedVenue.id}/notifications`}
               className={cn(

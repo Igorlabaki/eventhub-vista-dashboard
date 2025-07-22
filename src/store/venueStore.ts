@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Venue, ItemListVenueResponse, VenueListResponse, CreateVenueDTO, VenueCreateResponse, VenueDeleteResponse, UpdateVenueDTO } from '@/types/venue';
+import { Venue, ItemListVenueResponse, VenueListResponse, CreateVenueDTO, VenueCreateResponse, VenueDeleteResponse, UpdateVenueDTO, UpdateVenueInfoDTO } from '@/types/venue';
 import { venueService } from '@/services/venue.service';
 import { AxiosError } from 'axios';
 import { BackendResponse } from '@/lib/error-handler';
@@ -30,6 +30,7 @@ interface VenueState {
     pricePerPersonHour?: string;
     pricingModel: "PER_PERSON" | "PER_DAY" | "PER_PERSON_DAY" | "PER_PERSON_HOUR";
   }) => Promise<BackendResponse<Venue>>;
+  updateVenueInfo: (data: UpdateVenueInfoDTO) => Promise<BackendResponse<Venue>>;
 }
 
 export const useVenueStore = create<VenueState>((set) => ({
@@ -133,6 +134,27 @@ export const useVenueStore = create<VenueState>((set) => ({
       const error = err as ApiError;
       set({
         error: error?.response?.data?.message || "Não foi possível atualizar as informações de pagamento do espaço.",
+        isLoading: false
+      });
+      throw err;
+    }
+  },
+
+  updateVenueInfo: async (data: UpdateVenueInfoDTO) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await venueService.updateVenueInfo(data);
+      set((state) => ({
+        isLoading: false,
+        venues: state.venues.map(v =>
+          v.id === response.data.id ? { ...v, ...response.data } : v
+        )
+      }));
+      return response;
+    } catch (err: unknown) {
+      const error = err as ApiError;
+      set({
+        error: error?.response?.data?.message || "Não foi possível atualizar as informações do espaço.",
         isLoading: false
       });
       throw err;

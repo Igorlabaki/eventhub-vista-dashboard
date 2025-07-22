@@ -114,7 +114,7 @@ const App = () => {
                 <Route path="/venue/:id/services" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SERVICES"><VenueServices /></ProtectedRoute>} />
                 <Route path="/venue/:id/contacts" element={<ProtectedRoute requiredPermission="VIEW_VENUE_CONTACTS"><VenueContacts /></ProtectedRoute>} />
                 <Route path="/venue/:id/schedule" element={<ProtectedRoute requiredPermission="VIEW_VENUE_CALENDAR"><VenueSchedule /></ProtectedRoute>} />
-                <Route path="/venue/:id/settings" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SETTINGS"><VenueSettings /></ProtectedRoute>} />
+                <Route path="/venue/:id/settings" element={<ProtectedRoute requiredPermission="EDIT_VENUE_INFO"><VenueSettings /></ProtectedRoute>} />
                 <Route path="/venue/:id/website/faq" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueWebsiteFaq /></ProtectedRoute>} />
                 <Route path="/venue/:id/website/texts" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueWebsiteTexts /></ProtectedRoute>} />
                 <Route path="/venue/:id/notifications" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueNotifications /></ProtectedRoute>} />

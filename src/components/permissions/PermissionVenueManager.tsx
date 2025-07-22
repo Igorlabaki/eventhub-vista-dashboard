@@ -25,7 +25,7 @@ import { useUpdateUserPermissionMutations } from "@/hooks/permissions/mutation/u
 import { showSuccessToast } from "../ui/success-toast";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { useDeleteUserPermissionMutations } from "@/hooks/permissions/mutation/delete";
-import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
 import {
   generalPermissions,
   proposalEditPermissions,
@@ -33,6 +33,7 @@ import {
   venueEditPermissions,
   venueViewPermissions,
 } from "@/types/permissions";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
 // Interface que define a estrutura de uma permissão
 interface Permission {
@@ -70,7 +71,7 @@ export function PermissionVenueManager({
   initialRole = "user",
 }: PermissionManagerProps) {
   const { toast } = useToast();
-  const { currentUserVenuePermission } = useUserVenuePermissionStore(); 
+  const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore(); 
   const {
     createUserVenuePermission,
     updateUserVenuePermission,
@@ -145,9 +146,9 @@ export function PermissionVenueManager({
   };  
 
   const hasEditPermission = () => {
-    if (!currentUserVenuePermission || !currentUserVenuePermission.permissions) return false;
-    return currentUserVenuePermission.permissions.includes(
-      "EDIT_VENUE_WEBSITE_IMAGES"
+    if (!currentUserOrganizationPermission || !currentUserOrganizationPermission.permissions) return false;
+    return currentUserOrganizationPermission.permissions.includes(
+      "EDIT_ORG_PERMISSIONS"
     );
   };
 

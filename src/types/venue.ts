@@ -140,6 +140,20 @@ export interface UpdateVenueDTO {
   isShowOnOrganization?: boolean;
 }
 
+export interface UpdateVenueInfoDTO {
+  userId: string;
+  venueId: string;
+  name: string;
+  tiktokUrl?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  url?: string;
+  description?: string;
+  state: string;
+  city: string;
+  isShowOnOrganization: boolean;
+}
+
 export type ItemListVenueResponse = {
   id: string;
   name: string;

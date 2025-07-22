@@ -16,7 +16,8 @@ import {
   TrafficData,
   MonthData,
   AnalysisData,
-  UpdateVenueDTO
+  UpdateVenueDTO,
+  UpdateVenueInfoDTO
 } from '@/types/venue';
 
 export type CreateVenueWithFileDTO = Omit<CreateVenueDTO, 'imageUrl'> & {
@@ -117,6 +118,11 @@ export const venueService = {
         },
       }
     );
+    return response.data;
+  },
+
+  updateVenueInfo: async (data: UpdateVenueInfoDTO) => {
+    const response = await api.put<VenueUpdateResponse>('/venue/update/info', data);
     return response.data;
   },
 

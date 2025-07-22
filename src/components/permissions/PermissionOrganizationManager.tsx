@@ -132,7 +132,7 @@ export function PermissionOrganizationManager({
   const hasEditPermission = () => {
     if (!currentUserOrganizationPermission?.permissions) return false;
     return currentUserOrganizationPermission.permissions.includes(
-      "EDIT_ORG_WEBSITE_IMAGES"
+      "EDIT_ORG_PERMISSIONS"
     );
   };
 
