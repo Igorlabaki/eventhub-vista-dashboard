@@ -86,6 +86,7 @@ const App = () => {
               {/* Public */}
                 <Route path="/index" element={<Index />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -125,7 +126,7 @@ const App = () => {
                 <Route path="/proposal/:id/staff-list" element={<WorkerListPage />} />
                 <Route path="/proposal/:id/schedule-list" element={<ScheduleListPage />} />
                 <Route path="/proposal/:id/send" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_SEND"><ProposalSend /></ProtectedRoute>} />
-                <Route path="/proposal/:id/edit" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_EDIT"><ProposalEdit /></ProtectedRoute>} />
+                <Route path="/proposal/:id/edit" element={<ProtectedRoute requiredPermission="EDIT_VENUE_INFO"><ProposalEdit /></ProtectedRoute>} />
                 <Route path="/proposal/:id" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_INFO"><ProposalDetails /></ProtectedRoute>} />
                 <Route path="/proposal/:id/dates" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_DATES"><DateEventListPage /></ProtectedRoute>} />
                 <Route path="/proposal/:id/history" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_HISTORY"><ProposalHistory /></ProtectedRoute>} />

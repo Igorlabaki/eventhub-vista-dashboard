@@ -83,10 +83,10 @@ export function Header({ title, subtitle }: HeaderProps) {
 
         <div className="flex items-center gap-2  md:gap-4">
           {user && <p className="text-sm text-gray-500 hidden md:block">Bem vindo, {user.username}</p>}
-          <Button variant="ghost" size="icon" className="relative">
+       {/*    <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
             <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
-          </Button>
+          </Button> */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
