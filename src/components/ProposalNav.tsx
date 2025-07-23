@@ -11,6 +11,7 @@ import {
   DollarSign,
   Users,
   List,
+  Ham,
   Clipboard,
   LayoutDashboard,
 } from "lucide-react";
@@ -70,6 +71,12 @@ export function ProposalNav({
       title: "Enviar Orçamento",
       href: `/proposal/${proposal?.id}/send-proposal`,
       icon: Send,
+      permissionRequired: Permissions.SEND_PROPOSAL_INFO,
+    },
+    {
+      title: "Enviar Fornecedores",
+      href: `/proposal/${proposal?.id}/send-suppliers`,
+      icon: Ham,
       permissionRequired: Permissions.SEND_PROPOSAL_INFO,
     },
     {

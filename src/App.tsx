@@ -60,6 +60,7 @@ import OrganizationPermissionsV2 from "./pages/OrganizationPermissionsv2";
 import { ContarctPjFormPage } from "./pages/ContarctPjForm";
 import { ContarctPFFormPage } from "./pages/ContarctPFForm";
 import OrganizationWebsiteImages from "./pages/website/OrganizationWebsiteImages";
+import SendSuppliers from "./pages/SendSuppliers";
 
 const queryClient = new QueryClient();
 
@@ -132,12 +133,12 @@ const App = () => {
                 <Route path="/proposal/:id/history" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_HISTORY"><ProposalHistory /></ProtectedRoute>} />
                 <Route path="/proposal/:id/contact" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_CONTACT"><ProposalContact /></ProtectedRoute>} />
                 <Route path="/proposal/:id/payment" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_PAYMENT"><ProposalPayment /></ProtectedRoute>} />
-                <Route path="/proposal/:id/contract" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_CONTRACT"><ProposalContract /></ProtectedRoute>} />
-                <Route path="/proposal/:id/contract" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_CONTRACT"><ProposalContract /></ProtectedRoute>} />
+                <Route path="/proposal/:id/contract" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_DOCUMENTS"><ProposalContract /></ProtectedRoute>} />
                 <Route path="/proposal/:id/documents" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_DOCUMENTS"><ProposalDocuments /></ProtectedRoute>} />
                 <Route path="/proposal/:id/schedule" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_SCHEDULE"><ProposalSchedulePage /></ProtectedRoute>} />
-                <Route path="/proposal/:id/send-message" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_SEND_MESSAGE"><SendMessagePage /></ProtectedRoute>} />
-                <Route path="/proposal/:id/send-proposal" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_SEND_PROPOSAL"><SendProposalPage /></ProtectedRoute>} />
+                <Route path="/proposal/:id/send-message" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_TEXT"><SendMessagePage /></ProtectedRoute>} />
+                <Route path="/proposal/:id/send-suppliers" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_INFO"><SendSuppliers /></ProtectedRoute>} />
+                <Route path="/proposal/:id/send-proposal" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_INFO"><SendProposalPage /></ProtectedRoute>} />
                 <Route path="/proposal/:id/attendance-list" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_ATTENDANCE_LIST"><ProposalAttendanceListPage /></ProtectedRoute>} />
               {/* Public Form */}
                 <Route path="/venue/:id/form" element={<ProposalForm />} />

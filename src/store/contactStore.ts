@@ -7,7 +7,7 @@ interface ContactStore {
   isLoading: boolean;
   error: string | null;
   setContacts: (contacts: Contact[]) => void;
-  fetchContacts: (venueId: string, name?: string, type?: ContactType) => Promise<void>;
+  fetchContacts: ({venueId, name, type}: {venueId: string, name?: string, type?: ContactType}) => Promise<void>;
   createContact: (contact: Omit<Contact, "id">) => Promise<ContactCreateResponse>;
   updateContact: (contactId: string, data: Partial<Contact>) => Promise<ContactUpdateResponse>;
   deleteContact: (contactId: string, venueId: string) => Promise<ContactDeleteResponse>;
@@ -29,7 +29,7 @@ export const useContactStore = create<ContactStore>((set, get) => ({
   setContacts: (contacts) => set({ contacts }),
   clearError: () => set({ error: null }),
 
-  fetchContacts: async (venueId: string, name?: string, type?: ContactType) => {
+  fetchContacts: async ({venueId, name, type}: {venueId: string, name?: string, type?: ContactType}) => {
     set({ isLoading: true, error: null });
     try {
       const response = await contactService.list({ venueId, name, type });
@@ -50,7 +50,7 @@ export const useContactStore = create<ContactStore>((set, get) => ({
     try {
       const response = await contactService.create(contact);
       const createResponse = response as ContactCreateResponse;
-      await get().fetchContacts(contact.venueId);
+      await get().fetchContacts({venueId: contact.venueId});
       set({ isLoading: false });
       return createResponse;
     } catch (err: unknown) {
@@ -68,7 +68,7 @@ export const useContactStore = create<ContactStore>((set, get) => ({
     try {
       const response = await contactService.update({ contactId, data });
       const updateResponse = response as ContactUpdateResponse;
-      await get().fetchContacts(data.venueId || "");
+      await get().fetchContacts({venueId: data.venueId || ""});
       set({ isLoading: false });
       return updateResponse;
     } catch (err: unknown) {
@@ -85,7 +85,7 @@ export const useContactStore = create<ContactStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await contactService.delete(contactId);
-      await get().fetchContacts(venueId);
+      await get().fetchContacts({venueId: venueId});
       set({ isLoading: false });
       // Retorna um objeto ContactDeleteResponse manualmente
       return {

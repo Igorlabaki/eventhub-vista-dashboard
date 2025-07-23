@@ -32,6 +32,12 @@ export default function VenueContacts() {
     setIsCreatingContact(true);
   };
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setSelectedContact(undefined);
+    setIsCreatingContact(false);
+  };
+
   const hasEditPermission = () => {
       if (!currentUserVenuePermission?.permissions) return false;
     return currentUserVenuePermission.permissions.includes("EDIT_VENUE_CONTACTS");
@@ -58,11 +64,11 @@ export default function VenueContacts() {
 
   return (
     <DashboardLayout title="Contatos" subtitle="Gerencie os contatos do espaço">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <ContactHeader
           hasPermission={hasEditPermission()}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           onActionClick={handleCreateContact}
           isFormOpen={isCreatingContact || selectedContact !== undefined}
         />

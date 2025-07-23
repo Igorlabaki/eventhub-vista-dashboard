@@ -5,21 +5,29 @@ export enum ContactType {
 
 export interface Contact {
   id: string;
-  name: string;
-  role: string;
-  whatsapp: string;
+  name?: string;
+  role?: string;
+  whatsapp?: string;
   venueId: string;
   email?: string;
   type?: ContactType;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  tiktokUrl?: string;
+  url?: string;
 }
 
 export interface CreateContactParams {
-  name: string;
-  role: string;
+  name?: string;
+  role?: string;
   venueId: string;
-  whatsapp: string;
+  whatsapp?: string;
   email?: string;
   type?: ContactType;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  tiktokUrl?: string;
+  url?: string;
 }
 
 export interface UpdateContactParams {
@@ -30,6 +38,10 @@ export interface UpdateContactParams {
     whatsapp?: string;
     email?: string;
     type?: ContactType;
+    instagramUrl?: string;
+    facebookUrl?: string;
+    tiktokUrl?: string;
+    url?: string;
   };
 }
 
