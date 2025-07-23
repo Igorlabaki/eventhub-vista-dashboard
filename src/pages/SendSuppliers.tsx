@@ -47,6 +47,11 @@ export default function SendMessagePage() {
         if (contact.instagramUrl) urls.push(`Instagram: ${contact.instagramUrl}`);
         if (contact.facebookUrl) urls.push(`\nFacebook: ${contact.facebookUrl}`);
         if (contact.tiktokUrl) urls.push(`\nTikTok: ${contact.tiktokUrl}`);
+        if (contact.whatsapp) {
+          const phone = parsePhoneNumberFromString(contact.whatsapp);
+          const formatted = phone?.formatInternational() || contact.whatsapp;
+          urls.push(`\nWhatsApp: ${formatted}`);
+        }
         if (contact.url) urls.push(`\nSite: ${contact.url}`);
         return `\n- ${contact.name}${contact.role ? ` (${contact.role})` : ""}${urls.length ? `\n  ${urls.join(" | ")}` : ""}\n`;
       })

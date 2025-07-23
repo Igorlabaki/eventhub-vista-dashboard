@@ -89,6 +89,7 @@ export function ContactSection({
         showForm={showForm}
         list={
           <ContactList
+            venueId={venueId}
             hasPermission={hasPermission}
             contacts={contacts}
             isLoading={isLoading}

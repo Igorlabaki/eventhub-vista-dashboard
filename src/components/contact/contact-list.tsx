@@ -15,6 +15,7 @@ import { Edit, Pencil, Trash2, Phone } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { showSuccessToast } from "@/components/ui/success-toast";
 
 interface ContactListProps {
   contacts: Contact[];
@@ -23,6 +24,7 @@ interface ContactListProps {
   onCreateClick: () => void;
   onEditClick: (contact: Contact) => void;
   onDeleteClick?: (contact: Contact) => void;
+  venueId: string; // Adicionando venueId como prop
 }
 
 export function ContactList({
@@ -32,7 +34,7 @@ export function ContactList({
   onCreateClick,
   onEditClick,
   onDeleteClick,
-
+  venueId, // Recebendo venueId
 }: ContactListProps) {
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
@@ -49,6 +51,21 @@ export function ContactList({
 
   return (
     <>
+     <div className="mb-4">
+      <Button
+        onClick={async () => {
+          const link = `https://event-hub-dashboard.vercel.app/venue/${venueId}/partner-form`;
+          await navigator.clipboard.writeText(link);
+          showSuccessToast({
+            title: "Link copiado!",
+            description: "O link para cadastro de parceiro foi copiado."
+          });
+        }}
+        variant="outline"
+      >
+        Link para cadastro de parceiro
+      </Button>
+     </div>
       <FilterList
         items={contacts}
         filterBy={(contact, query) =>
