@@ -24,7 +24,7 @@ export default function VenueContacts() {
   
   useEffect(() => {
     if (venueId) {
-      fetchContacts(venueId);
+      fetchContacts({venueId: venueId});
     }
   }, [venueId, fetchContacts]);
 

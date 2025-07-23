@@ -74,7 +74,7 @@ export function ProposalNav({
       permissionRequired: Permissions.SEND_PROPOSAL_INFO,
     },
     {
-      title: "Enviar Fornecedores",
+      title: "Enviar Parceiros",
       href: `/proposal/${proposal?.id}/send-suppliers`,
       icon: Ham,
       permissionRequired: Permissions.SEND_PROPOSAL_INFO,

@@ -16,7 +16,7 @@ export const contactService = {
 
   async list(params: ListContactsParams): Promise<Contact[]> {
     const { venueId, name, type } = params;
-    const response = await api.get(`/contact/list?venueId=${venueId}&name=${name || ""}&type=${type || ""}`);
+    const response = await api.get(`/contact/list?venueId=${venueId}&${name ? `name=${name}` : ""}&${type ? `type=${type}` : ""}`);
     return response.data;
   },
 

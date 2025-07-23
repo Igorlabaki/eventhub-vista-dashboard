@@ -19,7 +19,7 @@ export function ContactHeader({
   const tabs = [
     { value: "all", label: "TODOS" },
     { value: "internal", label: "EQUIPE" },
-    { value: "supplier", label: "FORNECEDORES" },
+    { value: "supplier", label: "PARCEIROS" },
   ];
 
   return (

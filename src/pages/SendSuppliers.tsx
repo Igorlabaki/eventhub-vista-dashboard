@@ -124,11 +124,11 @@ export default function SendMessagePage() {
 
   return (
     <DashboardLayout
-      title="Enviar Mensagem"
+      title="Indicar Parceiros"
       subtitle="Envie uma mensagem para o cliente"
     >
       <FormLayout
-        title="Enviar fornecedores"
+        title="Enviar parceiros"
         form={form}
         onSubmit={onSubmit}
         submitLabel="Enviar via WhatsApp"
@@ -148,9 +148,9 @@ export default function SendMessagePage() {
           />
         </div>
         <div className="mb-8">
-          <h2 className="font-semibold mb-2">Selecione os fornecedores:</h2>
+          <h2 className="font-semibold mb-2">Selecione:</h2>
           {!isLoading && contacts.length === 0 && (
-            <div>Nenhum fornecedor encontrado.</div>
+            <div>Nenhum parceiro encontrado.</div>
           )}
           <FilterList
             items={contacts}
@@ -161,7 +161,7 @@ export default function SendMessagePage() {
                 (item.role?.toLowerCase().includes(q) ?? false)
               );
             }}
-            placeholder="Buscar fornecedor..."
+            placeholder="Buscar parceiro..."
           >
             {(filtered) => (
               <ul className="space-y-3">
