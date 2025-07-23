@@ -33,6 +33,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { useUserStore } from "@/store/userStore";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
+import { Button } from "@/components/ui/button";
+import { showSuccessToast } from "@/components/ui/success-toast";
 
 // Month names in Portuguese
 const monthNames = [
@@ -117,6 +119,7 @@ export default function VenueBudgets() {
   const { selectedVenue, fetchVenueById } = useVenueStore();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedDay, setSelectedDay] = useState<number | "">("");
   const { id: venueIdParam } = useParams();
   const { user } = useUserStore();
 
@@ -194,13 +197,31 @@ export default function VenueBudgets() {
         onYearChange={setSelectedYear}
         onMonthChange={setSelectedMonth}
       />
-
+      <div className="mb-4 flex gap-2 items-center justify-center w-full">
+        <Button
+          className="w-full"
+          onClick={async () => {
+            const link = `https://event-hub-dashboard.vercel.app/venue/${selectedVenue.id}/form`;
+            await navigator.clipboard.writeText(link);
+            showSuccessToast({
+              title: "Link copiado!",
+              description: "O link para o formulário de orçamento foi copiado.",
+            });
+          }}
+          variant="outline"
+        >
+          Link para formulário de orçamento
+        </Button>
+      </div>
       <FilterList
-        items={proposals.filter(
-          (proposal) =>
-            new Date(proposal.startDate).getMonth() === selectedMonth &&
-            new Date(proposal.startDate).getFullYear() === selectedYear
-        )}
+        items={proposals.filter((proposal) => {
+          const date = new Date(proposal.startDate);
+          const matchesMonth = date.getMonth() === selectedMonth;
+          const matchesYear = date.getFullYear() === selectedYear;
+          const matchesDay =
+            selectedDay === "" || date.getDate() === selectedDay;
+          return matchesMonth && matchesYear && matchesDay;
+        })}
         filterBy={(proposal, query) =>
           proposal.completeClientName
             .toLowerCase()
@@ -210,8 +231,20 @@ export default function VenueBudgets() {
       >
         {(filteredProposals) => (
           <>
-            <div className="mb-2 text-sm text-gray-500">
+            <div className=" flex justify-between items-center mb-2 text-sm text-gray-500">
               {filteredProposals.length} orçamentos
+              <Input
+                type="number"
+                min={1}
+                max={31}
+                placeholder="Dia"
+                value={selectedDay}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSelectedDay(value === "" ? "" : Number(value));
+                }}
+                className="w-24"
+              />
             </div>
             <ProposalTable
               proposals={filteredProposals}
