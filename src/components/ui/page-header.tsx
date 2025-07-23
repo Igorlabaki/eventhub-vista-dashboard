@@ -38,7 +38,7 @@ export function PageHeader({
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className={`px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+              className={`px-4 py-2  w-full text-sm font-semibold transition-all duration-200 ${
                 activeTab === tab.value
                   ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
                   : "border-b-4 border-transparent"

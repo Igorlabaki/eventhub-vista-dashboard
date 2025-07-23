@@ -17,9 +17,8 @@ export function ContactHeader({
   isFormOpen = false,
 }: ContactHeaderProps) {
   const tabs = [
-    { value: "all", label: "TODOS" },
-    { value: "internal", label: "EQUIPE" },
-    { value: "supplier", label: "PARCEIROS" },
+    { value: "SUPPLIER", label: "PARCEIROS" },
+    { value: "TEAM_MEMBER", label: "EQUIPE" },
   ];
 
   return (

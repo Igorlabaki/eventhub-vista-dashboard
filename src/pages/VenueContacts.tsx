@@ -15,7 +15,7 @@ import AccessDenied from "@/components/accessDenied";
 
 export default function VenueContacts() {
   const { id: venueId } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState<ContactType>(ContactType.SUPPLIER);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreatingContact, setIsCreatingContact] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null | undefined>(undefined);
@@ -24,15 +24,15 @@ export default function VenueContacts() {
   
   useEffect(() => {
     if (venueId) {
-      fetchContacts({venueId: venueId});
+      fetchContacts({venueId: venueId, type: activeTab});
     }
-  }, [venueId, fetchContacts]);
+  }, [venueId, fetchContacts,activeTab]);
 
   const handleCreateContact = () => {
     setIsCreatingContact(true);
   };
 
-  const handleTabChange = (tab: string) => {
+  const handleTabChange = (tab: ContactType) => {
     setActiveTab(tab);
     setSelectedContact(undefined);
     setIsCreatingContact(false);
@@ -46,9 +46,9 @@ export default function VenueContacts() {
   const getFilteredContacts = () => {
     let filtered = contacts;
     
-    if (activeTab === "internal") {
+    if (activeTab === "TEAM_MEMBER") {
       filtered = filtered?.filter(contact => contact.type === ContactType.TEAM_MEMBER);
-    } else if (activeTab === "supplier") {
+    } else if (activeTab === "SUPPLIER") {
       filtered = filtered?.filter(contact => contact.type === ContactType.SUPPLIER);
     }
 
@@ -75,6 +75,7 @@ export default function VenueContacts() {
 
         <TabsContent value={activeTab} className="mt-0">
           <ContactSection
+            searchQuery={activeTab}
             hasPermission={hasEditPermission()}
             contacts={getFilteredContacts()}
             venueId={venueId || ""}

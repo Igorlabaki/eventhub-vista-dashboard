@@ -62,6 +62,7 @@ import { ContarctPFFormPage } from "./pages/ContarctPFForm";
 import OrganizationWebsiteImages from "./pages/website/OrganizationWebsiteImages";
 import SendSuppliers from "./pages/SendSuppliers";
 import PartnerForm from "./pages/PartnerForm";
+import CrewForm from "./pages/CrewForm";
 
 const queryClient = new QueryClient();
 
@@ -144,6 +145,7 @@ const App = () => {
               {/* Public Form */}
                 <Route path="/venue/:id/form" element={<ProposalForm />} />
                 <Route path="/venue/:id/partner-form" element={<PartnerForm />} />
+                <Route path="/venue/:id/crew-form" element={<CrewForm />} />
                 <Route path="/proposal/:id/b2b-contract" element={<ContarctPjFormPage />} />
                 <Route path="/proposal/:id/person-contract" element={<ContarctPFFormPage />} />
             </Routes>

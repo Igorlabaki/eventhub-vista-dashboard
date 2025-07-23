@@ -21,6 +21,7 @@ interface ContactListProps {
   contacts: Contact[];
   isLoading: boolean;
   hasPermission: boolean;
+  searchQuery: string;
   onCreateClick: () => void;
   onEditClick: (contact: Contact) => void;
   onDeleteClick?: (contact: Contact) => void;
@@ -28,6 +29,7 @@ interface ContactListProps {
 }
 
 export function ContactList({
+  searchQuery,
   contacts,
   isLoading,
   hasPermission,
@@ -51,10 +53,11 @@ export function ContactList({
 
   return (
     <>
-     <div className="mb-4">
+     <div className="mb-4 mx-auto w-full flex justify-center">
       <Button
+      className="w-full"
         onClick={async () => {
-          const link = `https://event-hub-dashboard.vercel.app/venue/${venueId}/partner-form`;
+          const link = `https://event-hub-dashboard.vercel.app/venue/${venueId}/${searchQuery === "SUPPLIER" ? "partner-form" : "crew-form"}`;
           await navigator.clipboard.writeText(link);
           showSuccessToast({
             title: "Link copiado!",
@@ -63,7 +66,7 @@ export function ContactList({
         }}
         variant="outline"
       >
-        Link para cadastro de parceiro
+        Link para cadastro de {searchQuery === "SUPPLIER" ? "parceiro" : "colaborador"}
       </Button>
      </div>
       <FilterList

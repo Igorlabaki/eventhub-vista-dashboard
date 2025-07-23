@@ -14,7 +14,8 @@ import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 interface ContactSectionProps {
   contacts?: Contact[];
   venueId: string;
-  isLoading: boolean;
+  isLoading: boolean; 
+  searchQuery: string;
   isCreating: boolean;
   hasPermission: boolean;
   selectedContact: Contact | null | undefined;
@@ -24,6 +25,7 @@ interface ContactSectionProps {
 }
 
 export function ContactSection({
+  searchQuery,
   contacts,
   venueId,
   isLoading,
@@ -89,6 +91,7 @@ export function ContactSection({
         showForm={showForm}
         list={
           <ContactList
+            searchQuery={searchQuery}
             venueId={venueId}
             hasPermission={hasPermission}
             contacts={contacts}
