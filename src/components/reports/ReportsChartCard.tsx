@@ -146,12 +146,12 @@ export const ReportsChartCard: React.FC<ReportsChartCardProps> = ({
       {/* Estatísticas */}
       <div className="flex w-full justify-between items-center">
         <div className="flex flex-col gap-2">
-          <span className="text-sm md:text-base font-medium text-gray-600">{total.count} {type}</span>
-          <span className="text-sm md:text-base font-medium text-gray-600">{mediaPessoas} pessoas em média</span>
+          <span className="text-[13px] md:text-base font-medium text-gray-600">{total.count} {type}</span>
+          <span className="text-[13px] md:text-base font-medium text-gray-600">{mediaPessoas} pessoas em média</span>
         </div>
         <div className="flex flex-col gap-2 justify-end items-end">
-          <span className="text-sm md:text-base font-medium text-gray-600">R$ {valorPorOrcamento.toLocaleString('pt-BR', {minimumFractionDigits: 2})} por {type.slice(0, -1)}</span>
-          <span className="text-sm md:text-base font-medium text-gray-600">R$ {valorPorPessoa.toLocaleString('pt-BR', {minimumFractionDigits: 2})} por pessoa</span>
+          <span className="text-[13px] md:text-base font-medium text-gray-600">R$ {valorPorOrcamento.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} por {type.slice(0, -1)}</span>
+          <span className="text-[13px] md:text-base font-medium text-gray-600">R$ {valorPorPessoa.toLocaleString('pt-BR', {minimumFractionDigits: 2})} por pessoa</span>
         </div>
       </div>
 

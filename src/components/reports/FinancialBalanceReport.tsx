@@ -9,7 +9,7 @@ function getPercent(value: number, total: number) {
   return Math.round((value / total) * 100);
 }
 
-const recurringColor = "#3A6DF0"; // Azul
+const recurringColor = "#4A90E2"; // Azul
 const esporadicColor = "#22C55E"; // Verde
 
 export function FinancialBalanceReport({
@@ -123,7 +123,7 @@ export function FinancialBalanceReport({
         key={name}
         style={{ display: "flex", alignItems: "center", marginBottom: 12 }}
       >
-        <span style={{ width: 90, color: "#888", fontSize: 16 }}>{name}</span>
+        <span style={{ width: 90, color: "#888", fontSize: 15 }}>{name}</span>
         <div
           style={{
             flex: 1,
@@ -160,13 +160,13 @@ export function FinancialBalanceReport({
                 alignItems: "center",
                 color: "#444",
                 fontWeight: 500,
-                fontSize: 15,
+                fontSize: 11,
                 zIndex: 2,
                 pointerEvents: "none",
                 whiteSpace: "nowrap",
               }}
             >
-              R$ {value.toLocaleString("pt-BR")}
+              R$ {value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           )}
         </div>
@@ -181,16 +181,16 @@ export function FinancialBalanceReport({
 
   return (
     <div className="w-full mx-auto bg-white rounded-md shadow-md p-8 flex flex-col items-center">
-      <h2 className="text-center text-xl font-bold mb-6 text-gray-800">
+      <h2 className="text-center text-xl font-bold mb-6 text-gray-600">
         Despesas Recorrentes
       </h2>
       {/* Recorrentes Anual */}
       <div style={{ width: "100%", marginBottom: 32 }}>
-        <div className="font-semibold text-center mb-2 text-gray-700">
+        <div className="font-semibold text-center mb-2 text-gray-500">
           Anual
         </div>
         {recurringAnnual.length === 0 ? (
-          <div className="text-center text-gray-400 text-sm mb-2">
+          <div className="text-center  text-gray-400 text-sm mb-2">
             Nenhuma despesa cadastrada
           </div>
         ) : (
@@ -206,13 +206,14 @@ export function FinancialBalanceReport({
         <div className="text-center text-sm text-gray-500 mt-2">
           R${" "}
           {(recurringAnnual.length === 0 ? 0 : totalAnnual).toLocaleString(
-            "pt-BR"
+            "pt-BR",
+            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
           )}
         </div>
       </div>
       {/* Recorrentes Mensal */}
       <div style={{ width: "100%", marginBottom: 32 }}>
-        <div className="font-semibold text-center mb-2 text-gray-700">
+        <div className="font-semibold text-center mb-2 text-gray-500">
           Mensal
         </div>
         {recurringMonthly.length === 0 ? (
@@ -232,16 +233,17 @@ export function FinancialBalanceReport({
         <div className="text-center text-sm text-gray-500 mt-2">
           R${" "}
           {(recurringMonthly.length === 0 ? 0 : totalMonthly).toLocaleString(
-            "pt-BR"
+            "pt-BR",
+            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
           )}
         </div>
       </div>
-      <h2 className="text-center text-xl font-bold mb-2 text-gray-800">
+      <h2 className="text-center text-lg font-bold mb-2 text-gray-600">
         Despesas esporádicas
       </h2>
       {/* Esporádicas Anual */}
       <div style={{ width: "100%" }}>
-        <div className="font-semibold text-center mb-2 text-gray-700">
+        <div className="font-semibold text-center mb-2 text-gray-500">
           Anual
         </div>
         {esporadicAnnual.length === 0 ? (
@@ -261,30 +263,31 @@ export function FinancialBalanceReport({
         <div className="text-center text-sm text-gray-500 mt-2">
           R${" "}
           {(esporadicAnnual.length === 0 ? 0 : totalEsporadic).toLocaleString(
-            "pt-BR"
+            "pt-BR",
+            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
           )}
         </div>
       </div>
       {/* Seção final igual ao app */}
       <div className="w-full flex flex-col items-center mt-8 gap-3">
         <div className="w-full flex justify-between items-center">
-          <div className="text-sm font-medium text-gray-700">
+          <div className="md:text-sm flex flex-col justify-center items-center font-medium w-1/2 text-gray-700 ">
             Receita Bruta :{" "}
             <span className="font-semibold">
-              R$ {receitaBruta.toLocaleString("pt-BR")}
+              R$ {receitaBruta.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
-          <div className="text-sm font-medium text-gray-700">
+          <div className="flex flex-col justify-center items-center md:text-sm font-medium w-1/2 text-gray-700">
             Despesa anual :{" "}
             <span className="font-semibold">
-              R$ {despesaAnual.toLocaleString("pt-BR")}
+              R$ {despesaAnual.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
         </div>
-        <div className="text-sm font-medium text-gray-700">
+        <div className="font-medium text-gray-700 mt-5">
           Receita líquida :{" "}
           <span className="font-semibold">
-            R$ {receitaLiquida.toLocaleString("pt-BR")}
+            R$ {receitaLiquida.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
       </div>
