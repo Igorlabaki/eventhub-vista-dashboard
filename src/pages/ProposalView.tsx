@@ -8,6 +8,7 @@ import { Calendar } from "lucide-react";
 import NotFound from "./NotFound";
 import { ProposalFooter } from "@/components/proposalFooter";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { format, toZonedTime } from "date-fns-tz";
 
 function formatCurrency(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -16,13 +17,17 @@ function formatCurrency(value: number) {
 function formatDate(date: Date | string) {
   if (!date) return "";
   const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleDateString("pt-BR");
+  // Converter para UTC neutro
+  const zoned = toZonedTime(d, "UTC");
+  return format(zoned, "dd/MM/yyyy", { timeZone: "UTC" });
 }
 
 function formatHour(date: Date | string) {
   if (!date) return "";
   const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  // Converter para UTC neutro
+  const zoned = toZonedTime(d, "UTC");
+  return format(zoned, "HH:mm", { timeZone: "UTC" });
 }
 
 export default function ProposalView() {
