@@ -202,7 +202,7 @@ export function EmailTab({
           </div>
           {/* Botão Orçamento */}
           <a
-            href={`${venueUrl}/orcamento/byId/${proposal.id}`}
+            href={`https://event-hub-dashboard.vercel.app/proposal/${proposal.id}/view`}
             target="_blank"
             className="inline-block bg-black text-white px-8 py-2 rounded-md font-semibold text-lg mb-8 hover:bg-gray-900 transition"
           >
