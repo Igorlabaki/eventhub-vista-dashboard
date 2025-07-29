@@ -51,6 +51,22 @@ export function SidebarNav({
     }
   };
 
+  // Controla o scroll da página quando o sidebar está aberto no mobile
+  useEffect(() => {
+    if (showOnMobile) {
+      // Trava o scroll do body
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restaura o scroll do body
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup function para restaurar o scroll quando o componente for desmontado
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showOnMobile]);
+
   const user = useUserStore((state) => state.user);
   const { selectedVenue, fetchVenueById } = useVenueStore();
   useEffect(() => {
