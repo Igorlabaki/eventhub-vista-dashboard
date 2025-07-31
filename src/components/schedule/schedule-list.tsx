@@ -48,14 +48,14 @@ export function ScheduleList({
   const { selectedVenue } = useVenueStore();
   const proposalId = currentProposal?.id;
   const programacaoLink =
-    proposalId && selectedVenue?.url
-      ? `https://event-hub-dashboard.vercel.app/proposal/${proposalId}/schedule`
+    proposalId 
+      ? `https://event-hub-dashboard.vercel.app/proposal/${proposalId}/schedule-list`
       : undefined;
   const whatsappMsg = encodeURIComponent(
-    `Olá! Segue o link para acessar a programação do evento: ${programacaoLink}`
+    `Segue o link para cadastrar a programação do evento: ${programacaoLink}`
   );
 
-    const numeroOriginal = selectedVenue.whatsappNumber || "";
+    const numeroOriginal = currentProposal.whatsapp || "";
     const numeroLimpo = numeroOriginal.replace(/\D/g, "");
     const numeroComPlus = numeroOriginal.startsWith('+') ? numeroOriginal : `+${numeroLimpo}`;
     const phoneNumber = parsePhoneNumberFromString(numeroComPlus);
