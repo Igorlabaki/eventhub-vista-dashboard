@@ -7,6 +7,21 @@ import { Proposal } from "@/types/proposal";
 import { Attachment } from "@/types/attachment";
 import { Owner } from "@/types/owner";
 
+// Função utilitária para limpar valores monetários formatados
+function cleanCurrencyValue(value: unknown): number {
+  if (typeof value === "number") {
+    return value;
+  }
+  
+  if (typeof value === "string") {
+    // Remove R$, espaços e converte vírgula para ponto
+    const cleanValue = value.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.');
+    const numericValue = Number(cleanValue);
+    return isNaN(numericValue) ? 0 : numericValue;
+  }
+  
+  return 0;
+}
 
 export function generateContractPdf({
   contract,
@@ -42,7 +57,6 @@ export function generateContractPdf({
     ];
     return roman[num] || num;
   };
-
   // Função para substituir variáveis do template
   function replaceTemplateVars(text: string) {
     const values: Record<string, unknown> = {
@@ -51,15 +65,15 @@ export function generateContractPdf({
       venue: selectedVenue || {},
       proposal: currentProposal || {},
       paymentInfo: paymentInfo || {},
-    };
-
+    };  
   
     return text.replace(/\{\{(.*?)\}\}/g, (match, p1) => {
       const [obj, prop] = p1.trim().split('.');
       const value = values[obj] && typeof values[obj] === 'object' && values[obj] !== null && (values[obj] as Record<string, unknown>)[prop] !== undefined ? (values[obj] as Record<string, unknown>)[prop] : undefined;
       if (value !== undefined) {
         if (["totalAmount", "signalAmount", "paymentValue", "perPersonPrice"].includes(prop)) {
-          const numericValue = Number(value);
+          const numericValue = cleanCurrencyValue(value);
+          
           const formattedValue = numericValue.toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
@@ -73,10 +87,7 @@ export function generateContractPdf({
         if (typeof value === "string" && value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
           const parsedDate = parseISO(value);
           return isValid(parsedDate)
-            ? format(parsedDate,
-                parsedDate.getHours() !== 0 || parsedDate.getMinutes() !== 0
-                  ? "dd/MM/yyyy 'às' HH:mm"
-                  : "dd/MM/yyyy")
+            ? `${parsedDate.getUTCDate().toString().padStart(2, '0')}/${(parsedDate.getUTCMonth() + 1).toString().padStart(2, '0')}/${parsedDate.getUTCFullYear()} às ${parsedDate.getUTCHours().toString().padStart(2, '0')}:${parsedDate.getUTCMinutes().toString().padStart(2, '0')}`
             : value;
         }
         return value as string;
@@ -198,17 +209,30 @@ export function generateContractPdf({
       });
     }
 
-    // Abrir PDF em nova aba
-    const pdfUrl = doc.output('bloburl');
-    window.open(pdfUrl, '_blank');
+    // Gerar nome do arquivo baseado no tipo de pessoa
+    const fileName = currentProposal?.completeCompanyName 
+      ? `Contrato - ${currentProposal.completeCompanyName}.pdf`
+      : `Contrato - ${currentProposal?.completeClientName || 'Cliente'}.pdf`;
+    
+    // Forçar download com nome personalizado
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(pdfUrl);
+    
     toast({
       title: "Sucesso!",
-      description: "Contrato gerado para visualização.",
+      description: "Contrato gerado para download.",
     });
   } catch (error) {
     toast({
       title: "Erro",
-      description: "Erro ao gerar contrato. Tente novamente.",
+      description: "Erro ao gerar contrato. Verifique se todos os valores monetários estão corretos.",
       variant: "destructive",
     });
   }

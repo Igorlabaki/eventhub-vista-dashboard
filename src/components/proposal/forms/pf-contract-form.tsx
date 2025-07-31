@@ -184,7 +184,13 @@ export default function PFContractForm() {
                       dueDate: form.getValues().paymentInfo.dueDate,
                       paymentMethod: form.getValues().paymentMethod,
                       perPersonPrice: String(currentProposal?.totalAmount / currentProposal?.guestNumber),
-                      paymentValue: String(currentProposal?.totalAmount - Number(form.getValues().paymentInfo.signalAmount) / Number(form.getValues().paymentInfo.numberPayments)),
+                      paymentValue: String(currentProposal?.totalAmount - (() => {
+                        const signalAmount = form.getValues().paymentInfo.signalAmount;
+                        const cleanSignalAmount = typeof signalAmount === "string" 
+                          ? signalAmount.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.')
+                          : signalAmount;
+                        return Number(cleanSignalAmount) || 0;
+                      })() / Number(form.getValues().paymentInfo.numberPayments)),
                       numberPayments: form.getValues().paymentInfo.numberPayments,
                       signalAmount: form.getValues().paymentInfo.signalAmount,
                     }
