@@ -36,7 +36,7 @@ export default function VenueNotifications() {
       navigate(`/proposal/${proposalId}`);
     }
   };
-
+  console.log(notifications);
   return (
     <DashboardLayout title="Notificações" subtitle="Mantenha-se atualizado">
       <div className="space-y-4">

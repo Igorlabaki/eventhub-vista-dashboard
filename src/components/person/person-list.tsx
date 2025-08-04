@@ -184,7 +184,7 @@ export function PersonList({
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Presença</TableHead>
-                {hasEditPermission() || hasConfirmPermission() && (
+                {(hasEditPermission() || hasConfirmPermission()) && (
                   <TableHead className="w-[100px] text-center">Ações</TableHead>
                 )}
               </TableRow>

@@ -113,10 +113,9 @@ export function DocumentList({
         <TableHeader>
           <TableRow>
             <TableHead>Título</TableHead>
-            {hasEditPermission() ||
-              (hasViewPermission() && (
+            {(hasEditPermission() || hasViewPermission()) && (
                 <TableHead className="w-[150px] text-center">Ações</TableHead>
-              ))}
+              )}
           </TableRow>
         </TableHeader>
         <TableBody>
