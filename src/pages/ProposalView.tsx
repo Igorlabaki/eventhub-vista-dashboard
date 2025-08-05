@@ -93,7 +93,7 @@ export default function ProposalView() {
             EventHub
           </span>
         </div>
-        <div className="bg-white rounded-xl shadow-lg py-10 px-5 max-w-lg w-full ">
+        <div className="bg-white rounded-xl shadow-lg py-10 px-5 max-w-2xl w-full ">
           <h2 className="text-2xl font-bold text-center mb-6 text-gray-600">
             Proposta
           </h2>
@@ -154,6 +154,22 @@ export default function ProposalView() {
           </div>
           <div className="text-xs text-gray-500 mb-6">
             * Valor sujeito a alteração.
+          </div>
+          <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 mb-6 text-sm text-gray-600 mt-4">
+            <div className="flex justify-between sm:justify-center items-center">
+              <span>* Valor por pessoa:</span>
+              <span className="font-semibold ml-2">
+                {guestNumber && basePrice
+                  ? formatCurrency(basePrice / guestNumber)
+                  : "-"}
+              </span>
+            </div>
+            <div className="flex justify-between sm:justify-center items-center">
+              <span>* Valor da hora extra:</span>
+              <span className="font-semibold ml-2">
+                {formatCurrency(extraHourPrice) || "-"}
+              </span>
+            </div>
           </div>
           <div className="text-center text-gray-700 mb-2 text-sm sm:text-base">
             Tem alguma dúvida ou gostaria de conversar com a gente?
