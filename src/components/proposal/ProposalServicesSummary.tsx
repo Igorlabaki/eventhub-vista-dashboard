@@ -34,7 +34,7 @@ export function ProposalServicesSummary({
     })) || [];
 
   return (
-    <div className="rounded-xl p-6 mb-6 bg-white shadow-md w-full max-w-2xl mx-auto">
+    <div className="rounded-xl p-6  bg-white shadow-md w-full  mx-auto">
       <h1 className="text-2xl font-bold text-center text-primary mb-10">
         Informações do Evento
       </h1>

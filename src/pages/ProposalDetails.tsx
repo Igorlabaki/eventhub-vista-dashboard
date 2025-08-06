@@ -2,10 +2,13 @@ import { useParams } from "react-router-dom";
 import { useProposalStore } from "@/store/proposalStore";
 import { useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Users, Calendar, Clock } from "lucide-react";
+import { Users, Calendar, Clock, Share2, CheckCircle } from "lucide-react";
 import { ProposalServicesSummary } from "@/components/proposal/ProposalServicesSummary";
 import AccessDenied from "@/components/accessDenied";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { showSuccessToast } from "@/components/ui/success-toast";
 
 function ProposalDetailsSkeleton() {
   return (
@@ -69,20 +72,21 @@ function ProposalDetailsSkeleton() {
 
 export default function ProposalDetails() {
   const { id } = useParams();
-  const { fetchProposalById, currentProposal, isLoading, setCurrentProposal } = useProposalStore();
+  const { fetchProposalById, currentProposal, isLoading, setCurrentProposal } =
+    useProposalStore();
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
-  
+  const { toast } = useToast();
+
   useEffect(() => {
     if (id) {
       fetchProposalById(id);
     }
-    
+
     // Cleanup function para limpar a proposta atual quando o componente for desmontado
     return () => {
       setCurrentProposal(null);
     };
   }, [id, fetchProposalById, setCurrentProposal]);
-
 
   const hasViewValuesPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
@@ -91,7 +95,28 @@ export default function ProposalDetails() {
 
   const hasViewPersonalInfoPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes("VIEW_PROPOSAL_PERSONAL_INFO");
+    return currentUserVenuePermission.permissions.includes(
+      "VIEW_PROPOSAL_PERSONAL_INFO"
+    );
+  };
+
+  const handleShareProposal = async () => {
+    if (!id) return;
+
+    const link = `https://event-hub-dashboard.vercel.app/proposal/${id}/view`;
+          try {
+        await navigator.clipboard.writeText(link);
+        showSuccessToast({
+          title: "Link copiado!",
+          description: "O link foi copiado para a área de transferência.",
+        });
+    } catch (error) {
+      toast({
+        title: "Erro ao copiar",
+        description: "Não foi possível copiar o link. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading)
@@ -151,56 +176,71 @@ export default function ProposalDetails() {
       title="Orçamento"
       subtitle="Visão geral do orçamento/proposta"
     >
+      <div className="w-full  mb-1">
+        <Button
+          className="w-full"
+          onClick={handleShareProposal}
+          variant="outline"
+        >
+          <Share2 className="w-4 h-4 mr-2" />
+          Copiar link do orçamento
+        </Button>
+      </div>
       <div className="mx-auto flex flex-col md:flex-row   gap-2">
         {/* Seção de Conta/Serviços isolada em componente */}
-       
-        <ProposalServicesSummary hasViewValuesPermission={hasViewValuesPermission()}/>
-       
+        {/* Botão para compartilhar link */}
+
+        <ProposalServicesSummary
+          hasViewValuesPermission={hasViewValuesPermission()}
+        />
+
         {/* Informações Pessoais */}
         {hasViewPersonalInfoPermission() && (
-        <div className=" rounded-xl p-6 mb-6 bg-white shadow-md w-full max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-center text-primary mb-10">Informações Pessoais</h1>
-          <div className="flex flex-col gap-3 items-center w-full">
-            <div className="w-full flex justify-between">
-              <span className="text-gray-500">Nome:</span>{" "}
-              <span className="font-semibold text-gray-600">
-                {completeClientName || "-"}
-              </span>
-            </div>
-            <div className="w-full flex justify-between">
-              <span className="text-gray-500">Email:</span>{" "}
-              <span className="font-semibold text-gray-600">
-                {email || "-"}
-              </span>
-            </div>
-            <div className="w-full flex justify-between">
-              <span className="text-gray-500">Whatsapp:</span>{" "}
-              <span className="font-semibold text-gray-600">
-                {whatsapp || "-"}
-              </span>
-            </div>
-            <div className="w-full flex justify-between">
-              <span className="text-gray-500">Já conhece o espaço:</span>{" "}
-              <span className="font-semibold text-gray-600">
-                {knowsVenue ? "Sim" : "Não"}
-              </span>
-            </div>
-            <div className="w-full flex justify-between">
-              <span className="text-gray-500">Por onde nos conheceu:</span>{" "}
-              <span className="font-semibold text-gray-600">
-                {trafficSource || "-"}
-              </span>
-            </div>
-            <div className="w-full flex justify-between">
-              <span className="text-gray-500">Data do orcamento:</span>{" "}
-              <span className="font-semibold text-gray-600">
-                {createdAt
-                  ? new Date(createdAt).toLocaleDateString("pt-BR")
-                  : "-"}
-              </span>
+          <div className=" rounded-xl p-6  bg-white shadow-md w-full  mx-auto">
+            <h1 className="text-2xl font-bold text-center text-primary mb-10">
+              Informações Pessoais
+            </h1>
+            <div className="flex flex-col gap-3 items-center w-full">
+              <div className="w-full flex justify-between">
+                <span className="text-gray-500">Nome:</span>{" "}
+                <span className="font-semibold text-gray-600">
+                  {completeClientName || "-"}
+                </span>
+              </div>
+              <div className="w-full flex justify-between">
+                <span className="text-gray-500">Email:</span>{" "}
+                <span className="font-semibold text-gray-600">
+                  {email || "-"}
+                </span>
+              </div>
+              <div className="w-full flex justify-between">
+                <span className="text-gray-500">Whatsapp:</span>{" "}
+                <span className="font-semibold text-gray-600">
+                  {whatsapp || "-"}
+                </span>
+              </div>
+              <div className="w-full flex justify-between">
+                <span className="text-gray-500">Já conhece o espaço:</span>{" "}
+                <span className="font-semibold text-gray-600">
+                  {knowsVenue ? "Sim" : "Não"}
+                </span>
+              </div>
+              <div className="w-full flex justify-between">
+                <span className="text-gray-500">Por onde nos conheceu:</span>{" "}
+                <span className="font-semibold text-gray-600">
+                  {trafficSource || "-"}
+                </span>
+              </div>
+              <div className="w-full flex justify-between">
+                <span className="text-gray-500">Data do orcamento:</span>{" "}
+                <span className="font-semibold text-gray-600">
+                  {createdAt
+                    ? new Date(createdAt).toLocaleDateString("pt-BR")
+                    : "-"}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
         )}
       </div>
     </DashboardLayout>
