@@ -78,7 +78,7 @@ export const ReportsChartCard: React.FC<ReportsChartCardProps> = ({
   });
   // Ordenar do maior para o menor valor
   traffic = traffic.sort((a, b) => b.value - a.value);
-
+  console.log(traffic)
   // Estatísticas
   const mediaPessoas = Math.round(total.guestNumber / (total.count || 1));
   const valorPorOrcamento = total.total / (total.count || 1);

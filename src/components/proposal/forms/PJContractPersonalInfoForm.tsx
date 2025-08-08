@@ -148,7 +148,7 @@ export default function PJContractPersonalInfoForm() {
         name="completeClientName"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Nome Completo</FormLabel>
+            <FormLabel>Representante Legal</FormLabel>
             <FormControl>
               <Input {...field} />
             </FormControl>
