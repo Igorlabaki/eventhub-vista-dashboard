@@ -8,19 +8,24 @@ import { Attachment } from "@/types/attachment";
 import { Owner } from "@/types/owner";
 
 // Função utilitária para limpar valores monetários formatados
+// Arredonda todos os valores para duas casas decimais para evitar problemas de precisão
 function cleanCurrencyValue(value: unknown): number {
+  let numericValue: number;
+  
   if (typeof value === "number") {
-    return value;
-  }
-  
-  if (typeof value === "string") {
+    numericValue = value;
+  } else if (typeof value === "string") {
     // Remove R$, espaços e converte vírgula para ponto
-    const cleanValue = value.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.');
-    const numericValue = Number(cleanValue);
-    return isNaN(numericValue) ? 0 : numericValue;
+    // NÃO remove o ponto decimal, apenas formatações monetárias
+    const cleanValue = value.replace(/R\$\s*/g, '').replace(/\s/g, '').replace(',', '.');
+    numericValue = Number(cleanValue);
+    if (isNaN(numericValue)) return 0;
+  } else {
+    return 0;
   }
   
-  return 0;
+  // Arredonda para duas casas decimais
+  return Math.round(numericValue * 100) / 100;
 }
 
 export function generateContractPdf({
@@ -59,19 +64,28 @@ export function generateContractPdf({
   };
   // Função para substituir variáveis do template
   function replaceTemplateVars(text: string) {
+    // Processa e arredonda todos os valores monetários do paymentInfo
+    const processedPaymentInfo = {
+      ...paymentInfo,
+      amount: cleanCurrencyValue(paymentInfo.amount),
+      paymentValue: cleanCurrencyValue(paymentInfo.paymentValue),
+      signalAmount: cleanCurrencyValue(paymentInfo.signalAmount),
+      perPersonPrice: cleanCurrencyValue(paymentInfo.perPersonPrice),
+    };
+
     const values: Record<string, unknown> = {
       owner: owner,
       client: currentProposal || {},
       venue: selectedVenue || {},
       proposal: currentProposal || {},
-      paymentInfo: paymentInfo || {},
+      paymentInfo: processedPaymentInfo,
     };  
   
     return text.replace(/\{\{(.*?)\}\}/g, (match, p1) => {
       const [obj, prop] = p1.trim().split('.');
       const value = values[obj] && typeof values[obj] === 'object' && values[obj] !== null && (values[obj] as Record<string, unknown>)[prop] !== undefined ? (values[obj] as Record<string, unknown>)[prop] : undefined;
       if (value !== undefined) {
-        if (["totalAmount", "signalAmount", "paymentValue", "perPersonPrice"].includes(prop)) {
+        if (["totalAmount", "signalAmount", "paymentValue", "perPersonPrice", "amount", "price", "value", "cost", "fee", "discount", "tax", "rate", "totalValue", "totalPrice", "finalAmount", "finalPrice", "pricePerPerson", "pricePerDay", "pricePerPersonDay", "pricePerPersonHour"].includes(prop)) {
           const numericValue = cleanCurrencyValue(value);
           
           const formattedValue = numericValue.toLocaleString("pt-BR", {

@@ -106,7 +106,7 @@ export default function PJContractForm() {
       paymentMethod: "vista",
       paymentInfo: {
         signalAmount: currentProposal?.totalAmount
-          ? String(currentProposal.totalAmount / 2)
+          ? String(Math.round((currentProposal.totalAmount / 2) * 100) / 100)
           : "",
         numberPayments: "2",
         dueDate: "5",
@@ -177,10 +177,10 @@ export default function PJContractForm() {
                   amount: currentProposal?.totalAmount || 0,
                   dueDate: form.getValues().paymentInfo.dueDate,
                   paymentMethod: form.getValues().paymentMethod,
-                  paymentValue: String(currentProposal?.totalAmount / Number(form.getValues().paymentInfo.numberPayments)),
+                  paymentValue: String(Math.round((currentProposal?.totalAmount / Number(form.getValues().paymentInfo.numberPayments)) * 100) / 100),
                   numberPayments: form.getValues().paymentInfo.numberPayments,
                   signalAmount: form.getValues().paymentInfo.signalAmount,
-                  perPersonPrice: String(currentProposal?.totalAmount / currentProposal?.guestNumber),
+                  perPersonPrice: String(Math.round((currentProposal?.totalAmount / currentProposal?.guestNumber) * 100) / 100),
                 },
               })
             }
