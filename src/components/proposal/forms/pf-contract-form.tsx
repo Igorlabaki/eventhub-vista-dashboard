@@ -110,7 +110,9 @@ export default function PFContractForm() {
           state: currentProposal?.state || "SP",
           paymentMethod: "vista",
           paymentInfo: {
-            signalAmount: currentProposal?.totalAmount ? formatCurrencyBRL(currentProposal.totalAmount / 2) : "",
+            signalAmount: currentProposal?.totalAmount
+              ? String(Math.round((currentProposal.totalAmount / 2) * 100) / 100)
+              : "",
             numberPayments: "2",
             dueDate: "5",
           },
@@ -125,7 +127,7 @@ export default function PFContractForm() {
       const total = Number(currentProposal?.totalAmount) || 0;
       if (numberPayments && total) {
         const newSignal = total / numberPayments;
-        form.setValue('paymentInfo.signalAmount', formatCurrencyBRL(newSignal));
+        form.setValue('paymentInfo.signalAmount', String(Math.round(newSignal * 100) / 100));
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [form.watch('paymentInfo.numberPayments')]);
@@ -183,16 +185,10 @@ export default function PFContractForm() {
                       amount: currentProposal?.totalAmount || 0,
                       dueDate: form.getValues().paymentInfo.dueDate,
                       paymentMethod: form.getValues().paymentMethod,
-                      perPersonPrice: String(currentProposal?.totalAmount / currentProposal?.guestNumber),
-                      paymentValue: String(currentProposal?.totalAmount - (() => {
-                        const signalAmount = form.getValues().paymentInfo.signalAmount;
-                        const cleanSignalAmount = typeof signalAmount === "string" 
-                          ? signalAmount.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.')
-                          : signalAmount;
-                        return Number(cleanSignalAmount) || 0;
-                      })() / Number(form.getValues().paymentInfo.numberPayments)),
+                      paymentValue: String(Math.round((currentProposal?.totalAmount / Number(form.getValues().paymentInfo.numberPayments)) * 100) / 100),
                       numberPayments: form.getValues().paymentInfo.numberPayments,
                       signalAmount: form.getValues().paymentInfo.signalAmount,
+                      perPersonPrice: String(Math.round((currentProposal?.totalAmount / currentProposal?.guestNumber) * 100) / 100),
                     }
                   })}
                   disabled={!isFormComplete()}
@@ -390,11 +386,7 @@ export default function PFContractForm() {
                     <FormItem>
                       <FormLabel>Valor do Sinal</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value}
-                          onChange={e => field.onChange(formatCurrencyBRL(Number(e.target.value)))}
-                        />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
