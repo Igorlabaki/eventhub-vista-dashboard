@@ -3,8 +3,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 import { Proposal } from "@/types/proposal";
-import { useNavigate } from "react-router-dom";
-import { useProposalStore } from "@/store/proposalStore";
 
 interface ProposalTableProps {
   proposals: Proposal[];
@@ -45,19 +43,17 @@ const TableSkeleton = () => {
   );
 };
 
-export function ProposalTable({ 
-  proposals, 
-  isLoading, 
+export function ProposalTable({
+  proposals,
+  isLoading,
   monthNames,
   selectedMonth,
-  selectedYear 
+  selectedYear,
 }: ProposalTableProps) {
-  const navigate = useNavigate();
-  const { fetchProposalById } = useProposalStore();
-
-  const handleProposalClick = async (proposalId: string) => {
-    await fetchProposalById(proposalId);
-    navigate(`/proposal/${proposalId}`);
+  const handleProposalClick = (proposalId: string) => {
+    const baseUrl = window.location.origin;
+    const proposalUrl = `${baseUrl}/proposal/${proposalId}`;
+    window.open(proposalUrl, "_blank", "noopener,noreferrer");
   };
 
   if (isLoading) {
@@ -76,10 +72,10 @@ export function ProposalTable({
         </TableHeader>
         <TableBody>
           {proposals.length > 0 ? (
-            proposals.map(proposal => (
-              <TableRow 
-                key={proposal.id} 
-                className="cursor-pointer hover:bg-gray-50" 
+            proposals.map((proposal) => (
+              <TableRow
+                key={proposal.id}
+                className="cursor-pointer hover:bg-gray-50"
                 onClick={() => handleProposalClick(proposal.id)}
               >
                 <TableCell className="font-medium max-w-[120px]">{proposal.completeClientName}</TableCell>
