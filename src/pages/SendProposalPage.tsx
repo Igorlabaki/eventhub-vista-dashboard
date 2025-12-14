@@ -33,7 +33,8 @@ export default function SendProposalPage() {
       message: `Olá ${currentProposal?.completeClientName},\n\nVimos que você fez um orçamento conosco para seu evento e estamos 
       muito felizes em saber que a nossa casa de eventos te chamou a atenção. ✨\n\nAqui está o link para o seu 
       orçamento:\n\n${`https://event-hub-dashboard.vercel.app/proposal/${currentProposal?.id}/view`}\n\n
-      Para que você possa ter a certeza de que o espaço ${venue?.name} é o local perfeito para realizar o seu grande dia, gostaríamos de te convidar para uma visita sem compromisso!\n\nAdoraríamos te mostrar pessoalmente todos os detalhes do nosso espaço, te apresentar as diversas opções de decoração e serviços que oferecemos, e te ajudar a visualizar como o seu evento dos sonhos se tornar realidade aqui.\n\nFicamos à sua disposição para te ajudar a realizar o evento dos seus sonhos!\n\nAtenciosamente,\nEquipe ${venue?.name}`,
+      Para que você possa ter a certeza de que o espaço ${venue?.name} é o local perfeito para realizar o seu grande dia, gostaríamos
+       de te convidar para uma visita sem compromisso!\n\nAtenciosamente,\nEquipe ${venue?.name}`,
       file: null,
     },
   });
