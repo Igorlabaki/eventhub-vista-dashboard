@@ -4,7 +4,13 @@ import { useProposalStore } from "@/store/proposalStore";
 import { useVenueStore } from "@/store/venueStore";
 import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
 import { FiUsers, FiClock } from "react-icons/fi";
-import { Calendar } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
+import { Text } from "@/types/text";
+import { Venue } from "@/types/venue";
+
+interface VenueWithTexts extends Venue {
+  texts?: Text[];
+}
 import NotFound from "./NotFound";
 import { ProposalFooter } from "@/components/proposalFooter";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
@@ -83,16 +89,85 @@ export default function ProposalView() {
   const durationHours = Math.round(
     (end.getTime() - start.getTime()) / (1000 * 60 * 60)
   );
-  console.log(selectedVenue);
+
   return (
     <div className="flex flex-col min-h-screen ">
       <main className="flex justify-start py-14 items-center bg-eventhub-background flex-col px-3 flex-1">
-        <div className="flex items-center w-full justify-center mb-10">
-          <Calendar className="h-8 w-8 text-eventhub-primary" />
-          <span className="ml-2 font-bold text-3xl text-eventhub-primary">
-            EventHub
-          </span>
-        </div>
+        {selectedVenue?.logoUrl ? (
+          <div className="flex flex-col items-center justify-center mb-10">
+            <img
+              src={selectedVenue.logoUrl}
+              alt={`Logo ${selectedVenue.name}`}
+              className="max-h-24 max-w-64 object-contain mb-3"
+            />
+            {selectedVenue?.description && (
+              <p className="text-center text-gray-600 text-sm max-w-2xl px-4">
+                {selectedVenue.description}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center w-full justify-center mb-10">
+            <Calendar className="h-8 w-8 text-eventhub-primary" />
+            <span className="ml-2 font-bold text-3xl text-eventhub-primary">
+              EventHub
+            </span>
+          </div>
+        )}
+        {/* {selectedVenue && (
+          <div className="bg-white rounded-xl shadow-lg py-6 px-5 max-w-2xl w-full mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <MapPin className="h-5 w-5 text-eventhub-primary" />
+              <h3 className="text-lg font-semibold text-gray-800">
+                Local do Evento
+              </h3>
+            </div>
+            <div className="mb-3">
+              <p className="font-bold text-gray-900 mb-1">
+                {selectedVenue.name}
+              </p>
+              <p className="text-gray-700 text-sm">
+                {selectedVenue.street}, {selectedVenue.streetNumber}
+                {selectedVenue.complement && ` - ${selectedVenue.complement}`}
+                {" - "}
+                {selectedVenue.neighborhood} - {selectedVenue.city}/{selectedVenue.state}
+              </p>
+            </div>
+            {(selectedVenue as VenueWithTexts).texts &&
+              ((selectedVenue as VenueWithTexts).texts as Text[])
+                .filter((t) => t.area === "amenities").length > 0 && (
+                <>
+                  <div className="border-t border-gray-200 my-4"></div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                    Ambientes Disponibilizados:
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {((selectedVenue as VenueWithTexts).texts as Text[])
+                      .filter((t) => t.area === "amenities")
+                      .sort((a, b) => a.position - b.position)
+                      .map((t) => (
+                        <div key={t.id} className="flex items-center gap-2">
+                          <svg
+                            className="w-4 h-4 text-yellow-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-sm text-gray-700">
+                            {t.text}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </>
+              )}
+          </div>
+        )} */}
         <div className="bg-white rounded-xl shadow-lg py-10 px-5 max-w-2xl w-full ">
           <h2 className="text-2xl font-bold text-center mb-6 text-gray-600">
             Proposta
