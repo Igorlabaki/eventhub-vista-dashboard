@@ -36,6 +36,7 @@ import ProposalEditSkeleton from "@/components/proposal/ProposalEditSkeleton";
 import { generateTimeOptions } from "@/components/proposal/forms/PerPersonProposalForm";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
+import { wallClockDateIso, wallClockTime } from "@/lib/wall-clock-datetime";
 
 const proposalTypes = [
   { value: ProposalType.EVENT, label: "Evento" },
@@ -129,9 +130,9 @@ export default function ProposalEdit() {
           trafficSource: currentProposal.trafficSource || TrafficSource.OTHER,
           totalAmountInput: currentProposal.totalAmount?.toString() || "",
           serviceIds: (currentProposal.proposalServices || []).map(service => service.serviceId),
-          date: currentProposal.startDate ? new Date(currentProposal.startDate).toISOString().split('T')[0] : '',
-          startHour: currentProposal.startDate ? new Date(currentProposal.startDate).toISOString().substring(11, 16) : '',
-          endHour: currentProposal.endDate ? new Date(currentProposal.endDate).toISOString().substring(11, 16) : '',
+          date: currentProposal.startDate ? wallClockDateIso(currentProposal.startDate) : '',
+          startHour: currentProposal.startDate ? wallClockTime(currentProposal.startDate) : '',
+          endHour: currentProposal.endDate ? wallClockTime(currentProposal.endDate) : '',
         },
       });
     }

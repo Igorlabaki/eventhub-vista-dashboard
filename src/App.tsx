@@ -31,6 +31,7 @@ import ResetPassword from "./pages/ResetPassword";
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useBootstrapUser } from "@/hooks/useBootstrapUser";
+import { GoogleCalendarRedirectHandler } from "@/components/GoogleCalendarRedirectHandler";
 import VenueServices from "./pages/VenueServices";
 import ProposalDetails from "./pages/ProposalDetails";
 import ProposalEdit from "./pages/ProposalEdit";
@@ -85,6 +86,7 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <AppInitializer />
+            <GoogleCalendarRedirectHandler />
             <Routes>
               {/* Public */}
                 <Route path="/index" element={<Index />} />

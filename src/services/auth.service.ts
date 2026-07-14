@@ -61,6 +61,7 @@ export const authService = {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        console.error('[loginWithGoogle]', error.response?.status, error.response?.data);
         throw new Error(error.response?.data?.message || 'Erro ao fazer login com Google');
       }
       throw error;
@@ -106,6 +107,7 @@ export const authService = {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        console.error('[registerWithGoogle]', error.response?.status, error.response?.data);
         throw new Error(error.response?.data?.message || "Erro ao registrar com Google");
       }
       throw error;

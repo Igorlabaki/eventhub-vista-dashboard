@@ -13,7 +13,12 @@ import { getDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/styles/fullcalendar-google.css"; // Pode ser usado para customização extra
-import { formatInTimeZone } from "date-fns-tz";
+import {
+  wallClockDateBr,
+  wallClockDateIso,
+  wallClockTime,
+  wallClockToCalendarDate,
+} from "@/lib/wall-clock-datetime";
 import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -34,10 +39,12 @@ import { showSuccessToast } from "@/components/ui/success-toast";
 import { useVenueStore } from "@/store/venueStore";
 import { useUserStore } from "@/store/userStore";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
 import { PageHeader } from "@/components/PageHeader";
+import { googleCalendarIntegrationService } from "@/services/google-calendar-integration.service";
+import { Badge } from "@/components/ui/badge";
 import { createPortal } from "react-dom";
 import {
   Select,
@@ -110,8 +117,21 @@ export default function VenueSchedule() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
+  const [googleCalendarStatus, setGoogleCalendarStatus] = useState<{
+    connected: boolean;
+    needsGooglePermission?: boolean;
+    loading: boolean;
+  }>({ connected: false, loading: false });
+  const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
 
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("google_calendar") === "connected" && selectedVenue?.organizationId) {
+      setGoogleCalendarStatus({ connected: true, loading: false });
+    }
+  }, [searchParams, selectedVenue?.organizationId]);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
@@ -129,15 +149,12 @@ export default function VenueSchedule() {
 
   // Função para preencher o formulário com dados da data selecionada
   const fillFormWithEventData = (event: DateEvent) => {
-    const startDate = new Date(event.startDate);
-    const endDate = new Date(event.endDate);
-
     form.reset({
       title: event.title,
-      startDay: startDate.toISOString().split("T")[0],
-      endDay: endDate.toISOString().split("T")[0],
-      startHour: startDate.toTimeString().slice(0, 5),
-      endHour: endDate.toTimeString().slice(0, 5),
+      startDay: wallClockDateIso(event.startDate),
+      endDay: wallClockDateIso(event.endDate),
+      startHour: wallClockTime(event.startDate),
+      endHour: wallClockTime(event.endDate),
       userId: user?.id,
       username: user?.username,
       venueId: selectedVenue.id,
@@ -150,8 +167,8 @@ export default function VenueSchedule() {
       dateEvents.map((event) => ({
         id: event.id,
         title: event.title,
-        start: new Date(event.startDate),
-        end: new Date(event.endDate),
+        start: wallClockToCalendarDate(event.startDate),
+        end: wallClockToCalendarDate(event.endDate),
         allDay: false,
         resource: event,
       })),
@@ -161,6 +178,39 @@ export default function VenueSchedule() {
   useEffect(() => {
     fetchDateEvents();
   }, []);
+
+  useEffect(() => {
+    if (!selectedVenue?.organizationId) return;
+    let cancelled = false;
+    setGoogleCalendarStatus((s) => ({ ...s, loading: true }));
+    googleCalendarIntegrationService
+      .getAutoStatus(selectedVenue.organizationId)
+      .then((data) => {
+        if (!cancelled) {
+          setGoogleCalendarStatus({
+            connected: data.connected,
+            needsGooglePermission: data.needsGooglePermission ?? false,
+            loading: false,
+          });
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setGoogleCalendarStatus({ connected: false, loading: false });
+          if (err.response?.status === 403) {
+            toast({
+              title: "Sem permissão",
+              description:
+                "Você não tem permissão para acessar o calendário. Solicite ao administrador.",
+              variant: "destructive",
+            });
+          }
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedVenue?.organizationId]);
 
   const hasEditPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
@@ -421,6 +471,99 @@ export default function VenueSchedule() {
   // Calendário + detalhes
   const calendar = (
     <div className="relative">
+      {selectedVenue?.organizationId && (
+        <Card className="mb-4 border-0 shadow">
+          <CardContent className="p-4 flex flex-wrap items-center gap-3">
+            <p className="text-sm text-muted-foreground">
+              O EventHub só cria e atualiza eventos que ele mesmo gerencia.
+            </p>
+            {!googleCalendarStatus.loading && (
+              <>
+                {googleCalendarStatus.connected && (
+                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    Google Calendar Ativo
+                  </Badge>
+                )}
+                {googleCalendarStatus.needsGooglePermission && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isConnectingGoogle}
+                    onClick={async () => {
+                      try {
+                        setIsConnectingGoogle(true);
+                        const url =
+                          await googleCalendarIntegrationService.getConnectUrl(
+                            selectedVenue.organizationId
+                          );
+                        window.location.href = url;
+                      } catch (e) {
+                        if ((e as { response?: { status: number } })?.response?.status === 403) {
+                          toast({
+                            title: "Sem permissão",
+                            description:
+                              "Você não tem permissão para acessar o calendário. Solicite ao administrador.",
+                            variant: "destructive",
+                          });
+                        } else {
+                          toast({
+                            title: "Erro",
+                            description: "Não foi possível abrir a conexão com Google Calendar.",
+                            variant: "destructive",
+                          });
+                        }
+                        setIsConnectingGoogle(false);
+                      }
+                    }}
+                  >
+                    Reconectar Google Calendar
+                  </Button>
+                )}
+                {!googleCalendarStatus.connected &&
+                  !googleCalendarStatus.needsGooglePermission &&
+                  currentUserVenuePermission?.permissions.includes(
+                    "EDIT_VENUE_CALENDAR"
+                  ) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isConnectingGoogle}
+                      onClick={async () => {
+                        try {
+                          setIsConnectingGoogle(true);
+                          const url =
+                            await googleCalendarIntegrationService.getConnectUrl(
+                              selectedVenue.organizationId
+                            );
+                          window.location.href = url;
+                        } catch (e) {
+                          if ((e as { response?: { status: number } })?.response?.status === 403) {
+                            toast({
+                              title: "Sem permissão",
+                              description:
+                                "Você não tem permissão para acessar o calendário. Solicite ao administrador.",
+                              variant: "destructive",
+                            });
+                          } else {
+                            toast({
+                              title: "Erro",
+                              description:
+                                "Não foi possível abrir a conexão com Google Calendar.",
+                              variant: "destructive",
+                            });
+                          }
+                          setIsConnectingGoogle(false);
+                        }
+                      }}
+                    >
+                      Conectar Google Calendar
+                    </Button>
+                  )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
       {hasEditPermission() && (
         <PageHeader
           onCreateClick={() => setShowForm(true)}
@@ -521,23 +664,15 @@ export default function VenueSchedule() {
                 <div className="flex items-center gap-2  font-medium">
                   <CalendarDays className="w-5 h-5" />
                   {selectedEvent.startDate
-                    ? formatInTimeZone(
-                        selectedEvent.startDate,
-                        "UTC",
-                        "dd/MM/yyyy"
-                      )
+                    ? wallClockDateBr(selectedEvent.startDate)
                     : "--"}
                 </div>
                 <div className="flex items-center gap-2  font-medium">
                   <Clock className="w-5 h-5" />
                   {selectedEvent.startDate && selectedEvent.endDate ? (
                     <>
-                      {formatInTimeZone(
-                        selectedEvent.startDate,
-                        "UTC",
-                        "HH:mm"
-                      )}
-                      /{formatInTimeZone(selectedEvent.endDate, "UTC", "HH:mm")}
+                      {wallClockTime(selectedEvent.startDate)}/
+                      {wallClockTime(selectedEvent.endDate)}
                     </>
                   ) : (
                     "--"

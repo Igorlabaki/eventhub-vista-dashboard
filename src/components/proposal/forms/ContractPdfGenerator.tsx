@@ -141,7 +141,12 @@ export function generateContractPdf({
 
     // Cláusulas
     if (contract.clauses && Array.isArray(contract.clauses)) {
-      (contract.clauses as Clause[]).forEach((clause: Clause, idx: number) => {
+      const sortedClauses = [...contract.clauses].sort(
+        (a, b) =>
+          (a.position ?? Number.MAX_SAFE_INTEGER) -
+          (b.position ?? Number.MAX_SAFE_INTEGER)
+      );
+      (sortedClauses as Clause[]).forEach((clause: Clause, idx: number) => {
         const romanNum = toRoman(idx + 1);
         // Renderiza o número romano e o título da cláusula em negrito
         doc.setFont("helvetica", "bold");

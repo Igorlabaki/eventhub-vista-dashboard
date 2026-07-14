@@ -14,26 +14,10 @@ interface VenueWithTexts extends Venue {
 import NotFound from "./NotFound";
 import { ProposalFooter } from "@/components/proposalFooter";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
-import { format, toZonedTime } from "date-fns-tz";
+import { wallClockDateBr, wallClockTime } from "@/lib/wall-clock-datetime";
 
 function formatCurrency(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatDate(date: Date | string) {
-  if (!date) return "";
-  const d = typeof date === "string" ? new Date(date) : date;
-  // Converter para UTC neutro
-  const zoned = toZonedTime(d, "UTC");
-  return format(zoned, "dd/MM/yyyy", { timeZone: "UTC" });
-}
-
-function formatHour(date: Date | string) {
-  if (!date) return "";
-  const d = typeof date === "string" ? new Date(date) : date;
-  // Converter para UTC neutro
-  const zoned = toZonedTime(d, "UTC");
-  return format(zoned, "HH:mm", { timeZone: "UTC" });
 }
 
 export default function ProposalView() {
@@ -84,10 +68,11 @@ export default function ProposalView() {
   const serviceList = proposalServices || [];
 
   // Horário formatado
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = startDate;
+  const end = endDate;
   const durationHours = Math.round(
-    (end.getTime() - start.getTime()) / (1000 * 60 * 60)
+    (new Date(endDate).getTime() - new Date(startDate).getTime()) /
+      (1000 * 60 * 60)
   );
 
   return (
@@ -178,7 +163,7 @@ export default function ProposalView() {
             </span>
             {!selectedVenue?.hasOvernightStay && (
               <span className="flex items-center gap-1 text-sm sm:text-base">
-                <FiClock /> {formatHour(start)} - {formatHour(end)} (
+                <FiClock /> {wallClockTime(start)} - {wallClockTime(end)} (
                 {durationHours}
                 hrs)
               </span>
@@ -188,19 +173,19 @@ export default function ProposalView() {
               {selectedVenue?.hasOvernightStay ? (
                 <span className="flex flex-row justify-center items-center gap-x-1 leading-tight text-center">
                   <div className="flex flex-row justify-center items-center gap-x-1">
-                    <p>{formatDate(start)}</p>
-                    <p>({`${formatHour(start)}hrs`})</p>
+                    <p>{wallClockDateBr(start)}</p>
+                    <p>({`${wallClockTime(start)}hrs`})</p>
                   </div>
                   <span className="mx-auto">até</span>
                   <span className="flex flex-row justify-center items-center gap-x-1 leading-tight text-center">
                     <div className="flex flex-row justify-center items-center gap-x-1">
-                      <p>{formatDate(end)}</p> 
-                      <p>({`${formatHour(end)}hrs`})</p>{" "}
+                      <p>{wallClockDateBr(end)}</p> 
+                      <p>({`${wallClockTime(end)}hrs`})</p>{" "}
                     </div>
                   </span>
                 </span>
               ) : (
-                formatDate(start)
+                wallClockDateBr(start)
               )}
             </span>
           </div>

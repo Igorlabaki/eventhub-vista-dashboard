@@ -4,6 +4,7 @@ import { useProposalStore } from "@/store/proposalStore";
 import { Users } from "lucide-react";
 import React from "react";
 import { useVenueStore } from "@/store/venueStore";
+import { wallClockDateBr, wallClockTime } from "@/lib/wall-clock-datetime";
 
 interface ProposalService {
   service?: {
@@ -50,14 +51,10 @@ export function ProposalServicesSummary({
           <span className="font-semibold text-center text-primary text-[13px] md:text-base">
             {selectedVenue?.hasOvernightStay
               ? currentProposal?.startDate && currentProposal?.endDate
-                ? `${new Date(currentProposal.startDate).toLocaleDateString(
-                    "pt-BR"
-                  )} até ${new Date(currentProposal.endDate).toLocaleDateString(
-                    "pt-BR"
-                  )}`
+                ? `${wallClockDateBr(currentProposal.startDate)} até ${wallClockDateBr(currentProposal.endDate)}`
                 : "-"
               : currentProposal?.startDate
-              ? new Date(currentProposal.startDate).toLocaleDateString("pt-BR")
+              ? wallClockDateBr(currentProposal.startDate)
               : "-"}
           </span>
         </div>
@@ -66,9 +63,7 @@ export function ProposalServicesSummary({
           <span className="font-semibold text-sm md:text-base flex">
             <p>
               {currentProposal?.startDate
-                ? `${new Date(currentProposal.startDate)
-                    .toISOString()
-                    .substring(11, 16)}`
+                ? wallClockTime(currentProposal.startDate)
                 : "-"}
             </p>
             <p>
@@ -78,9 +73,7 @@ export function ProposalServicesSummary({
             </p>
             <p>
               {currentProposal?.endDate
-                ? `${new Date(currentProposal.endDate)
-                    .toISOString()
-                    .substring(11, 16)}`
+                ? wallClockTime(currentProposal.endDate)
                 : ""}
             </p>
           </span>
