@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Proposal } from "@/types/proposal";
-import { format } from "date-fns";
-import { pt } from "date-fns/locale";
 import { ClipboardList } from "lucide-react";
+import { wallClockDateBr, wallClockTime } from "@/lib/wall-clock-datetime";
 
 export interface BudgetDetailsProps {
   proposal: Proposal;
@@ -30,9 +29,7 @@ export function BudgetDetails({ proposal, onClose }: BudgetDetailsProps) {
         <div>
           <h3 className="text-sm font-medium text-gray-500">Data do Evento</h3>
           <p className="mt-1 text-sm text-gray-900">
-            {format(proposal.startDate, "dd/MM/yyyy", {
-              locale: pt
-            })}
+            {wallClockDateBr(proposal.startDate)}
           </p>
         </div>
 
@@ -51,7 +48,7 @@ export function BudgetDetails({ proposal, onClose }: BudgetDetailsProps) {
         <div>
           <h3 className="text-sm font-medium text-gray-500">Horário do Evento</h3>
           <p className="mt-1 text-sm text-gray-900">
-            {format(proposal.startDate, "HH:mm")} - {format(proposal.endDate, "HH:mm")}
+            {wallClockTime(proposal.startDate)} - {wallClockTime(proposal.endDate)}
           </p>
         </div>
       </div>

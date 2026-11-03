@@ -1,7 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format } from "date-fns";
-import { pt } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
+import { wallClockDateBr } from "@/lib/wall-clock-datetime";
 import { Proposal } from "@/types/proposal";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 
@@ -106,9 +105,7 @@ export function EventTable({
             >
               <TableCell className="font-medium">{event.completeClientName}</TableCell>
               <TableCell>
-                {format(new Date(event.startDate), "dd/MM/yyyy", {
-                  locale: pt,
-                })}
+                {wallClockDateBr(event.startDate)}
               </TableCell>
               {hasViewPermission() && ( 
               <TableCell className="text-right">

@@ -1,8 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
-import { pt } from "date-fns/locale";
 import { Proposal } from "@/types/proposal";
+import { wallClockDateBr } from "@/lib/wall-clock-datetime";
 
 interface ProposalTableProps {
   proposals: Proposal[];
@@ -80,9 +79,7 @@ export function ProposalTable({
               >
                 <TableCell className="font-medium max-w-[120px]">{proposal.completeClientName}</TableCell>
                 <TableCell>
-                  {format(proposal.startDate, "dd/MM/yyyy", {
-                    locale: pt
-                  })}
+                  {wallClockDateBr(proposal.startDate)}
                 </TableCell>
                 <TableCell className="text-right">
                   {new Intl.NumberFormat('pt-BR', {

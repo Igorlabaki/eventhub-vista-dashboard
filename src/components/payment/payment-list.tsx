@@ -13,6 +13,7 @@ import {
 import { PaymentListSkeleton } from "./payment-list-skeleton"
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog"
 import { Payment } from "@/types/payment"
+import { wallClockDateBr } from "@/lib/wall-clock-datetime"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { usePaymentStore } from "@/store/paymentStore"
@@ -110,7 +111,7 @@ export function PaymentList({
                 {formatCurrency(payment.amount)}
               </TableCell>
               <TableCell>
-                {new Date(payment.paymentDate).toLocaleDateString('pt-BR')}
+                {wallClockDateBr(payment.paymentDate)}
               </TableCell>
               {hasEditPermission() && (
               <TableCell className="text-center">

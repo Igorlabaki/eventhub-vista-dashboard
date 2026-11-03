@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
+import { wallClockDateIso } from "@/lib/wall-clock-datetime";
 import { CreatePaymentWithFileDTO } from "@/services/payment.service";
 
 interface PaymentFormProps {
@@ -97,7 +98,7 @@ export function PaymentForm({ payment, proposalId, venueId, userId, username, on
     resolver: zodResolver(formSchema),
     defaultValues: {
       amount: payment?.amount ? formatCurrency(payment.amount) : '',
-      paymentDate: payment?.paymentDate ? new Date(payment.paymentDate).toISOString().split('T')[0] : "",
+      paymentDate: payment?.paymentDate ? wallClockDateIso(payment.paymentDate) : "",
       paymentMethod: payment?.paymentMethod ?? undefined,
       file: null,
     },
@@ -106,7 +107,7 @@ export function PaymentForm({ payment, proposalId, venueId, userId, username, on
   React.useEffect(() => {
     form.reset({
       amount: payment?.amount ? formatCurrency(payment.amount) : '',
-      paymentDate: payment?.paymentDate ? new Date(payment.paymentDate).toISOString().split('T')[0] : "",
+      paymentDate: payment?.paymentDate ? wallClockDateIso(payment.paymentDate) : "",
       paymentMethod: payment?.paymentMethod ?? undefined,
       file: null,
     });

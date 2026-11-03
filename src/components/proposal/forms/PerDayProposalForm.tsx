@@ -28,7 +28,7 @@ const formSchema = z.object({
   startHour: z.string().min(1, "Horário de início é obrigatório"),
   endHour: z.string().min(1, "Horário de término é obrigatório"),
   guestNumber: z.string().min(1, "Número de hóspedes é obrigatório"),
-  email: z.string().email("E-mail inválido"),
+  email: z.string().trim().refine((value) => value === "" || z.string().email().safeParse(value).success, "E-mail inválido"),
   whatsapp: z.string().min(1, "WhatsApp é obrigatório"),
   description: z.string().min(1, "Descrição é obrigatória"),
   knowsVenue: z.boolean(),
@@ -128,7 +128,7 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         startHour: values.startHour,
         endHour: values.endHour,
         guestNumber: values.guestNumber,
-        email: values.email,
+        email: values.email.trim() === "" ? null : values.email.trim(),
         whatsapp: values.whatsapp,
         description: values.description,
         knowsVenue: values.knowsVenue,
@@ -146,8 +146,12 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         title,
         description: message
       });
-      
-      onBack();
+
+      if (response?.data?.id) {
+        navigate(`/proposal/${response.data.id}`);
+      } else {
+        onBack();
+      }
     } catch (error: unknown) {
       const { title, message } = handleBackendError(error, "Erro ao criar orçamento. Tente novamente mais tarde.");
       toast({
@@ -316,7 +320,7 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>E-mail</FormLabel>
+              <FormLabel>E-mail (opcional)</FormLabel>
               <FormControl>
                 <Input type="email" placeholder="email@cliente.com" {...field} />
               </FormControl>

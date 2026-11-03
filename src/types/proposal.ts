@@ -57,7 +57,7 @@ export interface Proposal {
   adressComplement?: string;
   startDate: Date;
   endDate: Date;
-  email: string;
+  email: string | null;
   whatsapp: string;
   description: string;
   hostMessage?: string;
@@ -106,7 +106,7 @@ export interface CreateProposalPerPersonDTO {
   guestNumber: string;
   description: string;
   knowsVenue: boolean;
-  email: string;
+  email: string | null;
   userId?: string;
   serviceIds: string[];
   totalAmountInput?: string;
@@ -125,7 +125,7 @@ export interface CreateProposalPerDayDTO {
   description: string;
   knowsVenue: boolean;
   guestNumber: string;
-  email: string;
+  email: string | null;
   userId?: string;
   serviceIds: string[];
   totalAmountInput?: string;
@@ -148,6 +148,7 @@ export interface UpdateProposalPersonalInfoDTO {
     completeClientName: string;
     completeCompanyName?: string;
     adressComplement?: string;
+    email: string;
   }
 }
 
@@ -165,7 +166,7 @@ export interface UpdateProposalPerDayDTO {
     guestNumber: string;
     description: string;
     knowsVenue: boolean;
-    email: string;
+    email: string | null;
     totalAmountInput: string;
     userId?: string;
     serviceIds: string[];
@@ -188,7 +189,7 @@ export interface UpdateProposalPerPersonDTO {
     guestNumber: string;
     description: string;
     knowsVenue: boolean;
-    email: string;
+    email: string | null;
     totalAmountInput: string;
     userId?: string;
     serviceIds: string[];

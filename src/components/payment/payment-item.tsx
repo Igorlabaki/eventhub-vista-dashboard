@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Payment } from "@/types/payment"
 import { formatCurrency } from "@/lib/utils"
+import { wallClockDateBr } from "@/lib/wall-clock-datetime"
 
 interface PaymentItemProps {
   payment: Payment
@@ -33,7 +34,7 @@ export function PaymentItem({ payment, onClick, isSelected, index }: PaymentItem
         <div className="flex flex-col">
           <span className="font-medium">{formatCurrency(payment.amount)}</span>
           <span className="text-sm text-gray-500">
-            {new Date(payment.paymentDate).toLocaleDateString('pt-BR')}
+            {wallClockDateBr(payment.paymentDate)}
           </span>
         </div>
         {index !== undefined && (

@@ -110,7 +110,7 @@ export function EmailTab({
         proposal: {
           proposalId: proposal.id,
           clientName: proposal.completeClientName,
-          clientEmail: proposal.email,
+          clientEmail: proposal.email || "",
         },
         message: form.getValues("message"),
         userId: user.id,

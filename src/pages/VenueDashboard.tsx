@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { wallClockDateTimeBr } from "@/lib/wall-clock-datetime";
 import { useUserStore } from "@/store/userStore";
 import { VenueDashboardSkeleton } from "@/components/venue/VenueDashboardSkeleton";
 import { useGetVenueDashBoardData } from "@/hooks/venue/queries/venueDashBoardData";
@@ -35,13 +36,6 @@ import { VenuePerformanceChart } from "@/components/venue/VenuePerformanceChart"
 import { VenuePerformanceChartAllMonths } from "@/components/venue/VenuePerformanceChartAllMonths";
 import { useVenueStore } from "@/store/venueStore";
 import { useGoalStore } from "@/store/goalStore";
-
-function formatarDataIso(isoString: string) {
-  const [datePart, timePart] = isoString.split("T");
-  const [year, month, day] = datePart.split("-");
-  const hour = timePart.slice(0, 5); // "HH:mm"
-  return `${day}/${month}/${year} às ${hour}`;
-}
 
 function VenueNotFound() {
   return (
@@ -185,9 +179,7 @@ export default function VenueDashboard() {
                           {venueDashBoardData.nextEvent.title}
                         </h4>
                         <div className="text-sm text-gray-500">
-                          {formatarDataIso(
-                            String(venueDashBoardData.nextEvent.startDate)
-                          )}
+                          {wallClockDateTimeBr(venueDashBoardData.nextEvent.startDate)}
                         </div>
                       </div>
                     </div>
@@ -228,9 +220,7 @@ export default function VenueDashboard() {
                           {venueDashBoardData.nextVisit.title}
                         </h4>
                         <div className="text-sm text-gray-500">
-                          {formatarDataIso(
-                            String(venueDashBoardData.nextVisit.startDate)
-                          )}
+                          {wallClockDateTimeBr(venueDashBoardData.nextVisit.startDate)}
                         </div>
                       </div>
                     </div>

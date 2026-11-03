@@ -65,6 +65,17 @@ export function GoalHeader({
             >
               DESCONTOS
             </TabsTrigger>
+            <TabsTrigger
+              value="minimos"
+              className={
+                `px-4 py-2 text-[12px] md:text-sm font-semibold transition-all duration-200
+                ${activeTab === "minimos"
+                  ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
+                  : "border-b-4 border-transparent"}`
+              }
+            >
+              MÍNIMOS
+            </TabsTrigger>
           </TabsList>
         </Tabs>
         {!isFormOpen && activeTab !== "panel" && (
@@ -80,6 +91,8 @@ export function GoalHeader({
               ? "Nova Meta"
               : activeTab === "adicionais"
               ? "Novo Adicional"
+              : activeTab === "minimos"
+              ? "Nova faixa"
               : "Novo Desconto"}
           </Button>
         )}
@@ -94,6 +107,8 @@ export function GoalHeader({
               ? "Nova Meta"
               : activeTab === "adicionais"
               ? "Novo Adicional"
+              : activeTab === "minimos"
+              ? "Nova faixa"
               : "Novo Desconto"
           }
         >

@@ -12,7 +12,7 @@ import { useProposalStore } from "@/store/proposalStore";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { format, differenceInMinutes } from "date-fns";
+import { wallClockDateBr, wallClockTime } from "@/lib/wall-clock-datetime";
 import { ProposalFooter } from "@/components/proposalFooter";
 import { useVenueStore } from "@/store/venueStore";
 
@@ -329,32 +329,25 @@ export function ScheduleListPage() {
                 </div>
               ) : (
                 filteredSchedules.map((g, i) => {
-                  // Função para combinar data e hora em um Date
-                  const combineDateAndTime = (date: Date | string | undefined, time: string) => {
-                    if (!date || !time || !/^\d{2}:\d{2}$/.test(time)) return null;
-                    const d = typeof date === "string" ? new Date(date) : date;
-                    if (isNaN(d.getTime())) return null;
-                    const [h, m] = time.split(":").map(Number);
-                    if (isNaN(h) || isNaN(m)) return null;
-                    const result = new Date(d);
-                    result.setHours(h, m, 0, 0);
-                    return result;
+                  const toClock = (value: string | Date | undefined) => {
+                    if (!value) return "";
+                    if (typeof value === "string" && /^\d{2}:\d{2}/.test(value)) return value.slice(0, 5);
+                    return wallClockTime(value);
                   };
-                  const startDateTime = combineDateAndTime(currentProposal?.startDate, g.startHour);
-                  const endDateTime = combineDateAndTime(currentProposal?.startDate, g.endHour);
-                  // Calcular duração
+                  const startLabel = toClock(g.startHour);
+                  const endLabel = toClock(g.endHour);
                   let duration = "";
-                  if (startDateTime && endDateTime) {
-                    let mins = differenceInMinutes(endDateTime, startDateTime);
+                  let dateHourStr = "";
+                  if (/^\d{2}:\d{2}$/.test(startLabel) && /^\d{2}:\d{2}$/.test(endLabel)) {
+                    const [sh, sm] = startLabel.split(":").map(Number);
+                    const [eh, em] = endLabel.split(":").map(Number);
+                    let mins = (eh * 60 + em) - (sh * 60 + sm);
                     if (mins < 0) mins += 24 * 60;
                     const h = Math.floor(mins / 60);
                     const m = mins % 60;
                     duration = m === 0 ? `${h}h` : `${h}h${m}min`;
-                  }
-                  // Formatar data e hora
-                  let dateHourStr = "";
-                  if (startDateTime && endDateTime) {
-                    dateHourStr = `${format(startDateTime, "dd/MM/yyyy HH:mm")} - ${format(endDateTime, "HH:mm")}`;
+                    const day = currentProposal?.startDate ? wallClockDateBr(currentProposal.startDate) : "";
+                    dateHourStr = `${day} ${startLabel} - ${endLabel}`.trim();
                   }
                   return (
                     <div

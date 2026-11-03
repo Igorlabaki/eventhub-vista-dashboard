@@ -52,6 +52,8 @@ import { GoalHeader } from "@/components/goal/goal-header";
 import { GoalsTab } from "@/components/goal/GoalsTab";
 import { FeesTab } from "@/components/goal/FeesTab";
 import { DiscountsTab } from "@/components/goal/DiscountsTab";
+import { MinimumPricesTab } from "@/components/goal/MinimumPricesTab";
+import { useMinimumPricePeriodStore } from "@/store/minimumPricePeriodStore";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NumericFormat } from 'react-number-format';
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -143,8 +145,10 @@ export default function VenueGoals() {
   const { goals, fetchGoals, isLoading: isLoadingGoals } = useGoalStore();
   const { user } = useUserStore();
   const { surcharges, discounts, fetchSurcharges, fetchDiscounts, isLoading: isLoadingSeasonalFees } = useSeasonalFeeStore();
+  const { periods, fetchPeriods, isLoading: isLoadingPeriods, error: periodsError } = useMinimumPricePeriodStore();
   const [feeDialogOpen, setFeeDialogOpen] = useState(false);
   const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
+  const [minimumDialogOpen, setMinimumDialogOpen] = useState(false);
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
@@ -301,6 +305,7 @@ export default function VenueGoals() {
       fetchGoals(venueId);
       fetchSurcharges(venueId);
       fetchDiscounts(venueId);
+      fetchPeriods(venueId);
     }
   }, [venueId]);
 
@@ -332,8 +337,11 @@ export default function VenueGoals() {
             }
             if (activeTab === "adicionais") setFeeDialogOpen(true);
             if (activeTab === "descontos") setDiscountDialogOpen(true);
+            if (activeTab === "minimos") {
+              setMinimumDialogOpen(true);
+            }
           }}
-          isFormOpen={showGoalForm || feeDialogOpen || discountDialogOpen}
+          isFormOpen={showGoalForm || feeDialogOpen || discountDialogOpen || minimumDialogOpen}
         />
 
         {/* Panel View */}
@@ -561,6 +569,62 @@ export default function VenueGoals() {
               </div>
             </section>
 
+            <section className="bg-white p-6 rounded-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-medium text-gray-800">Preços mínimos</h2>
+                <Button className="bg-primary hover:bg-primary/90 text-white" onClick={() => handleCardClick("minimos")}>
+                  Ver todos
+                </Button>
+              </div>
+              <Card className="bg-white border shadow-sm mb-4">
+                <CardContent className="p-4">
+                  <p className="text-sm text-gray-500">Preço mínimo padrão</p>
+                  <p className="text-lg font-semibold">
+                    {(venue?.minimumPrice || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                  </p>
+                </CardContent>
+              </Card>
+              <div className="space-y-4">
+                {isLoadingPeriods ? (
+                  <div className="text-center text-gray-500">Carregando faixas...</div>
+                ) : periods.length === 0 ? (
+                  <EmptyState
+                    hasEditPermission={hasEditPermission()}
+                    title="Nenhuma faixa cadastrada"
+                    description="O ano inteiro usa o preço mínimo padrão até você criar um período."
+                    actionText="Nova faixa"
+                    onAction={() => {
+                      setMinimumDialogOpen(true);
+                      handleCardClick("minimos");
+                    }}
+                  />
+                ) : (
+                  periods.slice(0, 3).map((period) => (
+                    <Card
+                      key={period.id}
+                      className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm"
+                      onClick={() => handleCardClick("minimos")}
+                    >
+                      <CardContent className="pt-6">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="font-medium text-lg text-gray-800">{period.title}</h3>
+                            <div className="flex items-center text-sm text-gray-600 mt-1">
+                              <Calendar className="h-4 w-4 mr-2" />
+                              <span>{period.startDay} até {period.endDay}</span>
+                            </div>
+                          </div>
+                          <div className="text-lg font-bold text-green-600">
+                            {period.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </section>
+
             {/* Descontos Section */}
             <section className="bg-white p-6 rounded-lg">
               <div className="flex justify-between items-center mb-4">
@@ -644,6 +708,19 @@ export default function VenueGoals() {
                 venueId={venueId || ""}
                 showForm={feeDialogOpen}
                 setShowForm={setFeeDialogOpen}
+              />
+            </TabsContent>
+            <TabsContent value="minimos" className="space-y-4">
+              <MinimumPricesTab
+                periods={periods}
+                isLoading={isLoadingPeriods}
+                error={periodsError}
+                venue={venue}
+                userId={user?.id}
+                canEdit={hasEditPermission()}
+                showForm={minimumDialogOpen}
+                setShowForm={setMinimumDialogOpen}
+                onReload={() => venueId && fetchPeriods(venueId)}
               />
             </TabsContent>
             {/* DESCONTOS TAB */}

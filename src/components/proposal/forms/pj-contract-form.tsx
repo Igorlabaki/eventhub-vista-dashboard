@@ -18,6 +18,7 @@ import { useForm } from "react-hook-form";
 import { Select } from "@/components/ui/select";
 import InputMask from "react-input-mask";
 import { generateContractPdf } from "./ContractPdfGenerator";
+import { requiredProposalEmail } from "./required-proposal-email";
 
 
 export default function PJContractForm() {
@@ -28,10 +29,16 @@ export default function PJContractForm() {
   const { selectedVenue } = useVenueStore();
 
   const onSubmit = async (values) => {
+    const emailResult = requiredProposalEmail(values.email);
+    if (!emailResult.ok) {
+      form.setError("email", { type: "manual", message: emailResult.message });
+      return;
+    }
     try {
       const dataToUpdate = {
         proposalId: currentProposal?.id,
         data: {
+          email: emailResult.email,
           completeCompanyName: values.completeCompanyName,
           cnpj: values.cnpj,
           completeClientName: values.completeClientName,
@@ -85,7 +92,8 @@ export default function PJContractForm() {
       formValues.neighborhood === currentProposal.neighborhood &&
       formValues.cep === currentProposal.cep &&
       formValues.city === currentProposal.city &&
-      formValues.state === currentProposal.state
+      formValues.state === currentProposal.state &&
+      formValues.email === (currentProposal.email || "")
     );
   };
 
@@ -103,6 +111,7 @@ export default function PJContractForm() {
       cep: currentProposal?.cep || "",
       city: currentProposal?.city || "São Paulo",
       state: currentProposal?.state || "SP",
+      email: currentProposal?.email || "",
       paymentMethod: "vista",
       paymentInfo: {
         signalAmount: currentProposal?.totalAmount
@@ -122,6 +131,7 @@ export default function PJContractForm() {
       values.completeCompanyName &&
       values.cnpj &&
       values.completeClientName &&
+      requiredProposalEmail(values.email).ok &&
       values.cpf &&
       values.street &&
       values.streetNumber &&
@@ -233,6 +243,19 @@ export default function PJContractForm() {
             <FormLabel>Nome Completo</FormLabel>
             <FormControl>
               <Input {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="email"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>E-mail</FormLabel>
+            <FormControl>
+              <Input type="email" placeholder="email@cliente.com" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

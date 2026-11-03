@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useVenueStore } from "@/store/venueStore";
 import { useProposalStore } from "@/store/proposalStore";
+import { wallClockDateIso, wallClockTime } from "@/lib/wall-clock-datetime";
 
 interface DateEventFormProps {
   dateEvent?: DateEvent | null;
@@ -33,14 +34,6 @@ interface DateEventFormProps {
   onDelete: (id: string) => Promise<void>;
   onCancel: () => void;
 }
-
-function formatarDataIso(isoString: string) {
-  const [datePart, timePart] = isoString.split("T");
-  const [year, month, day] = datePart.split("-");
-  const hour = timePart.slice(0, 5); // "HH:mm"
-  return `${day}/${month}/${year} às ${hour}`;
-}
-
 
 type DateEventFormValues = {
   title: string;
@@ -164,13 +157,10 @@ export function DateEventForm({ dateEvent, proposalId, venueId, userId, username
     if (value === DateEventType.EVENT && currentProposal) {
       form.setValue('title', `Evento - ${currentProposal.completeClientName || currentProposal.venue?.name || ''}`);
       if (currentProposal.startDate && currentProposal.endDate) {
-        const start = new Date(currentProposal.startDate);
-        const end = new Date(currentProposal.endDate);
-        const pad = (n: number) => n.toString().padStart(2, '0');
-        const startDay = `${start.getFullYear()}-${pad(start.getMonth()+1)}-${pad(start.getDate())}`;
-        const endDay = `${end.getFullYear()}-${pad(end.getMonth()+1)}-${pad(end.getDate())}`;
-        const startHour = `${pad(start.getHours())}:${pad(start.getMinutes())}`;
-        const endHour = `${pad(end.getHours())}:${pad(end.getMinutes())}`;
+        const startDay = wallClockDateIso(currentProposal.startDate);
+        const endDay = wallClockDateIso(currentProposal.endDate);
+        const startHour = wallClockTime(currentProposal.startDate);
+        const endHour = wallClockTime(currentProposal.endDate);
         if (isOvernight) {
           form.setValue('startDay', startDay);
           form.setValue('endDay', endDay);

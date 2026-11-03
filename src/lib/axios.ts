@@ -24,7 +24,9 @@ const PUBLIC_ROUTES = [
   '/proposal/:id/guest-list',
   '/proposal/:id/worker-list', 
   '/proposal/:id/schedule-list',
-  '/proposal/:id/view'
+  '/proposal/:id/view',
+  '/proposal/:id/person-contract',
+  '/proposal/:id/b2b-contract'
 ];
 
 // Verifica se a rota atual é pública

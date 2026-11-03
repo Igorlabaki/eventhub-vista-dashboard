@@ -9,9 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { DateEvent } from "@/types/date-event";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
+import { wallClockDateTimeBr } from "@/lib/wall-clock-datetime";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { useUserStore } from "@/store/userStore";
 
@@ -46,13 +45,6 @@ export function VenueCard({
     navigate(`/venue/${id}/notifications`);
   };
 
-  // Função para formatar a data sem considerar fuso horário
-  function formatarDataIso(isoString: string) {
-    const [datePart, timePart] = isoString.split("T");
-    const [year, month, day] = datePart.split("-");
-    const hour = timePart.slice(0, 5); // "HH:mm"
-    return `${day}/${month}/${year} às ${hour}`;
-  }
   return (
     <Card className="eventhub-card border-l-4 border-l-eventhub-primary">
       <CardHeader className="flex flex-row items-center justify-between mb-4 pb-2">
@@ -76,7 +68,7 @@ export function VenueCard({
                     {nextEvent.title}
                   </span>
                   <span className="text-sm font-semibold">
-                    {formatarDataIso(new Date(nextEvent.startDate).toISOString())}
+                    {wallClockDateTimeBr(nextEvent.startDate)}
                   </span>
                 </div>
               ) : (

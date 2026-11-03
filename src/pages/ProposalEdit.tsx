@@ -61,7 +61,7 @@ const editProposalSchema = z.object({
   data: z.object({
     completeClientName: z.string().min(1, "Nome do cliente é obrigatório"),
     completeCompanyName: z.string().optional(),
-    email: z.string().email("Email inválido"),
+    email: z.string().trim().refine((value) => value === "" || z.string().email().safeParse(value).success, "E-mail inválido"),
     whatsapp: z.string().min(1, "WhatsApp é obrigatório"),
     guestNumber: z.string().min(1, "Número de convidados é obrigatório"),
     description: z.string().min(1, "Descrição é obrigatória"),
@@ -159,7 +159,7 @@ export default function ProposalEdit() {
           guestNumber: data.data.guestNumber,
           description: data.data.description,
           knowsVenue: data.data.knowsVenue,
-          email: data.data.email,
+          email: data.data.email.trim() === "" ? null : data.data.email.trim(),
           totalAmountInput: data.data.totalAmountInput,
           serviceIds: data.data.serviceIds,
           type: data.data.type,
@@ -254,7 +254,7 @@ export default function ProposalEdit() {
                 name="data.email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>E-mail (opcional)</FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="email@cliente.com" {...field} />
                     </FormControl>

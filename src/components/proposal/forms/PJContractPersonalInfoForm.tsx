@@ -11,16 +11,23 @@ import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useForm } from "react-hook-form";
 import InputMask from "react-input-mask";
+import { requiredProposalEmail } from "./required-proposal-email";
 
 export default function PJContractPersonalInfoForm() {
   const { toast } = useToast();
   const { currentProposal, updateProposalPersonalInfo } = useProposalStore();
 
   const onSubmit = async (values) => {
+    const emailResult = requiredProposalEmail(values.email);
+    if (!emailResult.ok) {
+      form.setError("email", { type: "manual", message: emailResult.message });
+      return;
+    }
     try {
       const dataToUpdate = {
         proposalId: currentProposal?.id,
         data: {
+          email: emailResult.email,
           completeCompanyName: values.completeCompanyName,
           cnpj: values.cnpj,
           completeClientName: values.completeClientName,
@@ -73,7 +80,8 @@ export default function PJContractPersonalInfoForm() {
       formValues.cep === currentProposal.cep &&
       formValues.city === currentProposal.city &&
       formValues.state === currentProposal.state &&
-      formValues.adressComplement === currentProposal.adressComplement
+      formValues.adressComplement === currentProposal.adressComplement &&
+      formValues.email === (currentProposal.email || "")
     );
   };
 
@@ -91,6 +99,7 @@ export default function PJContractPersonalInfoForm() {
       cep: currentProposal?.cep || "",
       city: currentProposal?.city || "São Paulo",
       state: currentProposal?.state || "SP",
+      email: currentProposal?.email || "",
     },
   });
 
@@ -151,6 +160,19 @@ export default function PJContractPersonalInfoForm() {
             <FormLabel>Representante Legal</FormLabel>
             <FormControl>
               <Input {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="email"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>E-mail</FormLabel>
+            <FormControl>
+              <Input type="email" placeholder="email@cliente.com" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

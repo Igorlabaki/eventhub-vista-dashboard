@@ -17,6 +17,7 @@ import {
   KeyRound,
   Wrench,
   Receipt,
+  ListChecks,
 } from "lucide-react";
 import { Venue } from "@/types";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
@@ -93,6 +94,12 @@ export function VenueNav({
       href: `/venue/${venue?.id}/services`,
       icon: Wrench,
       permissionRequired: Permissions.VIEW_VENUE_SERVICES,
+    },
+    {
+      title: "Regras",
+      href: `/venue/${venue?.id}/rules`,
+      icon: ListChecks,
+      permissionRequired: Permissions.VIEW_VENUE_RULES,
     },
     {
       title: "Eventos",

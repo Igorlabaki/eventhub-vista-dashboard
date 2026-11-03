@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import extenso from "extenso";
-import { parseISO, isValid, format } from "date-fns";
+import { format } from "date-fns";
+import { wallClockDateTimeBr } from "@/lib/wall-clock-datetime";
 import { Venue } from "@/types/venue";
 import { Clause, Contract } from "@/types/contract";
 import { Proposal } from "@/types/proposal";
@@ -99,10 +100,7 @@ export function generateContractPdf({
           return `${formattedValue} (${valueExtenso})`;
         }
         if (typeof value === "string" && value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
-          const parsedDate = parseISO(value);
-          return isValid(parsedDate)
-            ? `${parsedDate.getUTCDate().toString().padStart(2, '0')}/${(parsedDate.getUTCMonth() + 1).toString().padStart(2, '0')}/${parsedDate.getUTCFullYear()} às ${parsedDate.getUTCHours().toString().padStart(2, '0')}:${parsedDate.getUTCMinutes().toString().padStart(2, '0')}`
-            : value;
+          return wallClockDateTimeBr(value);
         }
         return value as string;
       }
