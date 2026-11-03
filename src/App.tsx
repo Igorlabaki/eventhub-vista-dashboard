@@ -34,6 +34,7 @@ import { useBootstrapUser } from "@/hooks/useBootstrapUser";
 import { GoogleCalendarRedirectHandler } from "@/components/GoogleCalendarRedirectHandler";
 import VenueServices from "./pages/VenueServices";
 import VenueRules from "./pages/VenueRules";
+import VenueAmenities from "./pages/VenueAmenities";
 import ProposalDetails from "./pages/ProposalDetails";
 import ProposalEdit from "./pages/ProposalEdit";
 import ProposalHistory from "./pages/ProposalHistory";
@@ -120,6 +121,7 @@ const App = () => {
                 <Route path="/venue/:id/new-budget" element={<ProtectedRoute requiredPermission="VIEW_VENUE_NEW_BUDGET"><NewBudget /></ProtectedRoute>} />
                 <Route path="/venue/:id/services" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SERVICES"><VenueServices /></ProtectedRoute>} />
                 <Route path="/venue/:id/rules" element={<ProtectedRoute requiredPermission="VIEW_VENUE_RULES"><VenueRules /></ProtectedRoute>} />
+                <Route path="/venue/:id/amenities" element={<ProtectedRoute requiredPermission="VIEW_VENUE_AMENITIES"><VenueAmenities /></ProtectedRoute>} />
                 <Route path="/venue/:id/contacts" element={<ProtectedRoute requiredPermission="VIEW_VENUE_CONTACTS"><VenueContacts /></ProtectedRoute>} />
                 <Route path="/venue/:id/schedule" element={<ProtectedRoute requiredPermission="VIEW_VENUE_CALENDAR"><VenueSchedule /></ProtectedRoute>} />
                 <Route path="/venue/:id/settings" element={<ProtectedRoute requiredPermission="EDIT_VENUE_INFO"><VenueSettings /></ProtectedRoute>} />

@@ -18,6 +18,7 @@ import {
   Wrench,
   Receipt,
   ListChecks,
+  Sparkles,
 } from "lucide-react";
 import { Venue } from "@/types";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
@@ -100,6 +101,12 @@ export function VenueNav({
       href: `/venue/${venue?.id}/rules`,
       icon: ListChecks,
       permissionRequired: Permissions.VIEW_VENUE_RULES,
+    },
+    {
+      title: "Características",
+      href: `/venue/${venue?.id}/amenities`,
+      icon: Sparkles,
+      permissionRequired: Permissions.VIEW_VENUE_AMENITIES,
     },
     {
       title: "Eventos",
