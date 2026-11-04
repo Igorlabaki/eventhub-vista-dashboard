@@ -32,6 +32,7 @@ import { FormLayout } from "@/components/ui/form-layout";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { isTourVideoUrl } from "@/lib/tour-video";
 import {
   FormField,
   FormItem,
@@ -115,7 +116,28 @@ const venueSettingsSchema = z.object({
     .url("URL do Facebook inválida")
     .optional()
     .or(z.literal("")),
+  tourVideoUrl: z.string().refine((value) => value === "" || isTourVideoUrl(value), {
+    message: "Use um link do YouTube ou um arquivo de video (mp4, webm, ogg ou mov).",
+  }),
   logoUrl: z.string().url("URL do logo inválida").optional().or(z.literal("")),
+  proposalPrimaryColor: z
+    .string()
+    .refine(
+      (value) => value === "" || /^#[0-9A-Fa-f]{6}$/.test(value),
+      "Use uma cor no formato #RRGGBB"
+    ),
+  proposalSecondaryColor: z
+    .string()
+    .refine(
+      (value) => value === "" || /^#[0-9A-Fa-f]{6}$/.test(value),
+      "Use uma cor no formato #RRGGBB"
+    ),
+  proposalTextColor: z
+    .string()
+    .refine(
+      (value) => value === "" || /^#[0-9A-Fa-f]{6}$/.test(value),
+      "Use uma cor no formato #RRGGBB"
+    ),
   logoFile: z.instanceof(File).optional(),
   owners: z
     .array(z.string())
@@ -177,7 +199,11 @@ export default function VenueSettings() {
       tiktokUrl: "",
       instagramUrl: "",
       facebookUrl: "",
+      tourVideoUrl: "",
       logoUrl: "",
+      proposalPrimaryColor: "",
+      proposalSecondaryColor: "",
+      proposalTextColor: "",
       logoFile: undefined,
       owners: [],
     },
@@ -243,7 +269,11 @@ export default function VenueSettings() {
         tiktokUrl: selectedVenue.tiktokUrl || "",
         instagramUrl: selectedVenue.instagramUrl || "",
         facebookUrl: selectedVenue.facebookUrl || "",
+        tourVideoUrl: selectedVenue.tourVideoUrl || "",
         logoUrl: selectedVenue.logoUrl || "",
+        proposalPrimaryColor: selectedVenue.proposalPrimaryColor || "",
+        proposalSecondaryColor: selectedVenue.proposalSecondaryColor || "",
+        proposalTextColor: selectedVenue.proposalTextColor || "",
         owners: selectedVenue.ownerVenue.map((owner) => owner.ownerId) || [],
       });
       setLogoPreview(selectedVenue.logoUrl || null);
@@ -345,6 +375,10 @@ export default function VenueSettings() {
         neighborhood: data.neighborhood,
         pricingModel: data.pricingModel,
         instagramUrl: data.instagramUrl,
+        tourVideoUrl: data.tourVideoUrl,
+        proposalPrimaryColor: data.proposalPrimaryColor,
+        proposalSecondaryColor: data.proposalSecondaryColor,
+        proposalTextColor: data.proposalTextColor,
         minimumNights: data.minimumNights,
         whatsappNumber: data.whatsappNumber,
         pricePerDay: pricePerDay || undefined,
@@ -1154,6 +1188,28 @@ export default function VenueSettings() {
             </div>
           </div>
 
+          <FormField
+            control={form.control}
+            name="tourVideoUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Video do tour</FormLabel>
+                <FormControl>
+                  <Input
+                    type="url"
+                    placeholder="https://www.youtube.com/watch?v="
+                    className="w-full"
+                    {...field}
+                  />
+                </FormControl>
+                <p className="text-sm text-gray-500">
+                  O video entra mudo na proposta publica. Vale YouTube ou arquivo mp4, webm, ogg ou mov.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <div>
             <div className="w-full">
               <FormField
@@ -1186,6 +1242,70 @@ export default function VenueSettings() {
                   </FormItem>
                 )}
               />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-semibold text-md">Cores da proposta</h3>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  form.setValue("proposalPrimaryColor", "");
+                  form.setValue("proposalSecondaryColor", "");
+                  form.setValue("proposalTextColor", "");
+                }}
+              >
+                Usar cores padrão
+              </Button>
+            </div>
+            <p className="text-sm text-gray-500">
+              Valem só na página pública do orçamento. Primária é o fundo, secundária é o card e a cor do texto é a fonte. Salve para aplicar. Vazio volta à cor atual.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {(
+                [
+                  ["proposalPrimaryColor", "Cor primária"],
+                  ["proposalSecondaryColor", "Cor secundária"],
+                  ["proposalTextColor", "Cor do texto"],
+                ] as const
+              ).map(([name, label]) => (
+                <FormField
+                  key={name}
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{label}</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          aria-label={label}
+                          className="h-10 w-14 cursor-pointer rounded border bg-white p-1"
+                          value={
+                            /^#[0-9A-Fa-f]{6}$/.test(field.value || "")
+                              ? field.value
+                              : "#4f46e5"
+                          }
+                          onChange={(event) => field.onChange(event.target.value)}
+                        />
+                        <FormControl>
+                          <Input
+                            placeholder="#RRGGBB"
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ))}
             </div>
           </div>
 

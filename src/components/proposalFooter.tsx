@@ -1,5 +1,4 @@
 import React from "react";
-import { Venue } from "@/types/venue";
 import {
   FaWhatsapp,
   FaFacebook,
@@ -9,8 +8,17 @@ import {
 } from "react-icons/fa";
 import { Calendar } from "lucide-react";
 
+interface ProposalFooterVenue {
+  name?: string | null;
+  whatsappNumber?: string | null;
+  facebookUrl?: string | null;
+  tiktokUrl?: string | null;
+  instagramUrl?: string | null;
+  url?: string | null;
+}
+
 interface ProposalFooterProps {
-  selectedVenue: Venue | null;
+  selectedVenue: ProposalFooterVenue | null;
 }
 
 export function ProposalFooter({ selectedVenue }: ProposalFooterProps) {
@@ -33,7 +41,7 @@ export function ProposalFooter({ selectedVenue }: ProposalFooterProps) {
       {/* Redes sociais - canto esquerdo no desktop, abaixo do logo no mobile */}
       <div className="flex flex-col items-center md:items-start">
         <span className="text-white text-lg font-semibold mb-4 md:mb-6">
-          Siga a {selectedVenue?.name} nas redes sociais:
+          Siga nas redes sociais:
         </span>
         <div className="flex gap-8 justify-center md:justify-start">
           {selectedVenue?.whatsappNumber && (

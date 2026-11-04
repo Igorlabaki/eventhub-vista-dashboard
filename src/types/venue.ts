@@ -13,7 +13,11 @@ export interface Venue {
   tiktokUrl?: string | null;
   instagramUrl?: string | null;
   facebookUrl?: string | null;
+  tourVideoUrl?: string | null;
   logoUrl?: string | null;
+  proposalPrimaryColor?: string | null;
+  proposalSecondaryColor?: string | null;
+  proposalTextColor?: string | null;
   street: string;
   streetNumber: string;
   minimumNights?: number | null;
@@ -122,7 +126,11 @@ export interface UpdateVenueDTO {
   openingHour?: string;
   closingHour?: string;
   facebookUrl?: string;
+  tourVideoUrl?: string;
   logoUrl?: string;
+  proposalPrimaryColor?: string;
+  proposalSecondaryColor?: string;
+  proposalTextColor?: string;
   standardEventDuration?: string;
   logoFile?: File;
   maxGuest?: string;

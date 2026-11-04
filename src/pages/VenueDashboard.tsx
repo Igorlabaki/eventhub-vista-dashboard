@@ -36,6 +36,7 @@ import { VenuePerformanceChart } from "@/components/venue/VenuePerformanceChart"
 import { VenuePerformanceChartAllMonths } from "@/components/venue/VenuePerformanceChartAllMonths";
 import { useVenueStore } from "@/store/venueStore";
 import { useGoalStore } from "@/store/goalStore";
+import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
 
 function VenueNotFound() {
   return (
@@ -90,6 +91,16 @@ export default function VenueDashboard() {
       fetchGoals(venueId);
     }
   }, [venueId, fetchGoals]);
+
+  useEffect(() => {
+    const currentVenue = venue?.id === venueId ? venue : null;
+    document.title = currentVenue?.name
+      ? venueTabTitle(currentVenue.name, currentVenue.description)
+      : EVENTHUB_TAB_TITLE;
+    return () => {
+      document.title = EVENTHUB_TAB_TITLE;
+    };
+  }, [venue, venueId]);
 
   const { data: venueDashBoardData, isLoading: isLoadingDashBoardData } =
     useGetVenueDashBoardData(venueId || "", {

@@ -13,6 +13,56 @@ import {
   ProposalDeleteResponse 
 } from '@/types/proposal';
 
+export type RecalculatePublicProposalData = {
+  id: string;
+  startDate: string;
+  endDate: string;
+  guestNumber: number;
+  basePrice: number;
+  extraHoursQty: number;
+  extraHourPrice: number;
+  totalAmount: number;
+};
+
+export interface ProposalPresentation {
+  name: string;
+  description: string | null;
+  logoUrl: string | null;
+  city: string;
+  state: string;
+  neighborhood: string;
+  street: string;
+  streetNumber: string;
+  maxGuest: number;
+  hasOvernightStay: boolean;
+  checkIn: string | null;
+  checkOut: string | null;
+  minimumNights: number | null;
+  openingHour: string | null;
+  closingHour: string | null;
+  url: string | null;
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+  tiktokUrl: string | null;
+  tourVideoUrl: string | null;
+  whatsappNumber: string | null;
+  proposalPrimaryColor: string | null;
+  proposalSecondaryColor: string | null;
+  proposalTextColor: string | null;
+  canReorder: boolean;
+  images: { id: string; imageUrl: string; description: string | null; position: number }[];
+  catalog: { id: string; imageUrl: string; description: string | null; position: number; isShowOnProposal: boolean }[];
+  amenities: { name: string; position: number }[];
+}
+
+export interface ProposalPresentationResponse {
+  success: boolean;
+  message: string;
+  data: ProposalPresentation;
+  count: number;
+  type: string;
+}
+
 export const proposalService = {
   createProposalPerPerson: async (data: CreateProposalPerPersonDTO) => {
     const response = await api.post<ProposalCreateResponse>('/proposal/createPerPerson', data);
@@ -26,6 +76,25 @@ export const proposalService = {
 
   getProposalById: async (proposalId: string) => {
     const response = await api.get<ProposalByIdResponse>(`/proposal/byId/${proposalId}`);
+    return response.data;
+  },
+
+  getProposalPresentation: async (proposalId: string) => {
+    const response = await api.get<ProposalPresentationResponse>(`/proposal/presentation/${proposalId}`);
+    return response.data;
+  },
+
+  reorderProposalImages: async (proposalId: string, imageIds: string[]) => {
+    const response = await api.put<ProposalPresentationResponse>(`/proposal/presentation/${proposalId}/image-order`, { imageIds });
+    return response.data;
+  },
+
+  chooseProposalImage: async (proposalId: string, slotId: string, replacementId: string) => {
+    const response = await api.put<{
+      success: boolean;
+      message: string;
+      data: { images: ProposalPresentation["images"]; catalog: ProposalPresentation["catalog"] };
+    }>(`/proposal/presentation/${proposalId}/image-choice`, { slotId, replacementId });
     return response.data;
   },
 
@@ -54,6 +123,17 @@ export const proposalService = {
     if (params.approved !== undefined) queryParams.append('approved', params.approved.toString());
 
     const response = await api.get<ProposalListResponse>(`/proposal/list?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  recalculatePublicProposal: async (
+    proposalId: string,
+    data: { date: string; guestNumber: number; hours: number },
+  ) => {
+    const response = await api.put<{ success: boolean; message: string; data: RecalculatePublicProposalData }>(
+      `/proposal/presentation/${proposalId}/recalculate`,
+      data,
+    );
     return response.data;
   },
 

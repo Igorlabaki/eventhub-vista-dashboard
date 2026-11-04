@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -98,11 +97,20 @@ function formatWhatsapp(value: string) {
 
 
 
+function openCreatedProposal(detailTab: Window | null, proposalId: string) {
+  if (!detailTab || detailTab.closed) return;
+  try {
+    detailTab.opener = null;
+    detailTab.location.href = `${window.location.origin}/proposal/${proposalId}`;
+  } catch {
+    // O orçamento já foi criado. A aba atual ainda deve resetar.
+  }
+}
+
 export function PerPersonProposalForm({
   venueId,
   onBack,
 }: PerPersonProposalFormProps) {
-  const navigate = useNavigate();
   const { createProposalPerPerson } = useProposalStore();
   const { services, fetchServices, isLoading: isLoadingServices } = useServiceStore();
   const { selectedVenue } = useVenueStore();
@@ -159,6 +167,8 @@ export function PerPersonProposalForm({
   });
 
   const onSubmit = async (values: FormValues) => {
+    const detailTab = window.open("about:blank", "_blank");
+
     try {
       const proposalData: CreateProposalPerPersonDTO = {
         date: values.date,
@@ -186,11 +196,15 @@ export function PerPersonProposalForm({
       });
 
       if (response?.data?.id) {
-        navigate(`/proposal/${response.data.id}`);
+        openCreatedProposal(detailTab, response.data.id);
+        form.reset();
+        setSelectedServiceIds([]);
       } else {
+        detailTab?.close();
         onBack();
       }
     } catch (error: unknown) {
+      detailTab?.close();
       const { title, message } = handleBackendError(error, "Erro ao criar orçamento. Tente novamente mais tarde.");
       toast({
         title,

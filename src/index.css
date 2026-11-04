@@ -119,3 +119,13 @@
     @apply flex flex-col p-4 rounded-lg bg-eventhub-tertiary/30;
   }
 }
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .proposal-photo-zoom {
+    transition: transform 200ms ease-out;
+  }
+
+  .group:hover .proposal-photo-zoom {
+    transform: scale(1.025);
+  }
+}

@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -84,8 +83,17 @@ function generateTimeOptions() {
   return options;
 }
 
+function openCreatedProposal(detailTab: Window | null, proposalId: string) {
+  if (!detailTab || detailTab.closed) return;
+  try {
+    detailTab.opener = null;
+    detailTab.location.href = `${window.location.origin}/proposal/${proposalId}`;
+  } catch {
+    // O orçamento já foi criado. A aba atual ainda deve resetar.
+  }
+}
+
 export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps) {
-  const navigate = useNavigate();
   const { createProposalPerDay } = useProposalStore();
   const { services, fetchServices, isLoading: isLoadingServices } = useServiceStore();
   const { selectedVenue } = useVenueStore();
@@ -120,6 +128,8 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
   });
 
   const onSubmit = async (values: FormValues) => {
+    const detailTab = window.open("about:blank", "_blank");
+
     try {
       const proposalData: CreateProposalPerDayDTO = {
         completeClientName: values.completeClientName,
@@ -148,11 +158,15 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
       });
 
       if (response?.data?.id) {
-        navigate(`/proposal/${response.data.id}`);
+        openCreatedProposal(detailTab, response.data.id);
+        form.reset();
+        setSelectedServiceIds([]);
       } else {
+        detailTab?.close();
         onBack();
       }
     } catch (error: unknown) {
+      detailTab?.close();
       const { title, message } = handleBackendError(error, "Erro ao criar orçamento. Tente novamente mais tarde.");
       toast({
         title,
