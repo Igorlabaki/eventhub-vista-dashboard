@@ -219,6 +219,7 @@ export interface VenueDashboardData {
     type: string;
     proposalId: string | null;
   } | null;
+  proposalYears: number[];
 }
 
 

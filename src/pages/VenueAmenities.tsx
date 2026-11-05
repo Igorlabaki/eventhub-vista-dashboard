@@ -10,6 +10,7 @@ import { VenueAmenity } from "@/types/venue-amenity";
 export default function VenueAmenities() {
     const { selectedVenue: venue } = useVenueStore();
     const [isCreating, setIsCreating] = useState(false);
+    const [createSession, setCreateSession] = useState(0);
     const [selectedAmenity, setSelectedAmenity] = useState<VenueAmenity | null | undefined>(undefined);
     const { amenities, isLoading, error, fetchAmenities } = useVenueAmenityStore();
     const { currentUserVenuePermission } = useUserVenuePermissionStore();
@@ -22,11 +23,17 @@ export default function VenueAmenities() {
 
     const canEdit = currentUserVenuePermission?.permissions?.includes("EDIT_VENUE_AMENITIES") ?? false;
 
+    const openCreate = () => {
+        setSelectedAmenity(undefined);
+        setCreateSession((session) => session + 1);
+        setIsCreating(true);
+    };
+
     return (
         <DashboardLayout title="Características" subtitle="Cadastre o que este espaço tem">
             {canEdit && (
                 <PageHeader
-                    onCreateClick={() => setIsCreating(true)}
+                    onCreateClick={openCreate}
                     isFormOpen={isCreating || !!selectedAmenity}
                     createButtonText="Nova característica"
                 />
@@ -48,9 +55,10 @@ export default function VenueAmenities() {
                 venueId={venue?.id ?? ""}
                 isLoading={isLoading}
                 isCreating={isCreating}
+                createSession={createSession}
                 selectedAmenity={selectedAmenity}
                 setSelectedAmenity={setSelectedAmenity}
-                onCreateClick={() => setIsCreating(true)}
+                onCreateClick={openCreate}
                 onCancelCreate={() => setIsCreating(false)}
             />
         </DashboardLayout>

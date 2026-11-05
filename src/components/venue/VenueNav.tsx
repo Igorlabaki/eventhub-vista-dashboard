@@ -1,195 +1,105 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { cn } from "@/lib/utils";
+import type { ElementType } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Users,
-  Target,
-  Contact,
-  Bell,
-  Globe,
-  ClipboardList,
-  MapPin,
-  Calendar,
   BarChart,
+  Bell,
+  Calendar,
   CalendarDays,
-  Settings,
-  KeyRound,
-  Wrench,
-  Receipt,
+  ClipboardList,
+  Contact,
+  Globe,
+  LayoutDashboard,
   ListChecks,
+  Receipt,
+  Settings,
   Sparkles,
+  Target,
+  Wrench,
 } from "lucide-react";
 import { Venue } from "@/types";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
-import { venueViewPermissions, Permissions } from "@/types/permissions";
+import { Permissions } from "@/types/permissions";
+import { SectionedNav } from "@/components/sidebar/SectionedNav";
+import {
+  flatNavItems,
+  itemHref,
+  presentNavItems,
+  venueSections,
+  venueSettingsItem,
+  visibleSections,
+} from "@/components/sidebar/sidebar-nav-model";
 
 interface VenueNavProps {
   isCollapsed: boolean;
   onNavItemClick: () => void;
   venue: Venue;
+  hold?: boolean;
 }
 
-interface NavItem {
-  title: string;
-  href: string;
-  icon: React.ElementType;
-  permissionRequired: Permissions;
-}
+const venueIcons: Record<string, ElementType> = {
+  "Visão Geral": LayoutDashboard,
+  "Orçamentos": ClipboardList,
+  Agenda: CalendarDays,
+  Eventos: Calendar,
+  "Notificações": Bell,
+  "Metas/Preços": Target,
+  Serviços: Wrench,
+  Despesas: Receipt,
+  Relatórios: BarChart,
+  Contatos: Contact,
+  Site: Globe,
+  Regras: ListChecks,
+  Características: Sparkles,
+  Configurações: Settings,
+};
 
 export function VenueNav({
   isCollapsed,
   onNavItemClick,
   venue,
+  hold = false,
 }: VenueNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
+  const permissions = currentUserVenuePermission?.permissions;
+  const base = `/venue/${venue.id}`;
 
-  // Mapeamento dos itens de navegação baseado no venueViewPermissions
-  const venueNavItems: NavItem[] = [
-    {
-      title: "Notificações",
-      href: `/venue/${venue?.id}/notifications`,
-      icon: Bell,
-      permissionRequired: Permissions.VIEW_VENUE_NOTIFICATIONS,
-    },
-    {
-      title: "Visão Geral",
-      href: `/venue/${venue?.id}`,
-      icon: LayoutDashboard,
-      permissionRequired: Permissions.VIEW_VENUE_INFO,
-    },
-    {
-      title: "Metas/Preços",
-      href: `/venue/${venue?.id}/goals`,
-      icon: Target,
-      permissionRequired: Permissions.VIEW_VENUE_PRICES,
-    },
-    {
-      title: "Contatos",
-      href: `/venue/${venue?.id}/contacts`,
-      icon: Contact,
-      permissionRequired: Permissions.VIEW_VENUE_CONTACTS,
-    },
-    {
-      title: "Site",
-      href: `/venue/${venue?.id}/website`,
-      icon: Globe,
-      permissionRequired: Permissions.VIEW_VENUE_SITES,
-    },
-    {
-      title: "Orçamentos",
-      href: `/venue/${venue?.id}/budgets`,
-      icon: ClipboardList,
-      permissionRequired: Permissions.VIEW_VENUE_PROPOSALS,
-    },
-    {
-      title: "Despesas",
-      href: `/venue/${venue?.id}/expenses`,
-      icon: Receipt,
-      permissionRequired: Permissions.VIEW_VENUE_EXPENSES,
-    },
-    {
-      title: "Serviços",
-      href: `/venue/${venue?.id}/services`,
-      icon: Wrench,
-      permissionRequired: Permissions.VIEW_VENUE_SERVICES,
-    },
-    {
-      title: "Regras",
-      href: `/venue/${venue?.id}/rules`,
-      icon: ListChecks,
-      permissionRequired: Permissions.VIEW_VENUE_RULES,
-    },
-    {
-      title: "Características",
-      href: `/venue/${venue?.id}/amenities`,
-      icon: Sparkles,
-      permissionRequired: Permissions.VIEW_VENUE_AMENITIES,
-    },
-    {
-      title: "Eventos",
-      href: `/venue/${venue?.id}/events`,
-      icon: Calendar,
-      permissionRequired: Permissions.VIEW_VENUE_EVENTS,
-    },
-    {
-      title: "Relatórios",
-      href: `/venue/${venue?.id}/reports`,
-      icon: BarChart,
-      permissionRequired: Permissions.VIEW_VENUE_ANALYSIS,
-    },
-    {
-      title: "Agenda",
-      href: `/venue/${venue?.id}/schedule`,
-      icon: CalendarDays,
-      permissionRequired: Permissions.VIEW_VENUE_CALENDAR,
-    },
-    {
-      title: "Configurações",
-      href: `/venue/${venue?.id}/settings`,
-      icon: Settings,
-      permissionRequired: Permissions.VIEW_VENUE_CONFIG,
-    },
-  ];
-
-  // Função para verificar se o usuário tem a permissão necessária
-  const hasPermission = (requiredPermission: Permissions) => {
-    if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes(requiredPermission);
+  const canSee = (permission?: Permissions) => {
+    if (!permission || !permissions) return false;
+    return permissions.includes(permission);
   };
 
-  // Filtrar itens baseado nas permissões
-  const filteredNavItems = venueNavItems.filter(item => 
-    hasPermission(item.permissionRequired)
-  );
+  const sections = visibleSections(venueSections, canSee);
+  const settings = canSee(venueSettingsItem.permission) ? venueSettingsItem : null;
 
-  // Verificar se a página atual é acessível e redirecionar se necessário
   useEffect(() => {
-    if (!venue?.id || !currentUserVenuePermission?.permissions) return;
+    if (hold || !venue.id || !permissions) return;
 
-    const currentPath = location.pathname;
-    const currentItem = venueNavItems.find(item => item.href === currentPath);
-    
-    // Se a página atual não existe ou o usuário não tem permissão
-    if (!currentItem || !hasPermission(currentItem.permissionRequired)) {
-      // Encontrar a primeira página disponível
-      const firstAvailableItem = venueNavItems.find(item => 
-        hasPermission(item.permissionRequired)
-      );
-      
-      // Redirecionar para a primeira página disponível
-      if (firstAvailableItem) {
-        navigate(firstAvailableItem.href);
-      }
+    const allowed = flatNavItems(visibleSections(venueSections, (permission) => {
+      if (!permission) return false;
+      return permissions.includes(permission);
+    }), permissions.includes(Permissions.VIEW_VENUE_CONFIG) ? venueSettingsItem : null);
+
+    const current = allowed.find((item) => itemHref(base, item.path) === location.pathname);
+    if (!current && allowed[0]) {
+      navigate(itemHref(base, allowed[0].path));
     }
-  }, [location.pathname, currentUserVenuePermission?.permissions, venue?.id]);
+  }, [hold, location.pathname, permissions, venue.id, base, navigate]);
 
   return (
-    <div className="pt-3 pb-1">
-      {!isCollapsed && (
-        <div className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-           { venue?.name}
-        </div>
-      )}
-
-      {filteredNavItems.map((item) => (
-        <Link
-          key={item.href}
-          to={item.href}
-          className={cn(
-            "flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
-            location.pathname === item.href
-              ? "bg-eventhub-tertiary/30 text-eventhub-primary"
-              : "text-gray-700"
-          )}
-          onClick={onNavItemClick}
-        >
-          <item.icon className="h-5 w-5 mr-2" />
-          {!isCollapsed && <span>{item.title}</span>}
-        </Link>
-      ))}
-    </div>
+    <SectionedNav
+      heading={venue.name}
+      sections={sections.map((section) => ({
+        ...section,
+        items: presentNavItems(section.items, base, venueIcons),
+      }))}
+      settings={settings ? presentNavItems([settings], base, venueIcons)[0] : null}
+      isCollapsed={isCollapsed}
+      collapsedMode="always-open"
+      isActive={(href) => location.pathname === href}
+      onNavigate={onNavItemClick}
+    />
   );
-} 
+}

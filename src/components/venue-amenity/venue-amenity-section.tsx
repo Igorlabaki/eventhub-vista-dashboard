@@ -1,3 +1,4 @@
+import { venueCreateFormKey } from "@/lib/venue-create-form-key";
 import { VenueAmenity } from "@/types/venue-amenity";
 import { VenueAmenityForm } from "./venue-amenity-form";
 import { VenueAmenityList } from "./venue-amenity-list";
@@ -13,6 +14,7 @@ interface VenueAmenitySectionProps {
     venueId: string;
     isLoading: boolean;
     isCreating: boolean;
+    createSession: number;
     selectedAmenity: VenueAmenity | null | undefined;
     setSelectedAmenity: (amenity: VenueAmenity | null | undefined) => void;
     onCreateClick: () => void;
@@ -24,6 +26,7 @@ export function VenueAmenitySection({
     venueId,
     isLoading,
     isCreating,
+    createSession,
     selectedAmenity,
     setSelectedAmenity,
     onCreateClick,
@@ -75,6 +78,7 @@ export function VenueAmenitySection({
                     }
                     form={
                         <VenueAmenityForm
+                            key={venueCreateFormKey(selectedAmenity?.id, createSession)}
                             amenity={selectedAmenity}
                             onSubmit={handleSubmit}
                             onCancel={() => {

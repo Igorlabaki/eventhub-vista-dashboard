@@ -1,112 +1,65 @@
-import { Link, useLocation, useParams } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import {
-  ShieldCheck,
-  KeyRound,
-  FileText,
-  Building,
-  Settings,
-  Globe,
-} from "lucide-react";
-import { organizationViewPermissions, Permissions } from "@/types/permissions";
+import type { ElementType } from "react";
+import { useLocation, useParams } from "react-router-dom";
+import { Building, FileText, Globe, KeyRound, Settings, ShieldCheck } from "lucide-react";
+import { Permissions } from "@/types/permissions";
 import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
+import { SectionedNav } from "@/components/sidebar/SectionedNav";
+import {
+  organizationSections,
+  organizationSettingsItem,
+  presentNavItems,
+  visibleSections,
+} from "@/components/sidebar/sidebar-nav-model";
 
 interface OrganizationNavProps {
   organizationName: string;
   isCollapsed: boolean;
   onNavItemClick: () => void;
+  organizationId?: string;
 }
 
-interface NavItem {
-  title: string;
-  href: string;
-  icon: React.ElementType;
-  permissionRequired: Permissions;
-}
+const organizationIcons: Record<string, ElementType> = {
+  Espaços: Building,
+  Contratos: FileText,
+  Site: Globe,
+  Permissões: ShieldCheck,
+  Proprietários: KeyRound,
+  Configurações: Settings,
+};
 
 export function OrganizationNav({
   organizationName,
   isCollapsed,
   onNavItemClick,
+  organizationId: organizationIdProp,
 }: OrganizationNavProps) {
   const location = useLocation();
   const params = useParams();
-  const organizationId = params.id;
+  const organizationId = organizationIdProp || params.id;
   const { currentUserOrganizationPermission } = useUserOrganizationPermissionStore();
+  const permissions = currentUserOrganizationPermission?.permissions;
+  const base = `/organization/${organizationId}`;
 
-  // Mapeamento dos itens de navegação baseado no organizationViewPermissions
-  const organizationActionItems: NavItem[] = [
-    {
-      title: "Espaços",
-      href: `/organization/${organizationId}/venues`,
-      icon: Building,
-      permissionRequired: Permissions.VIEW_ORG_VENUES,
-    },
-    {
-      title: "Contratos",
-      href: `/organization/${organizationId}/contracts`,
-      icon: FileText,
-      permissionRequired: Permissions.VIEW_ORG_CONTRACTS,
-    },
-    {
-      title: "Permissões",
-      href: `/organization/${organizationId}/permissions`,
-      icon: ShieldCheck,
-      permissionRequired: Permissions.VIEW_ORG_PERMISSIONS,
-    },
-    {
-      title: "Proprietários",
-      href: `/organization/${organizationId}/owners`,
-      icon: KeyRound,
-      permissionRequired: Permissions.VIEW_ORG_OWNERS,
-    },
-    {
-      title: "Site",
-      href: `/organization/${organizationId}/website`,
-      icon: Globe,
-      permissionRequired: Permissions.VIEW_ORG_SITE,
-    },
-    {
-      title: "Configurações",
-      href: `/organization/${organizationId}/settings`,
-      icon: Settings,
-      permissionRequired: Permissions.VIEW_ORG_INFO,
-    },
-  ];
-  
-  // Função para verificar se o usuário tem a permissão necessária
-  const hasPermission = (requiredPermission: Permissions) => {
-    if (!currentUserOrganizationPermission?.permissions) return false;
-    return currentUserOrganizationPermission.permissions.includes(requiredPermission);
+  const canSee = (permission?: Permissions) => {
+    if (!permission || !permissions) return false;
+    return permissions.includes(permission);
   };
 
-  // Filtrar itens baseado nas permissões
-  const filteredNavItems = organizationActionItems.filter(item => 
-    hasPermission(item.permissionRequired)
-  );
+  const sections = visibleSections(organizationSections, canSee);
+  const settings = canSee(organizationSettingsItem.permission) ? organizationSettingsItem : null;
 
   return (
-    <div className="pb-1">
-      <div className="px-3 mt-4 mb-2 text-sm font-semibold text-gray-500">
-        {organizationName}
-      </div>
-      
-      {filteredNavItems.map((item) => (
-        <Link
-          key={item.title}
-          to={item.href}
-          className={cn(
-            "flex items-center px-3 py-2 mt-1 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary",
-            location.pathname.includes(item.href)
-              ? "bg-eventhub-tertiary/30 text-eventhub-primary"
-              : "text-gray-700"
-          )}
-          onClick={onNavItemClick}
-        >
-          <item.icon className="h-5 w-5 mr-2" />
-          {!isCollapsed && <span>{item.title}</span>}
-        </Link>
-      ))}
-    </div>
+    <SectionedNav
+      heading={organizationName || undefined}
+      sections={sections.map((section) => ({
+        ...section,
+        items: presentNavItems(section.items, base, organizationIcons),
+      }))}
+      settings={settings ? presentNavItems([settings], base, organizationIcons)[0] : null}
+      isCollapsed={isCollapsed}
+      collapsedMode="all"
+      isActive={(href) => location.pathname.includes(href)}
+      onNavigate={onNavItemClick}
+    />
   );
-} 
+}

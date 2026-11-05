@@ -1,3 +1,4 @@
+import { venueCreateFormKey } from "@/lib/venue-create-form-key";
 import { VenueRule } from "@/types/venue-rule";
 import { VenueRuleForm } from "./venue-rule-form";
 import { VenueRuleList } from "./venue-rule-list";
@@ -13,6 +14,7 @@ interface VenueRuleSectionProps {
     venueId: string;
     isLoading: boolean;
     isCreating: boolean;
+    createSession: number;
     selectedRule: VenueRule | null | undefined;
     setSelectedRule: (rule: VenueRule | null | undefined) => void;
     onCreateClick: () => void;
@@ -24,6 +26,7 @@ export function VenueRuleSection({
     venueId,
     isLoading,
     isCreating,
+    createSession,
     selectedRule,
     setSelectedRule,
     onCreateClick,
@@ -77,6 +80,7 @@ export function VenueRuleSection({
                     }
                     form={
                         <VenueRuleForm
+                            key={venueCreateFormKey(selectedRule?.id, createSession)}
                             rule={selectedRule}
                             onSubmit={handleSubmit}
                             onCancel={() => {

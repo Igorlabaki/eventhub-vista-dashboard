@@ -35,6 +35,21 @@ export type PublicServiceChoice = {
   hours?: number | null;
 };
 
+export type PublicIndication = {
+  id: string;
+  name: string;
+  role: string | null;
+  whatsapp: string;
+  email: string | null;
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+  tiktokUrl: string | null;
+  url: string | null;
+  category?: string | null;
+  logoUrl?: string | null;
+  description?: string | null;
+};
+
 export type PublicProposalServicesUpdate = {
   id: string;
   totalAmount: number;
@@ -146,7 +161,13 @@ export const proposalService = {
     if (params.email) queryParams.append('email', params.email);
     if (params.month) queryParams.append('month', params.month);
     if (params.year) queryParams.append('year', params.year);
+    if (params.day) queryParams.append('day', params.day);
+    if (params.page) queryParams.append('page', params.page);
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+    if (params.summary) queryParams.append('summary', 'true');
     if (params.approved !== undefined) queryParams.append('approved', params.approved.toString());
+    if (params.minAmount !== undefined) queryParams.append('minAmount', String(params.minAmount));
 
     const response = await api.get<ProposalListResponse>(`/proposal/list?${queryParams.toString()}`);
     return response.data;
@@ -179,6 +200,24 @@ export const proposalService = {
       `/proposal/presentation/${proposalId}/services`,
       { serviceIds, serviceHours },
     );
+    return response.data;
+  },
+
+  listProposalIndications: async (proposalId: string) => {
+    const response = await api.get<{
+      success: boolean;
+      message: string;
+      data: { indications: PublicIndication[] };
+    }>(`/proposal/indications/${proposalId}`);
+    return response.data;
+  },
+
+  replaceProposalIndications: async (proposalId: string, contactIds: string[]) => {
+    const response = await api.put<{
+      success: boolean;
+      message: string;
+      data: { contactIds: string[] };
+    }>(`/proposal/indications/${proposalId}`, { contactIds });
     return response.data;
   },
 

@@ -1,4 +1,5 @@
 import { api } from "@/lib/axios";
+import { PublicVenueRuleCard } from "@/lib/public-venue-rules";
 import {
     CreateVenueRuleDTO,
     UpdateVenueRuleDTO,
@@ -9,6 +10,13 @@ import {
 export const venueRuleService = {
     list: async (venueId: string) => {
         const response = await api.get<VenueRuleListResponse>(`/venue-rule/list/${venueId}`);
+        return response.data;
+    },
+
+    listPublic: async (venueId: string) => {
+        const response = await api.get<VenueRuleListResponse & { data: PublicVenueRuleCard[] }>(
+            `/venue-rule/public/${venueId}`,
+        );
         return response.data;
     },
 

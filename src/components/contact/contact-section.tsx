@@ -1,12 +1,11 @@
-import { Contact, ContactType } from "@/types/contact";
+import { ReactNode } from "react";
+import { Contact, ContactType, PartnerCategory } from "@/types/contact";
 
 import { useContactStore } from "@/store/contactStore";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useToast } from "@/hooks/use-toast";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
 import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
-import { EmptyState } from "@/components/EmptyState";
-import { ContactListSkeleton } from "./contact-list-skeleton";
 import { ContactList } from "./contact-list";
 import { ContactForm } from "./contact-form";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
@@ -14,18 +13,18 @@ import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 interface ContactSectionProps {
   contacts?: Contact[];
   venueId: string;
-  isLoading: boolean; 
-  searchQuery: string;
+  isLoading: boolean;
   isCreating: boolean;
   hasPermission: boolean;
   selectedContact: Contact | null | undefined;
   setSelectedContact: (contact: Contact | null | undefined) => void;
   onCreateClick: () => void;
   onCancelCreate: () => void;
+  listHeader?: ReactNode;
+  listFooter?: ReactNode;
 }
 
 export function ContactSection({
-  searchQuery,
   contacts,
   venueId,
   isLoading,
@@ -35,25 +34,31 @@ export function ContactSection({
   setSelectedContact,
   onCreateClick,
   onCancelCreate,
+  listHeader,
+  listFooter,
 }: ContactSectionProps) {
-  const { createContact, updateContact } = useContactStore();
+  const { createContact, updateContact, deleteContact } = useContactStore();
   const { toast } = useToast();
 
   const handleSubmit = async (data: {
-    name: string;
-    role: string;
-    whatsapp: string;
+    name?: string;
+    role?: string;
+    whatsapp?: string;
     email?: string;
     type?: ContactType;
-  }) => {
+    category?: PartnerCategory;
+    description?: string;
+  }, extra?: { file?: File; removeLogo?: boolean }) => {
     try {
       let response;
       if (selectedContact) {
         response = await updateContact(selectedContact.id, {
           ...data,
           email: data.email || undefined,
+          description: data.type === ContactType.SUPPLIER ? data.description : undefined,
+          removeLogo: extra?.removeLogo,
           venueId,
-        });
+        }, extra?.file);
         const { title, message } = handleBackendSuccess(response, "Contato atualizado com sucesso!");
         showSuccessToast({
           title,
@@ -62,8 +67,9 @@ export function ContactSection({
       } else {
         response = await createContact({
           ...data,
+          description: data.type === ContactType.SUPPLIER ? data.description : undefined,
           venueId,
-        });
+        }, extra?.file);
         const { title, message } = handleBackendSuccess(response, "Contato criado com sucesso!");
         showSuccessToast({
           title,
@@ -90,15 +96,18 @@ export function ContactSection({
       <AnimatedFormSwitcher
         showForm={showForm}
         list={
-          <ContactList
-            searchQuery={searchQuery}
-            venueId={venueId}
-            hasPermission={hasPermission}
-            contacts={contacts}
-            isLoading={isLoading}
-            onCreateClick={onCreateClick}
-            onEditClick={setSelectedContact}
-          />
+          <>
+            {listHeader}
+            <ContactList
+              hasPermission={hasPermission}
+              contacts={contacts}
+              isLoading={isLoading}
+              onCreateClick={onCreateClick}
+              onEditClick={setSelectedContact}
+              onDeleteClick={(contact) => deleteContact(contact.id, venueId)}
+            />
+            {listFooter}
+          </>
         }
         form={
           <ContactForm

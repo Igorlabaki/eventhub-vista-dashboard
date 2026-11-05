@@ -1,15 +1,19 @@
 import { create } from "zustand";
-import { Contact, ContactType, ContactListResponse, ContactCreateResponse, ContactUpdateResponse, ContactDeleteResponse } from "@/types/contact";
+import { Contact, ContactListPagination, ContactListResponse, ContactListSummary, ContactCreateResponse, ContactUpdateResponse, ContactDeleteResponse, ListContactsParams } from "@/types/contact";
 import { contactService } from "@/services/contactService";
 
 interface ContactStore {
   contacts: Contact[];
+  contactListPagination: ContactListPagination | null;
+  contactListSummary: ContactListSummary | null;
+  contactListError: string | null;
+  lastListParams: ListContactsParams | null;
   isLoading: boolean;
   error: string | null;
   setContacts: (contacts: Contact[]) => void;
-  fetchContacts: ({venueId, name, type}: {venueId: string, name?: string, type?: ContactType}) => Promise<void>;
-  createContact: (contact: Omit<Contact, "id">) => Promise<ContactCreateResponse>;
-  updateContact: (contactId: string, data: Partial<Contact>) => Promise<ContactUpdateResponse>;
+  fetchContacts: (params: ListContactsParams) => Promise<void>;
+  createContact: (contact: Omit<Contact, "id">, file?: File) => Promise<ContactCreateResponse>;
+  updateContact: (contactId: string, data: Partial<Contact> & { removeLogo?: boolean }, file?: File) => Promise<ContactUpdateResponse>;
   deleteContact: (contactId: string, venueId: string) => Promise<ContactDeleteResponse>;
   clearError: () => void;
 }
@@ -22,35 +26,52 @@ interface ApiError {
   };
 }
 
+function reloadList(get: () => ContactStore, venueId: string) {
+  const last = get().lastListParams;
+  return get().fetchContacts(last?.venueId === venueId ? last : { venueId });
+}
+
 export const useContactStore = create<ContactStore>((set, get) => ({
   contacts: [],
+  contactListPagination: null,
+  contactListSummary: null,
+  contactListError: null,
+  lastListParams: null,
   isLoading: false,
   error: null,
   setContacts: (contacts) => set({ contacts }),
-  clearError: () => set({ error: null }),
+  clearError: () => set({ error: null, contactListError: null }),
 
-  fetchContacts: async ({venueId, name, type}: {venueId: string, name?: string, type?: ContactType}) => {
-    set({ isLoading: true, error: null });
+  fetchContacts: async (params: ListContactsParams) => {
+    set({ isLoading: true, error: null, contactListError: null, lastListParams: params });
     try {
-      const response = await contactService.list({ venueId, name, type });
-      const listResponse = response as unknown as ContactListResponse;
-      set({ contacts: listResponse.data.contactList, isLoading: false });
+      const listResponse: ContactListResponse = await contactService.list(params);
+      set({
+        contacts: listResponse.data.contactList,
+        contactListPagination: listResponse.pagination ?? null,
+        contactListSummary: listResponse.data.summary ?? null,
+        isLoading: false,
+      });
     } catch (err: unknown) {
       const error = err as ApiError;
+      const message = error?.response?.data?.message || "Erro ao carregar contatos.";
       set({
-        error: error?.response?.data?.message || "Erro ao carregar contatos.",
+        error: message,
+        contactListError: message,
         contacts: [],
+        contactListPagination: null,
+        contactListSummary: null,
         isLoading: false
       });
     }
   },
 
-  createContact: async (contact) => {
+  createContact: async (contact, file) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await contactService.create(contact);
+      const response = await contactService.create(contact, file);
       const createResponse = response as ContactCreateResponse;
-      await get().fetchContacts({venueId: contact.venueId});
+      await reloadList(get, contact.venueId);
       set({ isLoading: false });
       return createResponse;
     } catch (err: unknown) {
@@ -63,12 +84,12 @@ export const useContactStore = create<ContactStore>((set, get) => ({
     }
   },
 
-  updateContact: async (contactId, data) => {
+  updateContact: async (contactId, data, file) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await contactService.update({ contactId, data });
+      const response = await contactService.update({ contactId, data }, file);
       const updateResponse = response as ContactUpdateResponse;
-      await get().fetchContacts({venueId: data.venueId || ""});
+      await reloadList(get, data.venueId || "");
       set({ isLoading: false });
       return updateResponse;
     } catch (err: unknown) {
@@ -85,7 +106,7 @@ export const useContactStore = create<ContactStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await contactService.delete(contactId);
-      await get().fetchContacts({venueId: venueId});
+      await reloadList(get, venueId);
       set({ isLoading: false });
       // Retorna um objeto ContactDeleteResponse manualmente
       return {

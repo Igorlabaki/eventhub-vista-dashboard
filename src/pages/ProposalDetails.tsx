@@ -1,7 +1,9 @@
 import { useParams } from "react-router-dom";
 import { useProposalStore } from "@/store/proposalStore";
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { notificationService } from "@/services/notification.service";
 import { Users, Calendar, Clock, Share2, CheckCircle } from "lucide-react";
 import { ProposalServicesSummary } from "@/components/proposal/ProposalServicesSummary";
 import AccessDenied from "@/components/accessDenied";
@@ -73,21 +75,27 @@ function ProposalDetailsSkeleton() {
 
 export default function ProposalDetails() {
   const { id } = useParams();
+  const queryClient = useQueryClient();
   const { fetchProposalById, currentProposal, isLoading, setCurrentProposal } =
     useProposalStore();
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (id) {
-      fetchProposalById(id);
-    }
+    if (!id) return;
+    let active = true;
+    fetchProposalById(id).then((proposal) => {
+      if (!active || !proposal?.id) return;
+      notificationService.markReadByProposal(proposal.id)
+        .then(() => queryClient.invalidateQueries({ queryKey: ["notifications", proposal.venueId] }))
+        .catch(() => undefined);
+    });
 
-    // Cleanup function para limpar a proposta atual quando o componente for desmontado
     return () => {
+      active = false;
       setCurrentProposal(null);
     };
-  }, [id, fetchProposalById, setCurrentProposal]);
+  }, [id, fetchProposalById, setCurrentProposal, queryClient]);
 
   const hasViewValuesPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;

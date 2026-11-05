@@ -1,20 +1,15 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus } from "lucide-react";
+import { Search } from "lucide-react";
 import { useProposalStore } from "@/store/proposalStore";
 import { useVenueStore } from "@/store/venueStore";
-import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
 import { EventTable } from "@/components/events/EventTable";
 import { EventMonthYearNavigator } from "@/components/events/EventMonthYearNavigator";
 import { EventDetails } from "@/components/EventDetails";
 import { EventSidebar } from "@/components/EventSidebar";
-import { FloatingActionButton } from "@/components/FloatingActionButton";
-import { EventFilterList } from "@/components/events/EventFilterList";
-import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
-import AccessDenied from "@/components/accessDenied";
+import { ProposalListPager } from "@/components/proposal/ProposalListPager";
 
 // Month names in Portuguese
 const monthNames = [
@@ -33,7 +28,9 @@ const monthNames = [
 ];
 
 export default function VenueEvents() {
+  const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -41,10 +38,14 @@ export default function VenueEvents() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
 
-  const { events, isLoading, error, fetchEvents, fetchProposalById } =
-    useProposalStore();
-
-  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+  const {
+    events,
+    isLoadingEvents,
+    eventListPagination,
+    eventListError,
+    fetchEvents,
+    fetchProposalById,
+  } = useProposalStore();
 
   useEffect(() => {
     const eventId = searchParams.get("id");
@@ -55,14 +56,27 @@ export default function VenueEvents() {
     }
   }, [searchParams]);
 
-  // Effect to fetch events when month/year changes
   useEffect(() => {
+    const handle = setTimeout(() => {
+      const next = searchInput.trim();
+      setSearchTerm((current) => {
+        if (current !== next) setPage(1);
+        return next;
+      });
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
+
+  useEffect(() => {
+    if (!selectedVenue?.id) return;
     fetchEvents({
       venueId: selectedVenue.id,
       month: (selectedMonth + 1).toString(),
       year: selectedYear.toString(),
+      completeClientName: searchTerm || undefined,
+      page: String(page),
     });
-  }, [selectedMonth, selectedYear]);
+  }, [selectedVenue?.id, selectedMonth, selectedYear, searchTerm, page]);
 
  // Handle opening event details
   const handleOpenEventDetails = (event) => {
@@ -84,37 +98,46 @@ export default function VenueEvents() {
         selectedYear={selectedYear}
         selectedMonth={selectedMonth}
         monthNames={monthNames}
-        onYearChange={setSelectedYear}
-        onMonthChange={setSelectedMonth}
+        onYearChange={(year) => {
+          setSelectedYear(year);
+          setPage(1);
+        }}
+        onMonthChange={(month) => {
+          setSelectedMonth(month);
+          setPage(1);
+        }}
       />
 
-      <EventFilterList
-        items={events.filter(
-          (event) =>
-            new Date(event.startDate).getMonth() === selectedMonth &&
-            new Date(event.startDate).getFullYear() === selectedYear
-        )}
-        filterBy={(event, query) =>
-          event.completeClientName.toLowerCase().includes(query.toLowerCase())
-        }
-        placeholder="Buscar eventos..."
-      >
-        {(filteredEvents) => (
-          <>
-            <div className="mb-2 text-sm text-gray-500">
-              {filteredEvents.length} eventos
-            </div>
-            <EventTable
-              events={filteredEvents}
-              isLoading={isLoading}
-              onEventClick={handleOpenEventDetails}
-              monthNames={monthNames}
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
-            />
-          </>
-        )}
-      </EventFilterList>
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={searchInput}
+          onChange={(event) => setSearchInput(event.target.value)}
+          placeholder="Buscar eventos..."
+          className="bg-white pl-9"
+        />
+      </div>
+      <div className="mb-2 text-sm text-gray-500">
+        {eventListPagination?.total ?? 0} eventos
+      </div>
+      {eventListError && (
+        <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {eventListError}
+        </div>
+      )}
+      <EventTable
+        events={events}
+        isLoading={isLoadingEvents}
+        onEventClick={handleOpenEventDetails}
+        monthNames={monthNames}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+      />
+      <ProposalListPager
+        page={eventListPagination?.page ?? page}
+        totalPages={eventListPagination?.totalPages ?? 0}
+        onPageChange={setPage}
+      />
     </>
   );
 

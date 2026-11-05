@@ -13,12 +13,17 @@ import { handleBackendError } from "@/lib/error-handler";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { ContactType } from "@/types/contact";
+import { PARTNER_CATEGORIES, PARTNER_CATEGORY_LABELS } from "@/lib/partner-category";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useParams } from "react-router-dom";
 import { useVenueStore } from "@/store/venueStore";
 import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
+import { PartnerPublicCard } from "@/components/proposal/PartnerPublicCard";
+import { Textarea } from "@/components/ui/textarea";
 
 const partnerFormSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
+  category: z.enum(PARTNER_CATEGORIES, { errorMap: () => ({ message: "Selecione a categoria" }) }),
   role: z.string().optional(),
   whatsapp: z.string().min(10, "WhatsApp é obrigatório"),
   email: z.string().email("E-mail inválido").optional().or(z.literal("")),
@@ -26,6 +31,7 @@ const partnerFormSchema = z.object({
   facebookUrl: z.string().optional(),
   tiktokUrl: z.string().optional(),
   url: z.string().optional(),
+  description: z.string().max(400, "A descrição passa de 400 caracteres").optional(),
 });
 
 type PartnerFormValues = z.infer<typeof partnerFormSchema>;
@@ -37,11 +43,14 @@ export default function PartnerForm() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const form = useForm<PartnerFormValues>({
     resolver: zodResolver(partnerFormSchema),
     defaultValues: {
       name: "",
+      category: undefined,
       role: "",
       whatsapp: "",
       email: "",
@@ -49,6 +58,7 @@ export default function PartnerForm() {
       facebookUrl: "",
       tiktokUrl: "",
       url: "",
+      description: "",
     },
   });
 
@@ -63,6 +73,18 @@ export default function PartnerForm() {
     };
     loadVenue();
   }, [id, fetchVenueById]);
+
+  React.useEffect(() => {
+    if (!logoFile) {
+      setLogoPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(logoFile);
+    setLogoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [logoFile]);
+
+  const preview = form.watch();
 
   if (!id) {
     console.error("ID do venue não encontrado");
@@ -79,10 +101,12 @@ export default function PartnerForm() {
     try {
       await createContact({
         ...data,
+        description: data.description?.trim() ?? "",
         type: ContactType.SUPPLIER,
         venueId: id,
-      });
+      }, logoFile ?? undefined);
       setSuccess(true);
+      setLogoFile(null);
       form.reset();
       showSuccessToast({
         title: "Cadastro realizado!",
@@ -128,6 +152,30 @@ export default function PartnerForm() {
                     <FormControl>
                       <Input placeholder="Nome do contato" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoria</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a categoria" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PARTNER_CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {PARTNER_CATEGORY_LABELS[category]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -232,6 +280,56 @@ export default function PartnerForm() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição do serviço</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="O que você oferece" maxLength={400} rows={4} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none" htmlFor="partner-logo">Logo</label>
+                <input
+                  id="partner-logo"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="block w-full text-sm"
+                  onChange={(event) => {
+                    const next = event.target.files?.[0] ?? null;
+                    if (next && !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(next.type)) {
+                      toast({
+                        title: "Logo",
+                        description: "A logo precisa ser uma imagem",
+                        variant: "destructive",
+                      });
+                      event.target.value = "";
+                      return;
+                    }
+                    setLogoFile(next);
+                  }}
+                />
+              </div>
+              <div className="space-y-3">
+                <p className="text-center text-sm font-medium text-eventhub-primary">Seu card</p>
+                <PartnerPublicCard
+                  variant="preview"
+                  name={preview.name}
+                  description={preview.description}
+                  logoUrl={logoPreview}
+                  whatsapp={preview.whatsapp}
+                  email={preview.email}
+                  instagramUrl={preview.instagramUrl}
+                  facebookUrl={preview.facebookUrl}
+                  tiktokUrl={preview.tiktokUrl}
+                  url={preview.url}
+                />
+              </div>
               <button
                 type="submit"
                 className="w-full bg-eventhub-primary text-white py-2 px-4 rounded hover:bg-eventhub-primary-dark transition disabled:opacity-60"

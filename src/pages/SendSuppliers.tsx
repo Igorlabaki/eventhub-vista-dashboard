@@ -2,110 +2,97 @@ import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FormLayout } from "@/components/ui/form-layout";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-} from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import { useProposalStore } from "@/store/proposalStore";
-import { useUserStore } from "@/store/userStore";
 import { useVenueStore } from "@/store/venueStore";
-import { WhatsAppButton } from "@/components/ui/whatsapp-button";
-import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useContactStore } from "@/store/contactStore";
 import { ContactType, Contact } from "@/types/contact";
 import { useEffect, useState } from "react";
 import { ErrorPage } from "@/components/ErrorPage";
 import { FilterList } from "@/components/filterList";
-type FormValues = {
-  message: string;
-};
+import { proposalService } from "@/services/proposal.service";
+import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
+import { showSuccessToast } from "@/components/ui/success-toast";
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+type FormValues = Record<string, never>;
 
 export default function SendMessagePage() {
   const { id } = useParams();
-  const { currentProposal } = useProposalStore();
   const { selectedVenue: venue } = useVenueStore();
-  const { user } = useUserStore();
   const { contacts, fetchContacts, isLoading, error } = useContactStore();
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
+  const [ready, setReady] = useState(false);
+  const [pageError, setPageError] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+  const form = useForm<FormValues>();
+  const link = id ? `${window.location.origin}/proposal/${id}/indications` : "";
 
-  const form = useForm<FormValues>({
-    defaultValues: {
-      message: "",
-    },
-  });
-
-  // Atualiza a mensagem sempre que os fornecedores selecionados mudam
   useEffect(() => {
-    const msg = selectedContacts
-      .map((contactId) => {
-        const contact = contacts.find((c) => c.id === contactId);
-        if (!contact) return "";
-        const urls = [];
-        if (contact.instagramUrl) urls.push(`Instagram: ${contact.instagramUrl}`);
-        if (contact.facebookUrl) urls.push(`\nFacebook: ${contact.facebookUrl}`);
-        if (contact.tiktokUrl) urls.push(`\nTikTok: ${contact.tiktokUrl}`);
-        if (contact.whatsapp) {
-          const phone = parsePhoneNumberFromString(contact.whatsapp);
-          const formatted = phone?.formatInternational() || contact.whatsapp;
-          urls.push(`\nWhatsApp: ${formatted}`);
-        }
-        if (contact.url) urls.push(`\nSite: ${contact.url}`);
-        return `\n- ${contact.name}${contact.role ? ` (${contact.role})` : ""}${urls.length ? `\n  ${urls.join(" | ")}` : ""}\n`;
+    if (!venue?.id || !id) return;
+    let active = true;
+    setPageError(false);
+    setReady(false);
+    Promise.all([
+      fetchContacts({ venueId: venue.id, type: ContactType.SUPPLIER }),
+      proposalService.listProposalIndications(id),
+    ])
+      .then(([, indications]) => {
+        if (!active) return;
+        setSelectedContacts(indications.data.indications.map((item) => item.id));
+        setReady(true);
       })
-      .filter(Boolean)
-      .join("\n");
-    form.setValue(
-      "message",
-      `Nossas indicações para o seu evento:${msg ? `\n${msg}` : ""}`
-    );
-  }, [selectedContacts, contacts, form]);
-
-  // Buscar fornecedores do venue atual
-
-  useEffect(() => {
-    if (venue?.id) {
-      fetchContacts({ venueId: venue.id, type: ContactType.SUPPLIER });
-    }
-  }, [venue?.id, fetchContacts]);
+      .catch(() => {
+        if (active) setPageError(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [venue?.id, id, fetchContacts]);
 
   const handleSelectContact = (contactId: string) => {
     setSelectedContacts((prev) =>
-      prev.includes(contactId)
-        ? prev.filter((id) => id !== contactId)
-        : [...prev, contactId]
+      prev.includes(contactId) ? prev.filter((item) => item !== contactId) : [...prev, contactId]
     );
   };
 
-  const onSubmit = (values: FormValues) => {
-    const numeroOriginal = currentProposal.whatsapp || "";
-    const numeroLimpo = numeroOriginal.replace(/\D/g, "");
-
-    const numeroComPlus = numeroOriginal.startsWith("+")
-      ? numeroOriginal
-      : `+${numeroLimpo}`;
-    const phoneNumber = parsePhoneNumberFromString(numeroComPlus);
-
-    const numeroFinal =
-      phoneNumber && phoneNumber.isValid()
-        ? phoneNumber.number.replace("+", "") // remove "+"
-        : `55${numeroLimpo}`; // fallback to Brazil
-
-    const link = `https://wa.me/${numeroFinal}?text=${encodeURIComponent(
-      values.message
-    )}`;
-    window.open(link, "whatsapp");
+  const onSubmit = async () => {
+    if (!id) return;
+    setSaving(true);
+    try {
+      const response = await proposalService.replaceProposalIndications(id, selectedContacts);
+      setSelectedContacts(response.data.contactIds);
+      const { title, message } = handleBackendSuccess(response, "Indicações salvas.");
+      showSuccessToast({ title, description: message });
+    } catch (saveError) {
+      const { title, message } = handleBackendError(saveError, "Não foi possível salvar as indicações.");
+      toast({ title, description: message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
-  console.log(contacts);
 
-  if (isLoading) {
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      showSuccessToast({ title: "Link copiado", description: "O link das indicações está na área de transferência." });
+    } catch {
+      toast({
+        title: "Não foi possível copiar",
+        description: "Selecione o link e copie manualmente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (error || pageError) {
+    return <ErrorPage />;
+  }
+
+  if (isLoading || !ready) {
     return (
-      <DashboardLayout
-        title="Enviar Mensagem"
-        subtitle="Envie uma mensagem para o cliente"
-      >
+      <DashboardLayout title="Indicar parceiros" subtitle="Escolha os parceiros deste orçamento">
         <ul className="space-y-3">
           {[1, 2, 3].map((i) => (
             <li key={i}>
@@ -123,48 +110,32 @@ export default function SendMessagePage() {
     );
   }
 
-  if(error){
-    return <ErrorPage />;
-  }
-
   return (
-    <DashboardLayout
-      title="Indicar Parceiros"
-      subtitle="Envie uma mensagem para o cliente"
-    >
+    <DashboardLayout title="Indicar parceiros" subtitle="Salve quem será indicado neste orçamento">
       <FormLayout
-        title="Enviar parceiros"
+        title="Parceiros indicados"
         form={form}
         onSubmit={onSubmit}
-        submitLabel="Enviar via WhatsApp"
+        submitLabel="Salvar indicações"
+        isSubmitting={saving}
       >
-        <div className="mb-6">
-          <FormField
-            control={form.control}
-            name="message"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Mensagem para o cliente</FormLabel>
-                <FormControl>
-                  <Textarea rows={10} {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+        <div className="mb-6 space-y-2">
+          <p className="text-sm font-medium">Link da página</p>
+          <div className="flex gap-2">
+            <Input readOnly value={link} aria-label="Link das indicações" />
+            <Button type="button" variant="outline" onClick={copyLink}>
+              Copiar
+            </Button>
+          </div>
         </div>
         <div className="mb-8">
           <h2 className="font-semibold mb-2">Selecione:</h2>
-          {!isLoading && contacts.length === 0 && (
-            <div>Nenhum parceiro encontrado.</div>
-          )}
+          {!isLoading && contacts.length === 0 && <div>Nenhum parceiro encontrado.</div>}
           <FilterList
             items={contacts}
             filterBy={(item, query) => {
               const q = query.toLowerCase();
-              return (
-                (item.name?.toLowerCase().includes(q) ?? false) ||
-                (item.role?.toLowerCase().includes(q) ?? false)
-              );
+              return (item.name?.toLowerCase().includes(q) ?? false) || (item.role?.toLowerCase().includes(q) ?? false);
             }}
             placeholder="Buscar parceiro..."
           >
@@ -180,14 +151,8 @@ export default function SendMessagePage() {
                         className="mt-1 mr-4 accent-purple-600"
                       />
                       <div>
-                        <div className="font-semibold text-base text-gray-900">
-                          {contact.name}
-                        </div>
-                        {contact.role && (
-                          <div className="text-sm text-gray-500 italic">
-                            {contact.role}
-                          </div>
-                        )}
+                        <div className="font-semibold text-base text-gray-900">{contact.name}</div>
+                        {contact.role && <div className="text-sm text-gray-500 italic">{contact.role}</div>}
                       </div>
                     </label>
                   </li>

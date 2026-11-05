@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -69,7 +69,6 @@ export default function VenueDashboard() {
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth);
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-  const years = Array.from({ length: 30 }, (_, i) => currentYear - 15 + i);
   const months = [
     "Todas",
     ...Array.from({ length: 12 }, (_, i) =>
@@ -102,11 +101,19 @@ export default function VenueDashboard() {
     };
   }, [venue, venueId]);
 
-  const { data: venueDashBoardData, isLoading: isLoadingDashBoardData } =
-    useGetVenueDashBoardData(venueId || "", {
-      month: selectedMonth,
-      year: selectedYear ? String(selectedYear) : undefined,
-    });
+  const {
+    data: fetchedDashboardData,
+    isLoading: isLoadingDashBoardData,
+    isPlaceholderData: dashboardNumbersLoading,
+  } = useGetVenueDashBoardData(venueId || "", {
+    month: selectedMonth,
+    year: selectedYear ? String(selectedYear) : undefined,
+  });
+  const retainedDashboardData = useRef(fetchedDashboardData);
+  if (fetchedDashboardData) {
+    retainedDashboardData.current = fetchedDashboardData;
+  }
+  const dashboardData = fetchedDashboardData ?? retainedDashboardData.current;
 
   const handleViewProposal = (proposalId: string) => {
     navigate(`/proposal/${proposalId}`);
@@ -133,44 +140,36 @@ export default function VenueDashboard() {
   
   if (
     (!venue && !isLoading) ||
-    (!venueDashBoardData && !isLoadingDashBoardData)
+    (!dashboardData && !isLoadingDashBoardData)
   )
     return <VenueNotFound />;
   return (
     <DashboardLayout title={venue?.name} subtitle="Painel de controle">
-      {isLoading || isLoadingDashBoardData ? (
+      {isLoading || !dashboardData ? (
         <VenueDashboardSkeleton />
       ) : (
-        <div className="bg-white rounded-md p-4 shadow-md">
-          <div className="mb-6 ">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              Visão Geral
-            </h2>
-            <p className="text-gray-500 mt-1">
-              Acompanhe os principais indicadores do seu espaço
-            </p>
-          </div>
+        <div className="space-y-6">
           <VenueStatsPanel
-            data={venueDashBoardData}
+            data={dashboardData}
+            numbersLoading={dashboardNumbersLoading}
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
             onMonthChange={setSelectedMonth}
             onYearChange={setSelectedYear}
             months={months}
-            years={years}
           />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-lg">Próximo Evento</h3>
-                  {venueDashBoardData?.nextEvent && (
+                  {dashboardData?.nextEvent && (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() =>
                         handleViewProposal(
-                          venueDashBoardData.nextEvent.proposalId
+                          dashboardData.nextEvent.proposalId
                         )
                       }
                     >
@@ -180,17 +179,17 @@ export default function VenueDashboard() {
                 </div>
 
                 <div className="space-y-4">
-                  {venueDashBoardData?.nextEvent ? (
+                  {dashboardData?.nextEvent ? (
                     <div className="flex items-center p-3 border rounded-lg hover:bg-gray-50">
                       <div className="flex-shrink-0 w-12 h-12 rounded-md flex items-center justify-center bg-eventhub-tertiary/40 mr-4">
                         <CalendarDays className="h-6 w-6 text-eventhub-primary" />
                       </div>
                       <div className="flex-grow">
                         <h4 className="font-medium text-gray-900">
-                          {venueDashBoardData.nextEvent.title}
+                          {dashboardData.nextEvent.title}
                         </h4>
                         <div className="text-sm text-gray-500">
-                          {wallClockDateTimeBr(venueDashBoardData.nextEvent.startDate)}
+                          {wallClockDateTimeBr(dashboardData.nextEvent.startDate)}
                         </div>
                       </div>
                     </div>
@@ -212,7 +211,7 @@ export default function VenueDashboard() {
                     size="sm"
                     onClick={() =>
                       handleViewProposal(
-                        venueDashBoardData.nextVisit.proposalId
+                        dashboardData.nextVisit.proposalId
                       )
                     }
                   >
@@ -221,17 +220,17 @@ export default function VenueDashboard() {
                 </div>
 
                 <div className="space-y-4">
-                  {venueDashBoardData?.nextVisit ? (
+                  {dashboardData?.nextVisit ? (
                     <div className="flex items-center p-3 border rounded-lg hover:bg-gray-50">
                       <div className="flex-shrink-0 w-12 h-12 rounded-md flex items-center justify-center bg-eventhub-tertiary/40 mr-4">
                         <Users className="h-6 w-6 text-eventhub-primary" />
                       </div>
                       <div className="flex-grow">
                         <h4 className="font-medium text-gray-900">
-                          {venueDashBoardData.nextVisit.title}
+                          {dashboardData.nextVisit.title}
                         </h4>
                         <div className="text-sm text-gray-500">
-                          {wallClockDateTimeBr(venueDashBoardData.nextVisit.startDate)}
+                          {wallClockDateTimeBr(dashboardData.nextVisit.startDate)}
                         </div>
                       </div>
                     </div>
@@ -248,18 +247,20 @@ export default function VenueDashboard() {
           <Card className="hidden lg:block">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-lg">Desempenho Mensal</h3>
+                <h3 className="font-semibold text-lg">
+                  {selectedMonth === "all" ? "Desempenho Anual" : "Desempenho Mensal"}
+                </h3>
               </div>
 
               {selectedMonth === "all" ? (
                 <VenuePerformanceChartAllMonths
-                  data={venueDashBoardData}
+                  data={dashboardData}
                   goals={goals || []}
                   months={months}
                 />
               ) : (
                 <VenuePerformanceChart
-                  data={venueDashBoardData}
+                  data={dashboardData}
                   goals={goals || []}
                   months={months}
                   selectedMonth={Number(selectedMonth)}

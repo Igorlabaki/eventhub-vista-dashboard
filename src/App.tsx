@@ -34,6 +34,7 @@ import { useBootstrapUser } from "@/hooks/useBootstrapUser";
 import { GoogleCalendarRedirectHandler } from "@/components/GoogleCalendarRedirectHandler";
 import VenueServices from "./pages/VenueServices";
 import VenueRules from "./pages/VenueRules";
+import PublicVenueRulesPage from "./pages/PublicVenueRules";
 import VenueAmenities from "./pages/VenueAmenities";
 import ProposalDetails from "./pages/ProposalDetails";
 import ProposalEdit from "./pages/ProposalEdit";
@@ -64,6 +65,9 @@ import { ContarctPjFormPage } from "./pages/ContarctPjForm";
 import { ContarctPFFormPage } from "./pages/ContarctPFForm";
 import OrganizationWebsiteImages from "./pages/website/OrganizationWebsiteImages";
 import SendSuppliers from "./pages/SendSuppliers";
+import ProposalEventLinkPage from "./pages/ProposalEventLink";
+import ProposalEventLinkSharePage from "./pages/ProposalEventLinkShare";
+import ProposalIndicationsPage from "./pages/ProposalIndications";
 import PartnerForm from "./pages/PartnerForm";
 import CrewForm from "./pages/CrewForm";
 
@@ -131,7 +135,9 @@ const App = () => {
                 <Route path="/venue/:id/website/images" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueWebsiteImages /></ProtectedRoute>} />
               {/* Proposal */}
                 <Route path="/proposal/:id/view" element={<ProposalView  />} />
+                <Route path="/proposal/:id/links" element={<ProposalEventLinkPage />} />
                 <Route path="/proposal/:id/guest-list" element={<GuestListPage />} />
+                <Route path="/proposal/:id/indications" element={<ProposalIndicationsPage />} />
                 <Route path="/proposal/:id/staff-list" element={<WorkerListPage />} />
                 <Route path="/proposal/:id/schedule-list" element={<ScheduleListPage />} />
                 <Route path="/proposal/:id/send" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_SEND"><ProposalSend /></ProtectedRoute>} />
@@ -147,9 +153,11 @@ const App = () => {
                 <Route path="/proposal/:id/send-message" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_TEXT"><SendMessagePage /></ProtectedRoute>} />
                 <Route path="/proposal/:id/send-suppliers" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_INFO"><SendSuppliers /></ProtectedRoute>} />
                 <Route path="/proposal/:id/send-proposal" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_INFO"><SendProposalPage /></ProtectedRoute>} />
+                <Route path="/proposal/:id/event-link" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_INFO"><ProposalEventLinkSharePage /></ProtectedRoute>} />
                 <Route path="/proposal/:id/attendance-list" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_ATTENDANCE_LIST"><ProposalAttendanceListPage /></ProtectedRoute>} />
               {/* Public Form */}
                 <Route path="/venue/:id/form" element={<ProposalForm />} />
+                <Route path="/venue/:id/rules/view" element={<PublicVenueRulesPage />} />
                 <Route path="/venue/:id/partner-form" element={<PartnerForm />} />
                 <Route path="/venue/:id/crew-form" element={<CrewForm />} />
                 <Route path="/proposal/:id/b2b-contract" element={<ContarctPjFormPage />} />

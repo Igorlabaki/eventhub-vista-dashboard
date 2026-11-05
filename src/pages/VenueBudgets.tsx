@@ -1,116 +1,41 @@
-import { useState, useEffect } from "react";
-import {
-  useSearchParams,
-  useNavigate,
-  useParams,
-  Navigate,
-} from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { format } from "date-fns";
-import { pt } from "date-fns/locale";
+import { Calendar, Link2, Plus, Search } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { BudgetDetails } from "@/components/BudgetDetails";
 import { BudgetSidebar } from "@/components/BudgetSidebar";
 import { useProposalStore } from "@/store/proposalStore";
 import { useVenueStore } from "@/store/venueStore";
-import { FilterList } from "@/components/filterList";
-import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
 import { MonthYearNavigator } from "@/components/proposal/MonthYearNavigator";
 import { ProposalTable } from "@/components/proposal/ProposalTable";
+import { ProposalListPager } from "@/components/proposal/ProposalListPager";
+import { ProposalListSummaryCards } from "@/components/proposal/ProposalListSummaryCards";
 import { PerDayProposalForm } from "@/components/proposal/forms/PerDayProposalForm";
 import { PerPersonProposalForm } from "@/components/proposal/forms/PerPersonProposalForm";
 import { PageHeader } from "@/components/PageHeader";
 import { useUserStore } from "@/store/userStore";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
-import AccessDenied from "@/components/accessDenied";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { showSuccessToast } from "@/components/ui/success-toast";
 
-// Month names in Portuguese
 const monthNames = [
-  "Jan",
-  "Fev",
-  "Mar",
-  "Abr",
-  "Mai",
-  "Jun",
-  "Jul",
-  "Ago",
-  "Set",
-  "Out",
-  "Nov",
-  "Dez",
+  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+  "Jul", "Ago", "Set", "Out", "Nov", "Dez",
 ];
 
-const TableSkeleton = () => {
-  return (
-    <div className="rounded-md border bg-white">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Cliente</TableHead>
-            <TableHead>Data do Evento</TableHead>
-            <TableHead className="text-right">Valor Total</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {[...Array(10)].map((_, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <Skeleton className="h-4 w-[200px]" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-4 w-[100px]" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-4 w-[120px] ml-auto" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-4 w-[120px] ml-auto" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-4 w-[120px] ml-auto" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-4 w-[120px] ml-auto" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-4 w-[120px] ml-auto" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-4 w-[120px] ml-auto" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-4 w-[120px] ml-auto" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-4 w-[120px] ml-auto" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-4 w-[120px] ml-auto" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-4 w-[120px] ml-auto" />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-};
+const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+type SortKey = "startDate" | "totalAmount" | "status";
+
+function daysInMonth(year: number, monthIndex: number) {
+  return new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+}
 
 export default function VenueBudgets() {
+  const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -120,24 +45,30 @@ export default function VenueBudgets() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDay, setSelectedDay] = useState<number | "">("");
+  const [statusFilter, setStatusFilter] = useState<"" | "open" | "closed">("");
+  const [amountFloorCommit, setAmountFloorCommit] = useState<number | null>(null);
+  const [sliderDraft, setSliderDraft] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortKey>("startDate");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const { id: venueIdParam } = useParams();
   const { user } = useUserStore();
 
-  const { proposals, isLoading, error, fetchProposals, fetchProposalById } =
-    useProposalStore();
+  const {
+    proposals,
+    isLoadingProposals,
+    proposalListPagination,
+    proposalListSummary,
+    proposalListError,
+    fetchProposals,
+    fetchProposalById,
+  } = useProposalStore();
 
-  // Handle opening proposal details
-  const handleOpenProposalDetails = (proposal) => {
-    setSelectedProposal(proposal);
-  };
-
-  // Close proposal details
   const handleCloseProposalDetails = () => {
     setSelectedProposal(null);
     navigate("/venue/budgets");
   };
 
-  // Create a new proposal
   const handleCreateNewProposal = () => {
     setShowForm(true);
   };
@@ -150,36 +81,94 @@ export default function VenueBudgets() {
 
   const hasEditPermission = () => {
     if (!currentUserVenuePermission?.permissions) return false;
-    return currentUserVenuePermission.permissions.includes(
-      "EDIT_VENUE_PROPOSALS"
-    );
+    return currentUserVenuePermission.permissions.includes("EDIT_VENUE_PROPOSALS");
   };
 
-  // Effect to handle URL parameters
   useEffect(() => {
     const proposalId = searchParams.get("id");
     const action = searchParams.get("action");
-
     if (proposalId && action === "view") {
       fetchProposalById(proposalId);
     }
   }, [searchParams]);
 
-  // Effect to fetch proposals when month/year changes
   useEffect(() => {
-    fetchProposals({
-      venueId: selectedVenue.id,
-      month: (selectedMonth + 1).toString(),
-      year: selectedYear.toString(),
-    });
-  }, [selectedMonth, selectedYear]);
+    const handle = setTimeout(() => {
+      const next = searchInput.trim();
+      setSearchTerm((current) => {
+        if (current !== next) setPage(1);
+        return next;
+      });
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
+
+  const amountFloor = typeof selectedVenue?.minimumPrice === "number" ? selectedVenue.minimumPrice : 0;
+  const amountCeiling = proposalListSummary?.amountMax ?? amountFloor;
+  const sliderDisabled = proposalListSummary == null || amountCeiling <= amountFloor;
+  const sliderMax = amountCeiling > amountFloor ? amountCeiling : amountFloor + 1;
+  const sliderShown = sliderDraft ?? amountFloorCommit ?? amountFloor;
+  const approvedFilter = statusFilter === "" ? undefined : statusFilter === "closed";
+  const minAmountFilter = amountFloorCommit != null && amountFloorCommit > amountFloor ? amountFloorCommit : undefined;
+
+  const proposalQuery = () => ({
+    venueId: selectedVenue?.id ?? "",
+    month: String(selectedMonth + 1),
+    year: String(selectedYear),
+    day: selectedDay === "" ? undefined : String(selectedDay),
+    completeClientName: searchTerm || undefined,
+    page: String(page),
+    sortBy,
+    sortDir,
+    summary: true as const,
+    approved: approvedFilter,
+    minAmount: minAmountFilter,
+  });
 
   useEffect(() => {
-    // Se não houver selectedVenue, tenta buscar pelo id da URL
+    if (!selectedVenue?.id) return;
+    fetchProposals(proposalQuery());
+  }, [selectedVenue?.id, selectedMonth, selectedYear, selectedDay, searchTerm, page, sortBy, sortDir, approvedFilter, minAmountFilter]);
+
+  useEffect(() => {
     if (!selectedVenue && venueIdParam && user?.id) {
       fetchVenueById(venueIdParam, user.id);
     }
   }, [selectedVenue, venueIdParam, user?.id, fetchVenueById]);
+
+  const resetAmount = () => {
+    setAmountFloorCommit(null);
+    setSliderDraft(null);
+  };
+
+  const changeMonth = (month: number) => {
+    setSelectedMonth(month);
+    setSelectedDay("");
+    resetAmount();
+    setPage(1);
+  };
+
+  const changeYear = (year: number) => {
+    setSelectedYear(year);
+    setSelectedDay("");
+    resetAmount();
+    setPage(1);
+  };
+
+  const changeSort = (next: SortKey) => {
+    setPage(1);
+    if (next === sortBy) {
+      setSortDir((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortBy(next);
+    setSortDir("asc");
+  };
+
+  const retry = () => {
+    if (!selectedVenue?.id) return;
+    fetchProposals(proposalQuery());
+  };
 
   const renderProposalList = () => (
     <>
@@ -188,74 +177,154 @@ export default function VenueBudgets() {
           onCreateClick={handleCreateNewProposal}
           createButtonText="Novo Orçamento"
           isFormOpen={showForm}
+          hideDesktopButton
         />
       )}
-      <MonthYearNavigator
-        selectedYear={selectedYear}
-        selectedMonth={selectedMonth}
-        monthNames={monthNames}
-        onYearChange={setSelectedYear}
-        onMonthChange={setSelectedMonth}
-      />
-      <div className="mb-4 flex gap-2 items-center justify-center w-full">
-        <Button
-          className="w-full"
-          onClick={async () => {
-            const link = `https://event-hub-dashboard.vercel.app/venue/${selectedVenue.id}/form`;
-            await navigator.clipboard.writeText(link);
-            showSuccessToast({
-              title: "Link copiado!",
-              description: "O link para o formulário de orçamento foi copiado.",
-            });
-          }}
-          variant="outline"
-        >
-          Link para formulário de orçamento
-        </Button>
-      </div>
-      <FilterList
-        items={proposals.filter((proposal) => {
-          const date = new Date(proposal.startDate);
-          const matchesMonth = date.getMonth() === selectedMonth;
-          const matchesYear = date.getFullYear() === selectedYear;
-          const matchesDay =
-            selectedDay === "" || date.getDate() === selectedDay;
-          return matchesMonth && matchesYear && matchesDay;
-        })}
-        filterBy={(proposal, query) =>
-          proposal.completeClientName
-            .toLowerCase()
-            .includes(query.toLowerCase())
-        }
-        placeholder="Buscar orçamentos..."
-      >
-        {(filteredProposals) => (
-          <>
-            <div className=" flex justify-between items-center mb-2 text-sm text-gray-500">
-              {filteredProposals.length} orçamentos
-              <Input
-                type="number"
-                min={1}
-                max={31}
-                placeholder="Dia"
-                value={selectedDay}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSelectedDay(value === "" ? "" : Number(value));
-                }}
-                className="w-24"
-              />
-            </div>
-            <ProposalTable
-              proposals={filteredProposals}
-              isLoading={isLoading}
-              monthNames={monthNames}
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
+      <div className="mb-6 rounded-3xl border bg-white p-4 shadow-sm sm:p-5">
+        <MonthYearNavigator
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+          monthNames={monthNames}
+          onYearChange={changeYear}
+          onMonthChange={changeMonth}
+          className="mb-4"
+        />
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative min-w-0 flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Buscar orçamentos..."
+              className="h-10 rounded-full bg-white pl-9"
             />
-          </>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 shrink-0 rounded-full border-primary/40 bg-white text-primary hover:bg-primary/5 hover:text-primary"
+            onClick={async () => {
+              const link = `https://event-hub-dashboard.vercel.app/venue/${selectedVenue.id}/form`;
+              await navigator.clipboard.writeText(link);
+              showSuccessToast({
+                title: "Link copiado!",
+                description: "O link para o formulário de orçamento foi copiado.",
+              });
+            }}
+          >
+            <Link2 className="h-4 w-4" />
+            Copiar link do formulário de orçamento
+          </Button>
+          {hasEditPermission() && (
+            <>
+              <div className="hidden h-8 w-px shrink-0 bg-border lg:block" />
+              <Button
+                type="button"
+                onClick={handleCreateNewProposal}
+                className="hidden h-10 shrink-0 rounded-full bg-eventhub-primary shadow-lg hover:bg-indigo-600 md:inline-flex"
+              >
+                <Plus className="h-4 w-4" />
+                Novo Orçamento
+              </Button>
+            </>
+          )}
+        </div>
+
+        <div className="mt-4 flex flex-col gap-4 border-t pt-4 md:flex-row md:items-center">
+          <label className="flex h-10 shrink-0 items-center gap-2 rounded-full border bg-white px-3 text-sm text-foreground">
+            Status
+            <select
+              aria-label="Status"
+              className="bg-transparent pr-1 outline-none"
+              value={statusFilter}
+              onChange={(event) => {
+                setStatusFilter(event.target.value as "" | "open" | "closed");
+                setPage(1);
+              }}
+            >
+              <option value="">Todos</option>
+              <option value="open">Aberto</option>
+              <option value="closed">Fechado</option>
+            </select>
+          </label>
+          <label className="flex h-10 shrink-0 items-center gap-2 rounded-full border bg-white px-3 text-sm text-foreground">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            Dia
+            <select
+              aria-label="Dia"
+              className="bg-transparent pr-1 outline-none"
+              value={selectedDay}
+              onChange={(event) => {
+                const value = event.target.value;
+                setSelectedDay(value === "" ? "" : Number(value));
+                resetAmount();
+                setPage(1);
+              }}
+            >
+              <option value="">Todos</option>
+              {Array.from({ length: daysInMonth(selectedYear, selectedMonth) }, (_, index) => index + 1).map((day) => (
+                <option key={day} value={day}>{day}</option>
+              ))}
+            </select>
+          </label>
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <span className="shrink-0 text-sm text-muted-foreground">Valor</span>
+            <Slider
+              aria-label="Valor mínimo"
+              className="min-w-0 flex-1"
+              min={amountFloor}
+              max={sliderMax}
+              step={1}
+              disabled={sliderDisabled}
+              value={[Math.min(Math.max(sliderShown, amountFloor), sliderMax)]}
+              onValueChange={(value) => setSliderDraft(value[0] ?? amountFloor)}
+              onValueCommit={(value) => {
+                const next = value[0] ?? amountFloor;
+                setSliderDraft(null);
+                setAmountFloorCommit(next > amountFloor ? next : null);
+                setPage(1);
+              }}
+            />
+            <span className="shrink-0 text-sm font-medium tabular-nums">{money.format(sliderShown)}</span>
+          </div>
+        </div>
+        {proposalListSummary != null && amountCeiling <= amountFloor && (
+          <p className="mt-2 text-xs text-muted-foreground">Não há valor acima do mínimo neste período.</p>
         )}
-      </FilterList>
+      </div>
+
+      <div className="shrink-0">
+        <ProposalListSummaryCards summary={proposalListSummary} />
+      </div>
+
+      <div className="mb-2 mt-4 text-sm text-muted-foreground">
+        {proposalListPagination?.total ?? proposalListSummary?.total ?? 0} orçamentos
+      </div>
+
+      {proposalListError && (
+        <div className="mb-3 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <span>{proposalListError}</span>
+          <Button type="button" variant="outline" size="sm" onClick={retry}>
+            Tentar de novo
+          </Button>
+        </div>
+      )}
+
+      <ProposalTable
+        proposals={proposals}
+        isLoading={isLoadingProposals}
+        monthNames={monthNames}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSort={changeSort}
+      />
+      <ProposalListPager
+        page={proposalListPagination?.page ?? page}
+        totalPages={proposalListPagination?.totalPages ?? 0}
+        onPageChange={setPage}
+      />
     </>
   );
 
@@ -276,10 +345,9 @@ export default function VenueBudgets() {
     );
   };
 
-  // Se ainda não carregou o selectedVenue, mostra loading
   if (!selectedVenue) {
     return (
-      <div className="text-center py-16 text-gray-500">
+      <div className="py-16 text-center text-gray-500">
         Carregando informações do espaço...
       </div>
     );
@@ -288,13 +356,11 @@ export default function VenueBudgets() {
   return (
     <DashboardLayout title="Orçamentos" subtitle="Gerencie seus orçamentos">
       {!selectedProposal ? (
-        <>
-          <AnimatedFormSwitcher
-            showForm={showForm}
-            list={renderProposalList()}
-            form={renderProposalForm()}
-          />
-        </>
+        <AnimatedFormSwitcher
+          showForm={showForm}
+          list={renderProposalList()}
+          form={renderProposalForm()}
+        />
       ) : (
         <div className="flex w-full">
           <BudgetSidebar

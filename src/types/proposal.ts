@@ -67,6 +67,7 @@ export interface Proposal {
   totalAmount: number;
   termsAccepted: boolean;
   approved: boolean;
+  status?: "ABERTO" | "FECHADO";
   createdAt: Date;
   updatedAt: Date;
   contact?: boolean;
@@ -211,7 +212,42 @@ export interface ListProposalParams {
   email?: string;
   month?: string;
   year?: string;
+  day?: string;
+  page?: string;
+  sortBy?: "startDate" | "totalAmount" | "status";
+  sortDir?: "asc" | "desc";
+  summary?: boolean;
   approved?: boolean;
+  minAmount?: number;
+}
+
+export interface ProposalListDailyPoint {
+  day: number;
+  count: number;
+  amount: number;
+  conversionRate: number;
+}
+
+export interface ProposalListChange {
+  total: number | null;
+  monthAmount: number | null;
+  conversionRate: number | null;
+}
+
+export interface ProposalListSummary {
+  total: number;
+  monthAmount: number;
+  amountMax: number;
+  conversionRate: number;
+  daily: ProposalListDailyPoint[];
+  change?: ProposalListChange;
+}
+
+export interface ProposalListPagination {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
 }
 
 export interface ProposalByIdResponse {
@@ -227,8 +263,10 @@ export interface ProposalListResponse {
   message: string;
   data: {
     proposalList: Proposal[];
+    summary?: ProposalListSummary;
   };
   count: number;
+  pagination?: ProposalListPagination;
   type: string;
 }
 

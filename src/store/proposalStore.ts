@@ -6,7 +6,9 @@ import {
   UpdateProposalPersonalInfoDTO,
   UpdateProposalPerDayDTO,
   UpdateProposalPerPersonDTO,
-  ListProposalParams
+  ListProposalParams,
+  ProposalListPagination,
+  ProposalListSummary,
 } from '@/types/proposal';
 import { proposalService } from '@/services/proposal.service';
 import { BackendResponse } from '@/lib/error-handler';
@@ -16,6 +18,13 @@ interface ProposalStore {
   events: Proposal[];
   currentProposal: Proposal | null;
   isLoading: boolean;
+  isLoadingProposals: boolean;
+  isLoadingEvents: boolean;
+  proposalListPagination: ProposalListPagination | null;
+  proposalListSummary: ProposalListSummary | null;
+  proposalListError: string | null;
+  eventListPagination: ProposalListPagination | null;
+  eventListError: string | null;
   error: string | null;
   setProposals: (proposals: Proposal[]) => void;
   setEvents: (events: Proposal[]) => void;
@@ -48,40 +57,57 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
   events: [],
   currentProposal: null,
   isLoading: false,
+  isLoadingProposals: false,
+  isLoadingEvents: false,
+  proposalListPagination: null,
+  proposalListSummary: null,
+  proposalListError: null,
+  eventListPagination: null,
+  eventListError: null,
   error: null,
   setProposals: (proposals) => set({ proposals }),
   setEvents: (events) => set({ events }),
   setCurrentProposal: (proposal) => set({ currentProposal: proposal }),
   
   fetchProposals: async (params) => {
-    set({ isLoading: true, error: null });
+    set({ isLoadingProposals: true, proposalListError: null });
     try {
       const response = await proposalService.listProposals(params);
-      set({ proposals: response.data.proposalList });
+      set({
+        proposals: response.data.proposalList,
+        proposalListPagination: response.pagination ?? null,
+        proposalListSummary: response.data.summary ?? null,
+      });
     } catch (err: unknown) {
       const error = err as ApiError;
-      set({ 
-        error: error?.response?.data?.message || "Não foi possível carregar as propostas.",
-        proposals: [] 
+      set({
+        proposalListError: error?.response?.data?.message || "Não foi possível carregar as propostas.",
+        proposals: [],
+        proposalListPagination: null,
+        proposalListSummary: null,
       });
     } finally {
-      set({ isLoading: false });
+      set({ isLoadingProposals: false });
     }
   },
 
   fetchEvents: async (params) => {
-    set({ isLoading: true, error: null });
+    set({ isLoadingEvents: true, eventListError: null });
     try {
       const response = await proposalService.listProposals({ ...params, approved: true });
-      set({ events: response.data.proposalList });
+      set({
+        events: response.data.proposalList,
+        eventListPagination: response.pagination ?? null,
+      });
     } catch (err: unknown) {
       const error = err as ApiError;
-      set({ 
-        error: error?.response?.data?.message || "Não foi possível carregar os eventos.",
-        events: [] 
+      set({
+        eventListError: error?.response?.data?.message || "Não foi possível carregar os eventos.",
+        events: [],
+        eventListPagination: null,
       });
     } finally {
-      set({ isLoading: false });
+      set({ isLoadingEvents: false });
     }
   },
 

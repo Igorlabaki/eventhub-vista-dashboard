@@ -12,6 +12,7 @@ import { useVenueStore } from "@/store/venueStore";
 import { useUserStore } from "@/store/userStore";
 import { useProposalStore } from "@/store/proposalStore";
 import ProposalNav from "@/components/ProposalNav";
+import { sidebarLevel } from "@/components/sidebar/sidebar-level";
 
 export function SidebarNav({
   showOnMobile = false,
@@ -78,6 +79,13 @@ export function SidebarNav({
 
   const isInProposal = location.pathname.includes("/proposal/");
   const { currentProposal, fetchProposalById } = useProposalStore();
+  const level = sidebarLevel({
+    pathname: location.pathname,
+    selectedVenueId: selectedVenue?.id ?? null,
+    currentProposalId: currentProposal?.id ?? null,
+    currentOrganizationId: currentOrganization?.id ?? null,
+  });
+  const sectionedNav = level.kind === "organization" || level.kind === "venue" || level.kind === "proposal";
   const proposalId = params.id; // pode ser id de proposal ou venue, depende da rota
 
   useEffect(() => {
@@ -104,7 +112,7 @@ export function SidebarNav({
         !showOnMobile && "animate-slide-out-right md:animate-none"
       )}
     >
-      <div className="flex items-center justify-between h-16 px-4 border-b">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
         <div className="flex items-center">
           <Calendar className="h-8 w-8 text-eventhub-primary" />
           {!isCollapsed && (
@@ -133,8 +141,8 @@ export function SidebarNav({
         )}
       </div>
 
-      <div className="flex flex-col flex-1 overflow-y-auto py-4">
-        <nav className="flex-1 px-2 space-y-1">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden py-4">
+        <div className="shrink-0 space-y-1 px-2">
           <Link
             to="/dashboard"
             className={cn(
@@ -149,12 +157,11 @@ export function SidebarNav({
             {!isCollapsed && <span>Organizações</span>}
           </Link>
 
-          {isInOrgWebsite && currentOrganization   &&(
+          {isInOrgWebsite && currentOrganization && (
             <Link
               to={`/organization/${currentOrganization.id}/venues`}
               className={cn(
-                "flex items-center ml-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary mt-4",
-                "text-gray-700"
+                "ml-3 mt-4 flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary"
               )}
               onClick={handleNavItemClick}
             >
@@ -163,14 +170,10 @@ export function SidebarNav({
             </Link>
           )}
 
-
-          { isInVenue && selectedVenue   &&(
+          {isInVenue && selectedVenue && currentOrganization && (
             <Link
               to={`/organization/${currentOrganization.id}/venues`}
-              className={cn(
-                "flex items-center ml-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary mt-4",
-                "text-gray-700"
-              )}
+              className="ml-3 mt-4 flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary"
               onClick={handleNavItemClick}
             >
               <Building className="h-5 w-5 mr-2" />
@@ -178,37 +181,54 @@ export function SidebarNav({
             </Link>
           )}
 
-          {selectedVenue && isInProposal || isInWebsite && selectedVenue && !isInOrgWebsite ? (
+          {selectedVenue && isInProposal ? (
             <Link
-              to={`/venue/${selectedVenue.id}/notifications`}
-              className={cn(
-                "flex items-center ml-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary mt-4",
-                "text-gray-700"
-              )}
+              to={`/venue/${selectedVenue.id}`}
+              className="ml-3 mt-4 flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary"
               onClick={handleNavItemClick}
             >
               <House className="h-5 w-5 mr-2" />
               {!isCollapsed && <span>{selectedVenue.name}</span>}
             </Link>
-          ): null}
+          ) : null}
 
-          {isInOrg && !isCollapsed && !isInOrgWebsite && (
+          {isInWebsite && selectedVenue && !isInOrgWebsite ? (
+            <Link
+              to={`/venue/${selectedVenue.id}/notifications`}
+              className="ml-3 mt-4 flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary"
+              onClick={handleNavItemClick}
+            >
+              <House className="h-5 w-5 mr-2" />
+              {!isCollapsed && <span>{selectedVenue.name}</span>}
+            </Link>
+          ) : null}
+        </div>
+
+        <div
+          className={cn(
+            "flex min-h-0 flex-1 flex-col px-2",
+            !sectionedNav && "overflow-y-auto"
+          )}
+        >
+          {level.kind === "organization" && (
             <OrganizationNav
               organizationName={currentOrganization?.name || ""}
+              organizationId={currentOrganization?.id}
               isCollapsed={isCollapsed}
               onNavItemClick={handleNavItemClick}
             />
           )}
 
-          {isInVenue && !isInWebsite && selectedVenue && (
+          {level.kind === "venue" && selectedVenue && (
             <VenueNav
+              hold={level.hold}
               isCollapsed={isCollapsed}
               onNavItemClick={handleNavItemClick}
               venue={selectedVenue}
             />
           )}
 
-          {isInWebsite && selectedVenue && !isInOrgWebsite && (
+          {level.kind === "website" && selectedVenue && (
             <WebsiteNav
               isCollapsed={isCollapsed}
               onNavItemClick={handleNavItemClick}
@@ -216,24 +236,23 @@ export function SidebarNav({
             />
           )}
 
-          {isInOrgWebsite && organizationId && (
+          {level.kind === "org-website" && (currentOrganization?.id || organizationId) && (
             <OrganizationWebsiteNav
               isCollapsed={isCollapsed}
               onNavItemClick={handleNavItemClick}
-              organizationId={organizationId}
+              organizationId={currentOrganization?.id || organizationId || ""}
             />
           )}
 
-          {isInProposal && (
-            <>
-              <ProposalNav
-                isCollapsed={isCollapsed}
-                onNavItemClick={handleNavItemClick}
-                proposal={currentProposal}
-              />
-            </>
+          {level.kind === "proposal" && currentProposal && (
+            <ProposalNav
+              hold={level.hold}
+              isCollapsed={isCollapsed}
+              onNavItemClick={handleNavItemClick}
+              proposal={currentProposal}
+            />
           )}
-        </nav>
+        </div>
       </div>
     </div>
   );

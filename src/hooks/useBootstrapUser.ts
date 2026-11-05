@@ -4,8 +4,9 @@ import { userService } from "@/services/user.service";
 import { useNavigate, useLocation } from "react-router-dom";
 
 // Rotas públicas que não precisam de autenticação
-const PUBLIC_ROUTES = [
+export const PUBLIC_ROUTES = [
   '/venue/:id/form',
+  '/venue/:id/rules/view',
   '/proposal/:id/guest-list',
   '/proposal/:id/worker-list', 
   '/proposal/:id/schedule-list',

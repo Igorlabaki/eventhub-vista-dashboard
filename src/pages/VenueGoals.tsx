@@ -1,27 +1,9 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { EmptyState } from "@/components/EmptyState";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Target,
-  Plus,
-  TrendingUp,
-  Calendar,
-  DollarSign,
-  Edit,
-  Users,
-  Search,
-  LayoutGrid,
-  List,
-  Pencil,
-} from "lucide-react";
+import { GoalsPanelSummary } from "@/components/goal/GoalsPanelSummary";
+import { GoalsPanelSections } from "@/components/goal/GoalsPanelSections";
+import { resolveCurrentPrice } from "@/components/goal/goals-panel-metrics";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -142,9 +124,9 @@ export default function VenueGoals() {
     setViewMode("panel");
   }, []);
   const { id: venueId } = useParams<{ id: string }>();
-  const { goals, fetchGoals, isLoading: isLoadingGoals } = useGoalStore();
+  const { goals, fetchGoals, isLoading: isLoadingGoals, error: goalsError } = useGoalStore();
   const { user } = useUserStore();
-  const { surcharges, discounts, fetchSurcharges, fetchDiscounts, isLoading: isLoadingSeasonalFees } = useSeasonalFeeStore();
+  const { surcharges, discounts, fetchSurcharges, fetchDiscounts, isLoading: isLoadingSeasonalFees, error: feesError } = useSeasonalFeeStore();
   const { periods, fetchPeriods, isLoading: isLoadingPeriods, error: periodsError } = useMinimumPricePeriodStore();
   const [feeDialogOpen, setFeeDialogOpen] = useState(false);
   const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
@@ -167,31 +149,7 @@ export default function VenueGoals() {
       setViewMode("card");
     }
   };
-  const { selectedVenue: venue, fetchVenueById, isLoading, updateVenuePaymentInfo } = useVenueStore();
-
-  const pricingType = () => {
-    if (venue?.pricingModel === "PER_DAY") {
-      return {
-        type: "Preço por Diária",
-        price: venue?.pricePerDay,
-      };
-    } else if (venue?.pricingModel === "PER_PERSON") {
-      return {
-        type: "Preço por Pessoa",
-        price: venue?.pricePerPerson,
-      };
-    } else if (venue?.pricingModel === "PER_PERSON_HOUR") {
-      return {
-        type: "Preço por Pessoa por Hora",
-        price: venue?.pricePerPersonHour,
-      };
-    } else if (venue?.pricingModel === "PER_PERSON_DAY") {
-      return {
-        type: "Preço por Pessoa por Dia",
-        price: venue?.pricePerPersonDay,
-      };
-    };
-  };
+  const { selectedVenue: venue, fetchVenueById, isLoading, error: venueError, updateVenuePaymentInfo } = useVenueStore();
 
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {
     const value = e.target.value.replace(/\D/g, '');
@@ -347,336 +305,122 @@ export default function VenueGoals() {
         {/* Panel View */}
         {viewMode === "panel" && (
           <div className="space-y-6">
-            {/* Pricing Model Section */}
-            <Card className="border shadow-sm">
-              <CardHeader>
-                <CardTitle>Modelo de Precificação</CardTitle>
-                <CardDescription>
-                  O modelo de preço atual para o espaço.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full md:w-1/3">
-                  {!isEditingPricing ? (
-                    <div className="p-6 border rounded-lg bg-white">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mr-3">
-                            <Calendar className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium">{pricingType()?.type}</h3>
-                            <p className="text-2xl font-bold text-primary mt-1">
-                              {pricingType()?.price?.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              })}
-                            </p>
-                          </div>
-                        </div>
-                        {hasEditPermission() && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setIsEditingPricing(true)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <Form {...pricingForm}>
-                      <form onSubmit={pricingForm.handleSubmit(handlePricingSubmit)} className="space-y-4">
-                        <FormField
-                          control={pricingForm.control}
-                          name="pricingModel"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Modelo de Precificação</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Selecione o modelo" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {pricingModels.map((model) => (
-                                    <SelectItem key={model.value} value={model.value}>
-                                      {model.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={pricingForm.control}
-                          name="price"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Preço</FormLabel>
-                              <FormControl>
-                                <Input
-                                  value={formatCurrency(field.value)}
-                                  onChange={(e) => handleCurrencyChange(e, field.onChange)}
-                                  placeholder="R$ 0,00"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setIsEditingPricing(false)}
-                            disabled={isSubmitting}
+            <GoalsPanelSummary
+              venueLoading={isLoading}
+              venueError={venueError}
+              venue={venue ?? null}
+              goalsLoading={isLoadingGoals}
+              goalsError={goalsError}
+              goals={goals}
+              feesLoading={isLoadingSeasonalFees}
+              feesError={feesError}
+              surchargeCount={surcharges.length}
+              discountCount={discounts.length}
+            />
+            <GoalsPanelSections
+              canEdit={hasEditPermission()}
+              price={resolveCurrentPrice(venue)}
+              priceLoading={isLoading}
+              priceError={venueError}
+              isEditingPrice={isEditingPricing}
+              onEditPrice={() => setIsEditingPricing(true)}
+              priceEditor={
+                <Form {...pricingForm}>
+                  <form onSubmit={pricingForm.handleSubmit(handlePricingSubmit)} className="space-y-4">
+                    <FormField
+                      control={pricingForm.control}
+                      name="pricingModel"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Modelo de Precificação</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
                           >
-                            Cancelar
-                          </Button>
-                          <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? "Salvando..." : "Salvar"}
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o modelo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {pricingModels.map((model) => (
+                                <SelectItem key={model.value} value={model.value}>
+                                  {model.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
 
-            {/* Goals Section */}
-            <section className="bg-white p-6 rounded-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-medium text-gray-800">Metas</h2>
-                        <Button
-                          className="bg-primary hover:bg-primary/90 text-white"
-                  onClick={() => handleCardClick("metas")}
-                        >
-                  Ver todas
-                        </Button>
-              </div>
+                    <FormField
+                      control={pricingForm.control}
+                      name="price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Preço</FormLabel>
+                          <FormControl>
+                            <Input
+                              value={formatCurrency(field.value)}
+                              onChange={(e) => handleCurrencyChange(e, field.onChange)}
+                              placeholder="R$ 0,00"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {isLoadingGoals ? (
-                  <div className="col-span-3 text-center text-gray-500">Carregando metas...</div>
-                ) : goals.length === 0 ? (
-                  <EmptyState
-                    hasEditPermission={hasEditPermission()}
-                    title="Nenhuma meta cadastrada"
-                    description="Cadastre uma meta para começar a acompanhar o desempenho do seu espaço"
-                    actionText="Nova Meta"
-                    onAction={() => setShowGoalForm(true)}
-                  />
-                ) : (
-                  goals.slice(0, 3).map((goal) => {
-                    const monthNumbers = goal.months
-                      .split(',')
-                      .map(m => Number(m.trim()))
-                      .filter(n => !isNaN(n) && n >= 1 && n <= 12)
-                      .sort((a, b) => a - b);
-                    const monthNames = monthNumbers.map(n => monthLabels[n - 1]);
-                    return (
-                      <Card 
-                        key={goal.id} 
-                        className="bg-white border shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
-                        onClick={() => handleCardClick("metas")}
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsEditingPricing(false)}
+                        disabled={isSubmitting}
                       >
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium text-lg">
-                                Meta: {goal.minValue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                                {goal.maxValue ? ` - ${goal.maxValue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}` : ""}
-                              </h3>
-                              <p className="text-sm text-gray-600 mt-1">
-                                Meses: {monthNames.join(', ')}
-                              </p>
-                            </div>
-                            <div className="bg-gray-100 p-1 rounded">
-                              <TrendingUp className="h-5 w-5 text-primary" />
-                            </div>
-                          </div>
-                          <div className="mt-3">
-                            <div className="text-xs text-gray-600 mb-1">Taxa de aumento</div>
-                            <div className={`font-medium ${goal.increasePercent === 10 ? 'text-green-600' : ''}`}>{goal.increasePercent}%</div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
-              </div>
-            </section>
-
-            {/* Adicionais Section */}
-            <section className="bg-white p-6 rounded-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-medium text-gray-800">Adicionais</h2>
-                        <Button
-                          className="bg-primary hover:bg-primary/90 text-white"
-                  onClick={() => handleCardClick("adicionais")}
-                        >
-                  Ver todos
-                        </Button>
-              </div>
-
-              <div className="space-y-4">
-                {isLoadingSeasonalFees ? (
-                  <div className="text-center text-gray-500">Carregando adicionais...</div>
-                ) : surcharges.length === 0 ? (
-                    <EmptyState
-                      hasEditPermission={hasEditPermission()}
-                      title="Nenhum adicional cadastrado"
-                      description="Cadastre um adicional para começar a definir taxas extras para seu espaço"
-                      actionText="Novo Adicional"
-                      onAction={() => setFeeDialogOpen(true)}
-                    />
-                  ) : (
-                  surcharges.slice(0, 3).map((fee) => (
-                    <Card 
-                      key={fee.id} 
-                      className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm"
-                      onClick={() => handleCardClick("adicionais")}
-                    >
-                        <CardContent className="pt-6">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <h3 className="font-medium text-lg text-gray-800">{fee.title}</h3>
-                              {fee.startDay && fee.endDay && (
-                                <div className="flex items-center text-sm text-gray-600 mt-1">
-                                  <Calendar className="h-4 w-4 mr-2" />
-                                  <span>{fee.startDay} até {fee.endDay}</span>
-                                </div>
-                              )}
-                              {fee.affectedDays && (
-                              <div className="text-sm text-gray-600 mt-1 max-w-[50%]">{traduzirDiasSemana(fee.affectedDays)}</div>
-                              )}
-                            </div>
-                            <div className="text-lg font-bold text-green-500">+ {fee.fee} %</div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                )}
-              </div>
-            </section>
-
-            <section className="bg-white p-6 rounded-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-medium text-gray-800">Preços mínimos</h2>
-                <Button className="bg-primary hover:bg-primary/90 text-white" onClick={() => handleCardClick("minimos")}>
-                  Ver todos
-                </Button>
-              </div>
-              <Card className="bg-white border shadow-sm mb-4">
-                <CardContent className="p-4">
-                  <p className="text-sm text-gray-500">Preço mínimo padrão</p>
-                  <p className="text-lg font-semibold">
-                    {(venue?.minimumPrice || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                  </p>
-                </CardContent>
-              </Card>
-              <div className="space-y-4">
-                {isLoadingPeriods ? (
-                  <div className="text-center text-gray-500">Carregando faixas...</div>
-                ) : periods.length === 0 ? (
-                  <EmptyState
-                    hasEditPermission={hasEditPermission()}
-                    title="Nenhuma faixa cadastrada"
-                    description="O ano inteiro usa o preço mínimo padrão até você criar um período."
-                    actionText="Nova faixa"
-                    onAction={() => {
-                      setMinimumDialogOpen(true);
-                      handleCardClick("minimos");
-                    }}
-                  />
-                ) : (
-                  periods.slice(0, 3).map((period) => (
-                    <Card
-                      key={period.id}
-                      className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm"
-                      onClick={() => handleCardClick("minimos")}
-                    >
-                      <CardContent className="pt-6">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h3 className="font-medium text-lg text-gray-800">{period.title}</h3>
-                            <div className="flex items-center text-sm text-gray-600 mt-1">
-                              <Calendar className="h-4 w-4 mr-2" />
-                              <span>{period.startDay} até {period.endDay}</span>
-                            </div>
-                          </div>
-                          <div className="text-lg font-bold text-green-600">
-                            {period.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </section>
-
-            {/* Descontos Section */}
-            <section className="bg-white p-6 rounded-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-medium text-gray-800">Descontos</h2>
-                        <Button
-                          className="bg-primary hover:bg-primary/90 text-white"
-                  onClick={() => handleCardClick("descontos")}
-                        >
-                  Ver todos
-                        </Button>
-              </div>
-
-              <div className="space-y-4">
-                {isLoadingSeasonalFees ? (
-                  <div className="text-center text-gray-500">Carregando descontos...</div>
-                ) : discounts.length === 0 ? (
-                    <EmptyState
-                      hasEditPermission={hasEditPermission()}
-                      title="Nenhum desconto cadastrado"
-                      description="Cadastre um desconto para começar a definir reduções de preço para seu espaço"
-                      actionText="Novo Desconto"
-                      onAction={() => setDiscountDialogOpen(true)}
-                    />
-                  ) : (
-                  discounts.slice(0, 3).map((discount) => (
-                    <Card 
-                      key={discount.id} 
-                      className="bg-white border hover:bg-gray-100 transition-colors cursor-pointer shadow-sm"
-                      onClick={() => handleCardClick("descontos")}
-                    >
-                        <CardContent className="pt-6">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <h3 className="font-medium text-lg text-gray-800">{discount.title}</h3>
-                              {discount.startDay && discount.endDay && (
-                                <div className="flex items-center text-sm text-gray-600 mt-1">
-                                  <Calendar className="h-4 w-4 mr-2" />
-                                  <span>{discount.startDay} até {discount.endDay}</span>
-                                </div>
-                              )}
-                              {discount.affectedDays && (
-                              <div className="text-sm text-gray-600 mt-1 max-w-[50%]">{traduzirDiasSemana(discount.affectedDays)}</div>
-                              )}
-                            </div>
-                          <div className="text-lg font-bold text-red-500">{`-${discount.fee}%`}</div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                )}
-              </div>
-            </section>
+                        Cancelar
+                      </Button>
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? "Salvando..." : "Salvar"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              }
+              goals={goals}
+              goalsLoading={isLoadingGoals}
+              goalsError={goalsError}
+              surcharges={surcharges}
+              discounts={discounts}
+              feesLoading={isLoadingSeasonalFees}
+              feesError={feesError}
+              minimumPrice={venue?.minimumPrice}
+              venueLoading={isLoading}
+              venueError={venueError}
+              periods={periods}
+              periodsLoading={isLoadingPeriods}
+              periodsError={periodsError}
+              monthLabels={monthLabels}
+              translateDays={traduzirDiasSemana}
+              onOpen={handleCardClick}
+              onCreateGoal={() => {
+                setSelectedGoal(null);
+                setShowGoalForm(true);
+                handleCardClick("metas");
+              }}
+              onCreateSurcharge={() => {
+                setFeeDialogOpen(true);
+                handleCardClick("adicionais");
+              }}
+              onCreateDiscount={() => {
+                setDiscountDialogOpen(true);
+                handleCardClick("descontos");
+              }}
+              onCreatePeriod={() => {
+                setMinimumDialogOpen(true);
+                handleCardClick("minimos");
+              }}
+            />
           </div>
         )}
 

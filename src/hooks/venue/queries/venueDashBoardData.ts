@@ -1,5 +1,5 @@
 import { venueService } from '@/services/venue.service';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 interface VenueDashboardParams {
   month?: string;
@@ -12,5 +12,6 @@ export const useGetVenueDashBoardData = (venueId: string, params?: VenueDashboar
     queryFn: () => venueService.getVenueDashBoardData(venueId, params),
     select: (response) => response.data,
     enabled: !!venueId,
+    placeholderData: keepPreviousData,
   });
 }; 

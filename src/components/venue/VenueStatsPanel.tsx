@@ -1,11 +1,13 @@
-import { StatCard } from "@/components/StatCard";
-import { CalendarDays, ClipboardList, Users, CreditCard } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Button } from "@/components/ui/button";
+import { ReactNode } from "react";
+import { CalendarDays, ClipboardList, CreditCard, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { MonthYearNavigator } from "@/components/proposal/MonthYearNavigator";
 import { VenueDashboardData } from "@/types/venue";
-import { NumericFormat } from 'react-number-format';
-import { ProposalsChart, VisitsChart, RevenueChart } from "./VenueStatsChart";
+import { NumericFormat } from "react-number-format";
+
+const shortMonthNames = [
+  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+  "Jul", "Ago", "Set", "Out", "Nov", "Dez",
+];
 
 interface VenueStatsPanelProps {
   data: VenueDashboardData;
@@ -14,7 +16,51 @@ interface VenueStatsPanelProps {
   onMonthChange: (month: string) => void;
   onYearChange: (year: number) => void;
   months: string[];
-  years: number[];
+  numbersLoading?: boolean;
+}
+
+function MonthChange({ value, isPositive }: { value: number; isPositive: boolean }) {
+  const Icon = isPositive ? TrendingUp : TrendingDown;
+  const tone = isPositive ? "text-emerald-600" : "text-red-600";
+  const visible = `${isPositive ? "+" : "-"}${value.toFixed(0)}%`;
+  return (
+    <p
+      className={`flex items-center gap-1 text-xs font-medium tabular-nums ${tone}`}
+      aria-label={`${visible} em relação ao mês anterior`}
+    >
+      <Icon className="h-3 w-3" aria-hidden />
+      <span aria-hidden>{visible}</span>
+    </p>
+  );
+}
+
+function OverviewKpiCard({
+  label,
+  value,
+  icon: Icon,
+  iconClass,
+  change,
+}: {
+  label: string;
+  value: ReactNode;
+  icon: typeof CalendarDays;
+  iconClass: string;
+  change?: ReactNode;
+}) {
+  return (
+    <div className="flex items-start justify-between rounded-2xl border bg-white px-5 py-4">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconClass}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="text-2xl font-semibold tracking-tight">{value}</p>
+        </div>
+      </div>
+      {change}
+    </div>
+  );
 }
 
 export function VenueStatsPanel({
@@ -23,73 +69,58 @@ export function VenueStatsPanel({
   selectedYear,
   onMonthChange,
   onYearChange,
-  months,
-  years,
+  numbersLoading = false,
 }: VenueStatsPanelProps) {
-  // Para exibir o mês no StatCard
-  const monthLabel = selectedMonth === "all"
-    ? "Todos os meses"
-    : months[Number(selectedMonth)];
-
-  // Formatação de moeda brasileira
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
-  // Título e valor dinâmicos para receita
   const receitaTitulo = selectedMonth === "all" ? "Receita Anual" : "Receita Mensal";
   const receitaValor = selectedMonth === "all"
     ? (data?.monthlyRevenueList?.reduce((acc, curr) => acc + (curr.revenue || 0), 0) || 0)
     : (data?.monthlyRevenue || 0);
-    
+  const kpiNumber = (value: ReactNode) =>
+    numbersLoading ? (
+      <span className="inline-block h-7 w-16 animate-pulse rounded bg-gray-200" />
+    ) : (
+      value
+    );
+
   return (
-    <div>
-      {/* Filtros de mês e ano */}
-      <div className="flex gap-2 mb-4">
-        <select
-          value={selectedMonth}
-          onChange={e => onMonthChange(e.target.value)}
-          className="border rounded px-2 py-1"
-        >
-          {months.map((m, i) => (
-            <option key={i === 0 ? "all" : i} value={i === 0 ? "all" : String(i)}>
-              {m.charAt(0).toUpperCase() + m.slice(1)}
-            </option>
-          ))}
-        </select>
-        <select
-          value={selectedYear}
-          onChange={e => onYearChange(Number(e.target.value))}
-          className="border rounded px-2 py-1"
-        >
-          {years.map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
+    <div className="space-y-4">
+      <div className="rounded-3xl border bg-white p-4 shadow-sm sm:p-5">
+        <MonthYearNavigator
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth === "all" ? -1 : Number(selectedMonth) - 1}
+          monthNames={shortMonthNames}
+          onYearChange={onYearChange}
+          onMonthChange={(monthIndex) => onMonthChange(String(monthIndex + 1))}
+          onSelectAll={() => onMonthChange("all")}
+          allSelected={selectedMonth === "all"}
+          className="mb-0"
+        />
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          title="Eventos"
-          value={data?.eventsThisMonth}
-          icon={<CalendarDays className="h-5 w-5 text-eventhub-primary" />}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <OverviewKpiCard
+          label="Eventos"
+          value={kpiNumber(data?.eventsThisMonth)}
+          icon={CalendarDays}
+          iconClass="bg-violet-100 text-violet-600"
         />
-        <StatCard
-          title="Orçamentos"
-          value={data?.proposalsInMonth}
-          icon={<ClipboardList className="h-5 w-5 text-eventhub-primary" />}
-          trend={data?.proposalsVariation}
+        <OverviewKpiCard
+          label="Orçamentos"
+          value={kpiNumber(data?.proposalsInMonth)}
+          icon={ClipboardList}
+          iconClass="bg-violet-100 text-violet-600"
+          change={numbersLoading || !data?.proposalsVariation ? undefined : (
+            <MonthChange value={data.proposalsVariation.value} isPositive={data.proposalsVariation.isPositive} />
+          )}
         />
-        <StatCard
-          title="Visitas Agendadas"
-          value={data?.totalVisits}
-          icon={<Users className="h-5 w-5 text-eventhub-primary" />}
+        <OverviewKpiCard
+          label="Visitas Agendadas"
+          value={kpiNumber(data?.totalVisits)}
+          icon={Users}
+          iconClass="bg-violet-100 text-violet-600"
         />
-        <StatCard
-          title={receitaTitulo}
-          value={
+        <OverviewKpiCard
+          label={receitaTitulo}
+          value={kpiNumber(
             <NumericFormat
               value={receitaValor}
               displayType="text"
@@ -99,10 +130,11 @@ export function VenueStatsPanel({
               decimalScale={2}
               fixedDecimalScale
             />
-          }
-          icon={<CreditCard className="h-5 w-5 text-eventhub-primary" />}
+          )}
+          icon={CreditCard}
+          iconClass="bg-emerald-100 text-emerald-600"
         />
       </div>
     </div>
   );
-} 
+}
