@@ -2,6 +2,8 @@ import { useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useVenueReportsStore } from "@/store/venueReportsStore";
 import { ReportsChartCard } from "./ReportsChartCard";
+import { alignMonths, ReportInput } from "./report-metrics";
+import { useAnalysisYear } from "./useAnalysisYear";
 
 interface BudgetsReportProps {
   selectedYear: string;
@@ -10,26 +12,45 @@ interface BudgetsReportProps {
 export function BudgetsReport({ selectedYear }: BudgetsReportProps) {
   const { id: venueId } = useParams<{ id: string }>();
   const { monthlyBudgetsData, trafficBudgetsData, fetchBudgetsData, fetchBudgetsTraffic, monthlyEventsData, fetchEventsData } = useVenueReportsStore();
+  const previousYear = String(Number(selectedYear) - 1);
+  const previous = useAnalysisYear(venueId, previousYear);
 
   const fetchData = useCallback(async () => {
     if (!venueId) return;
     await fetchBudgetsData({ venueId, year: selectedYear, approved: false });
     await fetchBudgetsTraffic({ venueId, year: selectedYear, approved: false });
     await fetchEventsData({ venueId, year: selectedYear, approved: true });
-  }, [venueId, selectedYear]);
+  }, [venueId, selectedYear, fetchBudgetsData, fetchBudgetsTraffic, fetchEventsData]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  return (
-    <ReportsChartCard
-      title={`ORÇAMENTOS ${selectedYear}`}
-      total={monthlyBudgetsData.total}
-      monthsData={monthlyBudgetsData.analysisProposalByMonth}
-      trafficData={trafficBudgetsData.sortedSources}
-      type="orçamentos"
-      approvedCount={monthlyEventsData.total.count}
-    />
-  );
-} 
+  const input: ReportInput = {
+    kind: "orcamentos",
+    year: selectedYear,
+    previousYear,
+    current: {
+      count: monthlyBudgetsData.total.count,
+      amount: monthlyBudgetsData.total.total,
+      guests: monthlyBudgetsData.total.guestNumber,
+      approved: monthlyEventsData.total.count,
+      proposals: monthlyBudgetsData.total.count,
+    },
+    previous: previous ? {
+      count: previous.total.count,
+      amount: previous.total.total,
+      guests: previous.total.guestNumber,
+      approved: previous.approved.count,
+      proposals: previous.total.count,
+    } : null,
+    countMonths: alignMonths(monthlyBudgetsData.analysisProposalByMonth, "count"),
+    amountMonths: alignMonths(monthlyBudgetsData.analysisProposalByMonth, "total"),
+    guestMonths: alignMonths(monthlyBudgetsData.analysisProposalByMonth, "guestNumber"),
+    approvedMonths: alignMonths(monthlyEventsData.analysisEventsByMonth, "count"),
+    proposalMonths: alignMonths(monthlyBudgetsData.analysisProposalByMonth, "count"),
+    traffic: trafficBudgetsData.sortedSources,
+  };
+
+  return <ReportsChartCard kind="orcamentos" input={input} />;
+}

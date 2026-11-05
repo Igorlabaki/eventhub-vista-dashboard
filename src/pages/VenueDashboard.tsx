@@ -256,13 +256,11 @@ export default function VenueDashboard() {
                 <VenuePerformanceChartAllMonths
                   data={dashboardData}
                   goals={goals || []}
-                  months={months}
                 />
               ) : (
                 <VenuePerformanceChart
                   data={dashboardData}
                   goals={goals || []}
-                  months={months}
                   selectedMonth={Number(selectedMonth)}
                 />
               )}
