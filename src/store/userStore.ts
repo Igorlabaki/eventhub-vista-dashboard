@@ -10,7 +10,6 @@ interface User {
   name: string;
   avatarUrl?: string;
   googleId?: string;
-  fcmToken?: string;
 }
 
 interface UpdateUserData {

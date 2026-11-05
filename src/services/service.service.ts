@@ -9,9 +9,19 @@ import {
     UpdateServiceDTO 
 } from '@/types/service';
 
+function serviceFormData(payload: unknown, file?: File) {
+    const formData = new FormData();
+    formData.append("payload", JSON.stringify(payload));
+    if (file) formData.append("file", file, file.name);
+    return formData;
+}
+
+const multipart = { headers: { "Content-Type": "multipart/form-data" } };
+
 export const serviceService = {
     createService: async (data: CreateServiceDTO) => {
-        const response = await api.post<ServiceCreateResponse>('/service/create', data);
+        const { file, ...payload } = data;
+        const response = await api.post<ServiceCreateResponse>('/service/create', serviceFormData(payload, file), multipart);
         return response.data;
     },
 
@@ -28,8 +38,8 @@ export const serviceService = {
         return response.data;
     },
 
-    updateService: async (data: UpdateServiceDTO) => {
-        const response = await api.put<ServiceUpdateResponse>('/service/update', data);
+    updateService: async ({ file, ...data }: UpdateServiceDTO) => {
+        const response = await api.put<ServiceUpdateResponse>('/service/update', serviceFormData(data, file), multipart);
         return response.data;
     },
 

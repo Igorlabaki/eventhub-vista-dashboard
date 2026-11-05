@@ -1,7 +1,12 @@
+export type ServicePricingType = "FIXED" | "PER_HOUR" | "PER_PERSON";
+
 export interface Service {
     id: string;
     name: string;
     price: number;
+    pricingType?: ServicePricingType;
+    description?: string | null;
+    imageUrl?: string | null;
     venueId: string;
     createdAt: Date;
     updatedAt: Date;
@@ -13,17 +18,24 @@ export interface CreateServiceDTO {
     name: string;
     price: number;
     venueId: string;
+    pricingType?: ServicePricingType;
+    description?: string | null;
+    file?: File;
     rpaRequired?: boolean;
-    rpaMinPeople?: number;
+    rpaMinPeople?: number | null;
 }
 
 export interface UpdateServiceDTO {
     serviceId: string;
+    file?: File;
     data: {
         name?: string;
         price?: number;
+        pricingType?: ServicePricingType;
+        description?: string | null;
+        removeImage?: boolean;
         rpaRequired?: boolean;
-        rpaMinPeople?: number;
+        rpaMinPeople?: number | null;
     };
 }
 

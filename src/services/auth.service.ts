@@ -5,7 +5,6 @@ import { useUserStore } from '@/store/userStore';
 interface LoginCredentials {
   email: string;
   password: string;
-  fcmToken?: string;
 }
 
 interface GoogleLoginCredentials {

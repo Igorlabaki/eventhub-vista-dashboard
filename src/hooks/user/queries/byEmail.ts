@@ -7,7 +7,6 @@ interface User {
   username: string;
   avatarUrl?: string;
   googleId?: string;
-  fcmToken?: string;
 }
 
 interface UserResponse {

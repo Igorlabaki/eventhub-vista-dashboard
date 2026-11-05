@@ -23,11 +23,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Service } from "@/types/service";
+import { Service, ServicePricingType } from "@/types/service";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   price: z.string().min(1, "Preço é obrigatório"),
+  pricingType: z.enum(["FIXED", "PER_HOUR", "PER_PERSON"]),
+  description: z.string().max(500, "A descrição passa de 500 caracteres").optional(),
   rpaRequired: z.boolean().default(false),
   rpaMinPeople: z.number().optional(),
 }).refine((data) => {
@@ -53,13 +57,24 @@ function parseCurrency(value: string) {
 
 interface ServiceFormProps {
   service?: Service | null;
-  onSubmit: (data: { name: string; price: number; rpaRequired: boolean; rpaMinPeople?: number }) => Promise<void>;
+  onSubmit: (data: {
+    name: string;
+    price: number;
+    pricingType: ServicePricingType;
+    description?: string | null;
+    file?: File;
+    removeImage?: boolean;
+    rpaRequired: boolean;
+    rpaMinPeople?: number | null;
+  }) => Promise<void>;
   onCancel: () => void;
 }
 
 export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [file, setFile] = useState<File | undefined>();
+  const [removeImage, setRemoveImage] = useState(false);
   const { deleteService } = useServiceStore();
   const { toast } = useToast();
 
@@ -68,6 +83,8 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
     defaultValues: {
       name: service?.name ?? "",
       price: service ? formatCurrency(service.price) : "",
+      pricingType: service?.pricingType ?? "FIXED",
+      description: service?.description ?? "",
       rpaRequired: service?.rpaRequired ?? false,
       rpaMinPeople: service?.rpaMinPeople,
     },
@@ -77,9 +94,13 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
     form.reset({
       name: service?.name ?? "",
       price: service ? formatCurrency(service.price) : "",
+      pricingType: service?.pricingType ?? "FIXED",
+      description: service?.description ?? "",
       rpaRequired: service?.rpaRequired ?? false,
       rpaMinPeople: service?.rpaMinPeople,
     });
+    setFile(undefined);
+    setRemoveImage(false);
   }, [service, form]);
  
   const handleDelete = async () => {
@@ -118,6 +139,10 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
       await onSubmit({
         name: values.name,
         price: parseCurrency(values.price),
+        pricingType: values.pricingType,
+        description: values.description?.trim() ? values.description.trim() : null,
+        file,
+        removeImage,
         rpaRequired: values.rpaRequired,
         rpaMinPeople: values.rpaMinPeople ?? null,
       });
@@ -178,6 +203,73 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
           </FormItem>
         )}
       />
+      <FormField
+        control={form.control}
+        name="pricingType"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Tipo de preço</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="FIXED">Preço fixo</SelectItem>
+                <SelectItem value="PER_HOUR">Por hora</SelectItem>
+                <SelectItem value="PER_PERSON">Por pessoa</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="description"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Descrição</FormLabel>
+            <FormControl>
+              <Textarea
+                placeholder="Texto opcional sobre o serviço"
+                className="mt-1"
+                maxLength={500}
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <div>
+        <Label>Foto</Label>
+        {service?.imageUrl && !removeImage && !file && (
+          <img src={service.imageUrl} alt="" className="mt-2 h-24 w-40 rounded object-cover" />
+        )}
+        <Input
+          type="file"
+          accept="image/*"
+          className="mt-1"
+          onChange={(event) => {
+            setFile(event.target.files?.[0]);
+            setRemoveImage(false);
+          }}
+        />
+        {service?.imageUrl && (
+          <button
+            type="button"
+            className="mt-2 text-sm text-gray-600 underline"
+            onClick={() => {
+              setRemoveImage((current) => !current);
+              setFile(undefined);
+            }}
+          >
+            {removeImage ? "Manter a foto atual" : "Remover foto"}
+          </button>
+        )}
+      </div>
       <FormField
         control={form.control}
         name="rpaRequired"

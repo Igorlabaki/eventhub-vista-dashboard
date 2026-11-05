@@ -19,6 +19,7 @@ import { showSuccessToast } from "@/components/ui/success-toast"
 import { useToast } from "@/hooks/use-toast"
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler"
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore"
+import { serviceUnitLabel } from "@/lib/service-price-label"
 
 interface ServiceListProps {
   services: Service[]
@@ -127,7 +128,12 @@ export function ServiceList({
                         {service.name}
                       </TableCell>
                       <TableCell>
-                        R$ {service.price.toFixed(2)}
+                        <span className="inline-flex items-center gap-2">
+                          {service.imageUrl && (
+                            <img src={service.imageUrl} alt="" className="h-8 w-12 rounded object-cover" />
+                          )}
+                          {serviceUnitLabel(service.price, service.pricingType)}
+                        </span>
                       </TableCell>
                       {hasEditPermission() && (
                       <TableCell className="text-center">

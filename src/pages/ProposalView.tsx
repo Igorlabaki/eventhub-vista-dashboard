@@ -1,19 +1,26 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useProposalStore } from "@/store/proposalStore";
-import { ArrowRight, Calendar, Check, Circle, Clock, GripVertical, House, Info, MapPin, Users } from "lucide-react";
+import { ArrowRight, Calendar, Check, CircleCheck, Clock, GripVertical, HelpCircle, House, Info, MapPin, Users } from "lucide-react";
 import { FaFacebook, FaGlobe, FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa";
 import NotFound from "./NotFound";
+import { Proposal } from "@/types/proposal";
+import { eventDurationHours } from "@/lib/event-duration";
 import { wallClockDateIso, wallClockTime } from "@/lib/wall-clock-datetime";
+import { chosenHoursLabel, publicHourlyRate, quotedServiceAmount, quotedServiceDetail, sortProposalServicesByPricing } from "@/lib/service-price-label";
 import {
   proposalService,
   ProposalPresentation,
+  PublicProposalServicesUpdate,
+  PublicServiceChoice,
 } from "@/services/proposal.service";
 import { imageOrderAfterSave, moveImageBefore, sameImageOrder } from "@/lib/reorder-proposal-images";
 import { replaceProposalImage } from "@/lib/choose-proposal-image";
 import { resolveTourVideo } from "@/lib/tour-video";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
+import { PublicServiceDetailDialog } from "@/components/proposal/forms/PublicServiceDetail";
 import { RecalculateProposalDialog } from "@/components/proposal/RecalculateProposalDialog";
+import { UpdateProposalServicesDialog } from "@/components/proposal/UpdateProposalServicesDialog";
 import { ProposalTourVideo } from "@/components/proposal/ProposalTourVideo";
 import {
   Dialog,
@@ -48,6 +55,78 @@ function formatCurrency(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function applyPublicServices(
+  current: Proposal,
+  data: PublicProposalServicesUpdate,
+  serviceHours: { serviceId: string; hours: number }[] = [],
+): Proposal {
+  const previous = new Map((current.proposalServices || []).map((line) => [line.serviceId, line]));
+  const hoursById = new Map(serviceHours.map((entry) => [entry.serviceId, entry.hours]));
+  const proposalServices = data.proposalServices.map((line) => {
+    const existing = previous.get(line.serviceId);
+    const hours = hoursById.get(line.serviceId);
+    const hourFields = typeof hours === "number"
+      ? {
+          pricingType: "PER_HOUR" as const,
+          quantity: hours,
+          ...(hours > 0 ? { unitPrice: line.amount / hours } : {}),
+        }
+      : {};
+    const serviceFields = {
+      name: line.service.name,
+      rpaRequired: line.service.rpaRequired,
+      rpaMinPeople: line.service.rpaMinPeople ?? undefined,
+    };
+    if (existing?.service) {
+      return {
+        ...existing,
+        ...hourFields,
+        id: line.id,
+        amount: line.amount,
+        service: { ...existing.service, ...serviceFields },
+      };
+    }
+    const now = new Date();
+    return {
+      id: line.id,
+      proposalId: current.id,
+      serviceId: line.serviceId,
+      amount: line.amount,
+      ...hourFields,
+      joinedAt: now,
+      service: {
+        id: line.serviceId,
+        name: line.service.name,
+        price: 0,
+        venueId: current.venueId,
+        createdAt: now,
+        updatedAt: now,
+        ...serviceFields,
+      },
+    };
+  });
+  return { ...current, totalAmount: data.totalAmount, proposalServices };
+}
+
+function hourlyRatesForChoices(
+  choices: PublicServiceChoice[],
+  lines: Proposal["proposalServices"] | undefined,
+  eventHours: number,
+) {
+  return Object.fromEntries(choices.flatMap((choice) => {
+    const line = (lines || []).find((item) => item.serviceId === choice.id);
+    const rate = publicHourlyRate({
+      hourly: choice.hourly,
+      amount: choice.amount,
+      hours: choice.hours,
+      eventHours,
+      unitPrice: line?.unitPrice,
+      catalogPrice: line?.service?.price,
+    });
+    return typeof rate === "number" ? [[choice.id, rate]] : [];
+  }));
+}
+
 function eventDateLabel(value: string | Date) {
   const [year, month, day] = wallClockDateIso(value).split("-");
   return `${day} de ${MONTHS_PT[Number(month) - 1] || month} de ${year}`;
@@ -65,38 +144,295 @@ const actionButtonMotion =
 
 const PUBLIC_LOADING_BACKGROUND = "#111315";
 const PUBLIC_LOADING_TEXT = "#f7f7f5";
+const MEDIA_READY_WAIT_MS = 8000;
 
-function PublicProposalLoadingScreen({
+function preloadImage(url: string) {
+  return new Promise<void>((resolve) => {
+    const img = new Image();
+    const finish = () => resolve();
+    img.onload = () => {
+      if (typeof img.decode === "function") {
+        img.decode().then(finish).catch(finish);
+        return;
+      }
+      finish();
+    };
+    img.onerror = finish;
+    img.src = url;
+  });
+}
+
+function preloadFileVideo(url: string) {
+  const video = document.createElement("video");
+  video.preload = "auto";
+  video.muted = true;
+  video.playsInline = true;
+  video.setAttribute("aria-hidden", "true");
+  video.style.position = "absolute";
+  video.style.width = "0";
+  video.style.height = "0";
+  video.style.opacity = "0";
+  video.style.pointerEvents = "none";
+  let settled = false;
+  const finish = () => {
+    if (settled) return;
+    settled = true;
+    video.removeAttribute("src");
+    video.load();
+    video.remove();
+  };
+  const promise = new Promise<void>((resolve) => {
+    const done = () => {
+      finish();
+      resolve();
+    };
+    video.addEventListener("canplay", done, { once: true });
+    video.addEventListener("error", done, { once: true });
+    document.body.appendChild(video);
+    video.src = url;
+  });
+  return { promise, cancel: finish };
+}
+
+function preloadManrope() {
+  if (typeof document === "undefined" || !document.fonts?.load) return Promise.resolve();
+  return Promise.all(
+    [400, 500, 700, 800].map((weight) =>
+      document.fonts.load(`${weight} 16px Manrope`).catch(() => undefined)
+    )
+  ).then(() => undefined);
+}
+
+function surfaceIsDark(color: string) {
+  const match = color.trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (!match) return true;
+  let hex = match[1];
+  if (hex.length === 3) hex = hex.split("").map((char) => char + char).join("");
+  const red = parseInt(hex.slice(0, 2), 16);
+  const green = parseInt(hex.slice(2, 4), 16);
+  const blue = parseInt(hex.slice(4, 6), 16);
+  return (0.299 * red + 0.587 * green + 0.114 * blue) / 255 < 0.55;
+}
+
+function boneTone(color: string) {
+  return surfaceIsDark(color) ? "bg-white/30" : "bg-black/10";
+}
+
+function Bone({ className, tone }: { className: string; tone: string }) {
+  return <div className={`motion-safe:animate-pulse rounded-md ${tone} ${className}`} />;
+}
+
+function presentationShowsFooter(house: ProposalPresentation | null) {
+  if (!house) return false;
+  const hasSocial = Boolean(
+    house.whatsappNumber || house.facebookUrl || house.tiktokUrl || house.instagramUrl || house.url
+  );
+  return Boolean(house.logoUrl || hasSocial);
+}
+
+function presentationHasMapEmbed(house: ProposalPresentation | null) {
+  if (!house) return false;
+  return Boolean(
+    [house.street, house.streetNumber, house.neighborhood, house.city, house.state].filter(Boolean).join(", ")
+  );
+}
+
+type PublicProposalSkeletonShape = {
+  hero: "video" | "photo" | "none";
+  coverAfterProposal: boolean;
+  galleryAfterProposal: number;
+  galleryAfterServices: number;
+  amenities: boolean;
+  services: boolean;
+  mapEmbed: boolean;
+  mapLine: boolean;
+  footer: boolean;
+};
+
+const GENERIC_PROPOSAL_SKELETON: PublicProposalSkeletonShape = {
+  hero: "photo",
+  coverAfterProposal: false,
+  galleryAfterProposal: 2,
+  galleryAfterServices: 0,
+  amenities: true,
+  services: true,
+  mapEmbed: true,
+  mapLine: false,
+  footer: true,
+};
+
+function skeletonShape(
+  house: ProposalPresentation | null,
+  serviceCount: number,
+  shaped: boolean
+): PublicProposalSkeletonShape {
+  if (!shaped) return GENERIC_PROPOSAL_SKELETON;
+  if (!house) {
+    return {
+      hero: "none",
+      coverAfterProposal: false,
+      galleryAfterProposal: 0,
+      galleryAfterServices: 0,
+      amenities: false,
+      services: serviceCount > 0,
+      mapEmbed: false,
+      mapLine: false,
+      footer: false,
+    };
+  }
+  const tour = resolveTourVideo(house.tourVideoUrl);
+  const hasCover = house.images.length > 0;
+  const galleryCount = Math.max(0, house.images.length - 1);
+  return {
+    hero: tour ? "video" : hasCover ? "photo" : "none",
+    coverAfterProposal: Boolean(tour && hasCover),
+    galleryAfterProposal: !tour ? galleryCount : 0,
+    galleryAfterServices: tour ? galleryCount : 0,
+    amenities: house.amenities.length > 0,
+    services: serviceCount > 0,
+    mapEmbed: presentationHasMapEmbed(house),
+    mapLine: !presentationHasMapEmbed(house),
+    footer: presentationShowsFooter(house),
+  };
+}
+
+function SkeletonGallery({ count, tone }: { count: number; tone: string }) {
+  if (count <= 0) return null;
+  return (
+    <div className="grid grid-cols-2 gap-3" aria-hidden>
+      {Array.from({ length: count }, (_, index) => {
+        const spansFullRow = count % 2 === 1 && index === count - 1;
+        return (
+          <div
+            key={index}
+            className={`h-40 motion-safe:animate-pulse rounded-xl ${tone}${spansFullRow ? " col-span-2" : ""}`}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function SkeletonTextCard({
+  style,
+  lines,
+  tone,
+  shellClassName = "",
+}: {
+  style?: React.CSSProperties;
+  lines: number;
+  tone: string;
+  shellClassName?: string;
+}) {
+  return (
+    <section className={`rounded-xl px-5 py-6 shadow-lg ${shellClassName}`} style={style} aria-hidden>
+      <Bone tone={tone} className="h-5 w-48 max-w-full" />
+      <Bone tone={tone} className="mt-2 h-4 w-full max-w-lg" />
+      <div className="mt-4 space-y-2">
+        {Array.from({ length: lines }, (_, index) => (
+          <Bone key={index} tone={tone} className="h-4 w-full max-w-sm" />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PublicProposalPageSkeleton({
   presentation,
+  shaped,
+  serviceCount,
 }: {
   presentation: ProposalPresentation | null;
+  shaped: boolean;
+  serviceCount: number;
 }) {
-  const background = presentation?.proposalPrimaryColor || PUBLIC_LOADING_BACKGROUND;
-  const color = presentation?.proposalTextColor || PUBLIC_LOADING_TEXT;
-  const name = presentation?.name?.trim();
+  const colorsKnown = presentation != null;
+  const background = colorsKnown
+    ? presentation.proposalPrimaryColor || PUBLIC_LOADING_BACKGROUND
+    : PUBLIC_LOADING_BACKGROUND;
+  const color = colorsKnown ? presentation.proposalTextColor || PUBLIC_LOADING_TEXT : PUBLIC_LOADING_TEXT;
+  const cardBackground = colorsKnown ? presentation.proposalSecondaryColor || "#ffffff" : null;
+  const cardText = colorsKnown ? presentation.proposalTextColor || "#181818" : color;
+  const cardStyle = cardBackground ? { backgroundColor: cardBackground, color: cardText } : undefined;
+  const cardShell = cardBackground ? "" : "bg-white/10";
+  const footerBackground = colorsKnown ? presentation.proposalSecondaryColor || "#4f46e5" : "#4f46e5";
+  const footerText = colorsKnown ? presentation.proposalTextColor || "#ffffff" : "#ffffff";
+  const pageTone = boneTone(background);
+  const cardTone = cardBackground ? boneTone(cardBackground) : pageTone;
+  const footerTone = boneTone(footerBackground);
+  const shape = skeletonShape(presentation, serviceCount, shaped);
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className="flex min-h-screen w-full items-center justify-center font-['Manrope',sans-serif]"
+      aria-busy="true"
+      className="flex min-h-screen flex-col font-['Manrope',sans-serif]"
       style={{ backgroundColor: background, color }}
     >
-      <div className="flex flex-col items-center gap-6 px-6">
-        {presentation?.logoUrl ? (
-          <img
-            src={presentation.logoUrl}
-            alt={name ? `Logo ${name}` : "Logo do espaço"}
-            className="max-h-24 max-w-64 object-contain"
-          />
-        ) : name ? (
-          <span className="text-center text-3xl font-bold tracking-wide">{name}</span>
-        ) : null}
-        <span className="relative flex h-10 w-10" aria-hidden>
-          <span className="absolute inline-flex h-full w-full animate-spin rounded-full border-4 border-current border-t-transparent opacity-80" />
-        </span>
-        <span className="sr-only">Carregando</span>
-      </div>
+      <span className="sr-only">Carregando</span>
+      <main className="flex flex-1 flex-col items-center justify-start px-3 py-10">
+        <div className="flex w-full max-w-3xl flex-col gap-5">
+          <header className="flex flex-col items-center">
+            <Bone tone={pageTone} className="mb-4 h-16 w-48 max-w-full" />
+            {presentation?.description?.trim() ? (
+              <div className="mb-6 flex w-full max-w-2xl flex-col items-center gap-2" aria-hidden>
+                <Bone tone={pageTone} className="h-4 w-full" />
+                <Bone tone={pageTone} className="h-4 w-4/5" />
+              </div>
+            ) : null}
+            {shape.hero === "video" && (
+              <div className={`mb-6 aspect-video w-full motion-safe:animate-pulse rounded-2xl ${pageTone}`} />
+            )}
+            {shape.hero === "photo" && (
+              <div className={`mb-6 h-72 w-full motion-safe:animate-pulse rounded-2xl ${pageTone}`} />
+            )}
+          </header>
+          <section className={`rounded-xl px-5 py-6 shadow-lg ${cardShell}`} style={cardStyle} aria-hidden>
+            <Bone tone={cardTone} className="h-3 w-40" />
+            <Bone tone={cardTone} className="mt-3 h-6 w-64 max-w-full" />
+            <Bone tone={cardTone} className="mt-2 h-4 w-full max-w-md" />
+            <div className="my-5 border-t border-current/15" />
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              {Array.from({ length: 4 }, (_, index) => (
+                <div key={index}>
+                  <Bone tone={cardTone} className="h-3 w-28" />
+                  <Bone tone={cardTone} className="mt-2 h-5 w-40 max-w-full" />
+                </div>
+              ))}
+            </div>
+          </section>
+          {shape.coverAfterProposal && (
+            <div className={`h-72 w-full motion-safe:animate-pulse rounded-2xl ${pageTone}`} />
+          )}
+          <SkeletonGallery count={shape.galleryAfterProposal} tone={pageTone} />
+          {shape.amenities && (
+            <SkeletonTextCard style={cardStyle} lines={4} tone={cardTone} shellClassName={cardShell} />
+          )}
+          {shape.services && (
+            <SkeletonTextCard style={cardStyle} lines={3} tone={cardTone} shellClassName={cardShell} />
+          )}
+          <SkeletonGallery count={shape.galleryAfterServices} tone={pageTone} />
+          <SkeletonTextCard style={cardStyle} lines={4} tone={cardTone} shellClassName={cardShell} />
+          {(shape.mapEmbed || shape.mapLine) && (
+            <div className="flex w-full flex-col items-center" aria-hidden>
+              <Bone tone={pageTone} className="h-4 w-40" />
+              {shape.mapEmbed && (
+                <div className={`mt-4 h-56 w-full motion-safe:animate-pulse rounded-2xl sm:h-72 ${pageTone}`} />
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+      {shape.footer && (
+        <footer
+          className="flex w-full flex-col gap-3 px-6 py-8"
+          style={{ backgroundColor: footerBackground, color: footerText }}
+          aria-hidden
+        >
+          <Bone tone={footerTone} className="h-12 w-40" />
+        </footer>
+      )}
     </div>
   );
 }
@@ -190,7 +526,30 @@ export default function ProposalView() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [coverSettled, setCoverSettled] = useState(false);
   const [recalculateOpen, setRecalculateOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [serviceDetail, setServiceDetail] = useState<{
+    name: string;
+    imageUrl: string | null;
+    description: string | null;
+  } | null>(null);
+  const [serviceDetailOpen, setServiceDetailOpen] = useState(false);
+  const [serviceChoices, setServiceChoices] = useState<PublicServiceChoice[] | null>(null);
+  const [serviceChoicesFailed, setServiceChoicesFailed] = useState(false);
+  const [readyForId, setReadyForId] = useState<string | null>(null);
+  const [trackedId, setTrackedId] = useState(id);
   const dragMoved = useRef(false);
+
+  if (id !== trackedId) {
+    setTrackedId(id);
+    setPresentation(null);
+    setPresentationLoading(Boolean(id));
+    setReadyForId(null);
+    setServiceChoices(null);
+    setServiceChoicesFailed(false);
+    setServicesOpen(false);
+    setServiceDetail(null);
+    setServiceDetailOpen(false);
+  }
 
   useEffect(() => {
     setCoverSettled(false);
@@ -200,17 +559,42 @@ export default function ProposalView() {
   }, [id, fetchProposalById]);
 
   useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    proposalService.listPublicProposalServices(id)
+      .then((response) => {
+        if (!cancelled) setServiceChoices(response.data.services);
+      })
+      .catch(() => {
+        if (!cancelled) setServiceChoicesFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
     if (!id) {
       setPresentationLoading(false);
       return;
     }
+    let active = true;
     setPresentation(null);
     setPresentationLoading(true);
     proposalService
       .getProposalPresentation(id)
-      .then((response) => setPresentation(response.data))
-      .catch(() => setPresentation(null))
-      .finally(() => setPresentationLoading(false));
+      .then((response) => {
+        if (active) setPresentation(response.data);
+      })
+      .catch(() => {
+        if (active) setPresentation(null);
+      })
+      .finally(() => {
+        if (active) setPresentationLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -227,10 +611,50 @@ export default function ProposalView() {
     };
   }, [presentation?.name, presentation?.description]);
 
-  if (isLoading || presentationLoading) {
-    return <PublicProposalLoadingScreen presentation={presentation} />;
+  useEffect(() => {
+    if (!id || presentationLoading || readyForId === id) return;
+    let cancelled = false;
+    const timeout = window.setTimeout(() => {
+      if (!cancelled) setReadyForId(id);
+    }, MEDIA_READY_WAIT_MS);
+
+    const jobs: Promise<unknown>[] = [preloadManrope()];
+    const urls = new Set<string>();
+    if (presentation?.logoUrl) urls.add(presentation.logoUrl);
+    for (const image of presentation?.images ?? []) {
+      if (image.imageUrl) urls.add(image.imageUrl);
+    }
+    urls.forEach((url) => jobs.push(preloadImage(url)));
+    const tour = resolveTourVideo(presentation?.tourVideoUrl);
+    const videoPreload = tour?.kind === "file" ? preloadFileVideo(tour.src) : null;
+    if (videoPreload) jobs.push(videoPreload.promise);
+
+    void Promise.all(jobs).finally(() => {
+      if (!cancelled) setReadyForId(id);
+    });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+      videoPreload?.cancel();
+    };
+  }, [id, presentationLoading, presentation, readyForId]);
+
+  const proposalMatchesRoute = currentProposal?.id === id;
+  const dataSettled = !isLoading && !presentationLoading && proposalMatchesRoute;
+  const pageReady = dataSettled && readyForId === id;
+
+  if (!isLoading && !presentationLoading && (error || !currentProposal)) return <NotFound />;
+  if (!pageReady) {
+    return (
+      <PublicProposalPageSkeleton
+        presentation={presentation}
+        shaped={Boolean(presentation) || dataSettled}
+        serviceCount={proposalMatchesRoute ? (currentProposal?.proposalServices.length ?? 0) : 0}
+      />
+    );
   }
-  if (error || !currentProposal) return <NotFound />;
+  if (!currentProposal) return <NotFound />;
 
   const {
     email,
@@ -244,7 +668,7 @@ export default function ProposalView() {
     proposalServices,
   } = currentProposal;
 
-  const serviceList = proposalServices || [];
+  const serviceList = sortProposalServicesByPricing(proposalServices || []);
   const durationHours = Math.round(
     (new Date(endDate).getTime() - new Date(startDate).getTime()) /
       (1000 * 60 * 60)
@@ -369,7 +793,7 @@ export default function ProposalView() {
     house?.url ? { href: house.url, label: "Site", icon: FaGlobe } : null,
   ].filter((item) => item !== null);
   const showSpaceFooter = Boolean(
-    house && (house.logoUrl || house.description || footerSocials.length > 0)
+    house && (house.logoUrl || footerSocials.length > 0)
   );
   const mapQuery = house
     ? [house.street, house.streetNumber, house.neighborhood, house.city, house.state]
@@ -480,6 +904,11 @@ export default function ProposalView() {
                 </span>
               </div>
             )}
+            {house?.description?.trim() ? (
+              <p className="mb-6 max-w-2xl whitespace-pre-line text-center text-[15px] font-normal leading-[1.6] motion-safe:animate-logo-in">
+                {house.description.trim()}
+              </p>
+            ) : null}
             {tourVideo ? (
               <ProposalTourVideo
                 video={tourVideo}
@@ -608,21 +1037,109 @@ export default function ProposalView() {
             </RevealBlock>
           )}
 
-          {serviceList.length > 0 && (
+          {(serviceList.length > 0 || (serviceChoices?.length ?? 0) > 0) && (
             <RevealBlock>
             <section className="rounded-xl px-5 py-6 shadow-lg" style={cardStyle}>
-              <h2 className={sectionTitleClass}>Sua experiência inclui</h2>
+              <div className="flex items-start justify-between gap-4">
+                <h2 className={sectionTitleClass}>Sua experiência inclui</h2>
+                <button
+                  type="button"
+                  onClick={() => setServicesOpen(true)}
+                  className={`inline-flex shrink-0 items-center justify-center rounded-full border border-current/40 px-4 py-1.5 text-[14px] font-medium hover:bg-white/10 ${actionButtonMotion}`}
+                >
+                  Alterar serviços
+                </button>
+              </div>
+              <UpdateProposalServicesDialog
+                open={servicesOpen}
+                onOpenChange={setServicesOpen}
+                proposalId={currentProposal.id}
+                approved={Boolean(currentProposal.approved)}
+                paid={Boolean(currentProposal.paid)}
+                choices={serviceChoices ?? []}
+                hourlyRates={hourlyRatesForChoices(
+                  serviceChoices ?? [],
+                  proposalServices,
+                  eventDurationHours(new Date(startDate), new Date(endDate)),
+                )}
+                eventHours={eventDurationHours(new Date(startDate), new Date(endDate))}
+                loadFailed={serviceChoicesFailed}
+                onSaved={(data, serviceHours) => {
+                  const hoursById = new Map(serviceHours.map((entry) => [entry.serviceId, entry.hours]));
+                  setCurrentProposal(applyPublicServices(currentProposal, data, serviceHours));
+                  setServiceChoices((current) => current?.map((choice) => {
+                    const saved = data.proposalServices.find((line) => line.serviceId === choice.id);
+                    const hours = hoursById.get(choice.id);
+                    if (!saved) return { ...choice, selected: false };
+                    return {
+                      ...choice,
+                      selected: true,
+                      amount: saved.amount,
+                      ...(typeof hours === "number" ? { hours } : {}),
+                    };
+                  }) ?? current);
+                }}
+              />
               <p className={sectionLeadClass}>
                 Serviços para que você aproveite cada momento com mais tranquilidade.
               </p>
               <ul className="mt-4 space-y-2">
-                {serviceList.map((service) => (
-                  <li key={service.id} className="flex items-start gap-2">
-                    <Circle className="mt-1 h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>{service.service?.name || "Serviço"}</span>
-                  </li>
-                ))}
+                {serviceList.map((service) => {
+                  const name = service.service?.name || "Serviço";
+                  const detailImage = service.service?.imageUrl?.trim() || "";
+                  const detailText = service.service?.description?.trim() || "";
+                  const minPeople = service.service?.rpaRequired ? service.service.rpaMinPeople : undefined;
+                  const requiredText = !minPeople
+                    ? ""
+                    : minPeople === 1
+                      ? "Obrigatório a partir de 1 pessoa."
+                      : `Obrigatório a partir de ${minPeople} pessoas.`;
+                  const hoursText = chosenHoursLabel(
+                    service.pricingType ?? service.service?.pricingType,
+                    service.quantity,
+                  );
+                  return (
+                    <li key={service.id} className="flex items-start gap-3">
+                      <CircleCheck className="mt-1 h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-1">
+                          <span>{name}</span>
+                          {(detailImage || detailText) && (
+                            <button
+                              type="button"
+                              className="relative inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full before:absolute before:-inset-2.5 before:content-[''] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                              aria-label={`Ver detalhes de ${name}`}
+                              onClick={() => {
+                                setServiceDetail({
+                                  name,
+                                  imageUrl: detailImage || null,
+                                  description: detailText || null,
+                                });
+                                setServiceDetailOpen(true);
+                              }}
+                            >
+                              <HelpCircle className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                          )}
+                        </span>
+                        {(requiredText || hoursText) && (
+                          <span className="mt-1 block text-xs opacity-70">
+                            {[requiredText, hoursText].filter(Boolean).join(" ")}
+                          </span>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
+              <PublicServiceDetailDialog
+                open={serviceDetailOpen}
+                onOpenChange={setServiceDetailOpen}
+                name={serviceDetail?.name ?? ""}
+                description={serviceDetail?.description}
+                imageUrl={serviceDetail?.imageUrl}
+                surfaceStyle={cardStyle}
+              />
             </section>
             </RevealBlock>
           )}
@@ -636,7 +1153,7 @@ export default function ProposalView() {
               <button
                 type="button"
                 onClick={() => setRecalculateOpen(true)}
-                className="inline-flex shrink-0 items-center justify-center rounded-full border border-current/40 px-4 py-1.5 text-[14px] font-medium hover:bg-white/10"
+                className={`hidden shrink-0 items-center justify-center rounded-full border border-current/40 px-4 py-1.5 text-[14px] font-medium hover:bg-white/10 sm:inline-flex ${actionButtonMotion}`}
               >
                 Alterar orçamento
               </button>
@@ -669,12 +1186,18 @@ export default function ProposalView() {
                   <span className="text-base font-medium tabular-nums">{formatCurrency(extraHourPrice * extraHoursQty)}</span>
                 </div>
               )}
-              {serviceList.map((service) => (
-                <div className="flex items-baseline justify-between gap-4" key={service.id}>
-                  <span>{service.service?.name || "Serviço"}</span>
-                  <span className="text-base font-medium tabular-nums">{formatCurrency(Number(service.service?.price || 0))}</span>
-                </div>
-              ))}
+              {serviceList.map((service) => {
+                const detail = quotedServiceDetail(service);
+                return (
+                  <div className="flex items-baseline justify-between gap-4" key={service.id}>
+                    <span>
+                      {service.service?.name || "Serviço"}
+                      {detail ? <span className="mt-0.5 block text-xs font-normal opacity-70">{detail}</span> : null}
+                    </span>
+                    <span className="text-base font-medium tabular-nums">{formatCurrency(quotedServiceAmount(service))}</span>
+                  </div>
+                );
+              })}
             </div>
             <div className="mt-5 border-t border-current/15 pt-5">
               <p className="text-[15px] font-medium">Investimento total</p>
@@ -716,6 +1239,15 @@ export default function ProposalView() {
                 </a>
               </div>
             )}
+            <div className="mb-4 text-center sm:hidden">
+              <button
+                type="button"
+                onClick={() => setRecalculateOpen(true)}
+                className={`inline-flex items-center justify-center rounded-full border border-current/40 px-6 py-3 text-[15px] font-medium hover:bg-white/10 ${actionButtonMotion}`}
+              >
+                Alterar orçamento
+              </button>
+            </div>
             {email && (
               <div className="text-xs text-center mt-2">
                 * Este orçamento foi encaminhado para o seu email: <b>{email}</b>
@@ -762,18 +1294,13 @@ export default function ProposalView() {
             color: textColor || "#ffffff",
           }}
         >
-          {(house?.logoUrl || house?.description) && (
+          {house?.logoUrl && (
             <div className="flex flex-col items-center md:items-start max-w-xl">
-              {house?.logoUrl && (
-                <img
-                  src={house.logoUrl}
-                  alt={`Logo ${house.name}`}
-                  className="max-h-16 max-w-48 object-contain mb-2"
-                />
-              )}
-              {house?.description && (
-                <p className="text-center md:text-left text-base">{house.description}</p>
-              )}
+              <img
+                src={house.logoUrl}
+                alt={`Logo ${house.name}`}
+                className="max-h-16 max-w-48 object-contain"
+              />
             </div>
           )}
           {footerSocials.length > 0 && (

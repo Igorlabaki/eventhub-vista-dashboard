@@ -21,7 +21,6 @@ export type User = {
   password: string;
   avatarUrl?: string | null;
   googleId?: string | null;
-  fcmToken?: string | null;
   passwordResetToken?: string | null;
   passwordResetExpires?: Date | null;
   emailConfirmationToken?: string | null;

@@ -5,6 +5,7 @@ import { Users } from "lucide-react";
 import React from "react";
 import { useVenueStore } from "@/store/venueStore";
 import { wallClockDateBr, wallClockTime } from "@/lib/wall-clock-datetime";
+import { quotedServiceAmount, quotedServiceDetail } from "@/lib/service-price-label";
 
 interface ProposalService {
   service?: {
@@ -31,7 +32,8 @@ export function ProposalServicesSummary({
   const servicosAdicionais =
     currentProposal?.proposalServices?.map((ps) => ({
       name: ps.service?.name,
-      price: ps.service?.price || 0,
+      price: quotedServiceAmount(ps),
+      detail: quotedServiceDetail(ps),
     })) || [];
 
   return (
@@ -108,7 +110,7 @@ export function ProposalServicesSummary({
               )}
             {(servicosAdicionais || []).map((serv, idx) => (
               <div className="flex justify-between  text-gray-600" key={idx}>
-                <span>{serv.name}</span>
+                <span>{serv.name}{serv.detail ? ` (${serv.detail})` : ""}</span>
                 <span className="font-medium">
                   {serv.price?.toLocaleString("pt-BR", {
                     style: "currency",

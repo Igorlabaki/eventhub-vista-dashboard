@@ -2,7 +2,7 @@ import { Venue } from "@/components/ui/venue-list";
 import { Payment } from "./payment";
 import { DateEvent } from "./dateEvent";
 import { Notification } from "./notification";
-import { Service } from "./service";
+import { Service, ServicePricingType } from "./service";
 import { Schedule } from "./schedule";
 import { Document, DocumentType } from "./document";
 import { Person } from "./person";
@@ -91,6 +91,10 @@ export interface ProposalService {
   proposalId: string;
   serviceId: string;
   teste?: string | null;
+  pricingType?: ServicePricingType | null;
+  unitPrice?: number | null;
+  quantity?: number | null;
+  amount?: number | null;
   joinedAt: Date;
   service?: Service;
   proposal?: Proposal;
@@ -109,6 +113,7 @@ export interface CreateProposalPerPersonDTO {
   email: string | null;
   userId?: string;
   serviceIds: string[];
+  serviceHours?: { serviceId: string; hours: number }[];
   totalAmountInput?: string;
   type: ProposalType;
   trafficSource: TrafficSource;
@@ -128,6 +133,7 @@ export interface CreateProposalPerDayDTO {
   email: string | null;
   userId?: string;
   serviceIds: string[];
+  serviceHours?: { serviceId: string; hours: number }[];
   totalAmountInput?: string;
   type: ProposalType;
   trafficSource: TrafficSource;

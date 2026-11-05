@@ -32,15 +32,19 @@ export function ServiceSection({
   const { createService, updateService } = useServiceStore();
   const { toast } = useToast();
 
-  const handleSubmit = async (data: Partial<Service>) => {
+  const handleSubmit = async (data: Partial<Service> & { file?: File; removeImage?: boolean }) => {
     try {
       let response;
       if (selectedService) {
         response = await updateService({
           serviceId: selectedService.id,
+          file: data.file,
           data: {
             name: data.name,
             price: data.price,
+            pricingType: data.pricingType,
+            description: data.description,
+            removeImage: data.removeImage,
             rpaRequired: data.rpaRequired,
             rpaMinPeople: data.rpaMinPeople,
           },
@@ -55,6 +59,9 @@ export function ServiceSection({
           name: data.name,
           price: data.price,
           venueId,
+          pricingType: data.pricingType,
+          description: data.description,
+          file: data.file,
           rpaRequired: data.rpaRequired,
           rpaMinPeople: data.rpaMinPeople,
         });

@@ -1,3 +1,5 @@
+import { durationServiceHours, wallClockDate } from "@/lib/event-duration";
+import { serviceUnitLabel } from "@/lib/service-price-label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -182,6 +184,12 @@ export function PerPersonProposalForm({
         knowsVenue: values.knowsVenue,
         email: values.email.trim() === "" ? null : values.email.trim(),
         serviceIds: selectedServiceIds,
+        serviceHours: durationServiceHours(
+          services ?? [],
+          selectedServiceIds,
+          wallClockDate(values.date, values.startHour),
+          wallClockDate(values.date, values.endHour),
+        ),
         totalAmountInput: values.totalAmountInput,
         type: values.type,
         trafficSource: values.trafficSource,
@@ -508,7 +516,7 @@ export function PerPersonProposalForm({
                     }
                   }}
                 />
-                {service.name} <span className="text-xs text-gray-500">(R$ {service.price.toFixed(2)})</span>
+                {service.name} <span className="text-xs text-gray-500">({serviceUnitLabel(service.price, service.pricingType)})</span>
               </label>
             ))}
           </div>

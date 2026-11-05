@@ -24,6 +24,32 @@ export type RecalculatePublicProposalData = {
   totalAmount: number;
 };
 
+export type PublicServiceChoice = {
+  id: string;
+  name: string;
+  amount: number;
+  required: boolean;
+  minPeople: number | null;
+  selected: boolean;
+  hourly?: boolean;
+  hours?: number | null;
+};
+
+export type PublicProposalServicesUpdate = {
+  id: string;
+  totalAmount: number;
+  proposalServices: {
+    id: string;
+    serviceId: string;
+    amount: number;
+    service: {
+      name: string;
+      rpaRequired: boolean;
+      rpaMinPeople: number | null;
+    };
+  }[];
+};
+
 export interface ProposalPresentation {
   name: string;
   description: string | null;
@@ -133,6 +159,25 @@ export const proposalService = {
     const response = await api.put<{ success: boolean; message: string; data: RecalculatePublicProposalData }>(
       `/proposal/presentation/${proposalId}/recalculate`,
       data,
+    );
+    return response.data;
+  },
+
+  listPublicProposalServices: async (proposalId: string) => {
+    const response = await api.get<{ success: boolean; message: string; data: { services: PublicServiceChoice[] } }>(
+      `/proposal/presentation/${proposalId}/services`,
+    );
+    return response.data;
+  },
+
+  updatePublicProposalServices: async (
+    proposalId: string,
+    serviceIds: string[],
+    serviceHours?: { serviceId: string; hours: number }[],
+  ) => {
+    const response = await api.put<{ success: boolean; message: string; data: PublicProposalServicesUpdate }>(
+      `/proposal/presentation/${proposalId}/services`,
+      { serviceIds, serviceHours },
     );
     return response.data;
   },

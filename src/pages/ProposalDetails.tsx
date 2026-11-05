@@ -9,6 +9,7 @@ import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { showSuccessToast } from "@/components/ui/success-toast";
+import { quotedServiceAmount, quotedServiceDetail } from "@/lib/service-price-label";
 
 function ProposalDetailsSkeleton() {
   return (
@@ -164,7 +165,8 @@ export default function ProposalDetails() {
   // Calcular soma dos serviços adicionais
   const servicosAdicionais = (proposalServices || []).map((ps) => ({
     name: ps.service?.name,
-    price: ps.service?.price || 0,
+    price: quotedServiceAmount(ps),
+    detail: quotedServiceDetail(ps),
   }));
   const somaServicos = servicosAdicionais.reduce(
     (acc, s) => acc + (s.price || 0),
