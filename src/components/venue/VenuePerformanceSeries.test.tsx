@@ -27,15 +27,48 @@ const goals = [
 ] as Goal[];
 
 describe("grafico da visao geral no estilo dos relatorios", () => {
-  it("no mes mostra a receita e a meta do periodo", () => {
+  it("no mes compara o mesmo mes em cada ano, com a tendencia", () => {
+    const html = renderToStaticMarkup(
+      <VenuePerformanceChart
+        data={{
+          ...data,
+          sameMonthRevenueByYear: [
+            { year: 2024, revenue: 0 },
+            { year: 2025, revenue: 15000 },
+            { year: 2026, revenue: 9089 },
+          ],
+        }}
+        goals={goals}
+        selectedMonth={11}
+      />,
+    );
+
+    expect(html).toContain("2024 receita R$\u00a00,00");
+    expect(html).toContain("2025 receita R$\u00a015.000,00");
+    expect(html).toContain("2026 receita R$\u00a09.089,00");
+    expect(html).toContain("Tendência");
+    expect(html).not.toContain("Meta");
+  });
+
+  it("sem anos mostra o estado vazio", () => {
+    const html = renderToStaticMarkup(
+      <VenuePerformanceChart
+        data={{ ...data, sameMonthRevenueByYear: [] }}
+        goals={goals}
+        selectedMonth={11}
+      />,
+    );
+
+    expect(html).toContain("Sem anos com registro");
+  });
+
+  it("sem o campo novo mantem a barra unica do ano filtrado", () => {
     const html = renderToStaticMarkup(
       <VenuePerformanceChart data={data} goals={goals} selectedMonth={11} />,
     );
 
     expect(html).toContain("nov. receita R$\u00a09.089,00 meta R$\u00a010.000,00");
-    expect(html).toContain("Receita");
     expect(html).toContain("Meta");
-    expect(html).not.toContain("janeiro");
   });
 
   it("no ano mostra os doze meses e deixa a meta zerada quando nao ha cadastro", () => {

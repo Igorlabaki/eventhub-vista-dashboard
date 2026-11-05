@@ -220,6 +220,10 @@ export interface VenueDashboardData {
     proposalId: string | null;
   } | null;
   proposalYears: number[];
+  sameMonthRevenueByYear: {
+    year: number;
+    revenue: number;
+  }[] | null;
 }
 
 

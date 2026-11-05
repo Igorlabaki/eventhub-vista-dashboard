@@ -1,6 +1,6 @@
 import { VenueDashboardData } from "@/types/venue";
 import { Goal } from "@/types/goal";
-import { annualPerformancePoints, monthlyPerformancePoints, VenuePerformanceSeries } from "./VenuePerformanceSeries";
+import { annualPerformancePoints, monthlyPerformancePoints, trendPerformancePoints, VenuePerformanceSeries } from "./VenuePerformanceSeries";
 
 interface VenuePerformanceChartProps {
   data: VenueDashboardData;
@@ -9,9 +9,16 @@ interface VenuePerformanceChartProps {
 }
 
 export function VenuePerformanceChart({ data, goals, selectedMonth }: VenuePerformanceChartProps) {
-  const points = selectedMonth === "all"
-    ? annualPerformancePoints(data, goals)
-    : monthlyPerformancePoints(data, goals, selectedMonth);
+  if (selectedMonth === "all") {
+    return <VenuePerformanceSeries points={annualPerformancePoints(data, goals)} />;
+  }
 
-  return <VenuePerformanceSeries points={points} />;
+  const trend = trendPerformancePoints(data);
+  if (trend === null) {
+    return <VenuePerformanceSeries points={monthlyPerformancePoints(data, goals, selectedMonth)} />;
+  }
+  if (trend.length === 0) {
+    return <p className="py-8 text-center text-sm text-slate-400">Sem anos com registro</p>;
+  }
+  return <VenuePerformanceSeries points={trend} variant="trend" />;
 }

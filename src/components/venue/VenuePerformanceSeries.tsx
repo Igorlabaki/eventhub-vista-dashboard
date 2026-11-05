@@ -41,6 +41,15 @@ export function monthlyPerformancePoints(
   return [point(selectedMonth, data.monthlyRevenue || 0, goals)];
 }
 
+export function trendPerformancePoints(data: VenueDashboardData): PerformancePoint[] | null {
+  if (data.sameMonthRevenueByYear == null) return null;
+  return data.sameMonthRevenueByYear.map((item) => ({
+    name: String(item.year),
+    Receita: item.revenue || 0,
+    Meta: 0,
+  }));
+}
+
 export function annualPerformancePoints(data: VenueDashboardData, goals: Goal[]): PerformancePoint[] {
   const revenueByMonth = new Map(
     (data.monthlyRevenueList || []).map((item) => [Number(item.month), item.revenue || 0]),
@@ -48,12 +57,14 @@ export function annualPerformancePoints(data: VenueDashboardData, goals: Goal[])
   return REPORT_MONTHS.map((_, index) => point(index + 1, revenueByMonth.get(index + 1) || 0, goals));
 }
 
-export function VenuePerformanceSeries({ points }: { points: PerformancePoint[] }) {
+export function VenuePerformanceSeries({ points, variant = "meta" }: { points: PerformancePoint[]; variant?: "meta" | "trend" }) {
   const max = Math.max(0, ...points.map((item) => Math.max(item.Receita, item.Meta)));
+  const lineKey = variant === "trend" ? "Receita" : "Meta";
+  const lineName = variant === "trend" ? "Tendência" : "Meta";
 
   return (
     <div>
-      <div className="h-80 w-full" role="img" aria-label="Receita em barras e meta em linha">
+      <div className="h-80 w-full" role="img" aria-label={variant === "trend" ? "Receita em barras e tendência em linha" : "Receita em barras e meta em linha"}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={points} margin={{ top: 28, right: 12, left: 0, bottom: 0 }}>
             <defs>
@@ -81,24 +92,37 @@ export function VenuePerformanceSeries({ points }: { points: PerformancePoint[] 
               maxBarSize={36}
               isAnimationActive={false}
             >
-              <LabelList
-                dataKey="Receita"
-                position="top"
-                fill="#5b4cdb"
-                fontSize={12}
-                fontWeight={600}
-                formatter={(value: number) => performanceLabel(value)}
-              />
+              {variant === "meta" && (
+                <LabelList
+                  dataKey="Receita"
+                  position="top"
+                  fill="#5b4cdb"
+                  fontSize={12}
+                  fontWeight={600}
+                  formatter={(value: number) => performanceLabel(value)}
+                />
+              )}
             </Bar>
             <Line
               type="monotone"
-              dataKey="Meta"
-              name="Meta"
+              dataKey={lineKey}
+              name={lineName}
               stroke="#6d5ef5"
               strokeWidth={2}
               dot={{ r: 4, fill: "#fff", stroke: "#6d5ef5", strokeWidth: 2 }}
               isAnimationActive={false}
-            />
+            >
+              {variant === "trend" && (
+                <LabelList
+                  dataKey="Receita"
+                  position="top"
+                  fill="#5b4cdb"
+                  fontSize={12}
+                  fontWeight={600}
+                  formatter={(value: number) => performanceLabel(value)}
+                />
+              )}
+            </Line>
           </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -109,12 +133,16 @@ export function VenuePerformanceSeries({ points }: { points: PerformancePoint[] 
         </span>
         <span className="inline-flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full border-2 border-violet-500" aria-hidden />
-          Meta
+          {lineName}
         </span>
       </div>
       <ul className="sr-only">
         {points.map((item) => (
-          <li key={item.name}>{item.name} receita {money(item.Receita)} meta {money(item.Meta)}</li>
+          <li key={item.name}>
+            {variant === "trend"
+              ? `${item.name} receita ${money(item.Receita)}`
+              : `${item.name} receita ${money(item.Receita)} meta ${money(item.Meta)}`}
+          </li>
         ))}
       </ul>
     </div>

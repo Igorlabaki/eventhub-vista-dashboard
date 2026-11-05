@@ -22,6 +22,7 @@ const data: VenueDashboardData = {
   nextEvent: null,
   nextVisit: null,
   proposalYears: [2026],
+  sameMonthRevenueByYear: null,
 };
 
 function markup(selectedMonth = "11", selectedYear = 2026, numbersLoading = false) {
