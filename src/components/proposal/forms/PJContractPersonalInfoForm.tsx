@@ -1,28 +1,62 @@
-import { FormMessage } from "@/components/ui/form";
-import { FormControl } from "@/components/ui/form";
-import { FormField, FormLabel } from "@/components/ui/form";
-import { FormItem } from "@/components/ui/form";
-import { FormLayout } from "@/components/ui/form-layout";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect, useRef, useState } from "react";
 import { useProposalStore } from "@/store/proposalStore";
-import React from "react";
-import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
-import { showSuccessToast } from "@/components/ui/success-toast";
+import { handleBackendError } from "@/lib/error-handler";
 import { useForm } from "react-hook-form";
-import InputMask from "react-input-mask";
 import { requiredProposalEmail } from "./required-proposal-email";
+import type { PublicListSurface } from "@/components/proposal/PublicVenueListShell";
+import { ContractPublicField } from "./ContractPublicField";
+import { PublicContractFormCard, type ContractSaveNotice } from "./PublicContractFormCard";
 
-export default function PJContractPersonalInfoForm() {
-  const { toast } = useToast();
+const LEAD = "Informe os dados de quem assina este contrato.";
+
+export default function PJContractPersonalInfoForm({ surface }: { surface: PublicListSurface }) {
   const { currentProposal, updateProposalPersonalInfo } = useProposalStore();
+  const [notice, setNotice] = useState<ContractSaveNotice>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const savedValues = useRef<string | null>(null);
 
-  const onSubmit = async (values) => {
+  const form = useForm({
+    defaultValues: {
+      completeCompanyName: currentProposal?.completeCompanyName || "",
+      cnpj: currentProposal?.cnpj || "",
+      completeClientName: currentProposal?.completeClientName || "",
+      cpf: currentProposal?.cpf || "",
+      rg: currentProposal?.rg || "",
+      street: currentProposal?.street || "",
+      streetNumber: currentProposal?.streetNumber || "",
+      adressComplement: currentProposal?.adressComplement || "",
+      neighborhood: currentProposal?.neighborhood || "",
+      cep: currentProposal?.cep || "",
+      city: currentProposal?.city || "São Paulo",
+      state: currentProposal?.state || "SP",
+      email: currentProposal?.email || "",
+    },
+  });
+
+  const onSubmit = async (values: {
+    completeCompanyName: string;
+    cnpj: string;
+    completeClientName: string;
+    cpf: string;
+    rg: string;
+    street: string;
+    streetNumber: string;
+    adressComplement: string;
+    neighborhood: string;
+    cep: string;
+    city: string;
+    state: string;
+    email: string;
+  }) => {
     const emailResult = requiredProposalEmail(values.email);
     if (!emailResult.ok) {
+      savedValues.current = null;
+      setNotice(null);
       form.setError("email", { type: "manual", message: emailResult.message });
       return;
     }
+    setSubmitting(true);
+    setNotice(null);
     try {
       const dataToUpdate = {
         proposalId: currentProposal?.id,
@@ -43,279 +77,81 @@ export default function PJContractPersonalInfoForm() {
         },
       };
 
-      const response = await updateProposalPersonalInfo(dataToUpdate);
-      const { title, message } = handleBackendSuccess(
-        response,
-        "Dados pessoais atualizados com sucesso!"
-      );
-      showSuccessToast({
-        title,
-        description: message,
-      });
+      await updateProposalPersonalInfo(dataToUpdate);
+      savedValues.current = JSON.stringify(values);
+      setNotice({ kind: "saved" });
     } catch (error: unknown) {
-      const { title, message } = handleBackendError(
+      const { message } = handleBackendError(
         error,
-        "Erro ao atualizar dados pessoais. Tente novamente mais tarde."
+        "Não foi possível salvar. Tente de novo em instantes."
       );
-      toast({
-        title,
-        description: message,
-        variant: "destructive",
-      });
+      savedValues.current = JSON.stringify(values);
+      setNotice({ kind: "error", message });
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      if (!savedValues.current) return;
+      if (JSON.stringify(values) !== savedValues.current) {
+        savedValues.current = null;
+        setNotice(null);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const isFormUnchanged = () => {
     if (!currentProposal) return false;
     const formValues = form.getValues();
-    return (
-      formValues.completeCompanyName === currentProposal.completeCompanyName &&
-      formValues.cnpj === currentProposal.cnpj &&
-      formValues.completeClientName === currentProposal.completeClientName &&
-      formValues.cpf === currentProposal.cpf &&
-      formValues.rg === currentProposal.rg &&
-      formValues.street === currentProposal.street &&
-      formValues.streetNumber === currentProposal.streetNumber &&
-      formValues.neighborhood === currentProposal.neighborhood &&
-      formValues.cep === currentProposal.cep &&
-      formValues.city === currentProposal.city &&
-      formValues.state === currentProposal.state &&
-      formValues.adressComplement === currentProposal.adressComplement &&
-      formValues.email === (currentProposal.email || "")
+    const initial = {
+      completeCompanyName: currentProposal.completeCompanyName || "",
+      cnpj: currentProposal.cnpj || "",
+      completeClientName: currentProposal.completeClientName || "",
+      cpf: currentProposal.cpf || "",
+      rg: currentProposal.rg || "",
+      street: currentProposal.street || "",
+      streetNumber: currentProposal.streetNumber || "",
+      adressComplement: currentProposal.adressComplement || "",
+      neighborhood: currentProposal.neighborhood || "",
+      cep: currentProposal.cep || "",
+      city: currentProposal.city || "São Paulo",
+      state: currentProposal.state || "SP",
+      email: currentProposal.email || "",
+    };
+    return (Object.keys(initial) as (keyof typeof initial)[]).every(
+      (key) => formValues[key] === initial[key]
     );
   };
 
-  const form = useForm({
-    defaultValues: {
-      completeCompanyName: currentProposal?.completeCompanyName || "",
-      cnpj: currentProposal?.cnpj || "",
-      completeClientName: currentProposal?.completeClientName || "",
-      cpf: currentProposal?.cpf || "",
-      rg: currentProposal?.rg || "",
-      street: currentProposal?.street || "",
-      streetNumber: currentProposal?.streetNumber || "",
-      adressComplement: currentProposal?.adressComplement || "",
-      neighborhood: currentProposal?.neighborhood || "",
-      cep: currentProposal?.cep || "",
-      city: currentProposal?.city || "São Paulo",
-      state: currentProposal?.state || "SP",
-      email: currentProposal?.email || "",
-    },
-  });
+  const inputClassName = surface.inputClassName;
 
   return (
-    <FormLayout
+    <PublicContractFormCard
+      surface={surface}
       title="Dados da Pessoa Jurídica"
-      onSubmit={onSubmit}
+      lead={LEAD}
       form={form}
-      submitLabel="Salvar Alterações"
-      customSubmitButton={
-        <button
-          type="submit"
-          disabled={isFormUnchanged()}
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-        >
-          Salvar Alterações
-        </button>
-      }
+      onSubmit={onSubmit}
+      submitDisabled={isFormUnchanged()}
+      submitting={submitting}
+      notice={notice}
     >
-      <FormField
-        control={form.control}
-        name="completeCompanyName"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Nome da Empresa</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="cnpj"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>CNPJ</FormLabel>
-            <FormControl>
-              <InputMask
-                mask="99.999.999/9999-99"
-                placeholder="Digite o CNPJ"
-                value={field.value}
-                onChange={field.onChange}
-              >
-                {(inputProps) => <Input {...inputProps} />}
-              </InputMask>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="completeClientName"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Representante Legal</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="email"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>E-mail</FormLabel>
-            <FormControl>
-              <Input type="email" placeholder="email@cliente.com" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="cpf"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>CPF</FormLabel>
-            <FormControl>
-              <InputMask
-                mask="999.999.999-99"
-                placeholder="Digite o CPF"
-                value={field.value}
-                onChange={field.onChange}
-              >
-                {(inputProps) => <Input {...inputProps} />}
-              </InputMask>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="rg"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>RG</FormLabel>
-            <FormControl>
-              <InputMask
-                mask="99.999.999-9"
-                placeholder="Digite o RG"
-                value={field.value}
-                onChange={field.onChange}
-              >
-                {(inputProps) => <Input {...inputProps} />}
-              </InputMask>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="street"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Logradouro</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="streetNumber"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Número</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="adressComplement"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Complemento</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="neighborhood"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Bairro</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="cep"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>CEP</FormLabel>
-            <FormControl>
-              <InputMask
-                mask="99999-999"
-                placeholder="Digite o CEP"
-                value={field.value}
-                onChange={field.onChange}
-              >
-                {(inputProps) => <Input {...inputProps} />}
-              </InputMask>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="city"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Cidade</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="state"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Estado</FormLabel>
-            <FormControl>
-              <Input {...field} maxLength={2} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </FormLayout>
+      <ContractPublicField control={form.control} name="completeCompanyName" label="Nome da Empresa" inputClassName={inputClassName} />
+      <ContractPublicField control={form.control} name="cnpj" label="CNPJ" inputClassName={inputClassName} mask="99.999.999/9999-99" placeholder="Digite o CNPJ" />
+      <ContractPublicField control={form.control} name="completeClientName" label="Representante Legal" inputClassName={inputClassName} />
+      <ContractPublicField control={form.control} name="email" label="E-mail" inputClassName={inputClassName} type="email" placeholder="email@cliente.com" />
+      <ContractPublicField control={form.control} name="cpf" label="CPF" inputClassName={inputClassName} mask="999.999.999-99" placeholder="Digite o CPF" />
+      <ContractPublicField control={form.control} name="rg" label="RG" inputClassName={inputClassName} mask="99.999.999-9" placeholder="Digite o RG" />
+      <ContractPublicField control={form.control} name="street" label="Logradouro" inputClassName={inputClassName} />
+      <ContractPublicField control={form.control} name="streetNumber" label="Número" inputClassName={inputClassName} />
+      <ContractPublicField control={form.control} name="adressComplement" label="Complemento" inputClassName={inputClassName} />
+      <ContractPublicField control={form.control} name="neighborhood" label="Bairro" inputClassName={inputClassName} />
+      <ContractPublicField control={form.control} name="cep" label="CEP" inputClassName={inputClassName} mask="99999-999" placeholder="Digite o CEP" />
+      <ContractPublicField control={form.control} name="city" label="Cidade" inputClassName={inputClassName} />
+      <ContractPublicField control={form.control} name="state" label="Estado" inputClassName={inputClassName} maxLength={2} />
+    </PublicContractFormCard>
   );
-} 
+}

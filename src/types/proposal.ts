@@ -199,6 +199,7 @@ export interface UpdateProposalPerPersonDTO {
     totalAmountInput: string;
     userId?: string;
     serviceIds: string[];
+    serviceHours?: { serviceId: string; hours: number }[];
     type: ProposalType;
     trafficSource: TrafficSource;
   }

@@ -1,5 +1,6 @@
-import { durationServiceHours, wallClockDate } from "@/lib/event-duration";
-import { serviceUnitLabel } from "@/lib/service-price-label";
+import { chosenServiceHours, serviceHourFieldError, stayEventHours } from "@/lib/event-duration";
+import { DashboardServiceChoices } from "@/components/proposal/DashboardServiceChoices";
+import { requiredServiceIds } from "@/lib/required-service-ids";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -100,6 +101,8 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
   const { services, fetchServices, isLoading: isLoadingServices } = useServiceStore();
   const { selectedVenue } = useVenueStore();
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [serviceHoursInput, setServiceHoursInput] = useState<Record<string, string>>({});
+  const [serviceHourErrors, setServiceHourErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
   
   // Definir valores iniciais dos horários com base na venue
@@ -129,7 +132,54 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
     }
   });
 
+  const guestNumberValue = form.watch("guestNumber");
+  const eventHours = stayEventHours(
+    form.watch("startDay") || "",
+    form.watch("endDay") || "",
+    selectedVenue?.checkIn || "14:00",
+    selectedVenue?.checkOut || "12:00",
+  );
+
+  useEffect(() => {
+    const guestNumber = parseInt(guestNumberValue || "0", 10);
+    const required = requiredServiceIds(services ?? [], Number.isNaN(guestNumber) ? 0 : guestNumber);
+    setSelectedServiceIds((current) => {
+      const kept = current.filter((id) => !required.includes(id));
+      const next = [...new Set([...required, ...kept])];
+      if (next.length === current.length && next.every((id, index) => id === current[index])) return current;
+      return next;
+    });
+  }, [guestNumberValue, services]);
+
+  useEffect(() => {
+    setServiceHourErrors((current) => {
+      const next = { ...current };
+      for (const [id, raw] of Object.entries(serviceHoursInput)) {
+        const message = serviceHourFieldError(raw, eventHours);
+        if (message) next[id] = message;
+        else delete next[id];
+      }
+      return next;
+    });
+  }, [serviceHoursInput, eventHours]);
+
   const onSubmit = async (values: FormValues) => {
+    const { serviceHours, errors: hourErrors } = chosenServiceHours(
+      services ?? [],
+      selectedServiceIds,
+      serviceHoursInput,
+      stayEventHours(
+        values.startDay,
+        values.endDay,
+        selectedVenue?.checkIn || "14:00",
+        selectedVenue?.checkOut || "12:00",
+      ),
+    );
+    if (Object.keys(hourErrors).length > 0) {
+      setServiceHourErrors(hourErrors);
+      return;
+    }
+
     const detailTab = window.open("about:blank", "_blank");
 
     try {
@@ -148,12 +198,7 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         trafficSource: values.trafficSource,
         venueId,
         serviceIds: selectedServiceIds,
-        serviceHours: durationServiceHours(
-          services ?? [],
-          selectedServiceIds,
-          wallClockDate(values.startDay, selectedVenue?.checkIn || values.startHour),
-          wallClockDate(values.endDay, selectedVenue?.checkOut || values.endHour),
-        ),
+        serviceHours,
         totalAmountInput: values.totalAmountInput,
       };
       
@@ -169,6 +214,8 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         openCreatedProposal(detailTab, response.data.id);
         form.reset();
         setSelectedServiceIds([]);
+        setServiceHoursInput({});
+        setServiceHourErrors({});
       } else {
         detailTab?.close();
         onBack();
@@ -445,24 +492,33 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         {isLoadingServices ? (
           <div>Carregando serviços...</div>
         ) : (
-          <div className="flex flex-wrap gap-3 mt-2">
-            {(services || []).map(service => (
-              <label key={service.id} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={selectedServiceIds.includes(service.id)}
-                  onChange={e => {
-                    if (e.target.checked) {
-                      setSelectedServiceIds(ids => [...ids, service.id]);
-                    } else {
-                      setSelectedServiceIds(ids => ids.filter(id => id !== service.id));
-                    }
-                  }}
-                />
-                {service.name} <span className="text-xs text-gray-500">({serviceUnitLabel(service.price, service.pricingType)})</span>
-              </label>
-            ))}
-          </div>
+          <DashboardServiceChoices
+            services={services || []}
+            guestNumber={parseInt(guestNumberValue || "0", 10) || 0}
+            selectedIds={selectedServiceIds}
+            hoursInput={serviceHoursInput}
+            hourErrors={serviceHourErrors}
+            onToggle={(serviceId, checked) => {
+              if (checked) {
+                setSelectedServiceIds((ids) => [...ids, serviceId]);
+                return;
+              }
+              setSelectedServiceIds((ids) => ids.filter((id) => id !== serviceId));
+              setServiceHoursInput((current) => {
+                const next = { ...current };
+                delete next[serviceId];
+                return next;
+              });
+              setServiceHourErrors((current) => {
+                const next = { ...current };
+                delete next[serviceId];
+                return next;
+              });
+            }}
+            onHoursChange={(serviceId, value) => {
+              setServiceHoursInput((current) => ({ ...current, [serviceId]: value }));
+            }}
+          />
         )}
       </div>
 

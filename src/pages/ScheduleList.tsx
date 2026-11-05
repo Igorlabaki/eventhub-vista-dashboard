@@ -2,20 +2,28 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useScheduleStore } from "@/store/scheduleStore";
 import { CreateScheduleDTO, Schedule } from "@/types/schedule";
-import { FiPlus, FiTrash2, FiSearch, FiClock, FiUsers } from "react-icons/fi";
+import { FiPlus, FiClock, FiUsers } from "react-icons/fi";
 import { handleBackendError } from "@/lib/error-handler";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
-import { Calendar } from "lucide-react";
-import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
 import { useProposalStore } from "@/store/proposalStore";
+import { PublicVenueListShell } from "@/components/proposal/PublicVenueListShell";
+import {
+  publicActionClass,
+  publicCardClass,
+  publicColumnClass,
+  publicDividerClass,
+  publicEyebrowClass,
+  publicLabelClass,
+  publicLeadClass,
+  publicTitleClass,
+  publicValueClass,
+} from "@/components/proposal/public-list-pattern";
+import { usePublicListVenue } from "@/components/proposal/usePublicListVenue";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { wallClockDateBr, wallClockTime } from "@/lib/wall-clock-datetime";
-import { ProposalFooter } from "@/components/proposalFooter";
-import { useVenueStore } from "@/store/venueStore";
-
 const getHourString = (date?: Date) => date ? new Date(date).toISOString().substring(11, 16) : undefined;
 
 // Função utilitária para extrair hora de uma string de data ou hora
@@ -48,10 +56,8 @@ export function ScheduleListPage() {
   const { toast } = useToast();
   const fetchProposalById = useProposalStore((s) => s.fetchProposalById);
   const currentProposal = useProposalStore((s) => s.currentProposal);
-
-  // Venue
-  const { selectedVenue, fetchVenueById } = useVenueStore();
-  const [venueLoading, setVenueLoading] = useState(false);
+  const proposal = currentProposal?.id === proposalId ? currentProposal : null;
+  const { venue, contentReady } = usePublicListVenue(proposal?.venueId, !isInitialLoading);
 
   // Definir limites de horário
   const minHour = getHourString(currentProposal?.startDate);
@@ -119,13 +125,6 @@ export function ScheduleListPage() {
   }, [proposalId]);
 
   useEffect(() => {
-    if (currentProposal?.venueId) {
-      setVenueLoading(true);
-      fetchVenueById(currentProposal.venueId).finally(() => setVenueLoading(false));
-    }
-  }, [currentProposal?.venueId, fetchVenueById]);
-
-  useEffect(() => {
     setScheduleList(
       schedules.map(s => ({
         ...s,
@@ -134,10 +133,6 @@ export function ScheduleListPage() {
       }))
     );
   }, [schedules]);
-
-  if (isInitialLoading || venueLoading) {
-    return <AppLoadingScreen />;
-  }
 
   const onSubmit = async (data: ScheduleFormType) => {
     setLoading(true);
@@ -210,180 +205,171 @@ export function ScheduleListPage() {
   );
 
   const savedCount = scheduleList.filter((g) => g.id).length;
+  const scheduleLead = savedCount === 0
+    ? "A programação ainda está em branco."
+    : savedCount === 1
+      ? "1 atração na programação."
+      : `${savedCount} atrações na programação.`;
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex flex-1 flex-col bg-eventhub-background py-14 px-2 md:px-8">
-        <div className="flex items-center w-full justify-center mb-10">
-          <Calendar className="h-8 w-8 text-eventhub-primary" />
-          <span className="ml-2 font-bold text-3xl text-eventhub-primary">
-            EventHub
-          </span>
-        </div>
-        <div className="max-w-6xl w-full md:mx-auto">
-          {/* Card de adicionar atração */}
-          <div className="bg-white rounded-xl shadow py-8 px-4 mb-8">
-            <h2 className="text-2xl font-bold text-center mb-6 text-eventhub-primary">
-              Adicionar Atração
-            </h2>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="flex flex-col gap-4 md:flex-row md:items-end">
-                <div className="flex-1">
-                  <label className="block text-gray-600 font-semibold mb-1">Título</label>
-                  <input
-                    className={`w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary ${errors.name ? 'border-red-500' : ''}`}
-                    placeholder="Título"
-                    {...register("name")}
-                  />
-                  {errors.name && <span className="text-red-500 text-xs">{errors.name.message}</span>}
-                </div>
-                <div className="flex-1">
-                  <label className="block text-gray-600 font-semibold mb-1">
-                    Número de colaboradores
-                  </label>
-                  <input
-                    className={`w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary ${errors.workerNumber ? 'border-red-500' : ''}`}
-                    placeholder="0"
-                    type="number"
-                    min={0}
-                    {...register("workerNumber", { valueAsNumber: true })}
-                  />
-                  {errors.workerNumber && <span className="text-red-500 text-xs">{errors.workerNumber.message}</span>}
-                </div>
-                <div className="flex-1">
-                  <label className="block text-gray-600 font-semibold mb-1">Horário de início</label>
-                  <input
-                    className={`w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary ${errors.startHour ? 'border-red-500' : ''}`}
-                    type="time"
-                    min={minHour}
-                    max={maxHour}
-                    {...register("startHour")}
-                  />
-                  {errors.startHour && <span className="text-red-500 text-xs">{errors.startHour.message}</span>}
-                </div>
-                <div className="flex-1">
-                  <label className="block text-gray-600 font-semibold mb-1">Horário fim</label>
-                  <input
-                    className={`w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary ${errors.endHour ? 'border-red-500' : ''}`}
-                    type="time"
-                    min={minHour}
-                    max={maxHour}
-                    {...register("endHour")}
-                  />
-                  {errors.endHour && <span className="text-red-500 text-xs">{errors.endHour.message}</span>}
-                </div>
-                <button
-                  className={`bg-eventhub-primary text-white rounded-full p-3 mt-4 md:mt-0 flex items-center justify-center hover:bg-eventhub-secondary transition ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
-                  type="submit"
-                  title="Adicionar atração"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                    </svg>
-                  ) : (
-                    <FiPlus size={24} />
-                  )}
-                </button>
-              </div>
-              <div className="mt-4">
-                <label className="block text-gray-600 font-semibold mb-1">
-                  Descrição sobre o evento
-                </label>
-                <textarea
-                  className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary"
-                  placeholder="Descreva a atração..."
-                  {...register("description")}
-                  rows={3}
-                />
-                {errors.description && <span className="text-red-500 text-xs">{errors.description.message}</span>}
-              </div>
-            </form>
-          </div>
-
-          {/* Card da lista de atrações */}
-          <div className="bg-white rounded-xl shadow p-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4 text-center">
-              <span className="text-lg font-bold text-center mb-6 text-eventhub-primary">
-                Lista de Atrações: {savedCount}
-              </span>
-            </div>
-            {/* Barra de pesquisa com ícone dentro */}
-            <div className="mb-4 relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                <FiSearch size={20} />
-              </span>
-              <input
-                className="w-full border border-gray-300 rounded px-10 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary"
-                placeholder="Buscar atração..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {filteredSchedules.length === 0 ? (
-                <div className="text-gray-400 text-center py-8">
-                  Nenhuma atração adicionada.
-                </div>
-              ) : (
-                filteredSchedules.map((g, i) => {
-                  const toClock = (value: string | Date | undefined) => {
-                    if (!value) return "";
-                    if (typeof value === "string" && /^\d{2}:\d{2}/.test(value)) return value.slice(0, 5);
-                    return wallClockTime(value);
-                  };
-                  const startLabel = toClock(g.startHour);
-                  const endLabel = toClock(g.endHour);
-                  let duration = "";
-                  let dateHourStr = "";
-                  if (/^\d{2}:\d{2}$/.test(startLabel) && /^\d{2}:\d{2}$/.test(endLabel)) {
-                    const [sh, sm] = startLabel.split(":").map(Number);
-                    const [eh, em] = endLabel.split(":").map(Number);
-                    let mins = (eh * 60 + em) - (sh * 60 + sm);
-                    if (mins < 0) mins += 24 * 60;
-                    const h = Math.floor(mins / 60);
-                    const m = mins % 60;
-                    duration = m === 0 ? `${h}h` : `${h}h${m}min`;
-                    const day = currentProposal?.startDate ? wallClockDateBr(currentProposal.startDate) : "";
-                    dateHourStr = `${day} ${startLabel} - ${endLabel}`.trim();
-                  }
-                  return (
-                    <div
-                      key={i}
-                      className="bg-gray-100 rounded-xl shadow-sm px-6 py-4 flex flex-col relative items-center mb-4"
-                    >
-                      <button
-                        className="absolute top-3 right-3 text-gray-500 hover:text-red-600 transition"
-                        onClick={() => handleRemoveSchedule(g as Schedule, i)}
-                        title="Remover"
-                      >
-                        <FiTrash2 size={20} />
-                      </button>
-                      <div className="text-center font-bold text-lg mb-2 w-full">{g.name}</div>
-                      <div className="flex items-center justify-center gap-2 mb-1 w-full">
-                        <FiClock className="mr-1" />
-                        <span className="text-sm">{dateHourStr || "Horário inválido"}</span>
-                        {duration && <span className="text-xs text-gray-500 ml-2">({duration})</span>}
-                      </div>
-                      <div className="flex items-center justify-center gap-2 mb-1 w-full">
-                        <FiUsers className="mr-1" />
-                        <span className="text-sm">({g.workerNumber})</span>
-                      </div>
-                      {g.description && (
-                        <div className="text-center text-gray-700 text-sm mt-1 w-full">{g.description}</div>
-                      )}
+    <>
+      <PublicVenueListShell venue={venue} contentReady={contentReady} variant="schedule">
+        {(surface) => {
+          const fieldClass = (invalid?: boolean) =>
+            `${surface.inputClassName}${invalid ? " border-red-500" : ""}`;
+          return (
+            <div className={publicColumnClass}>
+              <section className={publicCardClass} style={surface.cardStyle}>
+                <p className={publicEyebrowClass}>Programação</p>
+                <h2 className={`${publicTitleClass} mt-2`}>Como a celebração acontece</h2>
+                <p className={publicLeadClass}>Organize cada momento, com horário e equipe.</p>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                  <div className={publicDividerClass} />
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div>
+                      <label className={publicLabelClass} htmlFor="schedule-name">Título</label>
+                      <input
+                        id="schedule-name"
+                        className={fieldClass(Boolean(errors.name))}
+                        placeholder="Nome da atração"
+                        {...register("name")}
+                      />
+                      {errors.name && <span className="text-xs text-red-500">{errors.name.message}</span>}
                     </div>
-                  );
-                })
-              )}
+                    <div>
+                      <label className={publicLabelClass} htmlFor="schedule-workers">Colaboradores</label>
+                      <input
+                        id="schedule-workers"
+                        className={fieldClass(Boolean(errors.workerNumber))}
+                        placeholder="0"
+                        type="number"
+                        min={0}
+                        {...register("workerNumber", { valueAsNumber: true })}
+                      />
+                      {errors.workerNumber && <span className="text-xs text-red-500">{errors.workerNumber.message}</span>}
+                    </div>
+                    <div>
+                      <label className={publicLabelClass} htmlFor="schedule-start">Início</label>
+                      <input
+                        id="schedule-start"
+                        className={fieldClass(Boolean(errors.startHour))}
+                        type="time"
+                        min={minHour}
+                        max={maxHour}
+                        {...register("startHour")}
+                      />
+                      {errors.startHour && <span className="text-xs text-red-500">{errors.startHour.message}</span>}
+                    </div>
+                    <div>
+                      <label className={publicLabelClass} htmlFor="schedule-end">Fim</label>
+                      <input
+                        id="schedule-end"
+                        className={fieldClass(Boolean(errors.endHour))}
+                        type="time"
+                        min={minHour}
+                        max={maxHour}
+                        {...register("endHour")}
+                      />
+                      {errors.endHour && <span className="text-xs text-red-500">{errors.endHour.message}</span>}
+                    </div>
+                  </div>
+                  <div className="mt-5">
+                    <label className={publicLabelClass} htmlFor="schedule-description">Sobre a atração</label>
+                    <textarea
+                      id="schedule-description"
+                      className={surface.inputClassName}
+                      placeholder="Como este momento acontece"
+                      {...register("description")}
+                      rows={3}
+                    />
+                    {errors.description && <span className="text-xs text-red-500">{errors.description.message}</span>}
+                  </div>
+                  <div className="mt-5 flex justify-end border-t border-current/15 pt-5">
+                    <button className={publicActionClass} type="submit" disabled={loading}>
+                      {loading ? "Salvando atração" : (
+                        <>
+                          <FiPlus size={16} />
+                          Adicionar atração
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </section>
+
+              <section className={publicCardClass} style={surface.cardStyle}>
+                <h2 className={publicTitleClass}>Atrações do evento</h2>
+                <p className={publicLeadClass}>{scheduleLead}</p>
+                <div className={publicDividerClass} />
+                <label className={publicLabelClass} htmlFor="schedule-search">Buscar</label>
+                <input
+                  id="schedule-search"
+                  className={surface.inputClassName}
+                  placeholder="Nome da atração"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                <div className="mt-4 max-h-[400px] overflow-y-auto">
+                  {filteredSchedules.length === 0 ? (
+                    search.trim() ? <p className={publicLeadClass}>Nenhuma atração com esse nome.</p> : null
+                  ) : (
+                    filteredSchedules.map((g, i) => {
+                      const toClock = (value: string | Date | undefined) => {
+                        if (!value) return "";
+                        if (typeof value === "string" && /^\d{2}:\d{2}/.test(value)) return value.slice(0, 5);
+                        return wallClockTime(value);
+                      };
+                      const startLabel = toClock(g.startHour);
+                      const endLabel = toClock(g.endHour);
+                      let duration = "";
+                      let dateHourStr = "";
+                      if (/^\d{2}:\d{2}$/.test(startLabel) && /^\d{2}:\d{2}$/.test(endLabel)) {
+                        const [sh, sm] = startLabel.split(":").map(Number);
+                        const [eh, em] = endLabel.split(":").map(Number);
+                        let mins = (eh * 60 + em) - (sh * 60 + sm);
+                        if (mins < 0) mins += 24 * 60;
+                        const h = Math.floor(mins / 60);
+                        const m = mins % 60;
+                        duration = m === 0 ? `${h}h` : `${h}h${m}min`;
+                        const day = currentProposal?.startDate ? wallClockDateBr(currentProposal.startDate) : "";
+                        dateHourStr = `${day} ${startLabel} às ${endLabel}`.trim();
+                      }
+                      const crewLabel = g.workerNumber === 1 ? "1 colaborador" : `${g.workerNumber} colaboradores`;
+                      return (
+                        <div
+                          key={g.id || `${g.name}-${i}`}
+                          className="border-t border-current/15 py-4 first:border-t-0"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <p className={publicValueClass}>{g.name}</p>
+                            <button
+                              className="text-[13px] opacity-60 hover:opacity-100"
+                              onClick={() => handleRemoveSchedule(g as Schedule, i)}
+                              type="button"
+                            >
+                              Remover
+                            </button>
+                          </div>
+                          <p className="mt-1 flex items-center gap-2 text-[13px] opacity-70">
+                            <FiClock className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            {dateHourStr || "Horário inválido"}
+                            {duration ? ` · ${duration}` : ""}
+                          </p>
+                          <p className="mt-1 flex items-center gap-2 text-[13px] opacity-70">
+                            <FiUsers className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            {crewLabel}
+                          </p>
+                          {g.description && <p className={publicLeadClass}>{g.description}</p>}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </section>
             </div>
-          </div>
-        </div>
-      </main>
-      <ProposalFooter selectedVenue={selectedVenue} />
-      {/* Dialog de confirmação de exclusão */}
+          );
+        }}
+      </PublicVenueListShell>
       <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -392,6 +378,6 @@ export function ScheduleListPage() {
         entityType="atração"
         isPending={false}
       />
-    </div>
+    </>
   );
 }

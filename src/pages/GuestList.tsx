@@ -2,15 +2,27 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { usePersonStore } from "@/store/personStore";
 import { CreatePersonDTO, PersonType, Person } from "@/types/person";
-import { FiPlus, FiTrash2, FiSearch } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
-import { Calendar } from "lucide-react";
-import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
 import { useProposalStore } from "@/store/proposalStore";
-import { useVenueStore } from "@/store/venueStore";
-import { ProposalFooter } from "@/components/proposalFooter";
+import { PublicVenueListShell } from "@/components/proposal/PublicVenueListShell";
+import {
+  publicActionClass,
+  publicCardClass,
+  publicColumnClass,
+  publicDividerClass,
+  publicEyebrowClass,
+  publicLabelClass,
+  publicLeadClass,
+  publicTitleClass,
+  publicValueClass,
+} from "@/components/proposal/public-list-pattern";
+import { usePublicListVenue } from "@/components/proposal/usePublicListVenue";
+import { ImportPersonSpreadsheetButton } from "@/components/proposal/ImportPersonSpreadsheetButton";
+import { usePersonSpreadsheetImport } from "@/components/proposal/useImportPersonSpreadsheet";
+import { remainingGuestSlots } from "@/lib/person-spreadsheet";
 
 export default function GuestListPage() {
   const { id: proposalId } = useParams();
@@ -28,9 +40,17 @@ export default function GuestListPage() {
   const { toast } = useToast();
   const fetchProposalById = useProposalStore((s) => s.fetchProposalById);
   const currentProposal = useProposalStore((s) => s.currentProposal);
-  // Venue
-  const { selectedVenue, fetchVenueById } = useVenueStore();
-  const [venueLoading, setVenueLoading] = useState(false);
+  const proposal = currentProposal?.id === proposalId ? currentProposal : null;
+  const { venue, contentReady } = usePublicListVenue(proposal?.venueId, !isInitialLoading);
+  const savedGuestCount = guestList.filter((guest) => guest.id).length;
+  const { importing, importFile } = usePersonSpreadsheetImport({
+    proposalId,
+    type: PersonType.GUEST,
+    list: guestList,
+    setList: setGuestList,
+    remainingSlots: remainingGuestSlots(proposal?.guestNumber, savedGuestCount),
+    busy: loading || isInitialLoading,
+  });
   // Carrega a lista inicial do backend ao montar
   useEffect(() => {
     if (proposalId) {
@@ -44,17 +64,6 @@ export default function GuestListPage() {
       });
     }
   }, [proposalId, fetchPersons, fetchProposalById]);
-
-  useEffect(() => {
-    if (currentProposal?.venueId) {
-      setVenueLoading(true);
-      fetchVenueById(currentProposal.venueId).finally(() => setVenueLoading(false));
-    }
-  }, [currentProposal?.venueId, fetchVenueById]);
-
-  if (isInitialLoading || venueLoading) {
-    return <AppLoadingScreen />;
-  }
 
   const handleAddGuest = () => {
     if (!name.trim()) return;
@@ -153,131 +162,110 @@ export default function GuestListPage() {
       (g.email && g.email.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const savedCount = guestList.filter((g) => g.id).length;
+  const listedCount = guestList.length;
+  const saveLocked = loading || importing || guestList.length === 0 || guestList.every((g) => g.id);
+  const guestTarget = currentProposal?.guestNumber;
+  const guestLead = listedCount === 0
+    ? "A lista ainda está em branco."
+    : guestTarget
+      ? `${listedCount} de ${guestTarget} já estão na lista.`
+      : listedCount === 1
+        ? "1 convidado já está na lista."
+        : `${listedCount} convidados já estão na lista.`;
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex flex-1 flex-col bg-eventhub-background py-14 px-2 md:px-8">
-        <div className="flex items-center w-full justify-center mb-10">
-          <Calendar className="h-8 w-8 text-eventhub-primary" />
-          <span className="ml-2 font-bold text-3xl text-eventhub-primary">
-            EventHub
-          </span>
-        </div>
-        <div className="max-w-6xl  w-full md:mx-auto">
-          {/* Card de adicionar convidado */}
-          <div className="bg-white rounded-xl shadow py-8 px-4 mb-8">
-            <h2 className="text-2xl font-bold text-center mb-6 text-eventhub-primary">
-              Adicionar Convidado
-            </h2>
-            <div className="flex flex-col gap-4 md:flex-row md:items-end">
-              <div className="flex-1">
-                <label className="block text-gray-600 font-semibold mb-1">Nome</label>
-                <input
-                  className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary"
-                  placeholder="Nome"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+    <>
+      <PublicVenueListShell venue={venue} contentReady={contentReady} variant="people">
+        {(surface) => (
+          <div className={publicColumnClass}>
+            <section className={publicCardClass} style={surface.cardStyle}>
+              <p className={publicEyebrowClass}>Sua celebração</p>
+              <h2 className={`${publicTitleClass} mt-2`}>Quem vem com você</h2>
+              <p className={publicLeadClass}>
+                Inclua cada pessoa que participa deste evento. O e-mail é opcional. Se preferir, envie uma planilha com a coluna Nome e, se quiser, E-mail.
+              </p>
+              <div className={publicDividerClass} />
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                  <label className={publicLabelClass} htmlFor="guest-name">Nome</label>
+                  <input
+                    id="guest-name"
+                    className={surface.inputClassName}
+                    placeholder="Nome do convidado"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className={publicLabelClass} htmlFor="guest-email">E-mail (opcional)</label>
+                  <input
+                    id="guest-email"
+                    className={surface.inputClassName}
+                    placeholder="E-mail"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    type="email"
+                  />
+                </div>
               </div>
-              <div className="flex-1">
-                <label className="block text-gray-600 font-semibold mb-1">
-                  Email (opcional)
-                </label>
-                <input
-                  className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary"
-                  placeholder="Email (opcional)"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
+              <div className="mt-5 flex flex-wrap justify-end gap-3 border-t border-current/15 pt-5">
+                <ImportPersonSpreadsheetButton
+                  busy={importing}
+                  disabled={loading || isInitialLoading || !proposalId}
+                  onFile={importFile}
                 />
+                <button className={publicActionClass} onClick={handleAddGuest} type="button">
+                  <FiPlus size={16} />
+                  Adicionar convidado
+                </button>
               </div>
-              <button
-                className="bg-eventhub-primary text-white rounded-full p-3 mt-4 md:mt-0 flex items-center justify-center hover:bg-eventhub-secondary transition"
-                onClick={handleAddGuest}
-                title="Adicionar convidado"
-              >
-                <FiPlus size={24} />
-              </button>
-            </div>
-          </div>
+            </section>
 
-          {/* Card da lista de convidados */}
-          <div className="bg-white rounded-xl shadow py-8 px-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4 text-center">
-              <span className="text-lg font-bold text-center mb-6 text-eventhub-primary">
-                Lista de Convidados: {savedCount} / {currentProposal?.guestNumber}
-              </span>
-              <button
-                className={`w-full text-center md:w-auto font-semibold px-6 py-2 rounded transition flex items-center  
-                  ${
-                    loading || guestList.length === 0 || guestList.every((g) => g.id)
-                      ? "bg-gray-300 text-center text-gray-400 cursor-not-allowed"
-                      : "bg-[#6C63FF] hover:bg-[#554ee0] text-white cursor-pointer shadow-md"
-                  }
-                `}
-                onClick={handleSaveList}
-                disabled={
-                  loading || guestList.length === 0 || guestList.every((g) => g.id)
-                }
-              >
-                {loading ? (
-                  <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                  </svg>
-                ) : (
-                  "SALVAR LISTA"
-                )}
-              </button>
-            </div>
-            {/* Barra de pesquisa com ícone dentro */}
-            <div className="mb-4 relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                <FiSearch size={20} />
-              </span>
+            <section className={publicCardClass} style={surface.cardStyle}>
+              <h2 className={publicTitleClass}>Lista de convidados</h2>
+              <p className={publicLeadClass}>{guestLead}</p>
+              <div className={publicDividerClass} />
+              <label className={publicLabelClass} htmlFor="guest-search">Buscar</label>
               <input
-                className="w-full border border-gray-300 rounded px-10 py-2 focus:outline-none focus:ring-2 focus:to-eventhub-primary"
-                placeholder="Buscar convidado..."
+                id="guest-search"
+                className={surface.inputClassName}
+                placeholder="Nome ou e-mail"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-            </div>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {filteredGuests.length === 0 ? (
-                <div className="text-gray-400 text-center py-8">
-                  Nenhum convidado adicionado.
-                </div>
-              ) : (
-                filteredGuests.map((g, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between bg-gray-100 rounded px-4 py-3 hover:bg-gray-200 transition"
-                  >
-                    <div>
-                      <span className="font-medium">{g.name}</span>
-                      {g.email && (
-                        <span className="text-gray-500 ml-2 text-sm">
-                          {g.email}
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      className="text-gray-500 hover:text-red-600 transition"
-                      onClick={() => handleRemoveGuest(g as Person, i)}
-                      title="Remover"
+              <div className="mt-4 max-h-[400px] overflow-y-auto">
+                {filteredGuests.length === 0 ? (
+                  search.trim() ? <p className={publicLeadClass}>Nenhum convidado com esse nome.</p> : null
+                ) : (
+                  filteredGuests.map((g, i) => (
+                    <div
+                      key={g.id || `${g.name}-${i}`}
+                      className="flex items-start justify-between gap-4 border-t border-current/15 py-4 first:border-t-0"
                     >
-                      <FiTrash2 size={20} />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
+                      <div>
+                        <p className={publicValueClass}>{g.name}</p>
+                        {g.email && <p className="mt-1 text-[13px] opacity-70">{g.email}</p>}
+                      </div>
+                      <button
+                        className="text-[13px] opacity-60 hover:opacity-100"
+                        onClick={() => handleRemoveGuest(g as Person, i)}
+                        type="button"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="mt-5 flex justify-end border-t border-current/15 pt-5">
+                <button className={publicActionClass} onClick={handleSaveList} disabled={saveLocked} type="button">
+                  {loading ? "Salvando lista" : "Salvar lista"}
+                </button>
+              </div>
+            </section>
           </div>
-        </div>
-      </main>
-      <ProposalFooter selectedVenue={selectedVenue} />
-      {/* Dialog de confirmação de exclusão */}
+        )}
+      </PublicVenueListShell>
       <ConfirmDeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -286,6 +274,6 @@ export default function GuestListPage() {
         entityType="convidado"
         isPending={false}
       />
-    </div>
+    </>
   );
 }
