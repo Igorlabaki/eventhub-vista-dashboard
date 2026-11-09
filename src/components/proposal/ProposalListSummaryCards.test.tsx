@@ -62,4 +62,34 @@ describe("cards de resumo da listagem", () => {
     expect(html).not.toContain("ano anterior");
     expect(html).not.toContain(">—</p>");
   });
+
+  it("orcamentos continua com os tres cards", () => {
+    const html = markup(summary({ total: 22, monthAmount: -10, conversionRate: 0 }));
+    expect(html).toContain("md:grid-cols-3");
+    expect(html).toContain("Conversão");
+    expect(html).not.toContain("Total de eventos");
+  });
+
+  it("eventos mostra total e valor, sem conversao", () => {
+    const html = renderToStaticMarkup(
+      <ProposalListSummaryCards summary={summary({ total: 22, monthAmount: -10, conversionRate: 0 })} kind="events" />,
+    );
+    expect(html).toContain("Total de eventos");
+    expect(html).not.toContain("Total de orçamentos");
+    expect(html).toContain("Valor no mês");
+    expect(html).toContain("12.590,00");
+    expect(html).not.toContain("Conversão");
+    expect(html).toContain("md:grid-cols-2");
+    expect(html).toContain(">+22%</span>");
+  });
+
+  it("eventos sem VIEW_AMOUNTS fica so com o total", () => {
+    const html = renderToStaticMarkup(
+      <ProposalListSummaryCards summary={summary(undefined)} kind="events" showAmount={false} />,
+    );
+    expect(html).toContain("Total de eventos");
+    expect(html).not.toContain("Valor no mês");
+    expect(html).not.toContain("12.590,00");
+    expect(html).toContain("md:grid-cols-1");
+  });
 });

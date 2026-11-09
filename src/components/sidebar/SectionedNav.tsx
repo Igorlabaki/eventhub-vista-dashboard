@@ -45,7 +45,13 @@ export function SectionedNav({
         </div>
       )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div
+        data-nav-scroll="true"
+        className={cn(
+          "scrollbar-eventhub min-h-0 flex-1 overflow-y-auto overflow-x-hidden",
+          !isCollapsed && "[scrollbar-gutter:stable]",
+        )}
+      >
         {isCollapsed
           ? collapsedItems.map((item) => (
               <NavItemLink

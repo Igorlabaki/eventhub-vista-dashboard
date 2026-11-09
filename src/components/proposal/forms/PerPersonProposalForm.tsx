@@ -1,6 +1,7 @@
 import { chosenServiceHours, sameDayEventHours, serviceHourFieldError } from "@/lib/event-duration";
 import { DashboardServiceChoices } from "@/components/proposal/DashboardServiceChoices";
 import { requiredServiceIds } from "@/lib/required-service-ids";
+import { perPersonLabel } from "@/lib/per-person-amount";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -172,6 +173,7 @@ export function PerPersonProposalForm({
   });
 
   const guestNumberValue = form.watch("guestNumber");
+  const totalAmountValue = form.watch("totalAmountInput");
   const eventHours = sameDayEventHours(
     form.watch("date") || "",
     form.watch("startHour") || "",
@@ -452,21 +454,28 @@ export function PerPersonProposalForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Total</FormLabel>
-              <FormControl>
-                <NumericFormat
-                  value={field.value}
-                  onValueChange={(values) => {
-                    field.onChange(values.value);
-                  }}
-                  thousandSeparator="."
-                  decimalSeparator=","
-                  prefix="R$ "
-                  decimalScale={2}
-                  fixedDecimalScale
-                  placeholder="R$ 0,00"
-                  customInput={Input}
-                />
-              </FormControl>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <div className="min-w-[10rem] flex-1">
+                  <FormControl>
+                    <NumericFormat
+                      value={field.value}
+                      onValueChange={(values) => {
+                        field.onChange(values.value);
+                      }}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      prefix="R$ "
+                      decimalScale={2}
+                      fixedDecimalScale
+                      placeholder="R$ 0,00"
+                      customInput={Input}
+                    />
+                  </FormControl>
+                </div>
+                <span className="whitespace-nowrap text-sm text-gray-500" aria-live="polite">
+                  {perPersonLabel(totalAmountValue, guestNumberValue)}
+                </span>
+              </div>
               <FormMessage />
             </FormItem>
           )}

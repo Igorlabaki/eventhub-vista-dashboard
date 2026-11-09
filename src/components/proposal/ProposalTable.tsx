@@ -15,6 +15,8 @@ interface ProposalTableProps {
   sortBy: SortKey;
   sortDir: "asc" | "desc";
   onSort: (sortBy: SortKey) => void;
+  kind?: "budgets" | "events";
+  showAmount?: boolean;
 }
 
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -29,15 +31,15 @@ function StatusBadge({ status }: { status?: Proposal["status"] }) {
   );
 }
 
-const TableSkeleton = () => (
+const TableSkeleton = ({ showAmount, showStatus }: { showAmount: boolean; showStatus: boolean }) => (
   <div className="rounded-2xl border bg-white">
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Cliente</TableHead>
           <TableHead>Data do Evento</TableHead>
-          <TableHead className="text-right">Valor Total</TableHead>
-          <TableHead>Status</TableHead>
+          {showAmount && <TableHead className="text-right">Valor Total</TableHead>}
+          {showStatus && <TableHead>Status</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -45,8 +47,8 @@ const TableSkeleton = () => (
           <TableRow key={index}>
             <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
             <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-            <TableCell><Skeleton className="ml-auto h-4 w-[120px]" /></TableCell>
-            <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+            {showAmount && <TableCell><Skeleton className="ml-auto h-4 w-[120px]" /></TableCell>}
+            {showStatus && <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>}
           </TableRow>
         ))}
       </TableBody>
@@ -63,13 +65,19 @@ export function ProposalTable({
   sortBy,
   sortDir,
   onSort,
+  kind = "budgets",
+  showAmount = true,
 }: ProposalTableProps) {
+  const showStatus = kind === "budgets";
+  const emptyLabel = kind === "events" ? "Nenhum evento encontrado" : "Nenhum orçamento encontrado";
+  const columnCount = 2 + (showAmount ? 1 : 0) + (showStatus ? 1 : 0);
+
   const handleProposalClick = (proposalId: string) => {
     const proposalUrl = `${window.location.origin}/proposal/${proposalId}`;
     window.open(proposalUrl, "_blank", "noopener,noreferrer");
   };
 
-  if (isLoading) return <TableSkeleton />;
+  if (isLoading) return <TableSkeleton showAmount={showAmount} showStatus={showStatus} />;
 
   const sortLabel = (key: SortKey, label: string, alignRight = false) => (
     <button
@@ -90,8 +98,8 @@ export function ProposalTable({
           <TableRow>
             <TableHead>Cliente</TableHead>
             <TableHead>{sortLabel("startDate", "Data do Evento")}</TableHead>
-            <TableHead className="text-right">{sortLabel("totalAmount", "Valor Total", true)}</TableHead>
-            <TableHead>{sortLabel("status", "Status")}</TableHead>
+            {showAmount && <TableHead className="text-right">{sortLabel("totalAmount", "Valor Total", true)}</TableHead>}
+            {showStatus && <TableHead>{sortLabel("status", "Status")}</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -104,14 +112,14 @@ export function ProposalTable({
               >
                 <TableCell className="max-w-[220px] font-medium">{proposal.completeClientName}</TableCell>
                 <TableCell>{wallClockDateBr(proposal.startDate)}</TableCell>
-                <TableCell className="text-right">{money.format(proposal.totalAmount)}</TableCell>
-                <TableCell><StatusBadge status={proposal.status} /></TableCell>
+                {showAmount && <TableCell className="text-right">{money.format(proposal.totalAmount)}</TableCell>}
+                {showStatus && <TableCell><StatusBadge status={proposal.status} /></TableCell>}
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={4} className="h-24 text-center">
-                Nenhum orçamento encontrado para {monthNames[selectedMonth]}/{selectedYear}.
+              <TableCell colSpan={columnCount} className="h-24 text-center">
+                {emptyLabel} para {monthNames[selectedMonth]}/{selectedYear}.
               </TableCell>
             </TableRow>
           )}

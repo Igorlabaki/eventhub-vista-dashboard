@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
-import { CalendarDays, ClipboardList, CreditCard, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { CalendarDays, ClipboardList, CreditCard, Users } from "lucide-react";
 import { MonthYearNavigator } from "@/components/proposal/MonthYearNavigator";
+import { YearlyChange } from "@/components/ui/yearly-change";
 import { VenueDashboardData } from "@/types/venue";
 import { NumericFormat } from "react-number-format";
 
@@ -17,21 +18,6 @@ interface VenueStatsPanelProps {
   onYearChange: (year: number) => void;
   months: string[];
   numbersLoading?: boolean;
-}
-
-function MonthChange({ value, isPositive }: { value: number; isPositive: boolean }) {
-  const Icon = isPositive ? TrendingUp : TrendingDown;
-  const tone = isPositive ? "text-emerald-600" : "text-red-600";
-  const visible = `${isPositive ? "+" : "-"}${value.toFixed(0)}%`;
-  return (
-    <p
-      className={`flex items-center gap-1 text-xs font-medium tabular-nums ${tone}`}
-      aria-label={`${visible} em relação ao mês anterior`}
-    >
-      <Icon className="h-3 w-3" aria-hidden />
-      <span aria-hidden>{visible}</span>
-    </p>
-  );
 }
 
 function OverviewKpiCard({
@@ -81,6 +67,8 @@ export function VenueStatsPanel({
     ) : (
       value
     );
+  const kpiChange = (key: keyof NonNullable<VenueDashboardData["yearlyChange"]>) =>
+    numbersLoading ? undefined : <YearlyChange value={data?.yearlyChange?.[key]} />;
 
   return (
     <div className="space-y-4">
@@ -102,21 +90,21 @@ export function VenueStatsPanel({
           value={kpiNumber(data?.eventsThisMonth)}
           icon={CalendarDays}
           iconClass="bg-violet-100 text-violet-600"
+          change={kpiChange("events")}
         />
         <OverviewKpiCard
           label="Orçamentos"
           value={kpiNumber(data?.proposalsInMonth)}
           icon={ClipboardList}
           iconClass="bg-violet-100 text-violet-600"
-          change={numbersLoading || !data?.proposalsVariation ? undefined : (
-            <MonthChange value={data.proposalsVariation.value} isPositive={data.proposalsVariation.isPositive} />
-          )}
+          change={kpiChange("proposals")}
         />
         <OverviewKpiCard
           label="Visitas Agendadas"
           value={kpiNumber(data?.totalVisits)}
           icon={Users}
           iconClass="bg-violet-100 text-violet-600"
+          change={kpiChange("visits")}
         />
         <OverviewKpiCard
           label={receitaTitulo}
@@ -133,6 +121,7 @@ export function VenueStatsPanel({
           )}
           icon={CreditCard}
           iconClass="bg-emerald-100 text-emerald-600"
+          change={kpiChange("revenue")}
         />
       </div>
     </div>

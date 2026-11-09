@@ -8,5 +8,5 @@ interface Props {
 }
 
 export function VenuePerformanceChartAllMonths({ data, goals }: Props) {
-  return <VenuePerformanceSeries points={annualPerformancePoints(data, goals)} />;
+  return <VenuePerformanceSeries points={annualPerformancePoints(data, goals)} showAverage />;
 }

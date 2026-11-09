@@ -1,4 +1,4 @@
-import { TrafficSource } from "@/types/venue";
+import { AverageMonthData, TrafficSource } from "@/types/venue";
 
 export const REPORT_MONTHS = [
   "jan.", "fev.", "mar.", "abr.", "mai.", "jun.",
@@ -38,6 +38,17 @@ export interface MonthRow {
   guestNumber: number;
 }
 
+export interface PreviousMonths {
+  count: number[];
+  approved: number[];
+  proposals: number[];
+}
+
+export interface AverageMonths {
+  count: number[];
+  rate: number[];
+}
+
 export interface ReportInput {
   kind: ReportKind;
   year: string;
@@ -50,6 +61,8 @@ export interface ReportInput {
   approvedMonths: number[];
   proposalMonths: number[];
   traffic: TrafficSource[];
+  previousMonths?: PreviousMonths | null;
+  averageMonths?: AverageMonths | null;
 }
 
 export interface ReportDelta {
@@ -74,6 +87,11 @@ export interface ReportModel {
   insightsSubtitle: string;
   quantitySeries: number[];
   conversionSeries: number[];
+  previousLabel: string;
+  previousQuantitySeries: number[] | null;
+  previousConversionSeries: number[] | null;
+  averageQuantitySeries: number[] | null;
+  averageConversionSeries: number[] | null;
   traffic: Array<{ name: string; value: number; percent: number; color: string }>;
   bestMonth: string | null;
   participationLabel: string;
@@ -87,6 +105,19 @@ export function alignMonths(rows: MonthRow[] | undefined, pick: "count" | "total
     const found = rows?.find((row) => row.month === name);
     return found ? found[pick] || 0 : 0;
   });
+}
+
+/** `null` quando a rota nao trouxe media (sem anos com receita ou sem `average=true`). */
+export function averageMonths(
+  points: AverageMonthData[] | undefined,
+  countKey: "proposals" | "approved",
+): AverageMonths | null {
+  if (!points || points.length === 0) return null;
+  const pick = (key: "proposals" | "approved" | "rate") => REPORT_MONTHS.map((name) => {
+    const found = points.find((point) => point.month === name);
+    return found ? found[key] || 0 : 0;
+  });
+  return { count: pick(countKey), rate: pick("rate") };
 }
 
 function pad(values: number[]): number[] {
@@ -175,6 +206,12 @@ export function buildReportModel(input: ReportInput): ReportModel {
   const top = traffic.find((item) => item.value > 0) ?? null;
   const social = [...traffic].filter((item) => item.social && item.value > 0).sort((a, b) => b.value - a.value)[0] ?? null;
 
+  let previousConversion: number[] | null = null;
+  if (input.previousMonths) {
+    const previousApproved = pad(input.previousMonths.approved);
+    previousConversion = pad(input.previousMonths.proposals).map((proposals, index) => rate(previousApproved[index], proposals));
+  }
+
   return {
     kpis: [
       {
@@ -217,6 +254,11 @@ export function buildReportModel(input: ReportInput): ReportModel {
     insightsSubtitle: `Destaques de ${input.year}`,
     quantitySeries: countMonths,
     conversionSeries: proposalMonths.map((proposals, index) => rate(approvedMonths[index], proposals)),
+    previousLabel: input.previousYear,
+    previousQuantitySeries: input.previousMonths ? pad(input.previousMonths.count) : null,
+    previousConversionSeries: previousConversion,
+    averageQuantitySeries: input.averageMonths ? pad(input.averageMonths.count) : null,
+    averageConversionSeries: input.averageMonths ? pad(input.averageMonths.rate) : null,
     traffic: traffic.map(({ name, value, percent, color }) => ({ name, value, percent, color })),
     bestMonth: bestIndex >= 0 ? MONTH_NAMES[bestIndex] : null,
     participationLabel: bestIndex >= 0 ? `Participação de ${MONTH_NAMES[bestIndex].toLowerCase()}` : "Participação do mês",

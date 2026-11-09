@@ -149,6 +149,7 @@ export const useVenueReportsStore = create<VenueReportsStore>((set, get) => ({
       const response = await venueService.getVenueAnalysisByMonth({ 
         venueId, 
         year, 
+        average: true,
       });
 
       // Atualiza o cache e o estado

@@ -136,8 +136,8 @@ export const venueService = {
     return response.data;
   },
 
-  getVenueAnalysisByMonth: async ({ venueId, year, approved }: GetVenueAnalysisByMonthParams) => {
-    const response = await api.get<VenueAnalysisByMonthResponse>(`/venue/analysisByMonth?venueId=${venueId}&year=${year}${approved ? `&approved=${approved}` : ''}`);
+  getVenueAnalysisByMonth: async ({ venueId, year, approved, average }: GetVenueAnalysisByMonthParams) => {
+    const response = await api.get<VenueAnalysisByMonthResponse>(`/venue/analysisByMonth?venueId=${venueId}&year=${year}${approved ? `&approved=${approved}` : ''}${average ? '&average=true' : ''}`);
     return response.data;
   },
 

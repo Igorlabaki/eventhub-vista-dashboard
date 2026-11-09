@@ -207,7 +207,8 @@ export function SidebarNav({
         <div
           className={cn(
             "flex min-h-0 flex-1 flex-col px-2",
-            !sectionedNav && "overflow-y-auto"
+            !sectionedNav && "scrollbar-eventhub overflow-y-auto overflow-x-hidden",
+            !sectionedNav && !isCollapsed && "[scrollbar-gutter:stable]"
           )}
         >
           {level.kind === "organization" && (

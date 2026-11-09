@@ -34,6 +34,7 @@ import { VenueStatsPanel } from "@/components/venue/VenueStatsPanel";
 import { useGetGoals } from "@/hooks/goal/queries/useGetGoals";
 import { VenuePerformanceChart } from "@/components/venue/VenuePerformanceChart";
 import { VenuePerformanceChartAllMonths } from "@/components/venue/VenuePerformanceChartAllMonths";
+import { performanceTitle } from "@/components/venue/VenuePerformanceSeries";
 import { useVenueStore } from "@/store/venueStore";
 import { useGoalStore } from "@/store/goalStore";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
@@ -149,16 +150,7 @@ export default function VenueDashboard() {
         <VenueDashboardSkeleton />
       ) : (
         <div className="space-y-6">
-          <VenueStatsPanel
-            data={dashboardData}
-            numbersLoading={dashboardNumbersLoading}
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            onMonthChange={setSelectedMonth}
-            onYearChange={setSelectedYear}
-            months={months}
-          />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
@@ -206,17 +198,19 @@ export default function VenueDashboard() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-lg">Proxima Visita</h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      handleViewProposal(
-                        dashboardData.nextVisit.proposalId
-                      )
-                    }
-                  >
-                    Ver
-                  </Button>
+                  {dashboardData?.nextVisit && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleViewProposal(
+                          dashboardData.nextVisit.proposalId
+                        )
+                      }
+                    >
+                      Ver
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -244,11 +238,21 @@ export default function VenueDashboard() {
             </Card>
           </div>
 
+          <VenueStatsPanel
+            data={dashboardData}
+            numbersLoading={dashboardNumbersLoading}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthChange={setSelectedMonth}
+            onYearChange={setSelectedYear}
+            months={months}
+          />
+
           <Card className="hidden lg:block">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-lg">
-                  {selectedMonth === "all" ? "Desempenho Anual" : "Desempenho Mensal"}
+                  {performanceTitle(String(selectedMonth))}
                 </h3>
               </div>
 

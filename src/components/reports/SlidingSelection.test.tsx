@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { PillIndicator, SeriesToggle, UnderlineIndicator } from "./SlidingSelection";
+import { PillIndicator, SeriesToggle } from "./SlidingSelection";
 
 describe("indicador deslizante dos toggles", () => {
   it("move a pilula com transform e respeita reduced motion", () => {
@@ -11,13 +11,6 @@ describe("indicador deslizante dos toggles", () => {
     expect(html).toContain("duration-200");
     expect(html).toContain("motion-reduce:transition-none");
     expect(html).toContain('aria-hidden="true"');
-  });
-
-  it("move o sublinhado para a base da aba ativa", () => {
-    const html = renderToStaticMarkup(<UnderlineIndicator box={{ x: 8, y: 4, width: 110, height: 36 }} />);
-
-    expect(html).toContain("translate3d(8px, 38px, 0)");
-    expect(html).toContain("motion-reduce:transition-none");
   });
 
   it("mostra as duas series com a primeira pressionada", () => {

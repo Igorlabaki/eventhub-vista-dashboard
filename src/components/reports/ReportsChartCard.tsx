@@ -32,12 +32,25 @@ function Delta({ delta }: { delta: ReportDelta }) {
   return <p className={`text-xs font-medium ${tone}`}>{delta.text}</p>;
 }
 
+const AVERAGE_NAME = "Média dos anos";
+
 function MonthlyChart({ model }: { model: ReportModel }) {
   const [mode, setMode] = useState<"quantity" | "conversion">("quantity");
   const series = mode === "quantity" ? model.quantitySeries : model.conversionSeries;
-  const data = REPORT_MONTHS.map((name, index) => ({ name, value: series[index] || 0 }));
-  const max = Math.max(...data.map((item) => item.value), 0);
+  const previousSeries = mode === "quantity" ? model.previousQuantitySeries : model.previousConversionSeries;
+  const averageSeries = mode === "quantity" ? model.averageQuantitySeries : model.averageConversionSeries;
+  const data = REPORT_MONTHS.map((name, index) => ({
+    name,
+    value: series[index] || 0,
+    previous: previousSeries ? previousSeries[index] || 0 : undefined,
+    average: averageSeries ? averageSeries[index] || 0 : undefined,
+  }));
+  const max = Math.max(...data.flatMap((item) => [item.value, item.previous ?? 0, item.average ?? 0]), 0);
   const seriesName = mode === "quantity" ? model.quantityToggle : "Taxa de conversão";
+  const format = (value: number, decimals: number) => {
+    if (mode === "conversion") return `${value.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+    return value.toLocaleString("pt-BR", { maximumFractionDigits: decimals });
+  };
 
   return (
     <section className="rounded-2xl border bg-white p-5 shadow-sm">
@@ -80,14 +93,35 @@ function MonthlyChart({ model }: { model: ReportModel }) {
               width={40}
             />
             <Tooltip
-              formatter={(value: number) => [
-                mode === "conversion"
-                  ? `${value.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`
-                  : String(Math.round(value)),
-                seriesName,
-              ]}
+              formatter={(value: number, name: string, item: { dataKey?: string | number }) => {
+                if (item.dataKey === "value") return [format(value, 0), seriesName];
+                return [format(value, 1), name];
+              }}
             />
             <Bar dataKey="value" name={seriesName} fill="url(#reportBar)" radius={[8, 8, 0, 0]} maxBarSize={36} isAnimationActive={false} />
+            {previousSeries && (
+              <Line
+                type="monotone"
+                dataKey="previous"
+                name={model.previousLabel}
+                stroke="#94a3b8"
+                strokeWidth={2}
+                dot={{ r: 3, fill: "#fff", stroke: "#94a3b8", strokeWidth: 2 }}
+                isAnimationActive={false}
+              />
+            )}
+            {averageSeries && (
+              <Line
+                type="monotone"
+                dataKey="average"
+                name={AVERAGE_NAME}
+                stroke="#f59e0b"
+                strokeWidth={2}
+                strokeDasharray="6 4"
+                dot={false}
+                isAnimationActive={false}
+              />
+            )}
             <Line
               type="monotone"
               dataKey="value"
@@ -122,10 +156,26 @@ function MonthlyChart({ model }: { model: ReportModel }) {
           <span className="h-2.5 w-2.5 rounded-full border-2 border-violet-500" aria-hidden />
           Tendência
         </span>
+        {previousSeries && (
+          <span className="inline-flex items-center gap-2">
+            <span className="h-0.5 w-4 rounded-full bg-slate-400" aria-hidden />
+            {model.previousLabel}
+          </span>
+        )}
+        {averageSeries && (
+          <span className="inline-flex items-center gap-2">
+            <span className="w-4 border-t-2 border-dashed border-amber-500" aria-hidden />
+            {AVERAGE_NAME}
+          </span>
+        )}
       </div>
       <ul className="sr-only">
         {data.map((item) => (
-          <li key={item.name}>{item.name} {mode === "conversion" ? `${item.value.toFixed(1)}%` : item.value}</li>
+          <li key={item.name}>
+            {item.name} {mode === "conversion" ? `${item.value.toFixed(1)}%` : item.value}
+            {item.previous !== undefined && `, ${model.previousLabel} ${format(item.previous, 1)}`}
+            {item.average !== undefined && `, ${AVERAGE_NAME.toLowerCase()} ${format(item.average, 1)}`}
+          </li>
         ))}
       </ul>
     </section>

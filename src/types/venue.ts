@@ -199,6 +199,12 @@ export interface VenueDashboardData {
     value: number;
     isPositive: boolean;
   };
+  yearlyChange?: {
+    events: number | null;
+    proposals: number | null;
+    visits: number | null;
+    revenue: number | null;
+  };
   monthlyRevenueList: {
     month: number;
     revenue: number;
@@ -324,12 +330,23 @@ export interface AnalysisData {
   };
   analysisEventsByMonth: MonthData[];
   analysisProposalByMonth: MonthData[];
+  averageYears?: number[];
+  averageByMonth?: AverageMonthData[];
+}
+
+/** Media do mes nos anos com receita do espaco; `rate` em porcentagem. */
+export interface AverageMonthData {
+  month: string;
+  proposals: number;
+  approved: number;
+  rate: number;
 }
 
 export interface GetVenueAnalysisByMonthParams {
   venueId: string;
   year: string;
   approved?: boolean;
+  average?: boolean;
 }
 
 export interface GetVenueTrafficCountParams {

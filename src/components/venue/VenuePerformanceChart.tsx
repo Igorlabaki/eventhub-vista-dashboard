@@ -10,7 +10,7 @@ interface VenuePerformanceChartProps {
 
 export function VenuePerformanceChart({ data, goals, selectedMonth }: VenuePerformanceChartProps) {
   if (selectedMonth === "all") {
-    return <VenuePerformanceSeries points={annualPerformancePoints(data, goals)} />;
+    return <VenuePerformanceSeries points={annualPerformancePoints(data, goals)} showAverage />;
   }
 
   const trend = trendPerformancePoints(data);

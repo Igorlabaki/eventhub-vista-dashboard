@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildReportModel, YearTotals } from "./report-metrics";
+import { averageMonths, buildReportModel, YearTotals } from "./report-metrics";
 
 const months = [291, 187, 211, 189, 169, 158, 108, 156, 150, 201, 245, 340];
 
@@ -105,6 +105,49 @@ describe("relatorio anual no formato da referencia", () => {
     expect(report.bestMonth).toBe("Junho");
     expect(report.socialLeader).toBe("Facebook");
     expect(report.topChannel).toBe("Outros (78%)");
+  });
+
+  it("monta a serie do ano anterior para quantidade e conversao", () => {
+    const report = model({
+      previousMonths: {
+        count: [10, 20],
+        approved: [1, 0],
+        proposals: [10, 0],
+      },
+    });
+
+    expect(report.previousLabel).toBe("2025");
+    expect(report.previousQuantitySeries).toEqual([10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    expect(report.previousConversionSeries?.slice(0, 3)).toEqual([10, 0, 0]);
+  });
+
+  it("nao desenha ano anterior nem media sem dado", () => {
+    const report = model();
+
+    expect(report.previousQuantitySeries).toBeNull();
+    expect(report.previousConversionSeries).toBeNull();
+    expect(report.averageQuantitySeries).toBeNull();
+    expect(report.averageConversionSeries).toBeNull();
+  });
+
+  it("usa a media de quantidade e a taxa agregada que vem da rota", () => {
+    const report = model({ averageMonths: { count: [187.5, 0], rate: [12.5, 0] } });
+
+    expect(report.averageQuantitySeries?.slice(0, 3)).toEqual([187.5, 0, 0]);
+    expect(report.averageConversionSeries?.slice(0, 3)).toEqual([12.5, 0, 0]);
+  });
+
+  it("le a media de orcamentos ou de aprovados pelos nomes dos meses", () => {
+    const points = [
+      { month: "fev.", proposals: 4, approved: 1, rate: 25 },
+      { month: "jan.", proposals: 2, approved: 2, rate: 100 },
+    ];
+
+    expect(averageMonths(points, "proposals")?.count.slice(0, 3)).toEqual([2, 4, 0]);
+    expect(averageMonths(points, "approved")?.count.slice(0, 3)).toEqual([2, 1, 0]);
+    expect(averageMonths(points, "approved")?.rate.slice(0, 3)).toEqual([100, 25, 0]);
+    expect(averageMonths([], "proposals")).toBeNull();
+    expect(averageMonths(undefined, "proposals")).toBeNull();
   });
 
   it("troca os rotulos na aba de eventos", () => {

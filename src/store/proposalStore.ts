@@ -24,6 +24,7 @@ interface ProposalStore {
   proposalListSummary: ProposalListSummary | null;
   proposalListError: string | null;
   eventListPagination: ProposalListPagination | null;
+  eventListSummary: ProposalListSummary | null;
   eventListError: string | null;
   error: string | null;
   setProposals: (proposals: Proposal[]) => void;
@@ -63,6 +64,7 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
   proposalListSummary: null,
   proposalListError: null,
   eventListPagination: null,
+  eventListSummary: null,
   eventListError: null,
   error: null,
   setProposals: (proposals) => set({ proposals }),
@@ -98,6 +100,7 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
       set({
         events: response.data.proposalList,
         eventListPagination: response.pagination ?? null,
+        eventListSummary: response.data.summary ?? null,
       });
     } catch (err: unknown) {
       const error = err as ApiError;
@@ -105,6 +108,7 @@ export const useProposalStore = create<ProposalStore>((set, get) => ({
         eventListError: error?.response?.data?.message || "Não foi possível carregar os eventos.",
         events: [],
         eventListPagination: null,
+        eventListSummary: null,
       });
     } finally {
       set({ isLoadingEvents: false });

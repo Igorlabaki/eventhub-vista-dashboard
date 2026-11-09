@@ -1,6 +1,5 @@
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, LayoutGrid } from "lucide-react";
+import { Plus, ArrowLeft } from "lucide-react";
 import React from "react";
 
 interface GoalHeaderProps {
@@ -16,69 +15,20 @@ export function GoalHeader({
   onActionClick,
   isFormOpen = false,
 }: GoalHeaderProps) {
+  if (activeTab === "panel") return null;
+
   return (
     <div className="mb-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <Tabs value={activeTab} onValueChange={onTabChange}>
-          <TabsList className="bg-white/80 shadow-sm rounded-lg flex gap-1">
-            <TabsTrigger
-              value="panel"
-              className={
-                `px-4 py-2 text-[12px] md:text-sm text-center font-semibold transition-all duration-200
-                ${activeTab === "panel"
-                  ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
-                  : "border-b-4 border-transparent"}`
-              }
-            >
-              PAINEL
-            </TabsTrigger>
-            <TabsTrigger
-              value="metas"
-              className={
-                `px-4 py-2 text-[12px] md:text-sm font-semibold transition-all duration-200
-                ${activeTab === "metas"
-                  ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
-                  : "border-b-4 border-transparent"}`
-              }
-            >
-              METAS
-            </TabsTrigger>
-            <TabsTrigger
-              value="adicionais"
-              className={
-                `px-4 py-2 text-[12px] md:text-sm font-semibold transition-all duration-200
-                ${activeTab === "adicionais"
-                  ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
-                  : "border-b-4 border-transparent"}`
-              }
-            >
-              ADICIONAIS
-            </TabsTrigger>
-            <TabsTrigger
-              value="descontos"
-              className={
-                `px-4 py-2 text-[12px] md:text-sm font-semibold transition-all duration-200
-                ${activeTab === "descontos"
-                  ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
-                  : "border-b-4 border-transparent"}`
-              }
-            >
-              DESCONTOS
-            </TabsTrigger>
-            <TabsTrigger
-              value="minimos"
-              className={
-                `px-4 py-2 text-[12px] md:text-sm font-semibold transition-all duration-200
-                ${activeTab === "minimos"
-                  ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
-                  : "border-b-4 border-transparent"}`
-              }
-            >
-              MÍNIMOS
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-        {!isFormOpen && activeTab !== "panel" && (
+        <Button
+          variant="ghost"
+          className="w-fit gap-2 px-2 text-[12px] md:text-sm font-semibold text-slate-600 hover:text-violet-700"
+          onClick={() => onTabChange("panel")}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar ao painel
+        </Button>
+        {!isFormOpen && (
           <Button
             className="
               bg-eventhub-primary hover:bg-indigo-600 text-white md:my-0
@@ -98,7 +48,7 @@ export function GoalHeader({
         )}
       </div>
       {/* Botão flutuante mobile */}
-      {!isFormOpen && activeTab !== "panel" && (
+      {!isFormOpen && (
         <button
           className="fixed bottom-6 right-6 z-50 md:hidden bg-eventhub-primary hover:bg-indigo-600 text-white rounded-full shadow-lg p-4 flex items-center justify-center transition-all duration-200"
           onClick={onActionClick}

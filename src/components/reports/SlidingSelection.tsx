@@ -57,20 +57,6 @@ export function PillIndicator({ box }: { box: SelectionBox | null }) {
   );
 }
 
-export function UnderlineIndicator({ box }: { box: SelectionBox | null }) {
-  if (!box) return null;
-  return (
-    <span
-      aria-hidden
-      className={`${indicatorMotion} h-0.5 rounded-full bg-violet-600`}
-      style={{
-        width: box.width,
-        transform: `translate3d(${box.x}px, ${box.y + box.height - 2}px, 0)`,
-      }}
-    />
-  );
-}
-
 type SeriesOption<T extends string> = { value: T; label: string };
 
 export function SeriesToggle<T extends string>({

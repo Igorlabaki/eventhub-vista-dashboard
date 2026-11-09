@@ -2,7 +2,7 @@ import { useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useVenueReportsStore } from "@/store/venueReportsStore";
 import { ReportsChartCard } from "./ReportsChartCard";
-import { alignMonths, ReportInput } from "./report-metrics";
+import { alignMonths, averageMonths, ReportInput } from "./report-metrics";
 import { useAnalysisYear } from "./useAnalysisYear";
 
 interface EventsReportProps {
@@ -51,6 +51,12 @@ export function EventsReport({ selectedYear }: EventsReportProps) {
     approvedMonths: alignMonths(monthlyEventsData.analysisEventsByMonth, "count"),
     proposalMonths: alignMonths(monthlyBudgetsData.analysisProposalByMonth, "count"),
     traffic: trafficEventsData.sortedSources,
+    previousMonths: previousEvents && previousBudgets ? {
+      count: alignMonths(previousEvents.analysisEventsByMonth, "count"),
+      approved: alignMonths(previousEvents.analysisEventsByMonth, "count"),
+      proposals: alignMonths(previousBudgets.analysisProposalByMonth, "count"),
+    } : null,
+    averageMonths: averageMonths(monthlyBudgetsData.averageByMonth, "approved"),
   };
 
   return <ReportsChartCard kind="eventos" input={input} />;

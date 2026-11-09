@@ -45,5 +45,23 @@ describe("tela do relatorio anual", () => {
     expect(html).toContain("Outros (41%)");
     expect(html).toContain("Instagram");
     expect(html).toContain("Tendência");
+    expect(html).not.toContain("Média dos anos");
+  });
+
+  it("lista o ano anterior e a media dos anos na legenda e na leitura de tela", () => {
+    const html = renderToStaticMarkup(
+      <ReportsChartCard
+        kind="orcamentos"
+        input={{
+          ...input,
+          previousMonths: { count: [250], approved: [], proposals: [250] },
+          averageMonths: { count: [187.25], rate: [] },
+        }}
+      />,
+    );
+
+    expect(html).toContain("Média dos anos");
+    expect(html).toContain("jan. 291, 2025 250, média dos anos 187,3");
+    expect(html).toContain("fev. 187, 2025 0, média dos anos 0");
   });
 });

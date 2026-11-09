@@ -1,4 +1,4 @@
-import { Bar, CartesianGrid, ComposedChart, LabelList, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, CartesianGrid, ComposedChart, LabelList, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { REPORT_MONTHS } from "@/components/reports/report-metrics";
 import { VenueDashboardData } from "@/types/venue";
 import { Goal } from "@/types/goal";
@@ -16,6 +16,17 @@ function money(value: number): string {
 export function performanceLabel(value: number): string {
   if (!value) return "";
   return value.toLocaleString("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
+}
+
+export function performanceTitle(selectedMonth: string): string {
+  if (selectedMonth === "all") return "Desempenho Anual";
+  const month = new Date(2000, Number(selectedMonth) - 1, 1).toLocaleString("pt-BR", { month: "long" });
+  return `${month.charAt(0).toUpperCase()}${month.slice(1)} ao longo dos anos`;
+}
+
+export function averageRevenue(points: PerformancePoint[]): number {
+  if (points.length === 0) return 0;
+  return points.reduce((sum, item) => sum + item.Receita, 0) / points.length;
 }
 
 function goalForMonth(goals: Goal[], month: number): number {
@@ -57,10 +68,20 @@ export function annualPerformancePoints(data: VenueDashboardData, goals: Goal[])
   return REPORT_MONTHS.map((_, index) => point(index + 1, revenueByMonth.get(index + 1) || 0, goals));
 }
 
-export function VenuePerformanceSeries({ points, variant = "meta" }: { points: PerformancePoint[]; variant?: "meta" | "trend" }) {
+export function VenuePerformanceSeries({
+  points,
+  variant = "meta",
+  showAverage = variant === "trend",
+}: {
+  points: PerformancePoint[];
+  variant?: "meta" | "trend";
+  showAverage?: boolean;
+}) {
   const max = Math.max(0, ...points.map((item) => Math.max(item.Receita, item.Meta)));
   const lineKey = variant === "trend" ? "Receita" : "Meta";
   const lineName = variant === "trend" ? "Tendência" : "Meta";
+  const average = showAverage ? averageRevenue(points) : null;
+  const averageLabel = average ? `Média ${performanceLabel(average)}` : "";
 
   return (
     <div>
@@ -123,6 +144,15 @@ export function VenuePerformanceSeries({ points, variant = "meta" }: { points: P
                 />
               )}
             </Line>
+            {average !== null && (
+              <ReferenceLine
+                y={average}
+                stroke="#f59e0b"
+                strokeWidth={2}
+                strokeDasharray="6 4"
+                ifOverflow="extendDomain"
+              />
+            )}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -135,6 +165,12 @@ export function VenuePerformanceSeries({ points, variant = "meta" }: { points: P
           <span className="h-2.5 w-2.5 rounded-full border-2 border-violet-500" aria-hidden />
           {lineName}
         </span>
+        {average !== null && (
+          <span className="inline-flex items-center gap-2">
+            <span className="w-4 border-t-2 border-dashed border-amber-500" aria-hidden />
+            {averageLabel || "Média"}
+          </span>
+        )}
       </div>
       <ul className="sr-only">
         {points.map((item) => (
@@ -144,6 +180,7 @@ export function VenuePerformanceSeries({ points, variant = "meta" }: { points: P
               : `${item.name} receita ${money(item.Receita)} meta ${money(item.Meta)}`}
           </li>
         ))}
+        {average !== null && <li>{`média ${money(average)}`}</li>}
       </ul>
     </div>
   );

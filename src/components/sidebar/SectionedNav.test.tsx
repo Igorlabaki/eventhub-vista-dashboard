@@ -94,6 +94,21 @@ describe("SectionedNav", () => {
     expect(html).not.toContain("localhost");
   });
 
+  it("rola a lista com a barra do app e so reserva o espaco dela com a sidebar aberta", () => {
+    const scrollClass = (html: string) =>
+      html.match(/data-nav-scroll="true" class="([^"]+)"/)?.[1] ?? "";
+
+    const open = scrollClass(markup("/venue/1"));
+    expect(open).toContain("scrollbar-eventhub");
+    expect(open).toContain("overflow-y-auto");
+    expect(open).toContain("overflow-x-hidden");
+    expect(open).toContain("[scrollbar-gutter:stable]");
+
+    const collapsed = scrollClass(markup("/venue/1", true));
+    expect(collapsed).toContain("scrollbar-eventhub");
+    expect(collapsed).not.toContain("[scrollbar-gutter:stable]");
+  });
+
   it("no modo recolhido mostra o dia a dia e configuracoes, sem os outros grupos", () => {
     const html = markup("/venue/1", true);
 
