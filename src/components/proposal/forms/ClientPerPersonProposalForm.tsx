@@ -22,8 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProposalStore } from "@/store/proposalStore";
-import { ProposalType, TrafficSource } from "@/types/proposal";
+import { EventCategory, ProposalType, TrafficSource } from "@/types/proposal";
 import { PROPOSAL_TYPE_OPTIONS, TRAFFIC_SOURCE_OPTIONS } from "./constants";
+import { EVENT_CATEGORY_MESSAGE, EVENT_CATEGORY_OPTIONS } from "@/lib/event-category";
 import { useServiceStore } from "@/store/serviceStore";
 import { useEffect, useState, type CSSProperties } from "react";
 import { PublicBudgetStepIndicator, PublicBudgetStepNav, PublicBudgetStepStage, publicBudgetActionMotion } from "./PublicBudgetFormSteps";
@@ -190,6 +191,10 @@ export function ClientPerPersonProposalForm({
       description: z.string().min(1, "Descrição é obrigatória"),
       knowsVenue: z.boolean(),
       type: z.nativeEnum(ProposalType),
+      eventCategory: z.nativeEnum(EventCategory, {
+        required_error: EVENT_CATEGORY_MESSAGE,
+        invalid_type_error: EVENT_CATEGORY_MESSAGE,
+      }),
       trafficSource: z.nativeEnum(TrafficSource),
       totalAmountInput: z.string().optional(),
     });
@@ -317,6 +322,7 @@ export function ClientPerPersonProposalForm({
         serviceHours,
         totalAmountInput: "0",
         type: ProposalType.EVENT,
+        eventCategory: values.eventCategory,
         trafficSource: values.trafficSource,
       };
 
@@ -354,7 +360,7 @@ export function ClientPerPersonProposalForm({
   async function goNext() {
     const fields = step === 0
       ? ["completeClientName", "completeCompanyName", "email", "whatsapp"] as const
-      : ["date", "startHour", "endHour", "guestNumber", "description"] as const;
+      : ["date", "startHour", "endHour", "guestNumber", "eventCategory", "description"] as const;
     const valid = await form.trigger([...fields]);
     if (valid) setStep((current) => current + 1);
   }
@@ -585,6 +591,31 @@ export function ClientPerPersonProposalForm({
 
    
         </div>
+
+        <FormField
+          control={form.control}
+          name="eventCategory"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Categoria do evento</FormLabel>
+              <FormControl>
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent className="font-['Manrope',sans-serif]">
+                    {EVENT_CATEGORY_OPTIONS.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

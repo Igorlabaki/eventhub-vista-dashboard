@@ -2,6 +2,9 @@ import { chosenServiceHours, sameDayEventHours, serviceHourFieldError } from "@/
 import { DashboardServiceChoices } from "@/components/proposal/DashboardServiceChoices";
 import { requiredServiceIds } from "@/lib/required-service-ids";
 import { perPersonLabel } from "@/lib/per-person-amount";
+import { buildQuoteInput } from "@/lib/proposal-quote-input";
+import { useProposalQuote } from "@/hooks/proposal/queries/quote";
+import { ProposalQuoteSummary } from "@/components/proposal/ProposalQuoteSummary";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -24,8 +27,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProposalStore } from "@/store/proposalStore";
-import { ProposalType, TrafficSource } from "@/types/proposal";
+import { EventCategory, ProposalType, TrafficSource } from "@/types/proposal";
 import { PROPOSAL_TYPE_OPTIONS, TRAFFIC_SOURCE_OPTIONS } from "./constants";
+import { EVENT_CATEGORY_MESSAGE, EVENT_CATEGORY_OPTIONS, eventCategoryForPayload } from "@/lib/event-category";
 import { useServiceStore } from "@/store/serviceStore";
 import { useVenueStore } from "@/store/venueStore";
 import { useEffect, useState } from "react";
@@ -75,6 +79,7 @@ const baseFormSchema = z.object({
   description: z.string().min(1, "Descrição é obrigatória"),
   knowsVenue: z.boolean(),
   type: z.nativeEnum(ProposalType),
+  eventCategory: z.nativeEnum(EventCategory).optional(),
   trafficSource: z.nativeEnum(TrafficSource),
   totalAmountInput: z.string().optional(),
 });
@@ -144,6 +149,10 @@ export function PerPersonProposalForm({
       }, {
         message: "O horário de fim deve ser posterior ao horário de início",
         path: ["endHour"],
+      })
+      .refine((data) => data.type !== ProposalType.EVENT || !!data.eventCategory, {
+        message: EVENT_CATEGORY_MESSAGE,
+        path: ["eventCategory"],
       });
   };
 
@@ -174,11 +183,24 @@ export function PerPersonProposalForm({
 
   const guestNumberValue = form.watch("guestNumber");
   const totalAmountValue = form.watch("totalAmountInput");
-  const eventHours = sameDayEventHours(
-    form.watch("date") || "",
-    form.watch("startHour") || "",
-    form.watch("endHour") || "",
-  );
+  const dateValue = form.watch("date");
+  const startHourValue = form.watch("startHour");
+  const endHourValue = form.watch("endHour");
+  const typeValue = form.watch("type");
+  const isBarter = typeValue === ProposalType.BARTER;
+  const eventHours = sameDayEventHours(dateValue || "", startHourValue || "", endHourValue || "");
+  const quoteInput = buildQuoteInput({
+    venueId,
+    date: dateValue,
+    startHour: startHourValue,
+    endHour: endHourValue,
+    guestNumber: guestNumberValue,
+    type: typeValue,
+    services: services ?? [],
+    selectedServiceIds,
+    serviceHoursInput,
+  });
+  const { quote, isUpdating, error: quoteError } = useProposalQuote(isBarter ? null : quoteInput);
 
   useEffect(() => {
     const guestNumber = parseInt(guestNumberValue || "0", 10);
@@ -233,6 +255,7 @@ export function PerPersonProposalForm({
         serviceHours,
         totalAmountInput: values.totalAmountInput,
         type: values.type,
+        eventCategory: eventCategoryForPayload(values.type, values.eventCategory),
         trafficSource: values.trafficSource,
       };
       
@@ -459,6 +482,7 @@ export function PerPersonProposalForm({
                   <FormControl>
                     <NumericFormat
                       value={field.value}
+                      valueIsNumericString
                       onValueChange={(values) => {
                         field.onChange(values.value);
                       }}
@@ -473,7 +497,7 @@ export function PerPersonProposalForm({
                   </FormControl>
                 </div>
                 <span className="whitespace-nowrap text-sm text-gray-500" aria-live="polite">
-                  {perPersonLabel(totalAmountValue, guestNumberValue)}
+                  {perPersonLabel(totalAmountValue, guestNumberValue, isBarter || !quoteInput ? null : quote?.totalAmount)}
                 </span>
               </div>
               <FormMessage />
@@ -530,7 +554,10 @@ export function PerPersonProposalForm({
             <FormControl>
               <Select
                 value={field.value}
-                onValueChange={field.onChange}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  if (value !== ProposalType.EVENT) form.setValue("eventCategory", undefined);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
@@ -546,6 +573,31 @@ export function PerPersonProposalForm({
           </FormItem>
         )}
       />
+
+      {typeValue === ProposalType.EVENT && (
+        <FormField
+          control={form.control}
+          name="eventCategory"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Categoria do evento</FormLabel>
+              <FormControl>
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EVENT_CATEGORY_OPTIONS.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <div>
         <FormLabel>Serviços</FormLabel>
@@ -581,6 +633,17 @@ export function PerPersonProposalForm({
           />
         )}
       </div>
+
+      <ProposalQuoteSummary
+        hasInput={!!quoteInput}
+        isBarter={isBarter}
+        quote={quote}
+        isUpdating={isUpdating}
+        error={quoteError}
+        onUseValue={(totalAmount) => {
+          form.setValue("totalAmountInput", String(totalAmount), { shouldDirty: true });
+        }}
+      />
 
       <FormField
         control={form.control}

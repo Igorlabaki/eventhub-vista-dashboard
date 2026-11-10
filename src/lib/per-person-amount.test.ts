@@ -30,4 +30,12 @@ describe("valor por pessoa ao lado do Total", () => {
         expect(perPersonLabel("", "100")).toBe("— / pessoa");
         expect(perPersonLabel("5000", "0")).toBe("— / pessoa");
     });
+
+    it("com Total vazio usa o total estimado e avisa que e estimado", () => {
+        expect(perPersonLabel("", "100", 5000)).toMatch(/50,00 \/ pessoa \(estimado\)$/);
+        expect(perPersonLabel("4000", "100", 5000)).toMatch(/40,00 \/ pessoa$/);
+        expect(perPersonLabel("", "100", null)).toBe("— / pessoa");
+        expect(perPersonLabel("", "100", 0)).toBe("— / pessoa");
+        expect(perPersonLabel("", "", 5000)).toBe("— / pessoa");
+    });
 });

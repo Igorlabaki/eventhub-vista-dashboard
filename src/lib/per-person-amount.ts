@@ -7,8 +7,14 @@ export function perPersonAmount(totalInput?: string | null, guestInput?: string 
     return Math.round((total / guests) * 100) / 100;
 }
 
-export function perPersonLabel(totalInput?: string | null, guestInput?: string | null) {
+export function perPersonLabel(totalInput?: string | null, guestInput?: string | null, estimatedTotal?: number | null) {
     const amount = perPersonAmount(totalInput, guestInput);
-    if (amount === null) return "— / pessoa";
-    return `${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} / pessoa`;
+    if (amount !== null) return `${formatBrl(amount)} / pessoa`;
+    const estimated = totalInput ? null : perPersonAmount(estimatedTotal ? String(estimatedTotal) : null, guestInput);
+    if (estimated !== null) return `${formatBrl(estimated)} / pessoa (estimado)`;
+    return "— / pessoa";
+}
+
+function formatBrl(value: number) {
+    return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }

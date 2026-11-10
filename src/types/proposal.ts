@@ -17,6 +17,15 @@ export enum ProposalType {
   OTHER = "OTHER"
 }
 
+export enum EventCategory {
+  CORPORATE = "CORPORATE",
+  BIRTHDAY = "BIRTHDAY",
+  BACHELOR_PARTY = "BACHELOR_PARTY",
+  WEDDING = "WEDDING",
+  COFFEE_BREAK = "COFFEE_BREAK",
+  OTHER = "OTHER"
+}
+
 export enum TrafficSource {
   AIRBNB = "AIRBNB",
   GOOGLE = "GOOGLE",
@@ -51,6 +60,7 @@ export interface Proposal {
   city?: string;
   state?: string;
   type: ProposalType;
+  eventCategory?: EventCategory | null;
   trafficSource: TrafficSource;
   guestNumber: number;
   knowsVenue: boolean;
@@ -117,7 +127,28 @@ export interface CreateProposalPerPersonDTO {
   serviceHours?: { serviceId: string; hours: number }[];
   totalAmountInput?: string;
   type: ProposalType;
+  eventCategory?: EventCategory | null;
   trafficSource: TrafficSource;
+}
+
+export interface ProposalQuoteInput {
+  venueId: string;
+  date: string;
+  startHour: string;
+  endHour: string;
+  guestNumber: number;
+  serviceIds: string[];
+  serviceHours: { serviceId: string; hours: number }[];
+  type: ProposalType;
+}
+
+export interface ProposalQuote {
+  basePrice: number;
+  extraHoursQty: number;
+  extraHourPrice: number;
+  totalAmountService: number;
+  totalAmount: number;
+  minimumApplied: boolean;
 }
 
 export interface CreateProposalPerDayDTO {
@@ -137,6 +168,7 @@ export interface CreateProposalPerDayDTO {
   serviceHours?: { serviceId: string; hours: number }[];
   totalAmountInput?: string;
   type: ProposalType;
+  eventCategory?: EventCategory | null;
   trafficSource: TrafficSource;
 }
 
@@ -178,6 +210,7 @@ export interface UpdateProposalPerDayDTO {
     userId?: string;
     serviceIds: string[];
     type: ProposalType;
+    eventCategory?: EventCategory | null;
     trafficSource: TrafficSource;
     adressComplement?: string;
   }
@@ -202,6 +235,7 @@ export interface UpdateProposalPerPersonDTO {
     serviceIds: string[];
     serviceHours?: { serviceId: string; hours: number }[];
     type: ProposalType;
+    eventCategory?: EventCategory | null;
     trafficSource: TrafficSource;
   }
 }

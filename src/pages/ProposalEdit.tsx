@@ -27,7 +27,8 @@ import { FormLayout } from "@/components/ui/form-layout";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { ProposalType, TrafficSource } from "@/types/proposal";
+import { EventCategory, ProposalType, TrafficSource } from "@/types/proposal";
+import { EVENT_CATEGORY_MESSAGE, EVENT_CATEGORY_OPTIONS, eventCategoryForPayload } from "@/lib/event-category";
 import { NumericFormat } from 'react-number-format';
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -39,6 +40,9 @@ import { generateTimeOptions } from "@/components/proposal/forms/PerPersonPropos
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
 import { wallClockDateIso, wallClockTime } from "@/lib/wall-clock-datetime";
+import { buildQuoteInput } from "@/lib/proposal-quote-input";
+import { useProposalQuote } from "@/hooks/proposal/queries/quote";
+import { ProposalQuoteSummary } from "@/components/proposal/ProposalQuoteSummary";
 
 const proposalTypes = [
   { value: ProposalType.EVENT, label: "Evento" },
@@ -69,12 +73,16 @@ const editProposalSchema = z.object({
     description: z.string().min(1, "Descrição é obrigatória"),
     knowsVenue: z.boolean(),
     type: z.nativeEnum(ProposalType),
+    eventCategory: z.nativeEnum(EventCategory).optional(),
     trafficSource: z.nativeEnum(TrafficSource),
     totalAmountInput: z.string().min(1, "Valor total é obrigatório"),
     serviceIds: z.array(z.string()).default([]),
     date: z.string().min(1, "Data do evento é obrigatória"),
     startHour: z.string().min(1, "Horário de início é obrigatório"),
     endHour: z.string().min(1, "Horário de fim é obrigatório"),
+  }).refine((data) => data.type !== ProposalType.EVENT || !!data.eventCategory, {
+    message: EVENT_CATEGORY_MESSAGE,
+    path: ["eventCategory"],
   }),
 });
 
@@ -131,6 +139,7 @@ export default function ProposalEdit() {
           description: currentProposal.description || "",
           knowsVenue: currentProposal.knowsVenue || false,
           type: currentProposal.type || ProposalType.EVENT,
+          eventCategory: currentProposal.eventCategory ?? undefined,
           trafficSource: currentProposal.trafficSource || TrafficSource.OTHER,
           totalAmountInput: currentProposal.totalAmount?.toString() || "",
           serviceIds: (currentProposal.proposalServices || []).map(service => service.serviceId),
@@ -159,11 +168,31 @@ export default function ProposalEdit() {
 
   const guestNumberValue = form.watch("data.guestNumber");
   const selectedServiceIds = form.watch("data.serviceIds");
-  const eventHours = sameDayEventHours(
-    form.watch("data.date") || "",
-    form.watch("data.startHour") || "",
-    form.watch("data.endHour") || "",
-  );
+  const dateValue = form.watch("data.date");
+  const startHourValue = form.watch("data.startHour");
+  const endHourValue = form.watch("data.endHour");
+  const typeValue = form.watch("data.type");
+  const totalAmountValue = form.watch("data.totalAmountInput");
+  const isBarter = typeValue === ProposalType.BARTER;
+  const eventHours = sameDayEventHours(dateValue || "", startHourValue || "", endHourValue || "");
+  const quoteInput = buildQuoteInput({
+    venueId: currentProposal?.venueId || "",
+    date: dateValue,
+    startHour: startHourValue,
+    endHour: endHourValue,
+    guestNumber: guestNumberValue,
+    type: typeValue,
+    services: services ?? [],
+    selectedServiceIds,
+    serviceHoursInput,
+  });
+  const { quote, isUpdating, error: quoteError } = useProposalQuote(isBarter ? null : quoteInput);
+  const savedTotal = currentProposal?.totalAmount;
+  const saveNotice =
+    quote && quoteInput && !isBarter && savedTotal != null &&
+    Number(totalAmountValue) === savedTotal && quote.totalAmount !== savedTotal
+      ? `Ao salvar sem mudar o Total, o valor passa para ${quote.totalAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}.`
+      : null;
 
   useEffect(() => {
     const guestNumber = parseInt(guestNumberValue || "0", 10);
@@ -218,6 +247,7 @@ export default function ProposalEdit() {
           serviceIds: data.data.serviceIds,
           serviceHours,
           type: data.data.type,
+          eventCategory: eventCategoryForPayload(data.data.type, data.data.eventCategory),
           trafficSource: data.data.trafficSource,
         },
       });
@@ -440,6 +470,7 @@ export default function ProposalEdit() {
                     <FormControl>
                       <NumericFormat
                         value={field.value}
+                        valueIsNumericString
                         onValueChange={(values) => {
                           field.onChange(values.value);
                         }}
@@ -506,7 +537,10 @@ export default function ProposalEdit() {
                   <FormControl>
                     <Select
                       value={field.value}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        if (value !== ProposalType.EVENT) form.setValue("data.eventCategory", undefined);
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione" />
@@ -522,6 +556,31 @@ export default function ProposalEdit() {
                 </FormItem>
               )}
             />
+
+            {typeValue === ProposalType.EVENT && (
+              <FormField
+                control={form.control}
+                name="data.eventCategory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoria do evento:</FormLabel>
+                    <FormControl>
+                      <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EVENT_CATEGORY_OPTIONS.map((category) => (
+                            <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div>
               <FormLabel>Serviços</FormLabel>
@@ -558,6 +617,18 @@ export default function ProposalEdit() {
                 />
               )}
             </div>
+
+            <ProposalQuoteSummary
+              hasInput={!!quoteInput}
+              isBarter={isBarter}
+              quote={quote}
+              isUpdating={isUpdating}
+              error={quoteError}
+              notice={saveNotice}
+              onUseValue={(totalAmount) => {
+                form.setValue("data.totalAmountInput", String(totalAmount), { shouldDirty: true });
+              }}
+            />
 
             <FormField
               control={form.control}

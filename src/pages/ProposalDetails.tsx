@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { quotedServiceAmount, quotedServiceDetail } from "@/lib/service-price-label";
+import { proposalTypeWithCategoryLabel } from "@/lib/event-category";
 
 function ProposalDetailsSkeleton() {
   return (
@@ -167,6 +168,7 @@ export default function ProposalDetails() {
     createdAt,
     approved,
     type,
+    eventCategory,
     proposalServices = [],
   } = currentProposal;
 
@@ -239,6 +241,12 @@ export default function ProposalDetails() {
                 <span className="text-gray-500">Por onde nos conheceu:</span>{" "}
                 <span className="font-semibold text-gray-600">
                   {trafficSource || "-"}
+                </span>
+              </div>
+              <div className="w-full flex justify-between">
+                <span className="text-gray-500">Tipo do evento:</span>{" "}
+                <span className="font-semibold text-gray-600">
+                  {proposalTypeWithCategoryLabel(type, eventCategory)}
                 </span>
               </div>
               <div className="w-full flex justify-between">

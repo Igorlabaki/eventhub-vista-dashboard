@@ -10,7 +10,9 @@ import {
   ProposalByIdResponse, 
   ProposalUpdateResponse, 
   ProposalCreateResponse, 
-  ProposalDeleteResponse 
+  ProposalDeleteResponse,
+  ProposalQuote,
+  ProposalQuoteInput,
 } from '@/types/proposal';
 
 export type RecalculatePublicProposalData = {
@@ -112,6 +114,11 @@ export const proposalService = {
 
   createProposalPerDay: async (data: CreateProposalPerDayDTO) => {
     const response = await api.post<ProposalCreateResponse>('/proposal/createPerDay', data);
+    return response.data;
+  },
+
+  quoteProposal: async (data: ProposalQuoteInput) => {
+    const response = await api.post<{ success: boolean; message: string; data: ProposalQuote }>('/proposal/quote', data);
     return response.data;
   },
 

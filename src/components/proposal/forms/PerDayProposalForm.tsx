@@ -11,8 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProposalStore } from "@/store/proposalStore";
-import { ProposalType, TrafficSource, CreateProposalPerDayDTO } from "@/types/proposal";
+import { EventCategory, ProposalType, TrafficSource, CreateProposalPerDayDTO } from "@/types/proposal";
 import { PROPOSAL_TYPE_OPTIONS, TRAFFIC_SOURCE_OPTIONS } from "./constants";
+import { EVENT_CATEGORY_MESSAGE, EVENT_CATEGORY_OPTIONS, eventCategoryForPayload } from "@/lib/event-category";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
@@ -35,6 +36,7 @@ const formSchema = z.object({
   description: z.string().min(1, "Descrição é obrigatória"),
   knowsVenue: z.boolean(),
   type: z.nativeEnum(ProposalType),
+  eventCategory: z.nativeEnum(EventCategory).optional(),
   trafficSource: z.nativeEnum(TrafficSource),
   totalAmountInput: z.string().optional(),
 }).refine(
@@ -46,6 +48,9 @@ const formSchema = z.object({
 ).refine(
   (data) => data.startHour <= data.endHour,
   { message: "Horário de início não pode ser maior que o de término", path: ["endHour"] }
+).refine(
+  (data) => data.type !== ProposalType.EVENT || !!data.eventCategory,
+  { message: EVENT_CATEGORY_MESSAGE, path: ["eventCategory"] }
 );
 
 type FormValues = z.infer<typeof formSchema>;
@@ -133,6 +138,7 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
   });
 
   const guestNumberValue = form.watch("guestNumber");
+  const typeValue = form.watch("type");
   const eventHours = stayEventHours(
     form.watch("startDay") || "",
     form.watch("endDay") || "",
@@ -195,6 +201,7 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         description: values.description,
         knowsVenue: values.knowsVenue,
         type: values.type,
+        eventCategory: eventCategoryForPayload(values.type, values.eventCategory),
         trafficSource: values.trafficSource,
         venueId,
         serviceIds: selectedServiceIds,
@@ -470,7 +477,10 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
             <FormControl>
               <Select
                 value={field.value}
-                onValueChange={field.onChange}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  if (value !== ProposalType.EVENT) form.setValue("eventCategory", undefined);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
@@ -486,6 +496,31 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
           </FormItem>
         )}
       />
+
+      {typeValue === ProposalType.EVENT && (
+        <FormField
+          control={form.control}
+          name="eventCategory"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Categoria do evento</FormLabel>
+              <FormControl>
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EVENT_CATEGORY_OPTIONS.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <div>
         <FormLabel>Serviços</FormLabel>

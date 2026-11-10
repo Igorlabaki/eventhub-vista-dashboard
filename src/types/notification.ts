@@ -18,11 +18,19 @@ export interface Notification {
   isRead: boolean;
 }
 
+export interface NotificationListSummaryChange {
+  last7Days: number | null;
+  last30Days: number | null;
+  newProposals: number | null;
+}
+
 export interface NotificationListSummary {
   unread: number;
   last7Days: number;
   last30Days: number;
   newProposals: number;
+  /** Percentual inteiro contra a janela anterior de mesmo tamanho; `null` sem base. */
+  change?: NotificationListSummaryChange;
 }
 
 export interface NotificationListPagination {

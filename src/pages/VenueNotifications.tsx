@@ -96,6 +96,8 @@ export default function VenueNotifications() {
   return (
     <DashboardLayout title="Notificações" subtitle="Mantenha-se atualizado">
       <div className="space-y-4">
+        <NotificationListSummaryCards summary={summary} />
+
         <div className="rounded-3xl border bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="relative min-w-0 flex-1">
@@ -150,8 +152,6 @@ export default function VenueNotifications() {
             </Button>
           </div>
         </div>
-
-        <NotificationListSummaryCards summary={summary} />
 
         <div className="text-sm text-muted-foreground">
           {pagination?.total ?? 0} notificações
