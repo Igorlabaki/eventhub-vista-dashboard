@@ -26,7 +26,7 @@ export function PublicServiceDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto font-['Manrope',sans-serif] text-current" style={surfaceStyle}>
+      <DialogContent className="scrollbar-house max-h-[85vh] overflow-y-auto font-['Manrope',sans-serif] text-current" style={surfaceStyle}>
         <DialogTitle className="pr-6">{name}</DialogTitle>
         {photo ? (
           <img src={photo} alt="" className="h-auto w-full rounded-md" />
