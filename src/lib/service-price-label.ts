@@ -63,11 +63,12 @@ export function hourlyChoiceAmount(
     rate: number | null | undefined,
     rawHours: string,
     eventHours: number,
+    courtesyHours = 0,
 ) {
     if (typeof rate !== "number" || !Number.isFinite(rate)) return null;
     const value = rawHours.trim();
     if (!value || serviceHourFieldError(value, eventHours)) return null;
-    return rate * Number(value);
+    return rate * Math.max(Number(value) - courtesyHours, 0);
 }
 
 export function quotedServiceDetail(line: Pick<ProposalService, "amount" | "quantity" | "unitPrice" | "pricingType">) {

@@ -1,4 +1,5 @@
 import { chosenServiceHours, sameDayEventHours } from "@/lib/event-duration";
+import { chosenServiceCourtesy } from "@/lib/service-courtesy";
 import { ProposalQuoteInput, ProposalType } from "@/types/proposal";
 
 type QuoteFormValues = {
@@ -11,6 +12,7 @@ type QuoteFormValues = {
     services: { id: string; pricingType?: string | null }[];
     selectedServiceIds: string[];
     serviceHoursInput: Record<string, string>;
+    serviceCourtesyInput?: Record<string, string>;
 };
 
 export function buildQuoteInput(values: QuoteFormValues): ProposalQuoteInput | null {
@@ -31,6 +33,15 @@ export function buildQuoteInput(values: QuoteFormValues): ProposalQuoteInput | n
     );
     if (Object.keys(errors).length > 0) return null;
 
+    const courtesy = chosenServiceCourtesy({
+        services: values.services,
+        selectedIds: values.selectedServiceIds,
+        courtesyInput: values.serviceCourtesyInput ?? {},
+        hoursInput: values.serviceHoursInput,
+        guestNumber,
+    });
+    if (Object.keys(courtesy.errors).length > 0) return null;
+
     return {
         venueId,
         date,
@@ -39,6 +50,7 @@ export function buildQuoteInput(values: QuoteFormValues): ProposalQuoteInput | n
         guestNumber,
         serviceIds: values.selectedServiceIds,
         serviceHours,
+        ...(courtesy.serviceCourtesy.length > 0 ? { serviceCourtesy: courtesy.serviceCourtesy } : {}),
         type: values.type,
     };
 }

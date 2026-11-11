@@ -17,7 +17,13 @@ import {
   MonthData,
   AnalysisData,
   UpdateVenueDTO,
-  UpdateVenueInfoDTO
+  UpdateVenueInfoDTO,
+  ReportBlockParams,
+  ReportBlockResponse,
+  OccupancyData,
+  LeadTimeData,
+  ServiceAdherenceData,
+  EventProfileData,
 } from '@/types/venue';
 
 export type CreateVenueWithFileDTO = Omit<CreateVenueDTO, 'imageUrl'> & {
@@ -144,5 +150,33 @@ export const venueService = {
   getVenueTrafficCount: async ({ venueId, year, approved }: GetVenueTrafficCountParams) => {
     const response = await api.get<VenueTrafficCountResponse>(`/venue/trafficCount?venueId=${venueId}&year=${year}${approved ? `&approved=${approved}` : ''}`);
     return response.data;
-  }
+  },
+
+  getReportOccupancy: async ({ venueId, year, month }: ReportBlockParams) => {
+    const response = await api.get<ReportBlockResponse<OccupancyData>>('/venue/reports/occupancy', {
+      params: { venueId, year, month },
+    });
+    return response.data;
+  },
+
+  getReportLeadTime: async ({ venueId, year, eventCategory }: ReportBlockParams) => {
+    const response = await api.get<ReportBlockResponse<LeadTimeData>>('/venue/reports/lead-time', {
+      params: { venueId, year, eventCategory },
+    });
+    return response.data;
+  },
+
+  getReportServiceAdherence: async ({ venueId, year, eventCategory }: ReportBlockParams) => {
+    const response = await api.get<ReportBlockResponse<ServiceAdherenceData>>('/venue/reports/service-adherence', {
+      params: { venueId, year, eventCategory },
+    });
+    return response.data;
+  },
+
+  getReportEventProfile: async ({ venueId, year }: ReportBlockParams) => {
+    const response = await api.get<ReportBlockResponse<EventProfileData>>('/venue/reports/event-profile', {
+      params: { venueId, year },
+    });
+    return response.data;
+  },
 }; 

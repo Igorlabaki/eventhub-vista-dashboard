@@ -305,9 +305,15 @@ export interface TrafficSource {
   count: number;
 }
 
+export interface EventCategoryCount {
+  key: string | null;
+  count: number;
+}
+
 export interface TrafficData {
   all: number;
   sortedSources: TrafficSource[];
+  categories?: EventCategoryCount[];
 }
 
 export interface MonthData {
@@ -367,6 +373,102 @@ export interface VenueTrafficCountResponse {
   success: boolean;
   message: string;
   data: TrafficData;
+  count: number;
+  type: string;
+}
+
+export type ReportEventCategory = "CORPORATE" | "BIRTHDAY" | "BACHELOR_PARTY" | "WEDDING" | "COFFEE_BREAK" | "OTHER";
+/** `NONE` = sem categoria; ausente = todas. */
+export type ReportEventCategoryFilter = ReportEventCategory | "NONE";
+
+export interface ReportBlockParams {
+  venueId: string;
+  year: number;
+  month?: number;
+  eventCategory?: ReportEventCategoryFilter;
+}
+
+export type OccupancyGroup = "events" | "visits" | "blocks";
+export type OccupancyKey = OccupancyGroup | "total";
+
+export interface OccupancyCell {
+  weekday: number;
+  band: number;
+  events: number;
+  visits: number;
+  blocks: number;
+  total: number;
+}
+
+/** Minutos; `weekday` 0 = domingo; `band` 0 = 00–02. */
+export interface OccupancyData {
+  period: { kind: "year" | "month"; year: number; month: number | null };
+  bandHours: number;
+  cells: OccupancyCell[];
+  totals: Record<OccupancyKey, number>;
+  daysWithRecords: Record<OccupancyKey, number>;
+  occupancyRate: null;
+  availability: { defined: false; openingHour: string | null; closingHour: string | null };
+  discarded: number;
+}
+
+export type LeadTimeBucketKey = "0-7" | "8-30" | "31-90" | "90+";
+
+export interface LeadTimeData {
+  year: number;
+  eventCategory: ReportEventCategoryFilter | null;
+  created: number;
+  considered: number;
+  excluded: number;
+  approved: number;
+  medianDays: number | null;
+  buckets: {
+    key: LeadTimeBucketKey;
+    minDays: number;
+    maxDays: number | null;
+    total: number;
+    approved: number;
+    approvalRate: number | null;
+  }[];
+}
+
+export interface ServiceAdherenceItem {
+  serviceId: string;
+  name: string;
+  proposals: number;
+  adherence: number;
+  amountSum: number | null;
+  linesWithAmount: number;
+  linesTotal: number;
+}
+
+export interface ServiceAdherenceData {
+  year: number;
+  eventCategory: ReportEventCategoryFilter | null;
+  approvedProposals: number;
+  services: ServiceAdherenceItem[];
+}
+
+export type GuestBucketKey = "0-50" | "51-100" | "101-150" | "151+";
+
+export interface EventProfileData {
+  year: number;
+  events: number;
+  guestBuckets: { key: GuestBucketKey; min: number; max: number | null; count: number }[];
+  categories: { eventCategory: ReportEventCategory | null; count: number }[];
+  capacity: {
+    maxGuest: number;
+    atLeast80: number;
+    above100: number;
+    atLeast80Rate: number | null;
+    above100Rate: number | null;
+  } | null;
+}
+
+export interface ReportBlockResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
   count: number;
   type: string;
 }

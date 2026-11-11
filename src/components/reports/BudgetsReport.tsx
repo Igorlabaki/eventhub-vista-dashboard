@@ -2,6 +2,7 @@ import { useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useVenueReportsStore } from "@/store/venueReportsStore";
 import { ReportsChartCard } from "./ReportsChartCard";
+import { LeadTimeCard } from "./LeadTimeCard";
 import { alignMonths, averageMonths, ReportInput } from "./report-metrics";
 import { useAnalysisYear } from "./useAnalysisYear";
 
@@ -50,6 +51,7 @@ export function BudgetsReport({ selectedYear }: BudgetsReportProps) {
     approvedMonths: alignMonths(monthlyEventsData.analysisEventsByMonth, "count"),
     proposalMonths: alignMonths(monthlyBudgetsData.analysisProposalByMonth, "count"),
     traffic: trafficBudgetsData.sortedSources,
+    categories: trafficBudgetsData.categories,
     previousMonths: previous ? {
       count: alignMonths(previous.analysisProposalByMonth, "count"),
       approved: alignMonths(previous.analysisEventsByMonth, "count"),
@@ -58,5 +60,10 @@ export function BudgetsReport({ selectedYear }: BudgetsReportProps) {
     averageMonths: averageMonths(monthlyBudgetsData.averageByMonth, "proposals"),
   };
 
-  return <ReportsChartCard kind="orcamentos" input={input} />;
+  return (
+    <div className="space-y-4">
+      <ReportsChartCard kind="orcamentos" input={input} />
+      <LeadTimeCard venueId={venueId} year={Number(selectedYear)} />
+    </div>
+  );
 }

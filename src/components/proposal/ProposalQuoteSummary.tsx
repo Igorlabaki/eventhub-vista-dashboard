@@ -1,5 +1,8 @@
-import { Button } from "@/components/ui/button";
+import { useId } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { handleBackendError } from "@/lib/error-handler";
+import { applyDiscount, discountLabel, parseDiscountInput } from "@/lib/proposal-discount";
 import { ProposalQuote } from "@/types/proposal";
 
 interface ProposalQuoteSummaryProps {
@@ -8,7 +11,8 @@ interface ProposalQuoteSummaryProps {
   quote?: ProposalQuote;
   isUpdating: boolean;
   error: unknown;
-  onUseValue: (totalAmount: number) => void;
+  discountInput: string;
+  onDiscountChange: (value: string) => void;
   notice?: string | null;
 }
 
@@ -31,9 +35,13 @@ export function ProposalQuoteSummary({
   quote,
   isUpdating,
   error,
-  onUseValue,
+  discountInput,
+  onDiscountChange,
   notice,
 }: ProposalQuoteSummaryProps) {
+  const discountId = useId();
+  const { percent, error: discountError } = parseDiscountInput(discountInput);
+
   const renderBody = () => {
     if (isBarter) return <Row label="Total" value={brl(0)} strong />;
 
@@ -56,6 +64,9 @@ export function ProposalQuoteSummary({
 
     if (!quote) return <p className="text-sm text-gray-500">Calculando...</p>;
 
+    const discount = applyDiscount(quote.totalAmount, discountError ? 0 : percent);
+    const hasDiscount = discount.discountAmount > 0;
+
     return (
       <>
         <Row label="Espaço" value={brl(quote.basePrice)} />
@@ -66,17 +77,34 @@ export function ProposalQuoteSummary({
           />
         )}
         <Row label="Serviços" value={brl(quote.totalAmountService)} />
-        <div className="border-t pt-2">
-          <Row label="Total" value={brl(quote.totalAmount)} strong />
+        <div className="space-y-2 border-t pt-2">
+          <Row label="Total" value={brl(quote.totalAmount)} strong={!hasDiscount} />
+          {hasDiscount && (
+            <>
+              <Row label={discountLabel(discount.discountPercent)} value={`- ${brl(discount.discountAmount)}`} />
+              <Row label="Total com desconto" value={brl(discount.totalAmount)} strong />
+            </>
+          )}
         </div>
         {quote.minimumApplied && (
           <p className="text-xs text-amber-700">Preço mínimo do espaço aplicado</p>
         )}
         {notice && <p className="text-xs text-blue-700">{notice}</p>}
-        <div className="flex justify-end">
-          <Button type="button" variant="outline" size="sm" onClick={() => onUseValue(quote.totalAmount)}>
-            Usar este valor
-          </Button>
+        <div className="space-y-1">
+          <Label htmlFor={discountId}>Desconto (%)</Label>
+          <Input
+            id={discountId}
+            inputMode="decimal"
+            placeholder="0"
+            className="max-w-[8rem]"
+            value={discountInput}
+            aria-invalid={Boolean(discountError)}
+            aria-describedby={discountError ? `${discountId}-error` : undefined}
+            onChange={(event) => onDiscountChange(event.target.value)}
+          />
+          {discountError && (
+            <p id={`${discountId}-error`} className="text-xs text-red-600">{discountError}</p>
+          )}
         </div>
       </>
     );

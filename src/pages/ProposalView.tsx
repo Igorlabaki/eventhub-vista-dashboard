@@ -8,6 +8,7 @@ import { Proposal } from "@/types/proposal";
 import { eventDurationHours } from "@/lib/event-duration";
 import { wallClockDateIso, wallClockTime } from "@/lib/wall-clock-datetime";
 import { chosenHoursLabel, publicHourlyRate, quotedServiceAmount, quotedServiceDetail, sortProposalServicesByPricing } from "@/lib/service-price-label";
+import { courtesyDetail } from "@/lib/service-courtesy";
 import {
   proposalService,
   ProposalPresentation,
@@ -21,6 +22,7 @@ import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
 import { PublicServiceDetailDialog } from "@/components/proposal/forms/PublicServiceDetail";
 import { RecalculateProposalDialog } from "@/components/proposal/RecalculateProposalDialog";
 import { UpdateProposalServicesDialog } from "@/components/proposal/UpdateProposalServicesDialog";
+import { discountBreakdown } from "@/lib/proposal-discount";
 import { ProposalTourVideo } from "@/components/proposal/ProposalTourVideo";
 import {
   Dialog,
@@ -65,12 +67,18 @@ function applyPublicServices(
   const proposalServices = data.proposalServices.map((line) => {
     const existing = previous.get(line.serviceId);
     const hours = hoursById.get(line.serviceId);
+    const storedUnitPrice = typeof existing?.unitPrice === "number" ? existing.unitPrice : null;
     const hourFields = typeof hours === "number"
       ? {
           pricingType: "PER_HOUR" as const,
           quantity: hours,
-          ...(hours > 0 ? { unitPrice: line.amount / hours } : {}),
+          ...(storedUnitPrice != null
+            ? { unitPrice: storedUnitPrice }
+            : hours > 0 ? { unitPrice: (line.amount + (line.courtesyAmount ?? 0)) / hours } : {}),
         }
+      : {};
+    const courtesyFields = typeof line.courtesyQuantity === "number"
+      ? { courtesyQuantity: line.courtesyQuantity }
       : {};
     const serviceFields = {
       name: line.service.name,
@@ -81,6 +89,7 @@ function applyPublicServices(
       return {
         ...existing,
         ...hourFields,
+        ...courtesyFields,
         id: line.id,
         amount: line.amount,
         service: { ...existing.service, ...serviceFields },
@@ -93,6 +102,7 @@ function applyPublicServices(
       serviceId: line.serviceId,
       amount: line.amount,
       ...hourFields,
+      ...courtesyFields,
       joinedAt: now,
       service: {
         id: line.serviceId,
@@ -105,7 +115,13 @@ function applyPublicServices(
       },
     };
   });
-  return { ...current, totalAmount: data.totalAmount, proposalServices };
+  return {
+    ...current,
+    totalAmount: data.totalAmount,
+    discountPercent: data.discountPercent,
+    discountAmount: data.discountAmount,
+    proposalServices,
+  };
 }
 
 function hourlyRatesForChoices(
@@ -669,6 +685,7 @@ export default function ProposalView() {
   } = currentProposal;
 
   const serviceList = sortProposalServicesByPricing(proposalServices || []);
+  const discount = discountBreakdown(currentProposal);
   const durationHours = Math.round(
     (new Date(endDate).getTime() - new Date(startDate).getTime()) /
       (1000 * 60 * 60)
@@ -1064,6 +1081,7 @@ export default function ProposalView() {
                 )}
                 eventHours={eventDurationHours(new Date(startDate), new Date(endDate))}
                 loadFailed={serviceChoicesFailed}
+                discountPercent={currentProposal.discountPercent}
                 onSaved={(data, serviceHours) => {
                   const hoursById = new Map(serviceHours.map((entry) => [entry.serviceId, entry.hours]));
                   setCurrentProposal(applyPublicServices(currentProposal, data, serviceHours));
@@ -1075,6 +1093,8 @@ export default function ProposalView() {
                       ...choice,
                       selected: true,
                       amount: saved.amount,
+                      courtesyQuantity: saved.courtesyQuantity ?? choice.courtesyQuantity,
+                      courtesyAmount: saved.courtesyAmount ?? choice.courtesyAmount,
                       ...(typeof hours === "number" ? { hours } : {}),
                     };
                   }) ?? current);
@@ -1168,6 +1188,7 @@ export default function ProposalView() {
               approved={Boolean(currentProposal.approved)}
               paid={Boolean(currentProposal.paid)}
               maxGuest={house?.maxGuest}
+              discountPercent={currentProposal.discountPercent}
               onSaved={(data) => setCurrentProposal({ ...currentProposal, ...data })}
             />
             <p className={sectionLeadClass}>
@@ -1188,11 +1209,16 @@ export default function ProposalView() {
               )}
               {serviceList.map((service) => {
                 const detail = quotedServiceDetail(service);
+                const courtesy = courtesyDetail({
+                  ...service,
+                  pricingType: service.pricingType ?? service.service?.pricingType,
+                });
                 return (
                   <div className="flex items-baseline justify-between gap-4" key={service.id}>
                     <span>
                       {service.service?.name || "Serviço"}
                       {detail ? <span className="mt-0.5 block text-xs font-normal opacity-70">{detail}</span> : null}
+                      {courtesy ? <span className="mt-0.5 block text-xs font-normal opacity-70">{courtesy}</span> : null}
                     </span>
                     <span className="text-base font-medium tabular-nums">{formatCurrency(quotedServiceAmount(service))}</span>
                   </div>
@@ -1200,6 +1226,18 @@ export default function ProposalView() {
               })}
             </div>
             <div className="mt-5 border-t border-current/15 pt-5">
+              {discount && (
+                <div className="mb-4 space-y-2">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span>Subtotal</span>
+                    <span className="text-base font-medium tabular-nums">{formatCurrency(discount.subtotal)}</span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span>{discount.label}</span>
+                    <span className="text-base font-medium tabular-nums">- {formatCurrency(discount.amount)}</span>
+                  </div>
+                </div>
+              )}
               <p className="text-[15px] font-medium">Investimento total</p>
               <p className="mt-1 text-[30px] font-extrabold leading-none tracking-[-0.04em] tabular-nums">
                 {formatCurrency(totalAmount)}

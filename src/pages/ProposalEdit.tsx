@@ -41,8 +41,10 @@ import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
 import { wallClockDateIso, wallClockTime } from "@/lib/wall-clock-datetime";
 import { buildQuoteInput } from "@/lib/proposal-quote-input";
+import { chosenServiceCourtesy, courtesyInputFromLines, wholeGuestNumber, withoutKey } from "@/lib/service-courtesy";
 import { useProposalQuote } from "@/hooks/proposal/queries/quote";
 import { ProposalQuoteSummary } from "@/components/proposal/ProposalQuoteSummary";
+import { applyDiscount, formatDiscountPercent, parseDiscountInput } from "@/lib/proposal-discount";
 
 const proposalTypes = [
   { value: ProposalType.EVENT, label: "Evento" },
@@ -96,6 +98,9 @@ export default function ProposalEdit() {
   const { services, fetchServices, isLoading: isLoadingServices } = useServiceStore();
   const [serviceHoursInput, setServiceHoursInput] = useState<Record<string, string>>({});
   const [serviceHourErrors, setServiceHourErrors] = useState<Record<string, string>>({});
+  const [serviceCourtesyInput, setServiceCourtesyInput] = useState<Record<string, string>>({});
+  const [discountInput, setDiscountInput] = useState("");
+  const [discountTouched, setDiscountTouched] = useState(false);
   const { selectedVenue } = useVenueStore();
   const form = useForm<EditProposalFormValues>({
     resolver: zodResolver(editProposalSchema),
@@ -157,6 +162,10 @@ export default function ProposalEdit() {
       }
       setServiceHoursInput(hours);
       setServiceHourErrors({});
+      setServiceCourtesyInput(courtesyInputFromLines(currentProposal.proposalServices || []));
+      const savedPercent = currentProposal.discountPercent ?? 0;
+      setDiscountInput(savedPercent > 0 ? formatDiscountPercent(savedPercent) : "");
+      setDiscountTouched(savedPercent > 0);
     }
   }, [currentProposal, form]);
 
@@ -185,14 +194,31 @@ export default function ProposalEdit() {
     services: services ?? [],
     selectedServiceIds,
     serviceHoursInput,
+    serviceCourtesyInput,
   });
   const { quote, isUpdating, error: quoteError } = useProposalQuote(isBarter ? null : quoteInput);
+  const courtesy = chosenServiceCourtesy({
+    services: services ?? [],
+    selectedIds: selectedServiceIds,
+    courtesyInput: serviceCourtesyInput,
+    hoursInput: serviceHoursInput,
+    guestNumber: wholeGuestNumber(guestNumberValue),
+  });
+  const discount = parseDiscountInput(discountInput);
+  const discountedTotal = quote && quoteInput && !isBarter && !discount.error
+    ? applyDiscount(quote.totalAmount, discount.percent).totalAmount
+    : null;
   const savedTotal = currentProposal?.totalAmount;
   const saveNotice =
-    quote && quoteInput && !isBarter && savedTotal != null &&
-    Number(totalAmountValue) === savedTotal && quote.totalAmount !== savedTotal
-      ? `Ao salvar sem mudar o Total, o valor passa para ${quote.totalAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}.`
+    discountedTotal !== null && savedTotal != null &&
+    Number(totalAmountValue) === savedTotal && discountedTotal !== savedTotal
+      ? `Ao salvar sem mudar o Total, o valor passa para ${discountedTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}.`
       : null;
+
+  useEffect(() => {
+    if (!discountTouched || discountedTotal === null) return;
+    form.setValue("data.totalAmountInput", String(discountedTotal), { shouldDirty: true });
+  }, [discountTouched, discountedTotal, form]);
 
   useEffect(() => {
     const guestNumber = parseInt(guestNumberValue || "0", 10);
@@ -227,6 +253,8 @@ export default function ProposalEdit() {
       setServiceHourErrors(hourErrors);
       return;
     }
+    if (Object.keys(courtesy.errors).length > 0) return;
+    if (!isBarter && discount.error) return;
 
     try {
       const response = await updateProposalPerPerson({
@@ -244,8 +272,10 @@ export default function ProposalEdit() {
           knowsVenue: data.data.knowsVenue,
           email: data.data.email.trim() === "" ? null : data.data.email.trim(),
           totalAmountInput: data.data.totalAmountInput,
+          discountPercent: isBarter ? 0 : discount.percent,
           serviceIds: data.data.serviceIds,
           serviceHours,
+          ...(courtesy.serviceCourtesy.length > 0 ? { serviceCourtesy: courtesy.serviceCourtesy } : {}),
           type: data.data.type,
           eventCategory: eventCategoryForPayload(data.data.type, data.data.eventCategory),
           trafficSource: data.data.trafficSource,
@@ -471,8 +501,12 @@ export default function ProposalEdit() {
                       <NumericFormat
                         value={field.value}
                         valueIsNumericString
-                        onValueChange={(values) => {
+                        onValueChange={(values, sourceInfo) => {
                           field.onChange(values.value);
+                          if (sourceInfo.source === "event") {
+                            setDiscountInput("");
+                            setDiscountTouched(false);
+                          }
                         }}
                         thousandSeparator="."
                         decimalSeparator=","
@@ -593,6 +627,8 @@ export default function ProposalEdit() {
                   selectedIds={selectedServiceIds}
                   hoursInput={serviceHoursInput}
                   hourErrors={serviceHourErrors}
+                  courtesyInput={serviceCourtesyInput}
+                  courtesyErrors={courtesy.errors}
                   onToggle={(serviceId, checked) => {
                     const current = form.getValues("data.serviceIds");
                     if (checked) {
@@ -610,9 +646,13 @@ export default function ProposalEdit() {
                       delete next[serviceId];
                       return next;
                     });
+                    setServiceCourtesyInput((currentCourtesy) => withoutKey(currentCourtesy, serviceId));
                   }}
                   onHoursChange={(serviceId, value) => {
                     setServiceHoursInput((currentHours) => ({ ...currentHours, [serviceId]: value }));
+                  }}
+                  onCourtesyChange={(serviceId, value) => {
+                    setServiceCourtesyInput((currentCourtesy) => ({ ...currentCourtesy, [serviceId]: value }));
                   }}
                 />
               )}
@@ -625,8 +665,10 @@ export default function ProposalEdit() {
               isUpdating={isUpdating}
               error={quoteError}
               notice={saveNotice}
-              onUseValue={(totalAmount) => {
-                form.setValue("data.totalAmountInput", String(totalAmount), { shouldDirty: true });
+              discountInput={discountInput}
+              onDiscountChange={(value) => {
+                setDiscountInput(value);
+                setDiscountTouched(true);
               }}
             />
 

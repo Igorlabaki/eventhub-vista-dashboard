@@ -52,4 +52,14 @@ describe("entrada da cotacao do orcamento", () => {
             { serviceId: "led", hours: 3 },
         ]);
     });
+
+    it("leva a cortesia preenchida e espera ela ser valida", () => {
+        const withLed = { ...filled, selectedServiceIds: ["limpeza", "led"], serviceHoursInput: { led: "3" } };
+        expect(buildQuoteInput({ ...withLed, serviceCourtesyInput: { led: "2", limpeza: "1" } })?.serviceCourtesy).toEqual([
+            { serviceId: "limpeza", quantity: 1 },
+            { serviceId: "led", quantity: 2 },
+        ]);
+        expect(buildQuoteInput({ ...withLed, serviceCourtesyInput: { led: "4" } })).toBeNull();
+        expect(buildQuoteInput({ ...withLed, serviceCourtesyInput: { led: "0" } })).not.toHaveProperty("serviceCourtesy");
+    });
 });

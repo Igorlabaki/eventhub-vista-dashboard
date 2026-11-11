@@ -6,6 +6,12 @@ import React from "react";
 import { useVenueStore } from "@/store/venueStore";
 import { wallClockDateBr, wallClockTime } from "@/lib/wall-clock-datetime";
 import { quotedServiceAmount, quotedServiceDetail } from "@/lib/service-price-label";
+import { courtesyDetail } from "@/lib/service-courtesy";
+import { discountBreakdown } from "@/lib/proposal-discount";
+
+function brl(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 
 interface ProposalService {
   service?: {
@@ -34,7 +40,9 @@ export function ProposalServicesSummary({
       name: ps.service?.name,
       price: quotedServiceAmount(ps),
       detail: quotedServiceDetail(ps),
+      courtesy: courtesyDetail({ ...ps, pricingType: ps.pricingType ?? ps.service?.pricingType }),
     })) || [];
+  const discount = discountBreakdown(currentProposal);
 
   return (
     <div className="rounded-xl p-6  bg-white shadow-md w-full  mx-auto">
@@ -110,7 +118,10 @@ export function ProposalServicesSummary({
               )}
             {(servicosAdicionais || []).map((serv, idx) => (
               <div className="flex justify-between  text-gray-600" key={idx}>
-                <span>{serv.name}{serv.detail ? ` (${serv.detail})` : ""}</span>
+                <span>
+                  {serv.name}{serv.detail ? ` (${serv.detail})` : ""}
+                  {serv.courtesy && <span className="block text-sm text-gray-500">{serv.courtesy}</span>}
+                </span>
                 <span className="font-medium">
                   {serv.price?.toLocaleString("pt-BR", {
                     style: "currency",
@@ -119,6 +130,18 @@ export function ProposalServicesSummary({
                 </span>
               </div>
             ))}
+            {discount && (
+              <>
+                <div className="flex justify-between mt-4 text-gray-600">
+                  <span>Subtotal</span>
+                  <span className="font-medium">{brl(discount.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>{discount.label}</span>
+                  <span className="font-medium">- {brl(discount.amount)}</span>
+                </div>
+              </>
+            )}
             <div className="flex justify-between mt-4 text-lg ">
               <span className="font-bold text-gray-600">Total:</span>
               <span className="font-bold text-gray-600">

@@ -46,11 +46,13 @@ export const useVenueReportsStore = create<VenueReportsStore>((set, get) => ({
   },
   trafficEventsData: {
     all: 0,
-    sortedSources: []
+    sortedSources: [],
+    categories: []
   },
   trafficBudgetsData: {
     all: 0,
-    sortedSources: []
+    sortedSources: [],
+    categories: []
   },
   analyticsData: {
     total: { count: 0, total: 0, guestNumber: 0 },

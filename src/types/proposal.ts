@@ -75,6 +75,8 @@ export interface Proposal {
   extraHoursQty: number;
   extraHourPrice: number;
   totalAmount: number;
+  discountPercent?: number;
+  discountAmount?: number;
   termsAccepted: boolean;
   approved: boolean;
   status?: "ABERTO" | "FECHADO";
@@ -97,6 +99,11 @@ export interface Proposal {
   owners: Owner[];
 }
 
+export interface ServiceCourtesyInput {
+  serviceId: string;
+  quantity: number;
+}
+
 export interface ProposalService {
   id: string;
   proposalId: string;
@@ -105,6 +112,7 @@ export interface ProposalService {
   pricingType?: ServicePricingType | null;
   unitPrice?: number | null;
   quantity?: number | null;
+  courtesyQuantity?: number | null;
   amount?: number | null;
   joinedAt: Date;
   service?: Service;
@@ -125,7 +133,9 @@ export interface CreateProposalPerPersonDTO {
   userId?: string;
   serviceIds: string[];
   serviceHours?: { serviceId: string; hours: number }[];
+  serviceCourtesy?: ServiceCourtesyInput[];
   totalAmountInput?: string;
+  discountPercent?: number;
   type: ProposalType;
   eventCategory?: EventCategory | null;
   trafficSource: TrafficSource;
@@ -139,6 +149,7 @@ export interface ProposalQuoteInput {
   guestNumber: number;
   serviceIds: string[];
   serviceHours: { serviceId: string; hours: number }[];
+  serviceCourtesy?: ServiceCourtesyInput[];
   type: ProposalType;
 }
 
@@ -166,6 +177,7 @@ export interface CreateProposalPerDayDTO {
   userId?: string;
   serviceIds: string[];
   serviceHours?: { serviceId: string; hours: number }[];
+  serviceCourtesy?: ServiceCourtesyInput[];
   totalAmountInput?: string;
   type: ProposalType;
   eventCategory?: EventCategory | null;
@@ -209,6 +221,8 @@ export interface UpdateProposalPerDayDTO {
     totalAmountInput: string;
     userId?: string;
     serviceIds: string[];
+    serviceHours?: { serviceId: string; hours: number }[];
+    serviceCourtesy?: ServiceCourtesyInput[];
     type: ProposalType;
     eventCategory?: EventCategory | null;
     trafficSource: TrafficSource;
@@ -231,9 +245,11 @@ export interface UpdateProposalPerPersonDTO {
     knowsVenue: boolean;
     email: string | null;
     totalAmountInput: string;
+    discountPercent?: number;
     userId?: string;
     serviceIds: string[];
     serviceHours?: { serviceId: string; hours: number }[];
+    serviceCourtesy?: ServiceCourtesyInput[];
     type: ProposalType;
     eventCategory?: EventCategory | null;
     trafficSource: TrafficSource;

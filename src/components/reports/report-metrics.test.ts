@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { averageMonths, buildReportModel, YearTotals } from "./report-metrics";
+import { averageMonths, buildCategorySlices, buildReportModel, YearTotals } from "./report-metrics";
 
 const months = [291, 187, 211, 189, 169, 158, 108, 156, 150, 201, 245, 340];
 
@@ -158,5 +158,60 @@ describe("relatorio anual no formato da referencia", () => {
     expect(report.chartSubtitle).toBe("Evolução mensal de eventos em 2026");
     expect(report.quantityToggle).toBe("Eventos");
     expect(report.leadsSubtitle).toBe("Canais de entrada dos eventos");
+    expect(report.categoriesSubtitle).toBe("Eventos de 2026 por categoria do evento");
+    expect(report.categoriesNoun).toBe("eventos");
+  });
+});
+
+describe("distribuicao por categoria do evento", () => {
+  it("ordena da maior para a menor, tira categoria zerada e nomeia o sem categoria", () => {
+    const slices = buildCategorySlices([
+      { key: "CORPORATE", count: 10 },
+      { key: "BIRTHDAY", count: 31 },
+      { key: "WEDDING", count: 0 },
+      { key: null, count: 40 },
+    ]);
+
+    expect(slices.map((slice) => slice.name)).toEqual(["Sem categoria", "Aniversário", "Empresarial / confraternização"]);
+    expect(slices.map((slice) => slice.value)).toEqual([40, 31, 10]);
+  });
+
+  it("percentuais somam 100 mesmo com arredondamento", () => {
+    const slices = buildCategorySlices([
+      { key: "CORPORATE", count: 1 },
+      { key: "BIRTHDAY", count: 1 },
+      { key: "WEDDING", count: 1 },
+    ]);
+
+    expect(slices.map((slice) => slice.percent).sort()).toEqual([33, 33, 34]);
+    expect(slices.reduce((sum, slice) => sum + slice.percent, 0)).toBe(100);
+  });
+
+  it("uma categoria so fica com 100%", () => {
+    expect(buildCategorySlices([{ key: "WEDDING", count: 7 }])).toEqual([
+      expect.objectContaining({ name: "Casamento", value: 7, percent: 100 }),
+    ]);
+  });
+
+  it("valor desconhecido soma em Outro", () => {
+    const slices = buildCategorySlices([
+      { key: "OTHER", count: 2 },
+      { key: "FESTA", count: 3 },
+    ]);
+
+    expect(slices).toEqual([expect.objectContaining({ name: "Outro", value: 5, percent: 100 })]);
+  });
+
+  it("sem dado nao gera fatia e o total do modelo fica zero", () => {
+    expect(buildCategorySlices(undefined)).toEqual([]);
+    expect(buildCategorySlices([{ key: null, count: 0 }])).toEqual([]);
+    expect(model().categoriesTotal).toBe(0);
+  });
+
+  it("total da rosca e a soma das categorias", () => {
+    const report = model({ categories: [{ key: "BIRTHDAY", count: 3 }, { key: null, count: 2 }] });
+
+    expect(report.categoriesTotal).toBe(5);
+    expect(report.categoriesSubtitle).toBe("Orçamentos de 2026 por categoria do evento");
   });
 });

@@ -3,6 +3,8 @@ import axios from "axios";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { SERVICE_HOURS_MESSAGE, serviceHourFieldError } from "@/lib/event-duration";
 import { hourlyChoiceAmount } from "@/lib/service-price-label";
+import { courtesyLabel } from "@/lib/service-courtesy";
+import { discountRemovedNotice } from "@/lib/proposal-discount";
 import { proposalService, PublicServiceChoice } from "@/services/proposal.service";
 
 const CONFIRMED_MESSAGE = "Este orçamento já foi confirmado e não pode ser alterado.";
@@ -18,6 +20,7 @@ type UpdateProposalServicesDialogProps = {
   hourlyRates?: Record<string, number>;
   eventHours: number;
   loadFailed: boolean;
+  discountPercent?: number;
   onSaved: (
     data: Awaited<ReturnType<typeof proposalService.updatePublicProposalServices>>["data"],
     serviceHours: { serviceId: string; hours: number }[],
@@ -32,6 +35,21 @@ function requiredText(minPeople: number | null) {
   if (minPeople == null) return "Obrigatório.";
   if (minPeople === 1) return "Obrigatório a partir de 1 pessoa.";
   return `Obrigatório a partir de ${minPeople} pessoas.`;
+}
+
+function appliedCourtesyHours(choice: PublicServiceChoice, rawHours: string) {
+  const courtesy = choice.courtesyQuantity ?? 0;
+  const hours = Number(rawHours.trim());
+  if (!Number.isInteger(hours) || hours < 1) return courtesy;
+  return Math.min(courtesy, hours);
+}
+
+function courtesyNote(choice: PublicServiceChoice, rate: number | undefined, rawHours: string) {
+  if ((choice.courtesyQuantity ?? 0) <= 0) return null;
+  if (!choice.hourly) return courtesyLabel({ courtesyQuantity: choice.courtesyQuantity }, choice.courtesyAmount ?? 0);
+  const hours = appliedCourtesyHours(choice, rawHours);
+  const amount = typeof rate === "number" ? rate * hours : choice.courtesyAmount ?? 0;
+  return courtesyLabel({ pricingType: "PER_HOUR", courtesyQuantity: hours }, amount);
 }
 
 function messageFrom(error: unknown) {
@@ -52,8 +70,10 @@ export function UpdateProposalServicesDialog({
   hourlyRates,
   eventHours,
   loadFailed,
+  discountPercent,
   onSaved,
 }: UpdateProposalServicesDialogProps) {
+  const discountNotice = discountRemovedNotice(discountPercent);
   const [selected, setSelected] = useState<string[]>([]);
   const [hoursInput, setHoursInput] = useState<Record<string, string>>({});
   const [hourErrors, setHourErrors] = useState<Record<string, string>>({});
@@ -129,6 +149,7 @@ export function UpdateProposalServicesDialog({
         <DialogDescription id="update-proposal-services-description">
           Marque os serviços deste evento. O valor é atualizado ao confirmar.
         </DialogDescription>
+        {discountNotice && !blocked && <p className="text-sm text-amber-700">{discountNotice}</p>}
         {blocked && <p role="alert" className="text-sm text-red-600">{blocked}</p>}
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
         <div className="mt-2 flex max-h-80 flex-col gap-3 overflow-y-auto">
@@ -138,11 +159,13 @@ export function UpdateProposalServicesDialog({
           {choices.map((choice) => {
             const checked = choice.required || selected.includes(choice.id);
             const asksHours = Boolean(choice.hourly) && checked;
+            const rawHours = hoursInput[choice.id] ?? "";
             const shownAmount = choice.hourly
               ? (asksHours
-                ? hourlyChoiceAmount(hourlyRates?.[choice.id], hoursInput[choice.id] ?? "", eventHours)
+                ? hourlyChoiceAmount(hourlyRates?.[choice.id], rawHours, eventHours, appliedCourtesyHours(choice, rawHours))
                 : null)
               : choice.amount;
+            const courtesy = checked ? courtesyNote(choice, hourlyRates?.[choice.id], rawHours) : null;
             return (
               <div key={choice.id} className="flex items-center justify-between gap-3">
               <label className="flex min-w-0 flex-1 items-start gap-2">
@@ -180,6 +203,7 @@ export function UpdateProposalServicesDialog({
                   {choice.required && (
                     <span className="mt-1 block text-xs opacity-70">{requiredText(choice.minPeople)}</span>
                   )}
+                  {courtesy && <span className="mt-1 block text-xs opacity-70">{courtesy}</span>}
                 </span>
               </label>
               {asksHours && (

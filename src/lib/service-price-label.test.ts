@@ -61,6 +61,11 @@ describe("total do servico por hora no modal", () => {
         expect(hourlyChoiceAmount(1500, "1", 8)).toBe(1500);
     });
 
+    it("desconta as horas de cortesia da previa", () => {
+        expect(hourlyChoiceAmount(50, "6", 8, 2)).toBe(200);
+        expect(hourlyChoiceAmount(50, "2", 8, 2)).toBe(0);
+    });
+
     it("nao inventa total com hora vazia, invalida ou alem do evento", () => {
         expect(hourlyChoiceAmount(1500, "", 8)).toBeNull();
         expect(hourlyChoiceAmount(1500, "4h", 8)).toBeNull();

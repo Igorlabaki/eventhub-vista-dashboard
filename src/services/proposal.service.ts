@@ -24,6 +24,8 @@ export type RecalculatePublicProposalData = {
   extraHoursQty: number;
   extraHourPrice: number;
   totalAmount: number;
+  discountPercent: number;
+  discountAmount: number;
 };
 
 export type PublicServiceChoice = {
@@ -35,6 +37,8 @@ export type PublicServiceChoice = {
   selected: boolean;
   hourly?: boolean;
   hours?: number | null;
+  courtesyQuantity?: number;
+  courtesyAmount?: number;
 };
 
 export type PublicIndication = {
@@ -55,10 +59,14 @@ export type PublicIndication = {
 export type PublicProposalServicesUpdate = {
   id: string;
   totalAmount: number;
+  discountPercent: number;
+  discountAmount: number;
   proposalServices: {
     id: string;
     serviceId: string;
     amount: number;
+    courtesyQuantity?: number;
+    courtesyAmount?: number;
     service: {
       name: string;
       rpaRequired: boolean;

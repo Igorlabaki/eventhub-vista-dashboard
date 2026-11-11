@@ -1,4 +1,5 @@
-import { AverageMonthData, TrafficSource } from "@/types/venue";
+import { AverageMonthData, EventCategoryCount, TrafficSource } from "@/types/venue";
+import { EVENT_CATEGORY_OPTIONS } from "@/lib/event-category";
 
 export const REPORT_MONTHS = [
   "jan.", "fev.", "mar.", "abr.", "mai.", "jun.",
@@ -19,6 +20,27 @@ export const TRAFFIC_SOURCES = [
   { name: "Airbnb", key: "airbnb", color: "#F75C9C", social: false },
   { name: "Facebook", key: "facebook", color: "#3B5998", social: true },
 ] as const;
+
+export const UNCATEGORIZED_LABEL = "Sem categoria";
+
+const CATEGORY_COLORS: Record<string, string> = {
+  CORPORATE: "#6d5ef5",
+  BIRTHDAY: "#E94F4A",
+  BACHELOR_PARTY: "#F75C9C",
+  WEDDING: "#3ED6C5",
+  COFFEE_BREAK: "#f59e0b",
+  OTHER: "#3A6DF0",
+};
+
+const UNCATEGORIZED_COLOR = "#cbd5e1";
+
+export interface CategorySlice {
+  key: string | null;
+  name: string;
+  value: number;
+  percent: number;
+  color: string;
+}
 
 export type ReportKind = "orcamentos" | "eventos";
 export type DeltaTone = "up" | "down" | "flat" | "none";
@@ -61,6 +83,7 @@ export interface ReportInput {
   approvedMonths: number[];
   proposalMonths: number[];
   traffic: TrafficSource[];
+  categories?: EventCategoryCount[];
   previousMonths?: PreviousMonths | null;
   averageMonths?: AverageMonths | null;
 }
@@ -93,6 +116,10 @@ export interface ReportModel {
   averageQuantitySeries: number[] | null;
   averageConversionSeries: number[] | null;
   traffic: Array<{ name: string; value: number; percent: number; color: string }>;
+  categories: CategorySlice[];
+  categoriesTotal: number;
+  categoriesNoun: string;
+  categoriesSubtitle: string;
   bestMonth: string | null;
   participationLabel: string;
   participation: string | null;
@@ -118,6 +145,47 @@ export function averageMonths(
     return found ? found[key] || 0 : 0;
   });
   return { count: pick(countKey), rate: pick("rate") };
+}
+
+/** Maior resto: os percentuais inteiros sempre somam 100. */
+function wholePercents(values: number[]): number[] {
+  const total = values.reduce((sum, value) => sum + value, 0);
+  if (total <= 0) return values.map(() => 0);
+  const raw = values.map((value) => (value / total) * 100);
+  const result = raw.map(Math.floor);
+  let left = 100 - result.reduce((sum, value) => sum + value, 0);
+  raw
+    .map((value, index) => ({ index, rest: value - result[index] }))
+    .sort((a, b) => b.rest - a.rest)
+    .forEach(({ index }) => {
+      if (left <= 0) return;
+      result[index] += 1;
+      left -= 1;
+    });
+  return result;
+}
+
+/** Categorias com quantidade no ano, da maior para a menor; valor desconhecido soma em `Outro`. */
+export function buildCategorySlices(counts: EventCategoryCount[] | undefined): CategorySlice[] {
+  const totals = new Map<string | null, number>();
+  (counts ?? []).forEach(({ key, count }) => {
+    const known = key === null || EVENT_CATEGORY_OPTIONS.some((option) => option.value === key);
+    const slot = known ? key : "OTHER";
+    totals.set(slot, (totals.get(slot) ?? 0) + (count || 0));
+  });
+  const entries = [
+    ...EVENT_CATEGORY_OPTIONS.map((option) => ({
+      key: option.value as string | null,
+      name: option.label,
+      color: CATEGORY_COLORS[option.value],
+    })),
+    { key: null, name: UNCATEGORIZED_LABEL, color: UNCATEGORIZED_COLOR },
+  ]
+    .map((entry) => ({ ...entry, value: totals.get(entry.key) ?? 0 }))
+    .filter((entry) => entry.value > 0)
+    .sort((a, b) => b.value - a.value);
+  const percents = wholePercents(entries.map((entry) => entry.value));
+  return entries.map((entry, index) => ({ ...entry, percent: percents[index] }));
 }
 
 function pad(values: number[]): number[] {
@@ -197,6 +265,8 @@ export function buildReportModel(input: ReportInput): ReportModel {
     return { name: source.name, value, percent, color: source.color, social: source.social };
   }).sort((a, b) => b.value - a.value);
 
+  const categories = buildCategorySlices(input.categories);
+
   const monthTotal = countMonths.reduce((sum, value) => sum + value, 0);
   let bestIndex = -1;
   countMonths.forEach((value, index) => {
@@ -260,6 +330,10 @@ export function buildReportModel(input: ReportInput): ReportModel {
     averageQuantitySeries: input.averageMonths ? pad(input.averageMonths.count) : null,
     averageConversionSeries: input.averageMonths ? pad(input.averageMonths.rate) : null,
     traffic: traffic.map(({ name, value, percent, color }) => ({ name, value, percent, color })),
+    categories,
+    categoriesTotal: categories.reduce((sum, slice) => sum + slice.value, 0),
+    categoriesNoun: noun,
+    categoriesSubtitle: `${input.kind === "orcamentos" ? "Orçamentos" : "Eventos"} de ${input.year} por categoria do evento`,
     bestMonth: bestIndex >= 0 ? MONTH_NAMES[bestIndex] : null,
     participationLabel: bestIndex >= 0 ? `Participação de ${MONTH_NAMES[bestIndex].toLowerCase()}` : "Participação do mês",
     participation: bestIndex >= 0 && monthTotal > 0 ? `${Math.round((countMonths[bestIndex] / monthTotal) * 100)}%` : null,

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Area, AreaChart, Bar, CartesianGrid, ComposedChart, LabelList, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Calendar, CreditCard, Instagram, Layers, Lightbulb, Percent, Trophy, Users } from "lucide-react";
-import { REPORT_MONTHS, ReportDelta, ReportKind, ReportModel, buildReportModel, ReportInput } from "./report-metrics";
+import { Area, AreaChart, Bar, CartesianGrid, Cell, ComposedChart, LabelList, Line, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Calendar, CreditCard, Instagram, Layers, Lightbulb, Percent, PieChart as PieChartIcon, Trophy, Users } from "lucide-react";
+import { REPORT_MONTHS, CategorySlice, ReportDelta, ReportKind, ReportModel, buildReportModel, ReportInput } from "./report-metrics";
 import { SeriesToggle, panelEnter } from "./SlidingSelection";
 
 const ICONS = {
@@ -224,6 +224,78 @@ function LeadBars({ model }: { model: ReportModel }) {
   );
 }
 
+function CategoryDonut({ model }: { model: ReportModel }) {
+  const slices = model.categories;
+  const total = model.categoriesTotal;
+  return (
+    <section className="rounded-2xl border bg-white p-5 shadow-sm">
+      <div className="mb-5 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
+          <PieChartIcon className="h-5 w-5" aria-hidden />
+        </div>
+        <div>
+          <h2 className="text-base font-semibold text-slate-800">Categorias dos eventos</h2>
+          <p className="text-sm text-slate-500">{model.categoriesSubtitle}</p>
+        </div>
+      </div>
+      {total === 0 ? (
+        <p className="py-10 text-center text-sm text-slate-500">Nenhum registro neste ano.</p>
+      ) : (
+        <div className="flex flex-col items-center gap-6 md:flex-row">
+          <div
+            className="relative h-56 w-56 shrink-0"
+            role="img"
+            aria-label={`Distribuição de ${total} ${model.categoriesNoun} por categoria`}
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={slices}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius="62%"
+                  outerRadius="100%"
+                  paddingAngle={slices.length > 1 ? 2 : 0}
+                  stroke="none"
+                  isAnimationActive={false}
+                >
+                  {slices.map((slice) => (
+                    <Cell key={slice.name} fill={slice.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number, name: string, item: { payload?: CategorySlice }) => [
+                    `${value} (${item.payload?.percent ?? 0}%)`,
+                    name,
+                  ]}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-2xl font-semibold tracking-tight text-slate-900">{total}</span>
+              <span className="text-xs text-slate-500">{model.categoriesNoun}</span>
+            </div>
+          </div>
+          <ul className="w-full flex-1 space-y-2">
+            {slices.map((slice) => (
+              <li key={slice.name} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2">
+                <span className="flex min-w-0 items-center gap-2 text-sm text-slate-600">
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: slice.color }} aria-hidden />
+                  {slice.name}
+                </span>
+                <span className="shrink-0 text-sm">
+                  <span className="font-semibold text-slate-800">{slice.value}</span>
+                  <span className="text-slate-400"> · {slice.percent}%</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function Insight({ icon, label, value, valueClass }: { icon: JSX.Element; label: string; value: string; valueClass: string }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3">
@@ -284,6 +356,7 @@ export function ReportsChartCard({ kind, input }: { kind: ReportKind; input: Rep
           </div>
         </section>
       </div>
+      <CategoryDonut model={model} />
     </div>
   );
 }

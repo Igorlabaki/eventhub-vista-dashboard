@@ -64,4 +64,36 @@ describe("tela do relatorio anual", () => {
     expect(html).toContain("jan. 291, 2025 250, média dos anos 187,3");
     expect(html).toContain("fev. 187, 2025 0, média dos anos 0");
   });
+
+  it("mostra a rosca das categorias com total, legenda e sem categoria", () => {
+    const html = renderToStaticMarkup(
+      <ReportsChartCard
+        kind="orcamentos"
+        input={{
+          ...input,
+          categories: [
+            { key: "BIRTHDAY", count: 31 },
+            { key: "CORPORATE", count: 9 },
+            { key: null, count: 60 },
+          ],
+        }}
+      />,
+    );
+
+    expect(html).toContain("Categorias dos eventos");
+    expect(html).toContain("Orçamentos de 2026 por categoria do evento");
+    expect(html).toContain("Distribuição de 100 orçamentos por categoria");
+    expect(html).toContain("Sem categoria");
+    expect(html).toContain("Aniversário");
+    expect(html).toContain("Empresarial / confraternização");
+    expect(html).toContain(" · 31%");
+    expect(html).not.toContain("Casamento");
+  });
+
+  it("mostra estado vazio da rosca sem propostas no ano", () => {
+    const html = renderToStaticMarkup(<ReportsChartCard kind="eventos" input={{ ...input, categories: [] }} />);
+
+    expect(html).toContain("Categorias dos eventos");
+    expect(html).toContain("Nenhum registro neste ano.");
+  });
 });

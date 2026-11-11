@@ -3,8 +3,10 @@ import { DashboardServiceChoices } from "@/components/proposal/DashboardServiceC
 import { requiredServiceIds } from "@/lib/required-service-ids";
 import { perPersonLabel } from "@/lib/per-person-amount";
 import { buildQuoteInput } from "@/lib/proposal-quote-input";
+import { chosenServiceCourtesy, wholeGuestNumber, withoutKey } from "@/lib/service-courtesy";
 import { useProposalQuote } from "@/hooks/proposal/queries/quote";
 import { ProposalQuoteSummary } from "@/components/proposal/ProposalQuoteSummary";
+import { applyDiscount, parseDiscountInput } from "@/lib/proposal-discount";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -126,6 +128,9 @@ export function PerPersonProposalForm({
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [serviceHoursInput, setServiceHoursInput] = useState<Record<string, string>>({});
   const [serviceHourErrors, setServiceHourErrors] = useState<Record<string, string>>({});
+  const [serviceCourtesyInput, setServiceCourtesyInput] = useState<Record<string, string>>({});
+  const [discountInput, setDiscountInput] = useState("");
+  const [discountTouched, setDiscountTouched] = useState(false);
   const { toast } = useToast();
 
   // Criar schema dinâmico baseado no selectedVenue
@@ -199,8 +204,25 @@ export function PerPersonProposalForm({
     services: services ?? [],
     selectedServiceIds,
     serviceHoursInput,
+    serviceCourtesyInput,
   });
   const { quote, isUpdating, error: quoteError } = useProposalQuote(isBarter ? null : quoteInput);
+  const courtesy = chosenServiceCourtesy({
+    services: services ?? [],
+    selectedIds: selectedServiceIds,
+    courtesyInput: serviceCourtesyInput,
+    hoursInput: serviceHoursInput,
+    guestNumber: wholeGuestNumber(guestNumberValue),
+  });
+  const discount = parseDiscountInput(discountInput);
+  const discountedTotal = quote && quoteInput && !isBarter && !discount.error
+    ? applyDiscount(quote.totalAmount, discount.percent).totalAmount
+    : null;
+
+  useEffect(() => {
+    if (!discountTouched || discountedTotal === null) return;
+    form.setValue("totalAmountInput", String(discountedTotal), { shouldDirty: true });
+  }, [discountTouched, discountedTotal, form]);
 
   useEffect(() => {
     const guestNumber = parseInt(guestNumberValue || "0", 10);
@@ -236,6 +258,8 @@ export function PerPersonProposalForm({
       setServiceHourErrors(hourErrors);
       return;
     }
+    if (Object.keys(courtesy.errors).length > 0) return;
+    if (!isBarter && discount.error) return;
 
     const detailTab = window.open("about:blank", "_blank");
 
@@ -253,7 +277,9 @@ export function PerPersonProposalForm({
         email: values.email.trim() === "" ? null : values.email.trim(),
         serviceIds: selectedServiceIds,
         serviceHours,
+        ...(courtesy.serviceCourtesy.length > 0 ? { serviceCourtesy: courtesy.serviceCourtesy } : {}),
         totalAmountInput: values.totalAmountInput,
+        discountPercent: isBarter ? 0 : discount.percent,
         type: values.type,
         eventCategory: eventCategoryForPayload(values.type, values.eventCategory),
         trafficSource: values.trafficSource,
@@ -273,6 +299,9 @@ export function PerPersonProposalForm({
         setSelectedServiceIds([]);
         setServiceHoursInput({});
         setServiceHourErrors({});
+        setServiceCourtesyInput({});
+        setDiscountInput("");
+        setDiscountTouched(false);
       } else {
         detailTab?.close();
         onBack();
@@ -483,8 +512,12 @@ export function PerPersonProposalForm({
                     <NumericFormat
                       value={field.value}
                       valueIsNumericString
-                      onValueChange={(values) => {
+                      onValueChange={(values, sourceInfo) => {
                         field.onChange(values.value);
+                        if (sourceInfo.source === "event") {
+                          setDiscountInput("");
+                          setDiscountTouched(false);
+                        }
                       }}
                       thousandSeparator="."
                       decimalSeparator=","
@@ -610,6 +643,8 @@ export function PerPersonProposalForm({
             selectedIds={selectedServiceIds}
             hoursInput={serviceHoursInput}
             hourErrors={serviceHourErrors}
+            courtesyInput={serviceCourtesyInput}
+            courtesyErrors={courtesy.errors}
             onToggle={(serviceId, checked) => {
               if (checked) {
                 setSelectedServiceIds((ids) => [...ids, serviceId]);
@@ -626,9 +661,13 @@ export function PerPersonProposalForm({
                 delete next[serviceId];
                 return next;
               });
+              setServiceCourtesyInput((current) => withoutKey(current, serviceId));
             }}
             onHoursChange={(serviceId, value) => {
               setServiceHoursInput((current) => ({ ...current, [serviceId]: value }));
+            }}
+            onCourtesyChange={(serviceId, value) => {
+              setServiceCourtesyInput((current) => ({ ...current, [serviceId]: value }));
             }}
           />
         )}
@@ -640,8 +679,10 @@ export function PerPersonProposalForm({
         quote={quote}
         isUpdating={isUpdating}
         error={quoteError}
-        onUseValue={(totalAmount) => {
-          form.setValue("totalAmountInput", String(totalAmount), { shouldDirty: true });
+        discountInput={discountInput}
+        onDiscountChange={(value) => {
+          setDiscountInput(value);
+          setDiscountTouched(true);
         }}
       />
 

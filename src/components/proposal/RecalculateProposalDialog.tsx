@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { wallClockDateIso, wallClockTime } from "@/lib/wall-clock-datetime";
+import { discountRemovedNotice } from "@/lib/proposal-discount";
 import {
   proposalService,
   RecalculatePublicProposalData,
@@ -32,6 +33,7 @@ type RecalculateProposalDialogProps = {
   approved: boolean;
   paid: boolean;
   maxGuest?: number | null;
+  discountPercent?: number;
   onSaved: (data: RecalculatePublicProposalData) => void;
 };
 
@@ -94,8 +96,10 @@ export function RecalculateProposalDialog({
   approved,
   paid,
   maxGuest,
+  discountPercent,
   onSaved,
 }: RecalculateProposalDialogProps) {
+  const discountNotice = discountRemovedNotice(discountPercent);
   const schema = useMemo(() => buildSchema(maxGuest), [maxGuest]);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -157,6 +161,7 @@ export function RecalculateProposalDialog({
           Mude o dia, os convidados ou as horas. O valor é recalculado ao confirmar.
         </DialogDescription>
         <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+          {discountNotice && !blocked && <p className="text-sm text-amber-700">{discountNotice}</p>}
           {blocked && (
             <p role="alert" className="text-sm text-red-600">{blocked}</p>
           )}

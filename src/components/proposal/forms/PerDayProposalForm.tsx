@@ -1,5 +1,6 @@
 import { chosenServiceHours, serviceHourFieldError, stayEventHours } from "@/lib/event-duration";
 import { DashboardServiceChoices } from "@/components/proposal/DashboardServiceChoices";
+import { chosenServiceCourtesy, wholeGuestNumber, withoutKey } from "@/lib/service-courtesy";
 import { requiredServiceIds } from "@/lib/required-service-ids";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -108,6 +109,7 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [serviceHoursInput, setServiceHoursInput] = useState<Record<string, string>>({});
   const [serviceHourErrors, setServiceHourErrors] = useState<Record<string, string>>({});
+  const [serviceCourtesyInput, setServiceCourtesyInput] = useState<Record<string, string>>({});
   const { toast } = useToast();
   
   // Definir valores iniciais dos horários com base na venue
@@ -145,6 +147,13 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
     selectedVenue?.checkIn || "14:00",
     selectedVenue?.checkOut || "12:00",
   );
+  const courtesy = chosenServiceCourtesy({
+    services: services ?? [],
+    selectedIds: selectedServiceIds,
+    courtesyInput: serviceCourtesyInput,
+    hoursInput: serviceHoursInput,
+    guestNumber: wholeGuestNumber(guestNumberValue),
+  });
 
   useEffect(() => {
     const guestNumber = parseInt(guestNumberValue || "0", 10);
@@ -185,6 +194,7 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
       setServiceHourErrors(hourErrors);
       return;
     }
+    if (Object.keys(courtesy.errors).length > 0) return;
 
     const detailTab = window.open("about:blank", "_blank");
 
@@ -206,6 +216,7 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         venueId,
         serviceIds: selectedServiceIds,
         serviceHours,
+        ...(courtesy.serviceCourtesy.length > 0 ? { serviceCourtesy: courtesy.serviceCourtesy } : {}),
         totalAmountInput: values.totalAmountInput,
       };
       
@@ -223,6 +234,7 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
         setSelectedServiceIds([]);
         setServiceHoursInput({});
         setServiceHourErrors({});
+        setServiceCourtesyInput({});
       } else {
         detailTab?.close();
         onBack();
@@ -533,6 +545,8 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
             selectedIds={selectedServiceIds}
             hoursInput={serviceHoursInput}
             hourErrors={serviceHourErrors}
+            courtesyInput={serviceCourtesyInput}
+            courtesyErrors={courtesy.errors}
             onToggle={(serviceId, checked) => {
               if (checked) {
                 setSelectedServiceIds((ids) => [...ids, serviceId]);
@@ -549,9 +563,13 @@ export function PerDayProposalForm({ venueId, onBack }: PerDayProposalFormProps)
                 delete next[serviceId];
                 return next;
               });
+              setServiceCourtesyInput((current) => withoutKey(current, serviceId));
             }}
             onHoursChange={(serviceId, value) => {
               setServiceHoursInput((current) => ({ ...current, [serviceId]: value }));
+            }}
+            onCourtesyChange={(serviceId, value) => {
+              setServiceCourtesyInput((current) => ({ ...current, [serviceId]: value }));
             }}
           />
         )}

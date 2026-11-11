@@ -2,6 +2,9 @@ import { useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useVenueReportsStore } from "@/store/venueReportsStore";
 import { ReportsChartCard } from "./ReportsChartCard";
+import { OccupancyCard } from "./OccupancyCard";
+import { ServiceAdherenceCard } from "./ServiceAdherenceCard";
+import { EventProfileCard } from "./EventProfileCard";
 import { alignMonths, averageMonths, ReportInput } from "./report-metrics";
 import { useAnalysisYear } from "./useAnalysisYear";
 
@@ -51,6 +54,7 @@ export function EventsReport({ selectedYear }: EventsReportProps) {
     approvedMonths: alignMonths(monthlyEventsData.analysisEventsByMonth, "count"),
     proposalMonths: alignMonths(monthlyBudgetsData.analysisProposalByMonth, "count"),
     traffic: trafficEventsData.sortedSources,
+    categories: trafficEventsData.categories,
     previousMonths: previousEvents && previousBudgets ? {
       count: alignMonths(previousEvents.analysisEventsByMonth, "count"),
       approved: alignMonths(previousEvents.analysisEventsByMonth, "count"),
@@ -59,5 +63,16 @@ export function EventsReport({ selectedYear }: EventsReportProps) {
     averageMonths: averageMonths(monthlyBudgetsData.averageByMonth, "approved"),
   };
 
-  return <ReportsChartCard kind="eventos" input={input} />;
+  const year = Number(selectedYear);
+
+  return (
+    <div className="space-y-4">
+      <ReportsChartCard kind="eventos" input={input} />
+      <OccupancyCard venueId={venueId} year={year} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ServiceAdherenceCard venueId={venueId} year={year} />
+        <EventProfileCard venueId={venueId} year={year} />
+      </div>
+    </div>
+  );
 }

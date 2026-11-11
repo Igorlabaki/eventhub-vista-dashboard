@@ -25,7 +25,55 @@ type DashboardServiceChoicesProps = {
   hourErrors: Record<string, string>;
   onToggle: (serviceId: string, checked: boolean) => void;
   onHoursChange: (serviceId: string, value: string) => void;
+  courtesyInput?: Record<string, string>;
+  courtesyErrors?: Record<string, string>;
+  onCourtesyChange?: (serviceId: string, value: string) => void;
 };
+
+type CourtesyFieldProps = {
+  service: DashboardServiceChoice;
+  value: string;
+  error?: string;
+  onChange: (serviceId: string, value: string) => void;
+};
+
+function CourtesyField({ service, value, error, onChange }: CourtesyFieldProps) {
+  const id = `dashboard-service-courtesy-${service.id}`;
+  if (service.pricingType !== "PER_HOUR" && service.pricingType !== "PER_PERSON") {
+    return (
+      <label htmlFor={id} className="flex items-center gap-2 text-xs">
+        <input
+          id={id}
+          type="checkbox"
+          checked={value === "1"}
+          onChange={(event) => onChange(service.id, event.target.checked ? "1" : "")}
+        />
+        Cortesia
+      </label>
+    );
+  }
+
+  const label = service.pricingType === "PER_HOUR" ? "Horas de cortesia" : "Pessoas de cortesia";
+  return (
+    <>
+      <div className="flex items-center gap-2">
+        <label htmlFor={id} className="whitespace-nowrap text-xs">
+          {label}
+        </label>
+        <input
+          id={id}
+          type="text"
+          inputMode="numeric"
+          className="h-9 w-14 rounded-md border bg-transparent px-2 text-sm"
+          value={value}
+          aria-invalid={Boolean(error)}
+          onChange={(event) => onChange(service.id, event.target.value)}
+        />
+      </div>
+      {error && <p role="alert" className="text-right text-xs text-red-500">{error}</p>}
+    </>
+  );
+}
 
 export function DashboardServiceChoices({
   services,
@@ -35,6 +83,9 @@ export function DashboardServiceChoices({
   hourErrors,
   onToggle,
   onHoursChange,
+  courtesyInput = {},
+  courtesyErrors = {},
+  onCourtesyChange,
 }: DashboardServiceChoicesProps) {
   const requiredIds = requiredServiceIds(services, guestNumber);
   const ordered = [...services].sort((a, b) => {
@@ -53,9 +104,10 @@ export function DashboardServiceChoices({
         const isRequired = requiredIds.includes(service.id);
         const checked = selectedIds.includes(service.id);
         const asksHours = service.pricingType === "PER_HOUR" && checked;
+        const asksCourtesy = checked && Boolean(onCourtesyChange);
         const requiredText = requiredCopy(service);
         return (
-          <div key={service.id} className="flex items-center justify-between gap-3">
+          <div key={service.id} className="flex items-start justify-between gap-3">
             <label className="flex min-w-0 flex-1 items-start gap-2">
               <input
                 type="checkbox"
@@ -72,24 +124,36 @@ export function DashboardServiceChoices({
                 {requiredText && <span className="text-xs text-gray-500"> {requiredText}</span>}
               </span>
             </label>
-            {asksHours && (
-              <div className="flex w-44 shrink-0 flex-col items-end gap-1">
-                <div className="flex items-center gap-2">
-                  <label htmlFor={`dashboard-service-hours-${service.id}`} className="whitespace-nowrap text-xs">
-                    Quantas horas?
-                  </label>
-                  <input
-                    id={`dashboard-service-hours-${service.id}`}
-                    type="text"
-                    inputMode="numeric"
-                    className="h-9 w-14 rounded-md border bg-transparent px-2 text-sm"
-                    value={hoursInput[service.id] ?? ""}
-                    aria-invalid={Boolean(hourErrors[service.id])}
-                    onChange={(event) => onHoursChange(service.id, event.target.value)}
+            {(asksHours || asksCourtesy) && (
+              <div className="flex w-52 shrink-0 flex-col items-end gap-1">
+                {asksHours && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <label htmlFor={`dashboard-service-hours-${service.id}`} className="whitespace-nowrap text-xs">
+                        Quantas horas?
+                      </label>
+                      <input
+                        id={`dashboard-service-hours-${service.id}`}
+                        type="text"
+                        inputMode="numeric"
+                        className="h-9 w-14 rounded-md border bg-transparent px-2 text-sm"
+                        value={hoursInput[service.id] ?? ""}
+                        aria-invalid={Boolean(hourErrors[service.id])}
+                        onChange={(event) => onHoursChange(service.id, event.target.value)}
+                      />
+                    </div>
+                    {hourErrors[service.id] && (
+                      <p role="alert" className="text-right text-xs text-red-500">{hourErrors[service.id]}</p>
+                    )}
+                  </>
+                )}
+                {asksCourtesy && onCourtesyChange && (
+                  <CourtesyField
+                    service={service}
+                    value={courtesyInput[service.id] ?? ""}
+                    error={courtesyErrors[service.id]}
+                    onChange={onCourtesyChange}
                   />
-                </div>
-                {hourErrors[service.id] && (
-                  <p role="alert" className="text-right text-xs text-red-500">{hourErrors[service.id]}</p>
                 )}
               </div>
             )}
