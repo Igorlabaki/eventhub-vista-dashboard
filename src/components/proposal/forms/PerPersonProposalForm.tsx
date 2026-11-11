@@ -78,7 +78,7 @@ const baseFormSchema = z.object({
     }, {
       message: "Número de WhatsApp inválido",
     }),
-  description: z.string().min(1, "Descrição é obrigatória"),
+  description: z.string(),
   knowsVenue: z.boolean(),
   type: z.nativeEnum(ProposalType),
   eventCategory: z.nativeEnum(EventCategory).optional(),

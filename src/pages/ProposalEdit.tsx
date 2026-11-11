@@ -72,7 +72,7 @@ const editProposalSchema = z.object({
     email: z.string().trim().refine((value) => value === "" || z.string().email().safeParse(value).success, "E-mail inválido"),
     whatsapp: z.string().min(1, "WhatsApp é obrigatório"),
     guestNumber: z.string().min(1, "Número de convidados é obrigatório"),
-    description: z.string().min(1, "Descrição é obrigatória"),
+    description: z.string(),
     knowsVenue: z.boolean(),
     type: z.nativeEnum(ProposalType),
     eventCategory: z.nativeEnum(EventCategory).optional(),
