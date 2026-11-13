@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Calendar, Link2, Plus, Search } from "lucide-react";
+import { Calendar, Link2, Phone, Plus, Search } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { BudgetDetails } from "@/components/BudgetDetails";
 import { BudgetSidebar } from "@/components/BudgetSidebar";
@@ -20,6 +20,7 @@ import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { showSuccessToast } from "@/components/ui/success-toast";
+import { formatWhatsapp } from "@/lib/whatsapp-mask";
 
 const monthNames = [
   "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
@@ -37,6 +38,8 @@ function daysInMonth(year: number, monthIndex: number) {
 export default function VenueBudgets() {
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [whatsappInput, setWhatsappInput] = useState("");
+  const [whatsappTerm, setWhatsappTerm] = useState("");
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const navigate = useNavigate();
@@ -103,6 +106,17 @@ export default function VenueBudgets() {
     return () => clearTimeout(handle);
   }, [searchInput]);
 
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      const next = whatsappInput.trim();
+      setWhatsappTerm((current) => {
+        if (current !== next) setPage(1);
+        return next;
+      });
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [whatsappInput]);
+
   const amountFloor = typeof selectedVenue?.minimumPrice === "number" ? selectedVenue.minimumPrice : 0;
   const amountCeiling = proposalListSummary?.amountMax ?? amountFloor;
   const sliderDisabled = proposalListSummary == null || amountCeiling <= amountFloor;
@@ -117,6 +131,7 @@ export default function VenueBudgets() {
     year: String(selectedYear),
     day: selectedDay === "" ? undefined : String(selectedDay),
     completeClientName: searchTerm || undefined,
+    whatsapp: whatsappTerm || undefined,
     page: String(page),
     sortBy,
     sortDir,
@@ -128,7 +143,7 @@ export default function VenueBudgets() {
   useEffect(() => {
     if (!selectedVenue?.id) return;
     fetchProposals(proposalQuery());
-  }, [selectedVenue?.id, selectedMonth, selectedYear, selectedDay, searchTerm, page, sortBy, sortDir, approvedFilter, minAmountFilter]);
+  }, [selectedVenue?.id, selectedMonth, selectedYear, selectedDay, searchTerm, whatsappTerm, page, sortBy, sortDir, approvedFilter, minAmountFilter]);
 
   useEffect(() => {
     if (!selectedVenue && venueIdParam && user?.id) {
@@ -195,7 +210,19 @@ export default function VenueBudgets() {
             <Input
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Buscar orçamentos..."
+              placeholder="Buscar por nome..."
+              aria-label="Buscar por nome"
+              className="h-10 rounded-full bg-white pl-9"
+            />
+          </div>
+          <div className="relative min-w-0 lg:w-64 lg:shrink-0">
+            <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={whatsappInput}
+              onChange={(event) => setWhatsappInput(formatWhatsapp(event.target.value))}
+              placeholder="Buscar por WhatsApp..."
+              aria-label="Buscar por WhatsApp"
+              inputMode="tel"
               className="h-10 rounded-full bg-white pl-9"
             />
           </div>

@@ -260,6 +260,7 @@ export interface ListProposalParams {
   venueId: string;
   completeClientName?: string;
   email?: string;
+  whatsapp?: string;
   month?: string;
   year?: string;
   day?: string;

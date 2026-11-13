@@ -18,6 +18,7 @@ import { EVENT_CATEGORY_MESSAGE, EVENT_CATEGORY_OPTIONS, eventCategoryForPayload
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
+import { formatWhatsapp } from "@/lib/whatsapp-mask";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useServiceStore } from "@/store/serviceStore";
 import { NumericFormat } from 'react-number-format';
@@ -59,19 +60,6 @@ type FormValues = z.infer<typeof formSchema>;
 interface PerDayProposalFormProps {
   venueId: string;
   onBack: () => void;
-}
-
-function formatWhatsapp(value: string) {
-  value = value.replace(/\D/g, "");
-  if (value.length > 11) value = value.slice(0, 11);
-  if (value.length > 6) {
-    return `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
-  } else if (value.length > 2) {
-    return `(${value.slice(0, 2)}) ${value.slice(2)}`;
-  } else if (value.length > 0) {
-    return `(${value}`;
-  }
-  return "";
 }
 
 function clampHour(value: string) {

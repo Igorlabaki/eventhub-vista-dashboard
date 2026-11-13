@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Owner } from "@/types/owner";
+import { ownerDisplayName, ownerDocument, ownerMatchesSearch } from "@/lib/owner-document";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog";
@@ -55,10 +56,7 @@ export function OwnersList({
   }, [organizationId, user?.id, fetchVenues]);
 
   // Filter owners by search term
-  const filteredOwners = owners.filter(owner => 
-    owner.completeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    owner.cpf.includes(searchTerm)
-  );
+  const filteredOwners = owners.filter(owner => ownerMatchesSearch(owner, searchTerm));
 
   const handleDeleteClick = (owner: Owner) => {
     setOwnerToDelete(owner);
@@ -114,7 +112,7 @@ export function OwnersList({
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead className="hidden md:flex md:items-center">CPF</TableHead>
+                <TableHead className="hidden md:flex md:items-center">CPF / CNPJ</TableHead>
                 <TableHead>Espaços</TableHead>
                 {hasEditPermission() && (
                   <TableHead className="w-[100px]  text-center">Ações</TableHead>
@@ -131,8 +129,8 @@ export function OwnersList({
                     onClick={() => hasEditPermission() && onEditClick(owner)}
                     className="hover:bg-gray-50 cursor-pointer transition"
                   >
-                    <TableCell className="font-medium">{owner.completeName}</TableCell>
-                    <TableCell className="hidden md:block">{owner.cpf}</TableCell>
+                    <TableCell className="font-medium">{ownerDisplayName(owner)}</TableCell>
+                    <TableCell className="hidden md:block">{ownerDocument(owner)}</TableCell>
                     <TableCell>
                       <Button 
                         variant="outline" 
@@ -179,7 +177,7 @@ export function OwnersList({
         open={!!ownerToDelete}
         onOpenChange={() => setOwnerToDelete(null)}
         onConfirm={handleConfirmDelete}
-        entityName={ownerToDelete?.completeName || ""}
+        entityName={ownerToDelete ? ownerDisplayName(ownerToDelete) : ""}
         entityType="proprietário"
         isPending={isLoading}
       />

@@ -1,7 +1,15 @@
 import { z } from "zod";
 import { Venue } from "./venue";
 
+const ownerDocumentFieldsSchema = {
+    personType: z.enum(["PF", "PJ"]).optional(),
+    companyName: z.string().nullable().optional(),
+    cnpj: z.string().nullable().optional(),
+    companySize: z.enum(["MEI", "ME", "EPP", "DEMAIS"]).nullable().optional(),
+};
+
 export const createVenueOwnerSchema = z.object({
+    ...ownerDocumentFieldsSchema,
     cep: z.string(),
     pix: z.string(),
     cpf: z.string(),
@@ -23,6 +31,7 @@ export const createVenueOwnerSchema = z.object({
 export type CreateVenueOwnerRequestParams = z.infer<typeof createVenueOwnerSchema>;
 
 export const createOrganizationOwnerSchema = z.object({
+    ...ownerDocumentFieldsSchema,
     cep: z.string(),
     pix: z.string(),
     cpf: z.string(),
@@ -50,7 +59,19 @@ export const listOwnerByVenueIdQuerySchema = z.object({
 
 export type ListOwnerByVenueIdQuerySchema = z.infer<typeof listOwnerByVenueIdQuerySchema>;
 
-export interface Owner {
+export type OwnerPersonType = "PF" | "PJ";
+
+export type CompanySize = "MEI" | "ME" | "EPP" | "DEMAIS";
+
+/** Em PJ, `completeName`, `cpf` e `rg` sao do representante legal (ou titular, no MEI). */
+export interface OwnerDocumentFields {
+    personType?: OwnerPersonType;
+    companyName?: string | null;
+    cnpj?: string | null;
+    companySize?: CompanySize | null;
+}
+
+export interface Owner extends OwnerDocumentFields {
     id: string;
     completeName: string;
     cpf: string;
@@ -79,11 +100,11 @@ export interface OwnerVenue{
   venueId: string;
   role: string;         
   joinedAt: Date;
-  owner: Owner;           
+  owner?: Owner;
   venue: Venue;           
 };
 
-export interface CreateOwnerDTO {
+export interface CreateOwnerDTO extends OwnerDocumentFields {
     completeName: string;
     cpf: string;
     rg?: string;
@@ -102,7 +123,7 @@ export interface CreateOwnerDTO {
     venueIds?: string[];
 }
 
-export interface UpdateOwnerDTO {
+export interface UpdateOwnerDTO extends OwnerDocumentFields {
     completeName?: string;
     cpf?: string;
     rg?: string;

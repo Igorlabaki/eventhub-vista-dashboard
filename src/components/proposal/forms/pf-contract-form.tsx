@@ -19,6 +19,7 @@ import { Select } from '@/components/ui/select'
 import InputMask from 'react-input-mask';
 import { generateContractPdf } from './ContractPdfGenerator'
 import { requiredProposalEmail } from './required-proposal-email'
+import { ownerDisplayName } from '@/lib/owner-document'
 
 function formatCurrencyInput(value: string): string {
   const numbers = value.replace(/\D/g, '');
@@ -466,7 +467,7 @@ export default function PFContractForm() {
                     <SelectContent  >
                       {ownersByVenueId?.map((owner) => (
                         <SelectItem key={owner.id} value={owner.id}>
-                          {owner.completeName}
+                          {ownerDisplayName(owner)}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -46,6 +46,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useOrganizationStore } from "@/store/organizationStore";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
+import { ownerDisplayName } from "@/lib/owner-document";
 
 // Função para gerar opções de horário em intervalos de 30 minutos
 const generateTimeOptions = () => {
@@ -1340,7 +1341,7 @@ export default function VenueSettings() {
                           htmlFor={`owner-${owner.id}`}
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                         >
-                          {owner.completeName}
+                          {ownerDisplayName(owner)}
                         </label>
                       </div>
                     ))}

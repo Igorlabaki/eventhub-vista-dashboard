@@ -12,18 +12,45 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { handleBackendSuccess, handleBackendError } from "@/lib/error-handler";
-import { Owner } from "@/types/owner";
+import {
+  COMPANY_SIZE_OPTIONS,
+  formatCnpj,
+  isCnpjFormat,
+  normalizeCnpj,
+  OWNER_CNPJ_FORMAT,
+  ownerDisplayName,
+  personTypeOf,
+  representativeLabels,
+} from "@/lib/owner-document";
+import { CompanySize, Owner, OwnerDocumentFields, UpdateOwnerDTO } from "@/types/owner";
 import { CreateOwnerDTO } from "@/types/owner";
 import { useOwnerStore } from "@/store/ownerStore";
 import InputMask from 'react-input-mask';
 import { AsyncActionButton } from "@/components/AsyncActionButton";
 import { FormLayout } from "@/components/ui/form-layout";
 
+const NO_COMPANY_SIZE = "NONE";
+
+const CNPJ_FORMAT_CHARS = { "*": "[A-Za-z0-9]", "9": "[0-9]" };
+
 const formSchema = z.object({
-  completeName: z.string().min(1, "Nome completo é obrigatório"),
+  personType: z.enum(["PF", "PJ"]),
+  companyName: z.string().optional(),
+  cnpj: z.string().optional(),
+  companySize: z.enum(["MEI", "ME", "EPP", "DEMAIS", NO_COMPANY_SIZE]),
+  completeName: z.string().min(1, "Nome é obrigatório"),
   cpf: z.string().min(1, "CPF é obrigatório"),
   rg: z.string().optional(),
   pix: z.string().min(1, "PIX é obrigatório"),
@@ -38,6 +65,17 @@ const formSchema = z.object({
   bankAgency: z.string().min(1, "Agência é obrigatória"),
   bankAccountNumber: z.string().min(1, "Número da conta é obrigatório"),
   venueIds: z.array(z.string()).optional(),
+}).superRefine((data, ctx) => {
+  if (data.personType !== "PJ") return;
+  if (!data.companyName?.trim()) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["companyName"], message: "Razão social é obrigatória" });
+  }
+  const cnpj = normalizeCnpj(data.cnpj ?? "").replace(/_/g, "");
+  if (!cnpj) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["cnpj"], message: "CNPJ é obrigatório" });
+  } else if (!isCnpjFormat(cnpj)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["cnpj"], message: OWNER_CNPJ_FORMAT });
+  }
 });
 
 type OwnerFormValues = z.infer<typeof formSchema>;
@@ -46,6 +84,16 @@ interface OwnerFormProps {
   owner?: Owner;
   organizationId: string;
   onCancel: () => void;
+}
+
+function documentFields(data: OwnerFormValues): OwnerDocumentFields {
+  if (data.personType === "PF") return { personType: "PF" };
+  return {
+    personType: "PJ",
+    companyName: data.companyName?.trim(),
+    cnpj: normalizeCnpj(data.cnpj ?? ""),
+    companySize: data.companySize === NO_COMPANY_SIZE ? null : (data.companySize as CompanySize),
+  };
 }
 
 export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
@@ -58,6 +106,10 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
   const form = useForm<OwnerFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      personType: owner ? personTypeOf(owner) : "PF",
+      companyName: owner?.companyName || "",
+      cnpj: formatCnpj(owner?.cnpj),
+      companySize: owner?.companySize || NO_COMPANY_SIZE,
       completeName: owner?.completeName || "",
       cpf: owner?.cpf || "",
       rg: owner?.rg || "",
@@ -76,6 +128,10 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
     },
   });
 
+  const personType = form.watch("personType");
+  const companySize = form.watch("companySize");
+  const labels = representativeLabels(personType, companySize === NO_COMPANY_SIZE ? null : companySize);
+
   const onSubmit = async () => {
     const isValid = await form.trigger();
     if (!isValid) return;
@@ -85,7 +141,9 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
       const data = form.getValues();
       let response;
       if (isEditing && owner) {
-        const updateData = {
+        // Sem `venueIds`: os vinculos sao editados no VenueSelectionDialog e a API preserva os atuais.
+        const updateData: UpdateOwnerDTO = {
+          ...documentFields(data),
           completeName: data.completeName,
           cpf: data.cpf,
           rg: data.rg || undefined,
@@ -100,7 +158,6 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
           bankName: data.bankName,
           bankAgency: data.bankAgency,
           bankAccountNumber: data.bankAccountNumber,
-          venueIds: data.venueIds || [],
         };
 
         response = await updateOwner(owner.id, updateData);
@@ -112,6 +169,7 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
         onCancel();
       } else {
         const createData: CreateOwnerDTO = {
+          ...documentFields(data),
           completeName: data.completeName,
           cpf: data.cpf,
           rg: data.rg || undefined,
@@ -182,17 +240,110 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
       isSubmitting={isSubmitting}
       isEditing={isEditing}
       onDelete={handleDelete}
-      entityName={owner?.completeName}
+      entityName={owner ? ownerDisplayName(owner) : undefined}
       entityType="proprietário"
       isDeleting={isDeleting}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
+          name="personType"
+          render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Tipo de pessoa</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="PF" id="owner-person-type-pf" />
+                    <Label htmlFor="owner-person-type-pf">Pessoa física</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="PJ" id="owner-person-type-pj" />
+                    <Label htmlFor="owner-person-type-pj">Pessoa jurídica</Label>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {personType === "PJ" && (
+          <>
+            <FormField
+              control={form.control}
+              name="companyName"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Razão Social</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Digite a razão social" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="cnpj"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CNPJ</FormLabel>
+                  <FormControl>
+                    <InputMask
+                      mask="**.***.***/****-99"
+                      formatChars={CNPJ_FORMAT_CHARS}
+                      placeholder="Digite o CNPJ"
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                    >
+                      {(inputProps) => <Input {...inputProps} />}
+                    </InputMask>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="companySize"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Porte</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Não informar" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={NO_COMPANY_SIZE}>Não informar</SelectItem>
+                      {COMPANY_SIZE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
+
+        <FormField
+          control={form.control}
           name="completeName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome Completo</FormLabel>
+              <FormLabel>{labels.name}</FormLabel>
               <FormControl>
                 <Input placeholder="Digite o nome completo" {...field} />
               </FormControl>
@@ -206,7 +357,7 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
           name="cpf"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>CPF</FormLabel>
+              <FormLabel>{labels.cpf}</FormLabel>
               <FormControl>
                 <InputMask
                   mask="999.999.999-99"
@@ -227,7 +378,7 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
           name="rg"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>RG</FormLabel>
+              <FormLabel>{labels.rg}</FormLabel>
               <FormControl>
                 <InputMask
                   mask="99.999.999-9"
@@ -413,4 +564,4 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
       </div>
     </FormLayout>
   );
-} 
+}

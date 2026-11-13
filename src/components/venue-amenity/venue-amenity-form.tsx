@@ -1,43 +1,45 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { FormLayout } from "@/components/ui/form-layout";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { AmenityFormSubmit, AmenityFormValues, amenityFormSchema, amenityFormSubmit } from "@/lib/amenity-form";
 import { VenueAmenity } from "@/types/venue-amenity";
-
-const formSchema = z.object({
-    name: z.string().trim().min(1, "Informe o nome da característica").max(120, "Nome deve ter no máximo 120 caracteres"),
-    position: z.string().optional(),
-});
-
-type VenueAmenityFormValues = z.infer<typeof formSchema>;
 
 interface VenueAmenityFormProps {
     amenity?: VenueAmenity | null;
-    onSubmit: (data: { name: string; position?: number }) => Promise<void>;
+    onSubmit: (data: AmenityFormSubmit) => Promise<void>;
     onCancel: () => void;
+}
+
+function defaultValues(amenity?: VenueAmenity | null): AmenityFormValues {
+    return {
+        name: amenity?.name ?? "",
+        position: amenity ? String(amenity.position) : "",
+        description: amenity?.description ?? "",
+        videoUrl: amenity?.videoUrl ?? "",
+    };
 }
 
 export function VenueAmenityForm({ amenity, onSubmit, onCancel }: VenueAmenityFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const form = useForm<VenueAmenityFormValues>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            name: amenity?.name ?? "",
-            position: amenity ? String(amenity.position) : "",
-        },
+    const [file, setFile] = useState<File | undefined>();
+    const [removeImage, setRemoveImage] = useState(false);
+    const form = useForm<AmenityFormValues>({
+        resolver: zodResolver(amenityFormSchema),
+        defaultValues: defaultValues(amenity),
     });
 
     useEffect(() => {
-        form.reset({
-            name: amenity?.name ?? "",
-            position: amenity ? String(amenity.position) : "",
-        });
+        form.reset(defaultValues(amenity));
+        setFile(undefined);
+        setRemoveImage(false);
     }, [amenity, form]);
 
-    const handleSubmit = async (values: VenueAmenityFormValues) => {
+    const handleSubmit = async (values: AmenityFormValues) => {
         setIsSubmitting(true);
         try {
             const position = values.position === "" || values.position === undefined
@@ -47,10 +49,7 @@ export function VenueAmenityForm({ amenity, onSubmit, onCancel }: VenueAmenityFo
                 form.setError("position", { message: "Posição deve ser um número inteiro maior ou igual a zero" });
                 return;
             }
-            await onSubmit({
-                name: values.name.trim(),
-                position,
-            });
+            await onSubmit(amenityFormSubmit(values, { file, removeImage }, position));
         } finally {
             setIsSubmitting(false);
         }
@@ -74,6 +73,59 @@ export function VenueAmenityForm({ amenity, onSubmit, onCancel }: VenueAmenityFo
                         <FormLabel>Nome</FormLabel>
                         <FormControl>
                             <Input placeholder="Ex.: Piscina aquecida" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Descrição</FormLabel>
+                        <FormControl>
+                            <Textarea placeholder="Texto opcional sobre a característica" maxLength={500} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <div>
+                <Label>Foto</Label>
+                {amenity?.imageUrl && !removeImage && !file && (
+                    <img src={amenity.imageUrl} alt="" className="mt-2 h-24 w-40 rounded object-cover" />
+                )}
+                <Input
+                    type="file"
+                    accept="image/*"
+                    className="mt-1"
+                    onChange={(event) => {
+                        setFile(event.target.files?.[0]);
+                        setRemoveImage(false);
+                    }}
+                />
+                {amenity?.imageUrl && (
+                    <button
+                        type="button"
+                        className="mt-2 text-sm text-gray-600 underline"
+                        onClick={() => {
+                            setRemoveImage((current) => !current);
+                            setFile(undefined);
+                        }}
+                    >
+                        {removeImage ? "Manter a foto atual" : "Remover foto"}
+                    </button>
+                )}
+            </div>
+            <FormField
+                control={form.control}
+                name="videoUrl"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Link do vídeo no YouTube</FormLabel>
+                        <FormControl>
+                            <Input placeholder="https://www.youtube.com/watch?v=..." inputMode="url" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

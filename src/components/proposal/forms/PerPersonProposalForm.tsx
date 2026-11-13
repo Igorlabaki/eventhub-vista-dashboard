@@ -41,6 +41,7 @@ import "react-phone-input-2/lib/style.css";
 import { CreateProposalPerPersonDTO } from "@/types/proposal";
 import { useToast } from "@/hooks/use-toast";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
+import { formatWhatsapp } from "@/lib/whatsapp-mask";
 import { showSuccessToast } from "@/components/ui/success-toast";
 
 // Função para gerar opções de horário (hora cheia e meia hora)
@@ -92,20 +93,6 @@ interface PerPersonProposalFormProps {
   venueId: string;
   onBack: () => void;
 }
-
-function formatWhatsapp(value: string) {
-  value = value.replace(/\D/g, "");
-  if (value.length > 11) value = value.slice(0, 11);
-  if (value.length > 6) {
-    return `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
-  } else if (value.length > 2) {
-    return `(${value.slice(0, 2)}) ${value.slice(2)}`;
-  } else if (value.length > 0) {
-    return `(${value}`;
-  }
-  return "";
-}
-
 
 
 function openCreatedProposal(detailTab: Window | null, proposalId: string) {

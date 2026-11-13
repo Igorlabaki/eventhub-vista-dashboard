@@ -1,10 +1,13 @@
 import { api } from "@/lib/axios";
+import { amenityFormData } from "@/lib/amenity-form";
 import {
     CreateVenueAmenityDTO,
     UpdateVenueAmenityDTO,
     VenueAmenityListResponse,
     VenueAmenityResponse,
 } from "@/types/venue-amenity";
+
+const multipart = { headers: { "Content-Type": "multipart/form-data" } };
 
 export const venueAmenityService = {
     list: async (venueId: string) => {
@@ -13,12 +16,14 @@ export const venueAmenityService = {
     },
 
     create: async (data: CreateVenueAmenityDTO) => {
-        const response = await api.post<VenueAmenityResponse>("/venue-amenity/create", data);
+        const { file, ...payload } = data;
+        const response = await api.post<VenueAmenityResponse>("/venue-amenity/create", amenityFormData(payload, file), multipart);
         return response.data;
     },
 
     update: async (data: UpdateVenueAmenityDTO) => {
-        const response = await api.put<VenueAmenityResponse>("/venue-amenity/update", data);
+        const { file, ...payload } = data;
+        const response = await api.put<VenueAmenityResponse>("/venue-amenity/update", amenityFormData(payload, file), multipart);
         return response.data;
     },
 

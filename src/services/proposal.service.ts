@@ -103,7 +103,13 @@ export interface ProposalPresentation {
   canReorder: boolean;
   images: { id: string; imageUrl: string; description: string | null; position: number }[];
   catalog: { id: string; imageUrl: string; description: string | null; position: number; isShowOnProposal: boolean }[];
-  amenities: { name: string; position: number }[];
+  amenities: {
+    name: string;
+    position: number;
+    description: string | null;
+    imageUrl: string | null;
+    videoUrl: string | null;
+  }[];
 }
 
 export interface ProposalPresentationResponse {
@@ -174,6 +180,7 @@ export const proposalService = {
     if (params.venueId) queryParams.append('venueId', params.venueId);
     if (params.completeClientName) queryParams.append('completeClientName', params.completeClientName);
     if (params.email) queryParams.append('email', params.email);
+    if (params.whatsapp) queryParams.append('whatsapp', params.whatsapp);
     if (params.month) queryParams.append('month', params.month);
     if (params.year) queryParams.append('year', params.year);
     if (params.day) queryParams.append('day', params.day);

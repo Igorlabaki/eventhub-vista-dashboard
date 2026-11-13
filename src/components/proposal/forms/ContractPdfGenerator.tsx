@@ -7,6 +7,7 @@ import { Clause, Contract } from "@/types/contract";
 import { Proposal } from "@/types/proposal";
 import { Attachment } from "@/types/attachment";
 import { Owner } from "@/types/owner";
+import { resolveOwnerTemplateValue } from "@/lib/owner-template-values";
 
 // Função utilitária para limpar valores monetários formatados
 // Arredonda todos os valores para duas casas decimais para evitar problemas de precisão
@@ -84,6 +85,9 @@ export function generateContractPdf({
   
     return text.replace(/\{\{(.*?)\}\}/g, (match, p1) => {
       const [obj, prop] = p1.trim().split('.');
+      if (obj === "owner") {
+        return resolveOwnerTemplateValue(owner, prop) ?? match;
+      }
       const value = values[obj] && typeof values[obj] === 'object' && values[obj] !== null && (values[obj] as Record<string, unknown>)[prop] !== undefined ? (values[obj] as Record<string, unknown>)[prop] : undefined;
       if (value !== undefined) {
         if (["totalAmount", "signalAmount", "paymentValue", "perPersonPrice", "amount", "price", "value", "cost", "fee", "discount", "tax", "rate", "totalValue", "totalPrice", "finalAmount", "finalPrice", "pricePerPerson", "pricePerDay", "pricePerPersonDay", "pricePerPersonHour"].includes(prop)) {

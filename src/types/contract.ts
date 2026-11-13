@@ -106,6 +106,9 @@ export type DynamicField =
   | "owner.city"
   | "owner.state"
   | "owner.cep"
+  | "owner.companyName"
+  | "owner.cnpj"
+  | "owner.companySize"
   | "venue.name"
   | "venue.email"
   | "venue.street"
@@ -180,10 +183,13 @@ export interface DynamicFieldGroup {
     {
       name: "Proprietário",
       fields: [
-        { id: "owner.completeName", label: "Nome Completo", display: "NOME_PROPRIETARIO" },
+        { id: "owner.completeName", label: "Nome Completo (representante, se PJ)", display: "NOME_PROPRIETARIO" },
         { id: "owner.pix", label: "Pix", display: "PIX_PROPRIETARIO" },
-        { id: "owner.rg", label: "RG", display: "RG_PROPRIETARIO" },
-        { id: "owner.cpf", label: "CPF", display: "CPF_PROPRIETARIO" },
+        { id: "owner.rg", label: "RG (representante, se PJ)", display: "RG_PROPRIETARIO" },
+        { id: "owner.cpf", label: "CPF (representante, se PJ)", display: "CPF_PROPRIETARIO" },
+        { id: "owner.companyName", label: "Razão Social", display: "RAZAO_SOCIAL_PROPRIETARIO" },
+        { id: "owner.cnpj", label: "CNPJ", display: "CNPJ_PROPRIETARIO" },
+        { id: "owner.companySize", label: "Porte", display: "PORTE_PROPRIETARIO" },
         { id: "owner.street", label: "Rua", display: "RUA_PROPRIETARIO" },
         { id: "owner.streetNumber", label: "Número", display: "NUMERO_PROPRIETARIO" },
         { id: "owner.complement", label: "Complemento", display: "COMPLEMENTO_PROPRIETARIO" },

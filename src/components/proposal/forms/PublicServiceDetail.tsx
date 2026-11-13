@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type MouseEvent } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { amenityVideoEmbedUrl } from "@/lib/amenity-video";
 
 type PublicServiceDetailProps = {
   name: string;
@@ -11,6 +12,7 @@ type PublicServiceDetailProps = {
 type PublicServiceDetailDialogProps = PublicServiceDetailProps & {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  videoUrl?: string | null;
 };
 
 export function PublicServiceDetailDialog({
@@ -19,10 +21,12 @@ export function PublicServiceDetailDialog({
   name,
   description,
   imageUrl,
+  videoUrl,
   surfaceStyle,
 }: PublicServiceDetailDialogProps) {
   const text = description?.trim() ?? "";
   const photo = imageUrl?.trim() ?? "";
+  const embedUrl = amenityVideoEmbedUrl(videoUrl);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -36,8 +40,20 @@ export function PublicServiceDetailDialog({
             {text}
           </DialogDescription>
         ) : (
-          <DialogDescription className="sr-only">Foto do serviço.</DialogDescription>
+          <DialogDescription className="sr-only">Detalhes de {name}.</DialogDescription>
         )}
+        {embedUrl ? (
+          <div className="aspect-video w-full overflow-hidden rounded-md">
+            <iframe
+              src={embedUrl}
+              title={`Vídeo de ${name}`}
+              className="h-full w-full"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

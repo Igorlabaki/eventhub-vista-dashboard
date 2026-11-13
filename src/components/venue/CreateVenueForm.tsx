@@ -31,6 +31,7 @@ import { NumericFormat } from "react-number-format";
 import { useUserStore } from "@/store/userStore";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { ownerDisplayName } from "@/lib/owner-document";
 
 // Função para gerar opções de horário em intervalos de 30 minutos
 const generateTimeOptions = () => {
@@ -1081,7 +1082,7 @@ export function CreateVenueForm({
                         htmlFor={`owner-${owner.id}`}
                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                       >
-                        {owner.completeName}
+                        {ownerDisplayName(owner)}
                       </label>
                     </div>
                   ))}

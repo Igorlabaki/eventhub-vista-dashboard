@@ -7,6 +7,7 @@ import { OwnersList } from "@/components/owner/OwnersList";
 import { OwnersListSkeleton } from "@/components/owner/OwnersListSkeleton";
 import { Button } from "@/components/ui/button";
 import { Owner } from "@/types/owner";
+import { ownerMatchesSearch } from "@/lib/owner-document";
 import { FilterList } from "@/components/filterList";
 import { useOwnerStore } from "@/store/ownerStore";
 import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
@@ -52,13 +53,7 @@ export default function OrganizationOwners() {
     setCurrentOwner(null);
   };
 
-  const filterOwners = (owner: Owner, query: string) => {
-    const searchTerm = query.toLowerCase();
-    return (
-      owner.completeName.toLowerCase().includes(searchTerm) ||
-      owner.cpf.includes(searchTerm)
-    );
-  };
+  const filterOwners = (owner: Owner, query: string) => ownerMatchesSearch(owner, query);
 
 
   const hasEditPermission = () => {

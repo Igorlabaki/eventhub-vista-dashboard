@@ -25,5 +25,41 @@ describe("PublicServiceDetailDialog", () => {
     expect(html).toContain("scrollbar-house");
     expect(html).toContain("overflow-y-auto");
     expect(html).toContain("color:#f5f5f5");
+    expect(html).not.toContain("<iframe");
+  });
+
+  it("mostra foto, descricao e player do YouTube juntos", () => {
+    const html = renderToStaticMarkup(
+      <PublicServiceDetailDialog
+        open
+        onOpenChange={() => undefined}
+        name="Piscina"
+        description="Aquecida o ano todo"
+        imageUrl="https://example.com/piscina.jpg"
+        videoUrl="https://www.youtube.com/shorts/dQw4w9WgXcQ"
+      />,
+    );
+
+    expect(html).toContain("https://example.com/piscina.jpg");
+    expect(html).toContain("Aquecida o ano todo");
+    expect(html).toContain('src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0"');
+    expect(html).not.toContain("autoplay=1");
+    expect(html.indexOf("Aquecida o ano todo")).toBeLessThan(html.indexOf("<iframe"));
+  });
+
+  it("nao monta player com link invalido e nunca usa a URL crua", () => {
+    const html = renderToStaticMarkup(
+      <PublicServiceDetailDialog
+        open
+        onOpenChange={() => undefined}
+        name="Piscina"
+        description="Aquecida"
+        videoUrl="https://cdn.example.com/tour.mp4"
+      />,
+    );
+
+    expect(html).toContain("Aquecida");
+    expect(html).not.toContain("<iframe");
+    expect(html).not.toContain("tour.mp4");
   });
 });

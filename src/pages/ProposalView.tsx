@@ -20,6 +20,7 @@ import { replaceProposalImage } from "@/lib/choose-proposal-image";
 import { resolveTourVideo } from "@/lib/tour-video";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
 import { PublicServiceDetailDialog } from "@/components/proposal/forms/PublicServiceDetail";
+import { hasAmenityDetail } from "@/lib/amenity-video";
 import { RecalculateProposalDialog } from "@/components/proposal/RecalculateProposalDialog";
 import { UpdateProposalServicesDialog } from "@/components/proposal/UpdateProposalServicesDialog";
 import { discountBreakdown } from "@/lib/proposal-discount";
@@ -549,6 +550,8 @@ export default function ProposalView() {
     description: string | null;
   } | null>(null);
   const [serviceDetailOpen, setServiceDetailOpen] = useState(false);
+  const [amenityDetail, setAmenityDetail] = useState<ProposalPresentation["amenities"][number] | null>(null);
+  const [amenityDetailOpen, setAmenityDetailOpen] = useState(false);
   const [serviceChoices, setServiceChoices] = useState<PublicServiceChoice[] | null>(null);
   const [serviceChoicesFailed, setServiceChoicesFailed] = useState(false);
   const [readyForId, setReadyForId] = useState<string | null>(null);
@@ -565,6 +568,8 @@ export default function ProposalView() {
     setServicesOpen(false);
     setServiceDetail(null);
     setServiceDetailOpen(false);
+    setAmenityDetail(null);
+    setAmenityDetailOpen(false);
   }
 
   useEffect(() => {
@@ -1024,10 +1029,34 @@ export default function ProposalView() {
                 {house.amenities.map((amenity) => (
                   <li key={`${amenity.position}-${amenity.name}`} className="flex items-start gap-2">
                     <Check className="mt-1 h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>{amenity.name}</span>
+                    <span className="flex min-w-0 items-center gap-1">
+                      <span>{amenity.name}</span>
+                      {hasAmenityDetail(amenity) && (
+                        <button
+                          type="button"
+                          className="relative inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full before:absolute before:-inset-2.5 before:content-[''] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                          aria-label={`Ver detalhes de ${amenity.name}`}
+                          onClick={() => {
+                            setAmenityDetail(amenity);
+                            setAmenityDetailOpen(true);
+                          }}
+                        >
+                          <HelpCircle className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>
+              <PublicServiceDetailDialog
+                open={amenityDetailOpen}
+                onOpenChange={setAmenityDetailOpen}
+                name={amenityDetail?.name ?? ""}
+                description={amenityDetail?.description}
+                imageUrl={amenityDetail?.imageUrl}
+                videoUrl={amenityDetail?.videoUrl}
+                surfaceStyle={cardStyle}
+              />
               {whatsapp && (
                 <div className="mt-5 flex flex-col gap-4 border-t border-current/15 pt-5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
