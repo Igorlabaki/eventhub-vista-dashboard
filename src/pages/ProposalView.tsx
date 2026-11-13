@@ -20,7 +20,7 @@ import { replaceProposalImage } from "@/lib/choose-proposal-image";
 import { resolveTourVideo } from "@/lib/tour-video";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
 import { PublicServiceDetailDialog } from "@/components/proposal/forms/PublicServiceDetail";
-import { hasAmenityDetail } from "@/lib/amenity-video";
+import { hasAmenityDetail, stepIndex } from "@/lib/amenity-video";
 import { RecalculateProposalDialog } from "@/components/proposal/RecalculateProposalDialog";
 import { UpdateProposalServicesDialog } from "@/components/proposal/UpdateProposalServicesDialog";
 import { discountBreakdown } from "@/lib/proposal-discount";
@@ -550,7 +550,7 @@ export default function ProposalView() {
     description: string | null;
   } | null>(null);
   const [serviceDetailOpen, setServiceDetailOpen] = useState(false);
-  const [amenityDetail, setAmenityDetail] = useState<ProposalPresentation["amenities"][number] | null>(null);
+  const [amenityIndex, setAmenityIndex] = useState<number | null>(null);
   const [amenityDetailOpen, setAmenityDetailOpen] = useState(false);
   const [serviceChoices, setServiceChoices] = useState<PublicServiceChoice[] | null>(null);
   const [serviceChoicesFailed, setServiceChoicesFailed] = useState(false);
@@ -568,7 +568,7 @@ export default function ProposalView() {
     setServicesOpen(false);
     setServiceDetail(null);
     setServiceDetailOpen(false);
-    setAmenityDetail(null);
+    setAmenityIndex(null);
     setAmenityDetailOpen(false);
   }
 
@@ -696,6 +696,9 @@ export default function ProposalView() {
       (1000 * 60 * 60)
   );
   const house = presentation;
+  const detailedAmenities = house?.amenities.filter(hasAmenityDetail) ?? [];
+  const amenityDetail = amenityIndex === null ? null : detailedAmenities[amenityIndex] ?? null;
+  const canStepAmenities = detailedAmenities.length > 1;
   const tourVideo = resolveTourVideo(house?.tourVideoUrl);
   const cover = orderedImages[0];
   const gallery = orderedImages.slice(1);
@@ -1037,7 +1040,7 @@ export default function ProposalView() {
                           className="relative inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full before:absolute before:-inset-2.5 before:content-[''] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                           aria-label={`Ver detalhes de ${amenity.name}`}
                           onClick={() => {
-                            setAmenityDetail(amenity);
+                            setAmenityIndex(detailedAmenities.indexOf(amenity));
                             setAmenityDetailOpen(true);
                           }}
                         >
@@ -1056,6 +1059,21 @@ export default function ProposalView() {
                 imageUrl={amenityDetail?.imageUrl}
                 videoUrl={amenityDetail?.videoUrl}
                 surfaceStyle={cardStyle}
+                position={
+                  canStepAmenities && amenityIndex !== null
+                    ? { current: amenityIndex + 1, total: detailedAmenities.length }
+                    : undefined
+                }
+                onPrevious={
+                  canStepAmenities
+                    ? () => setAmenityIndex((index) => stepIndex(index, -1, detailedAmenities.length))
+                    : undefined
+                }
+                onNext={
+                  canStepAmenities
+                    ? () => setAmenityIndex((index) => stepIndex(index, 1, detailedAmenities.length))
+                    : undefined
+                }
               />
               {whatsapp && (
                 <div className="mt-5 flex flex-col gap-4 border-t border-current/15 pt-5 sm:flex-row sm:items-center sm:justify-between">

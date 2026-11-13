@@ -62,4 +62,32 @@ describe("PublicServiceDetailDialog", () => {
     expect(html).not.toContain("<iframe");
     expect(html).not.toContain("tour.mp4");
   });
+
+  it("sem navegacao, nao mostra setas nem contador", () => {
+    const html = renderToStaticMarkup(
+      <PublicServiceDetailDialog open onOpenChange={() => undefined} name="Painel de Led" description="Led" />,
+    );
+
+    expect(html).not.toContain('aria-label="Anterior"');
+    expect(html).not.toContain('aria-label="Próximo"');
+    expect(html).not.toContain("aria-live");
+  });
+
+  it("com navegacao, mostra setas e a posicao", () => {
+    const html = renderToStaticMarkup(
+      <PublicServiceDetailDialog
+        open
+        onOpenChange={() => undefined}
+        name="Piscina"
+        description="Aquecida"
+        onPrevious={() => undefined}
+        onNext={() => undefined}
+        position={{ current: 2, total: 5 }}
+      />,
+    );
+
+    expect(html).toContain('aria-label="Anterior"');
+    expect(html).toContain('aria-label="Próximo"');
+    expect(html).toContain("2 de 5");
+  });
 });

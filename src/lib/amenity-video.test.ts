@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { amenityVideoEmbedUrl, hasAmenityDetail } from "./amenity-video";
+import { amenityVideoEmbedUrl, hasAmenityDetail, stepIndex } from "./amenity-video";
 
 const EMBED = "https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0";
 
@@ -42,5 +42,19 @@ describe("botao de detalhe da caracteristica", () => {
     expect(hasAmenityDetail({ description: null, imageUrl: null, videoUrl: null })).toBe(false);
     expect(hasAmenityDetail({ description: "   ", imageUrl: null, videoUrl: null })).toBe(false);
     expect(hasAmenityDetail({ description: null, imageUrl: null, videoUrl: "https://cdn.example.com/tour.mp4" })).toBe(false);
+  });
+});
+
+describe("navegacao entre caracteristicas no modal", () => {
+  it("avanca e volta em circulo", () => {
+    expect(stepIndex(0, 1, 3)).toBe(1);
+    expect(stepIndex(2, 1, 3)).toBe(0);
+    expect(stepIndex(0, -1, 3)).toBe(2);
+    expect(stepIndex(1, -1, 3)).toBe(0);
+  });
+
+  it("sem item aberto ou lista vazia, nao muda", () => {
+    expect(stepIndex(null, 1, 3)).toBeNull();
+    expect(stepIndex(0, 1, 0)).toBe(0);
   });
 });
