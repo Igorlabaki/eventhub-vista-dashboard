@@ -2,6 +2,7 @@ import { youtubeVideoId } from "./tour-video";
 
 export type AmenityDetail = {
   description?: string | null;
+  images?: string[] | null;
   imageUrl?: string | null;
   videoUrl?: string | null;
 };
@@ -16,7 +17,12 @@ export function amenityVideoEmbedUrl(value: string | null | undefined): string |
 }
 
 export function hasAmenityDetail(amenity: AmenityDetail): boolean {
-  return Boolean(amenity.description?.trim() || amenity.imageUrl?.trim() || amenityVideoEmbedUrl(amenity.videoUrl));
+  return Boolean(
+    amenity.description?.trim() ||
+      amenity.images?.some((image) => image.trim()) ||
+      amenity.imageUrl?.trim() ||
+      amenityVideoEmbedUrl(amenity.videoUrl),
+  );
 }
 
 export function stepIndex(index: number | null, delta: number, total: number): number | null {

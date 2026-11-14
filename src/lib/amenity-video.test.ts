@@ -38,6 +38,12 @@ describe("botao de detalhe da caracteristica", () => {
     expect(hasAmenityDetail({ description: null, imageUrl: null, videoUrl: "https://youtu.be/dQw4w9WgXcQ" })).toBe(true);
   });
 
+  it("aparece so com fotos e nao conta foto em branco", () => {
+    expect(hasAmenityDetail({ description: null, images: ["https://a", "https://b"], imageUrl: null, videoUrl: null })).toBe(true);
+    expect(hasAmenityDetail({ description: null, images: ["  "], imageUrl: null, videoUrl: null })).toBe(false);
+    expect(hasAmenityDetail({ description: null, images: [], imageUrl: null, videoUrl: null })).toBe(false);
+  });
+
   it("nao aparece sem complemento, com descricao em branco ou so com video invalido", () => {
     expect(hasAmenityDetail({ description: null, imageUrl: null, videoUrl: null })).toBe(false);
     expect(hasAmenityDetail({ description: "   ", imageUrl: null, videoUrl: null })).toBe(false);

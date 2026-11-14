@@ -1056,14 +1056,10 @@ export default function ProposalView() {
                 onOpenChange={setAmenityDetailOpen}
                 name={amenityDetail?.name ?? ""}
                 description={amenityDetail?.description}
+                images={amenityDetail?.images}
                 imageUrl={amenityDetail?.imageUrl}
                 videoUrl={amenityDetail?.videoUrl}
                 surfaceStyle={cardStyle}
-                position={
-                  canStepAmenities && amenityIndex !== null
-                    ? { current: amenityIndex + 1, total: detailedAmenities.length }
-                    : undefined
-                }
                 onPrevious={
                   canStepAmenities
                     ? () => setAmenityIndex((index) => stepIndex(index, -1, detailedAmenities.length))

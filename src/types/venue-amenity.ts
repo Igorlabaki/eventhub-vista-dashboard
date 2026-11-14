@@ -1,9 +1,17 @@
+export interface VenueAmenityImage {
+    id: string;
+    imageUrl: string;
+    position: number;
+}
+
+export type AmenityImageRef = { id: string } | { newIndex: number };
+
 export interface VenueAmenity {
     id: string;
     name: string;
     position: number;
     description: string | null;
-    imageUrl: string | null;
+    images: VenueAmenityImage[];
     videoUrl: string | null;
     venueId: string;
     createdAt: string;
@@ -15,7 +23,7 @@ export interface CreateVenueAmenityDTO {
     name: string;
     description?: string | null;
     videoUrl?: string;
-    file?: File;
+    files?: File[];
 }
 
 export interface UpdateVenueAmenityDTO {
@@ -24,8 +32,8 @@ export interface UpdateVenueAmenityDTO {
     position?: number;
     description?: string | null;
     videoUrl?: string;
-    file?: File;
-    removeImage?: boolean;
+    images?: AmenityImageRef[];
+    files?: File[];
 }
 
 export interface VenueAmenityResponse {

@@ -63,17 +63,16 @@ describe("PublicServiceDetailDialog", () => {
     expect(html).not.toContain("tour.mp4");
   });
 
-  it("sem navegacao, nao mostra setas nem contador", () => {
+  it("sem navegacao, nao mostra setas", () => {
     const html = renderToStaticMarkup(
       <PublicServiceDetailDialog open onOpenChange={() => undefined} name="Painel de Led" description="Led" />,
     );
 
     expect(html).not.toContain('aria-label="Anterior"');
     expect(html).not.toContain('aria-label="Próximo"');
-    expect(html).not.toContain("aria-live");
   });
 
-  it("com navegacao, mostra setas e a posicao", () => {
+  it("com navegacao, mostra as setas fora do painel e sem contador", () => {
     const html = renderToStaticMarkup(
       <PublicServiceDetailDialog
         open
@@ -82,12 +81,81 @@ describe("PublicServiceDetailDialog", () => {
         description="Aquecida"
         onPrevious={() => undefined}
         onNext={() => undefined}
-        position={{ current: 2, total: 5 }}
       />,
     );
 
     expect(html).toContain('aria-label="Anterior"');
     expect(html).toContain('aria-label="Próximo"');
-    expect(html).toContain("2 de 5");
+    expect(html.indexOf('aria-label="Próximo"')).toBeLessThan(html.indexOf("scrollbar-house"));
+    expect(html).not.toContain("aria-live");
+  });
+
+  function photoTags(html: string) {
+    return [...html.matchAll(/<img[^>]*>/g)].map((match) => match[0]);
+  }
+
+  function dialogWith(images: string[]) {
+    return renderToStaticMarkup(
+      <PublicServiceDetailDialog
+        open
+        onOpenChange={() => undefined}
+        name="Piscina"
+        images={images}
+        onPrevious={() => undefined}
+        onNext={() => undefined}
+      />,
+    );
+  }
+
+  it("uma foto ocupa a largura do grid", () => {
+    const tags = photoTags(dialogWith(["https://a"]));
+    expect(tags).toHaveLength(1);
+    expect(tags[0]).toContain("col-span-2");
+    expect(tags[0]).not.toContain("aspect-square");
+  });
+
+  it("duas fotos ficam lado a lado", () => {
+    const tags = photoTags(dialogWith(["https://a", "https://b"]));
+    expect(tags).toHaveLength(2);
+    for (const tag of tags) {
+      expect(tag).toContain("aspect-square");
+      expect(tag).not.toContain("col-span-2");
+    }
+  });
+
+  it("tres fotos: a primeira em cima, na largura, e duas embaixo, na ordem recebida", () => {
+    const html = dialogWith(["https://a", "https://b", "https://c"]);
+    const tags = photoTags(html);
+    expect(tags.map((tag) => tag.match(/src="([^"]+)"/)?.[1])).toEqual(["https://a", "https://b", "https://c"]);
+    expect(tags[0]).toContain("col-span-2");
+    expect(tags[0]).toContain("aspect-video");
+    expect(tags[1]).toContain("aspect-square");
+    expect(tags[2]).toContain("aspect-square");
+    expect(html).toContain('aria-label="Próximo"');
+  });
+
+  it("ignora foto vazia e, com images, nao usa o imageUrl", () => {
+    const html = renderToStaticMarkup(
+      <PublicServiceDetailDialog
+        open
+        onOpenChange={() => undefined}
+        name="Piscina"
+        images={["  ", "https://a"]}
+        imageUrl="https://antiga"
+      />,
+    );
+    expect(photoTags(html)).toHaveLength(1);
+    expect(html).not.toContain("https://antiga");
+  });
+
+  it("sem images, o modal do servico mostra o imageUrl como antes", () => {
+    const tags = photoTags(
+      renderToStaticMarkup(
+        <PublicServiceDetailDialog open onOpenChange={() => undefined} name="Painel de Led" imageUrl="https://example.com/led.jpg" />,
+      ),
+    );
+    expect(tags).toHaveLength(1);
+    expect(tags[0]).toContain("https://example.com/led.jpg");
+    expect(tags[0]).toContain("h-auto w-full rounded-md");
   });
 });

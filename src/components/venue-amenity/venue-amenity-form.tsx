@@ -1,12 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { FormLayout } from "@/components/ui/form-layout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { AmenityFormSubmit, AmenityFormValues, amenityFormSchema, amenityFormSubmit } from "@/lib/amenity-form";
+import {
+    AMENITY_MAX_PHOTOS,
+    AmenityFormSubmit,
+    AmenityFormValues,
+    AmenityPhoto,
+    addPhotos,
+    amenityFormSchema,
+    amenityFormSubmit,
+    initialPhotos,
+    movePhoto,
+    photoKey,
+    photoUrl,
+    removePhoto,
+    revokePhotoPreviews,
+} from "@/lib/amenity-form";
 import { VenueAmenity } from "@/types/venue-amenity";
 
 interface VenueAmenityFormProps {
@@ -26,8 +42,10 @@ function defaultValues(amenity?: VenueAmenity | null): AmenityFormValues {
 
 export function VenueAmenityForm({ amenity, onSubmit, onCancel }: VenueAmenityFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [file, setFile] = useState<File | undefined>();
-    const [removeImage, setRemoveImage] = useState(false);
+    const [photos, setPhotos] = useState<AmenityPhoto[]>(() => initialPhotos(amenity));
+    const [skippedPhotos, setSkippedPhotos] = useState(0);
+    const photosRef = useRef(photos);
+    photosRef.current = photos;
     const form = useForm<AmenityFormValues>({
         resolver: zodResolver(amenityFormSchema),
         defaultValues: defaultValues(amenity),
@@ -35,9 +53,20 @@ export function VenueAmenityForm({ amenity, onSubmit, onCancel }: VenueAmenityFo
 
     useEffect(() => {
         form.reset(defaultValues(amenity));
-        setFile(undefined);
-        setRemoveImage(false);
+        setPhotos((current) => {
+            revokePhotoPreviews(current);
+            return initialPhotos(amenity);
+        });
+        setSkippedPhotos(0);
     }, [amenity, form]);
+
+    useEffect(() => () => revokePhotoPreviews(photosRef.current), []);
+
+    const handleRemovePhoto = (index: number) => {
+        revokePhotoPreviews([photos[index]]);
+        setPhotos(removePhoto(photos, index));
+        setSkippedPhotos(0);
+    };
 
     const handleSubmit = async (values: AmenityFormValues) => {
         setIsSubmitting(true);
@@ -49,7 +78,7 @@ export function VenueAmenityForm({ amenity, onSubmit, onCancel }: VenueAmenityFo
                 form.setError("position", { message: "Posição deve ser um número inteiro maior ou igual a zero" });
                 return;
             }
-            await onSubmit(amenityFormSubmit(values, { file, removeImage }, position));
+            await onSubmit(amenityFormSubmit(values, photos, position));
         } finally {
             setIsSubmitting(false);
         }
@@ -92,30 +121,76 @@ export function VenueAmenityForm({ amenity, onSubmit, onCancel }: VenueAmenityFo
                 )}
             />
             <div>
-                <Label>Foto</Label>
-                {amenity?.imageUrl && !removeImage && !file && (
-                    <img src={amenity.imageUrl} alt="" className="mt-2 h-24 w-40 rounded object-cover" />
+                <Label>Fotos</Label>
+                <p className="mt-1 text-sm text-gray-500">
+                    Até {AMENITY_MAX_PHOTOS} fotos. Use as setas para escolher a ordem em que aparecem na proposta.
+                </p>
+                {photos.length > 0 && (
+                    <ul className="mt-2 grid max-w-md grid-cols-3 gap-2">
+                        {photos.map((photo, index) => (
+                            <li key={photoKey(photo)}>
+                                <img
+                                    src={photoUrl(photo)}
+                                    alt={`Foto ${index + 1}`}
+                                    className="aspect-square w-full rounded object-cover"
+                                />
+                                <div className="mt-1 flex justify-between">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        aria-label="Mover foto para a esquerda"
+                                        disabled={index === 0}
+                                        onClick={() => setPhotos(movePhoto(photos, index, -1))}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        aria-label="Remover foto"
+                                        onClick={() => handleRemovePhoto(index)}
+                                    >
+                                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        aria-label="Mover foto para a direita"
+                                        disabled={index === photos.length - 1}
+                                        onClick={() => setPhotos(movePhoto(photos, index, 1))}
+                                    >
+                                        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                                    </Button>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
                 )}
-                <Input
-                    type="file"
-                    accept="image/*"
-                    className="mt-1"
-                    onChange={(event) => {
-                        setFile(event.target.files?.[0]);
-                        setRemoveImage(false);
-                    }}
-                />
-                {amenity?.imageUrl && (
-                    <button
-                        type="button"
-                        className="mt-2 text-sm text-gray-600 underline"
-                        onClick={() => {
-                            setRemoveImage((current) => !current);
-                            setFile(undefined);
+                {photos.length < AMENITY_MAX_PHOTOS && (
+                    <Input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="mt-2"
+                        onChange={(event) => {
+                            const chosen = Array.from(event.target.files ?? []);
+                            event.target.value = "";
+                            const { list, skipped } = addPhotos(photos, chosen);
+                            setPhotos(list);
+                            setSkippedPhotos(skipped.length);
                         }}
-                    >
-                        {removeImage ? "Manter a foto atual" : "Remover foto"}
-                    </button>
+                    />
+                )}
+                {skippedPhotos > 0 && (
+                    <p className="mt-1 text-sm text-amber-700" role="status">
+                        Só cabem {AMENITY_MAX_PHOTOS} fotos. {skippedPhotos === 1 ? "1 foto ficou" : `${skippedPhotos} fotos ficaram`} de fora.
+                    </p>
                 )}
             </div>
             <FormField

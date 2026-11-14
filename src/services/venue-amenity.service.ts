@@ -16,14 +16,14 @@ export const venueAmenityService = {
     },
 
     create: async (data: CreateVenueAmenityDTO) => {
-        const { file, ...payload } = data;
-        const response = await api.post<VenueAmenityResponse>("/venue-amenity/create", amenityFormData(payload, file), multipart);
+        const { files, ...payload } = data;
+        const response = await api.post<VenueAmenityResponse>("/venue-amenity/create", amenityFormData(payload, files), multipart);
         return response.data;
     },
 
     update: async (data: UpdateVenueAmenityDTO) => {
-        const { file, ...payload } = data;
-        const response = await api.put<VenueAmenityResponse>("/venue-amenity/update", amenityFormData(payload, file), multipart);
+        const { files, ...payload } = data;
+        const response = await api.put<VenueAmenityResponse>("/venue-amenity/update", amenityFormData(payload, files), multipart);
         return response.data;
     },
 

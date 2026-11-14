@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
 import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
 import { ServiceListSkeleton } from "@/components/service/service-list-skeleton";
-import { AmenityFormSubmit } from "@/lib/amenity-form";
+import { AmenityFormSubmit, amenityPhotoPayload } from "@/lib/amenity-form";
 
 interface VenueAmenitySectionProps {
     amenities: VenueAmenity[];
@@ -37,6 +37,7 @@ export function VenueAmenitySection({
     const { toast } = useToast();
 
     const handleSubmit = async (data: AmenityFormSubmit) => {
+        const { images, files } = amenityPhotoPayload(data.photos);
         try {
             const response = selectedAmenity
                 ? await updateAmenity({
@@ -45,15 +46,15 @@ export function VenueAmenitySection({
                     position: data.position,
                     description: data.description,
                     videoUrl: data.videoUrl,
-                    file: data.file,
-                    removeImage: data.removeImage,
+                    images,
+                    files,
                 })
                 : await createAmenity({
                     venueId,
                     name: data.name,
                     description: data.description,
                     videoUrl: data.videoUrl,
-                    file: data.file,
+                    files,
                 });
             const { title, message } = handleBackendSuccess(
                 response,
