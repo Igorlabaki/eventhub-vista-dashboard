@@ -38,6 +38,7 @@ describe("sidebar por secoes", () => {
       "Site",
       "Regras",
       "Características",
+      "Fotos",
     ]);
     expect(venueSections.flatMap((section) => section.items).some((item) => item.title === "Configurações")).toBe(false);
     expect(itemHref("/venue/ar756", venueSettingsItem.path)).toBe("/venue/ar756/settings");

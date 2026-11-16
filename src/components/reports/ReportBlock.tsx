@@ -13,11 +13,12 @@ interface ReportBlockProps {
   error: unknown;
   onRetry: () => void;
   isEmpty: boolean;
+  emptyLabel?: string;
   className?: string;
   children: ReactNode;
 }
 
-export function ReportBlock({ icon: Icon, title, subtitle, actions, isLoading, error, onRetry, isEmpty, className = "", children }: ReportBlockProps) {
+export function ReportBlock({ icon: Icon, title, subtitle, actions, isLoading, error, onRetry, isEmpty, emptyLabel = EMPTY_BLOCK_LABEL, className = "", children }: ReportBlockProps) {
   return (
     <section className={`rounded-2xl border bg-white p-5 shadow-sm ${className}`} aria-busy={isLoading}>
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
@@ -51,7 +52,7 @@ export function ReportBlock({ icon: Icon, title, subtitle, actions, isLoading, e
           </button>
         </div>
       ) : isEmpty ? (
-        <p className="py-10 text-center text-sm text-slate-500">{EMPTY_BLOCK_LABEL}</p>
+        <p className="py-10 text-center text-sm text-slate-500">{emptyLabel}</p>
       ) : (
         children
       )}

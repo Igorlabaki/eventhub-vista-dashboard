@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { OccupancyCell } from "@/types/venue";
 import {
+  adsChannelLabel,
   bandLabel,
+  formatRoas,
   blockErrorMessage,
   capacityIndicator,
   categoryFilterParam,
@@ -78,6 +80,15 @@ describe("report-blocks", () => {
     expect(categoryLabel("WEDDING")).toBe("Casamento");
     expect(categoryFilterParam("ALL")).toBeUndefined();
     expect(categoryFilterParam("NONE")).toBe("NONE");
+  });
+
+  it("formata o retorno dos anuncios e o nome do canal", () => {
+    expect(formatRoas(8)).toBe("8,0x");
+    expect(formatRoas(2.345)).toBe("2,3x");
+    expect(formatRoas(null)).toBe("—");
+    expect(adsChannelLabel(null)).toBe("Sem canal");
+    expect(adsChannelLabel("TIKTOK")).toBe("TikTok");
+    expect(adsChannelLabel("OTHER")).toBe("Outros");
   });
 
   it("explica o 403 e generaliza as demais falhas", () => {

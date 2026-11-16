@@ -11,11 +11,13 @@ import {
 
 export type CreateEmailConfigWithFileDTO = Omit<CreateEmailConfigDTO, 'backgroundImageUrl'> & {
   file?: File;
+  backgroundPhotoId?: string;
 };
 
 export type UpdateEmailConfigWithFileDTO = Omit<UpdateEmailConfigDTO, 'data'> & {
   data: Omit<UpdateEmailConfigDTO['data'], 'backgroundImageUrl'> & {
     file?: File;
+    backgroundPhotoId?: string;
   };
 };
 
@@ -30,6 +32,7 @@ export const emailConfigService = {
     if (data.file) {
       formData.append('file', data.file, data.file.name);
     }
+    if (data.backgroundPhotoId) formData.append('backgroundPhotoId', data.backgroundPhotoId);
     const response = await api.post<EmailConfigCreateResponse>('/emailConfig/create', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -59,6 +62,7 @@ export const emailConfigService = {
     if (data.data.file) {
       formData.append('file', data.data.file, data.data.file.name);
     }
+    if (data.data.backgroundPhotoId) formData.append('backgroundPhotoId', data.data.backgroundPhotoId);
     const response = await api.put<EmailConfigUpdateResponse>('/emailConfig/update', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

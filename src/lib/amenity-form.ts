@@ -16,6 +16,7 @@ export type AmenityFormValues = z.infer<typeof amenityFormSchema>;
 
 export type AmenityPhoto =
   | { kind: "existing"; id: string; url: string }
+  | { kind: "library"; key: string; photoId: string; url: string }
   | { kind: "new"; key: string; file: File; previewUrl: string };
 
 export type AmenityFormSubmit = {
@@ -59,12 +60,29 @@ export function removePhoto(list: AmenityPhoto[], index: number): AmenityPhoto[]
   return list.filter((_, current) => current !== index);
 }
 
+export function addLibraryPhotos(
+  list: AmenityPhoto[],
+  chosen: { id: string; url: string }[],
+): { list: AmenityPhoto[]; skipped: number } {
+  const known = new Set(list.flatMap((photo) => (photo.kind === "library" ? [photo.photoId] : [])));
+  const fresh = chosen.filter((photo) => !known.has(photo.id));
+  const room = Math.max(0, AMENITY_MAX_PHOTOS - list.length);
+  const added: AmenityPhoto[] = fresh.slice(0, room).map((photo) => ({
+    kind: "library",
+    key: `lib-${photo.id}`,
+    photoId: photo.id,
+    url: photo.url,
+  }));
+  return { list: [...list, ...added], skipped: Math.max(0, fresh.length - added.length) };
+}
+
 export function photoKey(photo: AmenityPhoto) {
   return photo.kind === "existing" ? photo.id : photo.key;
 }
 
 export function photoUrl(photo: AmenityPhoto) {
-  return photo.kind === "existing" ? photo.url : photo.previewUrl;
+  if (photo.kind === "new") return photo.previewUrl;
+  return photo.url;
 }
 
 export function revokePhotoPreviews(list: AmenityPhoto[], revoke: (url: string) => void = (url) => URL.revokeObjectURL(url)) {
@@ -77,6 +95,7 @@ export function amenityPhotoPayload(list: AmenityPhoto[]): { images: AmenityImag
   const files: File[] = [];
   const images = list.map((photo): AmenityImageRef => {
     if (photo.kind === "existing") return { id: photo.id };
+    if (photo.kind === "library") return { photoId: photo.photoId };
     files.push(photo.file);
     return { newIndex: files.length - 1 };
   });

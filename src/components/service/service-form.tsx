@@ -26,6 +26,10 @@ import {
 import { Service, ServicePricingType } from "@/types/service";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { PhotoPicker, PickedVenuePhoto } from "@/components/venue-photo/PhotoPicker";
+import { useVenueStore } from "@/store/venueStore";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { Permissions } from "@/types/permissions";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -63,6 +67,7 @@ interface ServiceFormProps {
     pricingType: ServicePricingType;
     description?: string | null;
     file?: File;
+    photoId?: string;
     removeImage?: boolean;
     rpaRequired: boolean;
     rpaMinPeople?: number | null;
@@ -73,8 +78,11 @@ interface ServiceFormProps {
 export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [file, setFile] = useState<File | undefined>();
+  const [picked, setPicked] = useState<PickedVenuePhoto[]>([]);
   const [removeImage, setRemoveImage] = useState(false);
+  const { selectedVenue } = useVenueStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+  const canUploadPhotos = currentUserVenuePermission?.permissions?.includes(Permissions.EDIT_VENUE_PHOTOS) ?? false;
   const { deleteService } = useServiceStore();
   const { toast } = useToast();
 
@@ -99,7 +107,7 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
       rpaRequired: service?.rpaRequired ?? false,
       rpaMinPeople: service?.rpaMinPeople,
     });
-    setFile(undefined);
+    setPicked([]);
     setRemoveImage(false);
   }, [service, form]);
  
@@ -141,7 +149,7 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
         price: parseCurrency(values.price),
         pricingType: values.pricingType,
         description: values.description?.trim() ? values.description.trim() : null,
-        file,
+        photoId: picked[0]?.id,
         removeImage,
         rpaRequired: values.rpaRequired,
         rpaMinPeople: values.rpaMinPeople ?? null,
@@ -245,25 +253,30 @@ export function ServiceForm({ service, onSubmit, onCancel }: ServiceFormProps) {
       />
       <div>
         <Label>Foto</Label>
-        {service?.imageUrl && !removeImage && !file && (
+        {service?.imageUrl && !removeImage && picked.length === 0 && (
           <img src={service.imageUrl} alt="" className="mt-2 h-24 w-40 rounded object-cover" />
         )}
-        <Input
-          type="file"
-          accept="image/*"
-          className="mt-1"
-          onChange={(event) => {
-            setFile(event.target.files?.[0]);
-            setRemoveImage(false);
-          }}
-        />
+        {selectedVenue?.id && (
+          <div className="mt-1">
+            <PhotoPicker
+              venueId={selectedVenue.id}
+              mode="single"
+              value={picked}
+              onChange={(photos) => {
+                setPicked(photos);
+                setRemoveImage(false);
+              }}
+              canUpload={canUploadPhotos}
+            />
+          </div>
+        )}
         {service?.imageUrl && (
           <button
             type="button"
             className="mt-2 text-sm text-gray-600 underline"
             onClick={() => {
               setRemoveImage((current) => !current);
-              setFile(undefined);
+              setPicked([]);
             }}
           >
             {removeImage ? "Manter a foto atual" : "Remover foto"}

@@ -17,7 +17,8 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Expense, ExpenseType, ExpenseCategory, CreateExpenseDTO } from "@/types/expense";
+import { Expense, ExpenseType, ExpenseCategory, CreateExpenseDTO, ExpenseTrafficSource } from "@/types/expense";
+import { expenseTrafficSourceOptions, expenseTrafficSourcePayload } from "@/components/expense/expense-traffic-source";
 import {
   Select,
   SelectContent,
@@ -36,6 +37,7 @@ const formSchema = z
     paymentDate: z.string().optional(),
     type: z.nativeEnum(ExpenseType),
     category: z.nativeEnum(ExpenseCategory),
+    trafficSource: z.union([z.enum(["INSTAGRAM", "FACEBOOK", "TIKTOK", "GOOGLE", "OTHER"]), z.literal("")]).optional(),
     recurring: z.boolean(),
     venueId: z.string().min(1, "Venue é obrigatória"),
   })
@@ -47,6 +49,13 @@ const formSchema = z
         path: ["paymentDate"],
       });
     }
+    if (data.category === ExpenseCategory.ADVERTISING && !data.trafficSource) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Selecione o canal",
+        path: ["trafficSource"],
+      });
+    }
   });
 
 export type ExpenseFormValues = {
@@ -56,6 +65,7 @@ export type ExpenseFormValues = {
   paymentDate?: string;
   type: ExpenseType;
   category: ExpenseCategory;
+  trafficSource?: ExpenseTrafficSource | "";
   recurring: boolean;
   venueId: string;
 };
@@ -119,6 +129,7 @@ export function ExpenseForm({
       paymentDate: expense?.paymentDate ?? "",
       type: expense?.type ?? ExpenseType.MONTHLY,
       category: expense?.category ?? ExpenseCategory.MAINTENANCE,
+      trafficSource: expense?.trafficSource ?? "",
       recurring: expense?.recurring ?? false,
       venueId: venueId,
     },
@@ -133,10 +144,21 @@ export function ExpenseForm({
       paymentDate: expense?.paymentDate ?? "",
       type: expense?.type ?? ExpenseType.MONTHLY,
       category: expense?.category ?? ExpenseCategory.MAINTENANCE,
+      trafficSource: expense?.trafficSource ?? "",
       recurring: expense?.recurring ?? false,
       venueId: venueId,
     });
   }, [expense, form, venueId]);
+
+  const category = form.watch("category");
+  const isAdvertising = category === ExpenseCategory.ADVERTISING;
+
+  React.useEffect(() => {
+    if (!isAdvertising && form.getValues("trafficSource")) {
+      form.setValue("trafficSource", "");
+      form.clearErrors("trafficSource");
+    }
+  }, [isAdvertising, form]);
 
   React.useEffect(() => {
     const subscription = form.watch((value, { name, type }) => {
@@ -179,6 +201,7 @@ export function ExpenseForm({
       await onSubmit({
         ...values,
         amount: parseCurrency(values.amount),
+        trafficSource: expenseTrafficSourcePayload(values.category, values.trafficSource),
       });
     } catch (error) {
       console.error('Erro ao submeter formulário:', error);
@@ -311,6 +334,33 @@ export function ExpenseForm({
           </FormItem>
         )}
       />
+
+      {isAdvertising && (
+        <FormField
+          control={form.control}
+          name="trafficSource"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Canal</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o canal" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {expenseTrafficSourceOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.display}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={form.control}

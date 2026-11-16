@@ -4,7 +4,7 @@ export interface VenueAmenityImage {
     position: number;
 }
 
-export type AmenityImageRef = { id: string } | { newIndex: number };
+export type AmenityImageRef = { id: string } | { newIndex: number } | { photoId: string };
 
 export interface VenueAmenity {
     id: string;

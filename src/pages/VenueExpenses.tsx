@@ -50,12 +50,9 @@ export default function VenueExpenses() {
   };
 
   // Função que recebe os dados do form, converte amount e chama o backend
-  const handleExpenseFormSubmit = async (values: ExpenseFormValues) => {
+  const handleExpenseFormSubmit = async (payload: CreateExpenseDTO) => {
     try {
       let response;
-      const payload: CreateExpenseDTO = {
-        ...values,
-      };
       if (selectedExpense) {
         response = await updateExpense(selectedExpense.id, payload as UpdateExpenseDTO);
         const { title, message } = handleBackendSuccess(response, "Despesa atualizada com sucesso!");

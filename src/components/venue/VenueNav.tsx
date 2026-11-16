@@ -14,6 +14,7 @@ import {
   Receipt,
   Settings,
   Sparkles,
+  Images,
   Target,
   Wrench,
 } from "lucide-react";
@@ -51,6 +52,7 @@ const venueIcons: Record<string, ElementType> = {
   Site: Globe,
   Regras: ListChecks,
   Características: Sparkles,
+  Fotos: Images,
   Configurações: Settings,
 };
 

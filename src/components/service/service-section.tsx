@@ -32,7 +32,7 @@ export function ServiceSection({
   const { createService, updateService } = useServiceStore();
   const { toast } = useToast();
 
-  const handleSubmit = async (data: Partial<Service> & { file?: File; removeImage?: boolean }) => {
+  const handleSubmit = async (data: Partial<Service> & { file?: File; photoId?: string; removeImage?: boolean }) => {
     try {
       let response;
       if (selectedService) {
@@ -45,6 +45,7 @@ export function ServiceSection({
             pricingType: data.pricingType,
             description: data.description,
             removeImage: data.removeImage,
+            photoId: data.photoId,
             rpaRequired: data.rpaRequired,
             rpaMinPeople: data.rpaMinPeople,
           },
@@ -62,6 +63,7 @@ export function ServiceSection({
           pricingType: data.pricingType,
           description: data.description,
           file: data.file,
+          photoId: data.photoId,
           rpaRequired: data.rpaRequired,
           rpaMinPeople: data.rpaMinPeople,
         });

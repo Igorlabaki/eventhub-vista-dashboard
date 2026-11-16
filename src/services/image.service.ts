@@ -16,12 +16,14 @@ import {
 } from '@/types/image';
 
 export const imageService = {
-  createImage: async (data: CreateImageDTO & { file: File, responsiveMode: string }) => {
+  createImage: async (data: CreateImageDTO & { responsiveMode?: string }) => {
     const formData = new FormData();
 
-    formData.append('file', data.file);
-    formData.append('tag', data.tag);
+    if (data.file) formData.append('file', data.file);
+    if (data.photoId) formData.append('photoId', data.photoId);
+    formData.append('tag', data.tag ?? '');
     formData.append('venueId', data.venueId);
+    if (data.imageUrl) formData.append('imageUrl', data.imageUrl);
     if (data.group) formData.append('group', data.group);
     if (data.position) formData.append('position', data.position);
     if (data.description) formData.append('description', data.description);
@@ -43,6 +45,8 @@ export const imageService = {
   updateImage: async (data: UpdateImageDTO) => {
     const formData = new FormData();
     if (data.file) formData.append('file', data.file);
+    if (data.photoId) formData.append('photoId', data.photoId);
+    if (data.imageUrl) formData.append('imageUrl', data.imageUrl);
     formData.append('imageId', data.imageId);
     formData.append('tag', data.tag);
     formData.append('venueId', data.venueId);

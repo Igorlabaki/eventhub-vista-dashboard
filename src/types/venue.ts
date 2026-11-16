@@ -165,6 +165,10 @@ export interface UpdateVenueInfoDTO {
 export type ItemListVenueResponse = {
   id: string;
   name: string;
+  logoUrl?: string | null;
+  proposalPrimaryColor?: string | null;
+  proposalSecondaryColor?: string | null;
+  proposalTextColor?: string | null;
   images: Image[];
   DateEvent: DateEvent[];
   _count: {
@@ -463,6 +467,29 @@ export interface EventProfileData {
     atLeast80Rate: number | null;
     above100Rate: number | null;
   } | null;
+}
+
+export type AdsChannel = "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "GOOGLE" | "OTHER";
+
+export interface AdsReportTotals {
+  spent: number;
+  proposals: number;
+  events: number;
+  revenue: number;
+  costPerProposal: number | null;
+  costPerEvent: number | null;
+  roas: number | null;
+}
+
+export interface AdsReportRow extends AdsReportTotals {
+  /** `null` = gasto de Publicidade sem canal. */
+  channel: AdsChannel | null;
+}
+
+export interface AdsReportData {
+  year: number;
+  rows: AdsReportRow[];
+  total: AdsReportTotals;
 }
 
 export interface ReportBlockResponse<T> {

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   AMENITY_VIDEO_URL_MESSAGE,
   AmenityPhoto,
+  addLibraryPhotos,
   addPhotos,
   amenityFormData,
   amenityFormSchema,
@@ -31,7 +32,11 @@ function saved(id: string): AmenityPhoto {
 }
 
 function ids(list: AmenityPhoto[]) {
-  return list.map((photo) => (photo.kind === "existing" ? photo.id : photo.file.name));
+  return list.map((photo) => {
+    if (photo.kind === "existing") return photo.id;
+    if (photo.kind === "library") return photo.photoId;
+    return photo.file.name;
+  });
 }
 
 describe("formulario da caracteristica", () => {
@@ -96,6 +101,18 @@ describe("formulario da caracteristica", () => {
     const revoked: string[] = [];
     revokePhotoPreviews(list, (url) => revoked.push(url));
     expect(revoked).toEqual(["blob:1.png"]);
+  });
+
+  it("foto da biblioteca vira photoId e nao entra como arquivo", () => {
+    const { list, skipped } = addLibraryPhotos([saved("a")], [
+      { id: "p1", url: "https://bucket/p1.webp" },
+      { id: "p2", url: "https://bucket/p2.webp" },
+      { id: "p3", url: "https://bucket/p3.webp" },
+    ]);
+    expect(skipped).toBe(1);
+    const { images, files } = amenityPhotoPayload(list);
+    expect(images).toEqual([{ id: "a" }, { photoId: "p1" }, { photoId: "p2" }]);
+    expect(files).toEqual([]);
   });
 
   it("salva, nova e salva viram id, newIndex 0 e id com um arquivo", () => {

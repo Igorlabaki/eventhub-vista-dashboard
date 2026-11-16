@@ -14,6 +14,7 @@ import {
 import { ExpenseListSkeleton } from "@/components/expense/expense-list-skeleton"
 import { ConfirmDeleteDialog } from "@/components/ui/confirm-delete-dialog"
 import { Expense } from "@/types/expense"
+import { expenseChannelLabel } from "@/components/expense/expense-traffic-source"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { useExpenseStore } from "@/store/expenseStore"
@@ -133,6 +134,11 @@ export function ExpenseList({
                         className="font-medium cursor-pointer"
                       >
                         {expense.name}
+                        {expenseChannelLabel(expense) && (
+                          <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-600">
+                            {expenseChannelLabel(expense)}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>{formatCurrency(expense.amount)}</TableCell>
                       {hasEditPermission() && ( 

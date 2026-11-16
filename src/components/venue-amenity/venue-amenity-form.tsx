@@ -13,7 +13,7 @@ import {
     AmenityFormSubmit,
     AmenityFormValues,
     AmenityPhoto,
-    addPhotos,
+    addLibraryPhotos,
     amenityFormSchema,
     amenityFormSubmit,
     initialPhotos,
@@ -24,9 +24,13 @@ import {
     revokePhotoPreviews,
 } from "@/lib/amenity-form";
 import { VenueAmenity } from "@/types/venue-amenity";
+import { PhotoPicker } from "@/components/venue-photo/PhotoPicker";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { Permissions } from "@/types/permissions";
 
 interface VenueAmenityFormProps {
     amenity?: VenueAmenity | null;
+    venueId: string;
     onSubmit: (data: AmenityFormSubmit) => Promise<void>;
     onCancel: () => void;
 }
@@ -40,10 +44,12 @@ function defaultValues(amenity?: VenueAmenity | null): AmenityFormValues {
     };
 }
 
-export function VenueAmenityForm({ amenity, onSubmit, onCancel }: VenueAmenityFormProps) {
+export function VenueAmenityForm({ amenity, venueId, onSubmit, onCancel }: VenueAmenityFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [photos, setPhotos] = useState<AmenityPhoto[]>(() => initialPhotos(amenity));
     const [skippedPhotos, setSkippedPhotos] = useState(0);
+    const { currentUserVenuePermission } = useUserVenuePermissionStore();
+    const canUploadPhotos = currentUserVenuePermission?.permissions?.includes(Permissions.EDIT_VENUE_PHOTOS) ?? false;
     const photosRef = useRef(photos);
     photosRef.current = photos;
     const form = useForm<AmenityFormValues>({
@@ -173,19 +179,21 @@ export function VenueAmenityForm({ amenity, onSubmit, onCancel }: VenueAmenityFo
                     </ul>
                 )}
                 {photos.length < AMENITY_MAX_PHOTOS && (
-                    <Input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="mt-2"
-                        onChange={(event) => {
-                            const chosen = Array.from(event.target.files ?? []);
-                            event.target.value = "";
-                            const { list, skipped } = addPhotos(photos, chosen);
-                            setPhotos(list);
-                            setSkippedPhotos(skipped.length);
-                        }}
-                    />
+                    <div className="mt-2">
+                        <PhotoPicker
+                            venueId={venueId}
+                            mode="multiple"
+                            max={AMENITY_MAX_PHOTOS - photos.length}
+                            value={[]}
+                            onChange={(selected) => {
+                                const { list, skipped } = addLibraryPhotos(photos, selected);
+                                setPhotos(list);
+                                setSkippedPhotos(skipped);
+                            }}
+                            canUpload={canUploadPhotos}
+                            triggerLabel="Escolher fotos"
+                        />
+                    </div>
                 )}
                 {skippedPhotos > 0 && (
                     <p className="mt-1 text-sm text-amber-700" role="status">

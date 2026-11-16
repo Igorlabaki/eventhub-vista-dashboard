@@ -37,6 +37,15 @@ export const useReportServiceAdherence = (
     ...blockQuery,
   });
 
+export const useReportAds = (venueId: string | undefined, year: number) =>
+  useQuery({
+    queryKey: ['venueReportBlock', 'ads', venueId, year],
+    queryFn: () => venueService.getReportAds({ venueId: venueId!, year }),
+    select: (response) => response.data,
+    enabled: !!venueId,
+    ...blockQuery,
+  });
+
 export const useReportEventProfile = (venueId: string | undefined, year: number) =>
   useQuery({
     queryKey: ['venueReportBlock', 'event-profile', venueId, year],

@@ -2,7 +2,6 @@ import { FormField, FormItem, FormControl } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Proposal } from "@/types/proposal";
 import { UseFormReturn } from "react-hook-form";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { X } from "lucide-react";
@@ -18,7 +17,9 @@ import { useUserStore } from "@/store/userStore";
 import { toast } from "sonner";
 import { CreateEmailConfigWithFileDTO, UpdateEmailConfigWithFileDTO } from "@/services/emailConfig.service";
 import { showSuccessToast } from "../ui/success-toast";
-import { useToast } from "@/hooks/use-toast";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { Permissions } from "@/types/permissions";
+import { PhotoPicker, PickedVenuePhoto } from "@/components/venue-photo/PhotoPicker";
 interface EmailTabProps {
   proposal: Proposal | null;
   venueUrl?: string;
@@ -36,10 +37,13 @@ export function EmailTab({
   form,
 }: EmailTabProps) {
   const [preview, setPreview] = useState<string | null>(null);
+  const [backgroundPhoto, setBackgroundPhoto] = useState<PickedVenuePhoto | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   const { selectedVenue } = useVenueStore();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+  const canUploadPhotos = currentUserVenuePermission?.permissions?.includes(Permissions.EDIT_VENUE_PHOTOS) ?? false;
   const { fetchEmailConfigByType, currentEmailConfig, updateEmailConfig, createEmailConfig, isLoading } = useEmailConfigStore();
   const { user } = useUserStore();
 
@@ -52,47 +56,12 @@ export function EmailTab({
 
   // Atualizar preview e mensagem do form se vier config
   React.useEffect(() => {
-    // Nunca setar preview com a imagem do banco, apenas limpar se não houver arquivo selecionado
-    if (!form.getValues("file")) {
-      setPreview(null);
-    }
     if (currentEmailConfig && currentEmailConfig.message) {
       form.setValue("message", currentEmailConfig.message);
     }
   }, [currentEmailConfig]);
 
-
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      form.setValue("file", file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    form.setValue("file", null);
-    setPreview(null);
-  };
   const { toast } = useToast();
-  // Atualiza preview se já houver imagem salva
-  React.useEffect(() => {
-    if (form.getValues("file") && !preview) {
-      const file = form.getValues("file");
-      if (file instanceof File) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-  }, [form, preview]);
 
   // Função para enviar o e-mail
   const handleSend = async () => {
@@ -136,23 +105,20 @@ export function EmailTab({
   // Novo onSubmit para o formCard
   const handleFormSubmit = async () => {
     if (!selectedVenue) return;
-    const file = form.getValues("file");
     if (currentEmailConfig) {
-      // Atualizar config existente
       await updateEmailConfig({
         emailConfigId: currentEmailConfig.id,
         venueId: selectedVenue.id,
         data: {
-          file: file || undefined,
+          backgroundPhotoId: backgroundPhoto?.id,
         },
       } as UpdateEmailConfigWithFileDTO);
     } else {
-      // Criar nova config
       await createEmailConfig({
         title: `PROPOSAL - ${venueName}`,
         type: "PROPOSAL",
         venueId: selectedVenue.id,
-        file: file || undefined,
+        backgroundPhotoId: backgroundPhoto?.id,
       } as CreateEmailConfigWithFileDTO);
     }
     setIsEditMode(false);
@@ -296,25 +262,32 @@ export function EmailTab({
       }
     >
       <div className="space-y-2">
-        <Label htmlFor="file">Imagem de fundo (opcional)</Label>
-        <div className="flex items-center gap-4">
-          <Input
-            id="file"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="flex-1"
+        <Label>Imagem de fundo (opcional)</Label>
+        {selectedVenue?.id && (
+          <PhotoPicker
+            venueId={selectedVenue.id}
+            mode="single"
+            value={backgroundPhoto ? [backgroundPhoto] : []}
+            onChange={(photos) => {
+              setBackgroundPhoto(photos[0] ?? null);
+              setPreview(photos[0]?.url ?? null);
+            }}
+            canUpload={canUploadPhotos}
+            triggerLabel="Escolher foto"
           />
-          {(preview || currentEmailConfig?.backgroundImageUrl) && (
-            <button
-              type="button"
-              onClick={removeImage}
-              className="p-2 hover:bg-gray-100 rounded-full"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        )}
+        {(preview || currentEmailConfig?.backgroundImageUrl) && (
+          <button
+            type="button"
+            onClick={() => {
+              setBackgroundPhoto(null);
+              setPreview(null);
+            }}
+            className="p-2 hover:bg-gray-100 rounded-full"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
         {/* Miniatura da imagem */}
         {preview ? (
           <div className="mt-2">

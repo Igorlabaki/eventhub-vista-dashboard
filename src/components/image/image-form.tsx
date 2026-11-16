@@ -17,6 +17,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { CreateImageDTO, CreateImageOrganizationDTO, Image } from "@/types/image";
+import { PhotoPicker, PickedVenuePhoto } from "@/components/venue-photo/PhotoPicker";
+import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { Permissions } from "@/types/permissions";
 import { min } from "date-fns";
 
 const MAX_FILE_SIZE_MB = 2.5;
@@ -47,8 +50,12 @@ export function ImageForm({ imageItem, venueId, organizationId, onSubmit, onCanc
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [preview, setPreview] = useState<string | null>(imageItem?.imageUrl || null);
+  const [picked, setPicked] = useState<PickedVenuePhoto[]>([]);
   const { deleteImage } = useImageStore();
   const { toast } = useToast();
+  const { currentUserVenuePermission } = useUserVenuePermissionStore();
+  const canUploadPhotos = currentUserVenuePermission?.permissions?.includes(Permissions.EDIT_VENUE_PHOTOS) ?? false;
+  const usesLibrary = Boolean(venueId) && !organizationId;
 
   const form = useForm<ImageFormValues>({
     resolver: zodResolver(formSchema),
@@ -143,7 +150,15 @@ export function ImageForm({ imageItem, venueId, organizationId, onSubmit, onCanc
     setIsSubmitting(true);
     try {
       // Validação do arquivo para novas imagens
-      if (!imageItem && !values.file) {
+      if (!imageItem && usesLibrary && picked.length === 0) {
+        toast({
+          title: "Erro",
+          description: "Escolha uma foto da biblioteca.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!imageItem && !usesLibrary && !values.file) {
         toast({
           title: "Erro",
           description: "O arquivo é obrigatório para novas imagens.",
@@ -165,9 +180,10 @@ export function ImageForm({ imageItem, venueId, organizationId, onSubmit, onCanc
         };
       } else if (venueId) {
         payload = {
-          file: values.file,
+          file: undefined,
+          photoId: picked[0]?.id,
           tag: values.tag,
-          imageUrl: values.imageUrl,
+          imageUrl: picked[0]?.url ?? values.imageUrl,
           position: values.position,
           description: values.description,
           responsiveMode: values.responsiveMode,
@@ -208,6 +224,21 @@ export function ImageForm({ imageItem, venueId, organizationId, onSubmit, onCanc
           />
         </div>
       )}
+      {usesLibrary ? (
+        venueId ? (
+          <PhotoPicker
+            venueId={venueId}
+            mode="single"
+            value={picked}
+            onChange={(photos) => {
+              setPicked(photos);
+              setPreview(photos[0]?.url ?? imageItem?.imageUrl ?? null);
+            }}
+            canUpload={canUploadPhotos}
+            triggerLabel="Escolher foto"
+          />
+        ) : null
+      ) : (
       <FormField
         control={form.control}
         name="file"
@@ -226,6 +257,7 @@ export function ImageForm({ imageItem, venueId, organizationId, onSubmit, onCanc
           </FormItem>
         )}
       />
+      )}
       <FormField
         control={form.control}
         name="tag"

@@ -21,6 +21,7 @@ export interface CreateServiceDTO {
     pricingType?: ServicePricingType;
     description?: string | null;
     file?: File;
+    photoId?: string;
     rpaRequired?: boolean;
     rpaMinPeople?: number | null;
 }
@@ -34,6 +35,7 @@ export interface UpdateServiceDTO {
         pricingType?: ServicePricingType;
         description?: string | null;
         removeImage?: boolean;
+        photoId?: string;
         rpaRequired?: boolean;
         rpaMinPeople?: number | null;
     };

@@ -6,6 +6,7 @@ import { useAnalysisYear } from "./useAnalysisYear";
 import { alignMonths } from "./report-metrics";
 import { FinancialReportCard } from "./FinancialReportCard";
 import { FinanceInput } from "./finance-metrics";
+import { AdsInvestmentCard } from "./AdsInvestmentCard";
 
 function useExpenseYear(venueId: string, year: string) {
   const [data, setData] = useState<ExpenseAnalysis | null>(null);
@@ -70,5 +71,10 @@ export function FinancialBalanceReport({
       : null,
   };
 
-  return <FinancialReportCard input={input} />;
+  return (
+    <div className="space-y-4">
+      <FinancialReportCard input={input} />
+      <AdsInvestmentCard venueId={venueId} year={Number(selectedYear)} />
+    </div>
+  );
 }

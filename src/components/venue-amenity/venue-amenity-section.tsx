@@ -89,6 +89,7 @@ export function VenueAmenitySection({
                         <VenueAmenityForm
                             key={venueCreateFormKey(selectedAmenity?.id, createSession)}
                             amenity={selectedAmenity}
+                            venueId={venueId}
                             onSubmit={handleSubmit}
                             onCancel={() => {
                                 setSelectedAmenity(undefined);

@@ -19,8 +19,9 @@ export interface CreateImageDTO {
   description: string;
   tag?: string;
   position?: string;
-  responsiveMode?: string;  
-  file: File;
+  responsiveMode?: string;
+  file?: File;
+  photoId?: string;
   group?: string;
 }
 export interface CreateImageOrganizationDTO {
@@ -42,7 +43,8 @@ export interface UpdateImageDTO {
   tag?: string;
   position?: string;
   responsiveMode?: string;
-  file: File;
+  file?: File;
+  photoId?: string;
   group?: string;
 }
 export interface UpdateImageOrganizationDTO {

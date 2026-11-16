@@ -13,6 +13,8 @@ export enum ExpenseCategory {
   ADVERTISING = "ADVERTISING"
 }
 
+export type ExpenseTrafficSource = "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "GOOGLE" | "OTHER";
+
 export interface Expense {
   id: string;
   name: string;
@@ -21,6 +23,7 @@ export interface Expense {
   paymentDate?: string; // ISO string
   type: ExpenseType;
   category: ExpenseCategory;
+  trafficSource?: ExpenseTrafficSource | null;
   recurring: boolean;
   createdAt: string;
   updatedAt: string;
@@ -34,6 +37,7 @@ export interface CreateExpenseParams {
   paymentDate?: string;
   type: ExpenseType;
   category: ExpenseCategory;
+  trafficSource?: ExpenseTrafficSource | null;
   recurring: boolean;
   venueId: string;
 }
@@ -131,6 +135,7 @@ export type CreateExpenseDTO = {
   paymentDate?: string;
   type: ExpenseType;
   category: ExpenseCategory;
+  trafficSource?: ExpenseTrafficSource | null;
   recurring: boolean;
   venueId: string;
 };

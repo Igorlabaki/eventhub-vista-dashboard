@@ -1,5 +1,6 @@
 import { EVENT_CATEGORY_OPTIONS } from "@/lib/event-category";
 import {
+  AdsChannel,
   EventProfileData,
   GuestBucketKey,
   LeadTimeBucketKey,
@@ -8,7 +9,7 @@ import {
   OccupancyKey,
   ReportEventCategoryFilter,
 } from "@/types/venue";
-import { UNCATEGORIZED_LABEL } from "./report-metrics";
+import { TRAFFIC_SOURCES, UNCATEGORIZED_LABEL } from "./report-metrics";
 
 export const UNAVAILABLE_LABEL = "indisponível";
 export const EMPTY_BLOCK_LABEL = "Nenhum registro neste periodo.";
@@ -38,6 +39,20 @@ export function formatRate(rate: number | null | undefined): string {
 export function formatDays(days: number | null): string {
   if (days === null) return UNAVAILABLE_LABEL;
   return `${formatDecimal(days)} ${days === 1 ? "dia" : "dias"}`;
+}
+
+export const NO_VALUE_LABEL = "—";
+export const NO_CHANNEL_LABEL = "Sem canal";
+
+/** Retorno do anuncio como multiplo da receita sobre o investido (`8,0x`). */
+export function formatRoas(roas: number | null): string {
+  if (roas === null || !Number.isFinite(roas)) return NO_VALUE_LABEL;
+  return `${roas.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}x`;
+}
+
+export function adsChannelLabel(channel: AdsChannel | null): string {
+  if (channel === null) return NO_CHANNEL_LABEL;
+  return TRAFFIC_SOURCES.find((source) => source.key.toLowerCase() === channel.toLowerCase())?.name ?? channel;
 }
 
 export function monthOptionLabel(month: number): string {

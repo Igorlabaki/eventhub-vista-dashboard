@@ -63,6 +63,10 @@ export function VenuesList({ venues, isLoading, onCreateClick, organizationId, o
               nextEvent={venue?.DateEvent?.[0] as DateEvent || null}
               upcomingEvents={venue?._count?.DateEvent || 0}
               organizationId={organizationId}
+              logoUrl={venue.logoUrl}
+              primaryColor={venue.proposalPrimaryColor}
+              secondaryColor={venue.proposalSecondaryColor}
+              textColor={venue.proposalTextColor}
               onEditClick={() => onEditClick?.(venue.id)}
             />
           ))}

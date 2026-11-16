@@ -24,6 +24,7 @@ import {
   LeadTimeData,
   ServiceAdherenceData,
   EventProfileData,
+  AdsReportData,
 } from '@/types/venue';
 
 export type CreateVenueWithFileDTO = Omit<CreateVenueDTO, 'imageUrl'> & {
@@ -175,6 +176,13 @@ export const venueService = {
 
   getReportEventProfile: async ({ venueId, year }: ReportBlockParams) => {
     const response = await api.get<ReportBlockResponse<EventProfileData>>('/venue/reports/event-profile', {
+      params: { venueId, year },
+    });
+    return response.data;
+  },
+
+  getReportAds: async ({ venueId, year }: ReportBlockParams) => {
+    const response = await api.get<ReportBlockResponse<AdsReportData>>('/venue/reports/ads', {
       params: { venueId, year },
     });
     return response.data;
