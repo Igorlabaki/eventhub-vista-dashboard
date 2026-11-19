@@ -78,6 +78,7 @@ export type PublicProposalServicesUpdate = {
 export interface ProposalPresentation {
   name: string;
   description: string | null;
+  slogan: string | null;
   logoUrl: string | null;
   city: string;
   state: string;

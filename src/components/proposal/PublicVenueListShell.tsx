@@ -118,7 +118,7 @@ function ListSkeleton({
       <main className="flex flex-1 flex-col px-2 py-14 md:px-8">
         <div className="mb-10 flex w-full flex-col items-center justify-center gap-4" aria-hidden>
           <Bone tone={pageTone} className="h-16 w-48 max-w-full" />
-          {venue?.description?.trim() ? (
+          {venue?.slogan?.trim() ? (
             <>
               <Bone tone={pageTone} className="h-4 w-full max-w-2xl" />
               <Bone tone={pageTone} className="h-4 w-4/5 max-w-xl" />
@@ -182,11 +182,11 @@ export function PublicVenueListShell({
   const [readyKey, setReadyKey] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = venue?.name ? venueTabTitle(venue.name, venue.description) : EVENTHUB_TAB_TITLE;
+    document.title = venue?.name ? venueTabTitle(venue.name, venue.slogan) : EVENTHUB_TAB_TITLE;
     return () => {
       document.title = EVENTHUB_TAB_TITLE;
     };
-  }, [venue?.name, venue?.description]);
+  }, [venue?.name, venue?.slogan]);
 
   useEffect(() => {
     if (!waitKey || readyKey === waitKey) return;
@@ -249,9 +249,9 @@ export function PublicVenueListShell({
               </span>
             </div>
           )}
-          {venue?.description?.trim() ? (
+          {venue?.slogan?.trim() ? (
             <p className="max-w-2xl whitespace-pre-line text-center text-[15px] font-normal leading-[1.6]">
-              {venue.description.trim()}
+              {venue.slogan.trim()}
             </p>
           ) : null}
         </div>

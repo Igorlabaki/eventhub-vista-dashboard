@@ -175,6 +175,7 @@ describe("apresentacao publica do espaco", () => {
     expect(page).toContain("A casa");
     expect(page).toContain("view.slogan");
     expect(page).toContain("view.houseCard");
+    expect(page).toContain("view.houseCard.description");
     expect(page).toContain("venueTabTitle(house.name, view.slogan)");
     expect(page).toContain("Serviços disponíveis");
     expect(page).toContain("Seu investimento");
@@ -184,7 +185,22 @@ describe("apresentacao publica do espaco", () => {
     expect(page).not.toContain("Alterar serviços");
     expect(page).not.toContain("Investimento total");
     expect(page).not.toContain("Alterar orçamento");
-    expect(proposal).toContain("house?.description");
+    expect(proposal).toContain("house?.slogan");
+    expect(proposal).toContain("presentation?.slogan");
+    expect(proposal).toContain("venueTabTitle(presentation.name, presentation.slogan)");
+    expect(proposal).not.toContain("house?.description");
+    expect(proposal).not.toContain("presentation?.description");
+    const form = source("src/pages/ProposalForm.tsx");
+    const shell = source("src/components/proposal/PublicVenueListShell.tsx");
+    const dashboard = source("src/pages/VenueDashboard.tsx");
+    for (const pageSource of [form, shell]) {
+      expect(pageSource).toContain("venue?.slogan");
+      expect(pageSource).toContain("venue.slogan");
+      expect(pageSource).not.toContain("venue?.description");
+      expect(pageSource).not.toContain("venue.description");
+    }
+    expect(dashboard).toContain("venueTabTitle(currentVenue.name, currentVenue.slogan)");
+    expect(dashboard).not.toContain("currentVenue.description");
     expect(proposal).toContain("Sua experiência inclui");
     expect(proposal).toContain("Seu investimento");
     expect(proposal).toContain("Investimento total");

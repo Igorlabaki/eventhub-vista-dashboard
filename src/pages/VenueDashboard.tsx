@@ -95,7 +95,7 @@ export default function VenueDashboard() {
   useEffect(() => {
     const currentVenue = venue?.id === venueId ? venue : null;
     document.title = currentVenue?.name
-      ? venueTabTitle(currentVenue.name, currentVenue.description)
+      ? venueTabTitle(currentVenue.name, currentVenue.slogan)
       : EVENTHUB_TAB_TITLE;
     return () => {
       document.title = EVENTHUB_TAB_TITLE;

@@ -392,7 +392,7 @@ function PublicProposalPageSkeleton({
         <div className="flex w-full max-w-3xl flex-col gap-5">
           <header className="flex flex-col items-center">
             <Bone tone={pageTone} className="mb-4 h-16 w-48 max-w-full" />
-            {presentation?.description?.trim() ? (
+            {presentation?.slogan?.trim() ? (
               <div className="mb-6 flex w-full max-w-2xl flex-col items-center gap-2" aria-hidden>
                 <Bone tone={pageTone} className="h-4 w-full" />
                 <Bone tone={pageTone} className="h-4 w-4/5" />
@@ -625,12 +625,12 @@ export default function ProposalView() {
 
   useEffect(() => {
     document.title = presentation?.name
-      ? venueTabTitle(presentation.name, presentation.description)
+      ? venueTabTitle(presentation.name, presentation.slogan)
       : EVENTHUB_TAB_TITLE;
     return () => {
       document.title = EVENTHUB_TAB_TITLE;
     };
-  }, [presentation?.name, presentation?.description]);
+  }, [presentation?.name, presentation?.slogan]);
 
   useEffect(() => {
     if (!id || presentationLoading || readyForId === id) return;
@@ -929,9 +929,9 @@ export default function ProposalView() {
                 </span>
               </div>
             )}
-            {house?.description?.trim() ? (
+            {house?.slogan?.trim() ? (
               <p className="mb-6 max-w-2xl whitespace-pre-line text-center text-[15px] font-normal leading-[1.6] motion-safe:animate-logo-in">
-                {house.description.trim()}
+                {house.slogan.trim()}
               </p>
             ) : null}
             {tourVideo ? (
