@@ -22,6 +22,7 @@ api.interceptors.request.use((config) => {
 export const PUBLIC_ROUTES = [
   '/venue/:id/form',
   '/venue/:id/rules/view',
+  '/venue/:id/apresentacao',
   '/proposal/:id/guest-list',
   '/proposal/:id/worker-list', 
   '/proposal/:id/schedule-list',

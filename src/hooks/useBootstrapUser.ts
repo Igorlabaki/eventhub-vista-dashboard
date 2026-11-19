@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 export const PUBLIC_ROUTES = [
   '/venue/:id/form',
   '/venue/:id/rules/view',
+  '/venue/:id/apresentacao',
   '/proposal/:id/guest-list',
   '/proposal/:id/worker-list', 
   '/proposal/:id/schedule-list',

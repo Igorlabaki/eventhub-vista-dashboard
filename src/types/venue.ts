@@ -8,6 +8,7 @@ export interface Venue {
   id: string;
   name: string;
   description?: string;
+  slogan?: string | null;
   email?: string | null;
   url?: string | null;
   tiktokUrl?: string | null;
@@ -110,6 +111,7 @@ export interface UpdateVenueDTO {
   userId: string;
   venueId: string;
   description?: string;
+  slogan?: string;
   whatsappNumber?: string;
   minimumPrice?: string;
   cep?: string;

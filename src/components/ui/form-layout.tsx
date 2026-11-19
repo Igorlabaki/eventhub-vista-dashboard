@@ -7,7 +7,7 @@ import { Form } from "@/components/ui/form";
 import { UseFormReturn, FieldValues } from "react-hook-form";
 
 interface FormLayoutProps<T extends FieldValues = FieldValues> {
-  title: string;
+  title?: string;
   children: React.ReactNode;
   onSubmit: (values: T) => void | Promise<void>;
   onCancel?: () => void;
@@ -49,18 +49,24 @@ export function FormLayout<T extends FieldValues = FieldValues>({
 
   return (
     <div className={`bg-white rounded-lg border shadow-sm p-6 animate-slide-in ${className}`}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">
-          {title}
-        </h2>
-        {
-          onCancel && (
-            <Button variant="outline" size="sm" onClick={onCancel}>
-              Voltar
-            </Button>
-          )
-        }
-      </div>
+      {(title || onCancel) && (
+        <div className="flex justify-between items-center mb-6">
+          {title ? (
+            <h2 className="text-xl font-semibold">
+              {title}
+            </h2>
+          ) : (
+            <span />
+          )}
+          {
+            onCancel && (
+              <Button variant="outline" size="sm" onClick={onCancel}>
+                Voltar
+              </Button>
+            )
+          }
+        </div>
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {children}

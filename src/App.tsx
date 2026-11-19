@@ -35,6 +35,7 @@ import { GoogleCalendarRedirectHandler } from "@/components/GoogleCalendarRedire
 import VenueServices from "./pages/VenueServices";
 import VenueRules from "./pages/VenueRules";
 import PublicVenueRulesPage from "./pages/PublicVenueRules";
+import VenuePresentation from "./pages/VenuePresentation";
 import VenueAmenities from "./pages/VenueAmenities";
 import VenuePhotos from "./pages/VenuePhotos";
 import ProposalDetails from "./pages/ProposalDetails";
@@ -160,6 +161,7 @@ const App = () => {
               {/* Public Form */}
                 <Route path="/venue/:id/form" element={<ProposalForm />} />
                 <Route path="/venue/:id/rules/view" element={<PublicVenueRulesPage />} />
+                <Route path="/venue/:id/apresentacao" element={<VenuePresentation />} />
                 <Route path="/venue/:id/partner-form" element={<PartnerForm />} />
                 <Route path="/venue/:id/crew-form" element={<CrewForm />} />
                 <Route path="/proposal/:id/b2b-contract" element={<ContarctPjFormPage />} />

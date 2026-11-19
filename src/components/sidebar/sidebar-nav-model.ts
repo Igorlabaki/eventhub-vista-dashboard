@@ -51,6 +51,7 @@ export const venueSections: SidebarNavSectionModel[] = [
       { title: "Regras", path: "/rules", permission: Permissions.VIEW_VENUE_RULES },
       { title: "Características", path: "/amenities", permission: Permissions.VIEW_VENUE_AMENITIES },
       { title: "Fotos", path: "/photos", permission: Permissions.VIEW_VENUE_PHOTOS },
+      { title: "Apresentação", path: "/apresentacao", permission: Permissions.VIEW_VENUE_SITES, opensExternalUrl: true },
     ],
   },
 ];

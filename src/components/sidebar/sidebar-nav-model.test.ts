@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { publicVenuePresentationShareUrl } from "@/lib/public-venue-presentation";
 import { Permissions } from "@/types/permissions";
 import {
   flatNavItems,
@@ -39,6 +40,7 @@ describe("sidebar por secoes", () => {
       "Regras",
       "Características",
       "Fotos",
+      "Apresentação",
     ]);
     expect(venueSections.flatMap((section) => section.items).some((item) => item.title === "Configurações")).toBe(false);
     expect(itemHref("/venue/ar756", venueSettingsItem.path)).toBe("/venue/ar756/settings");
@@ -78,6 +80,23 @@ describe("sidebar por secoes", () => {
       "Proprietários",
     ]);
     expect(flatNavItems(organizationSections, organizationSettingsItem).at(-1)?.title).toBe("Configurações");
+  });
+
+  it("abre a apresentacao do espaco fora do painel, na mesma permissao do site", () => {
+    const item = venueSections
+      .flatMap((section) => section.items)
+      .find((entry) => entry.title === "Apresentação");
+    const icon = () => null;
+    const href = publicVenuePresentationShareUrl("AR756");
+
+    expect(item?.permission).toBe(Permissions.VIEW_VENUE_SITES);
+    expect(item?.opensExternalUrl).toBe(true);
+    expect(internalItemHref("/venue/venue-1", item!)).toBeNull();
+    expect(
+      presentNavItems([item!], "/venue/venue-1", { Apresentação: icon }, () => href),
+    ).toEqual([{ title: "Apresentação", href, icon, external: true }]);
+    expect(href).toBe("https://event-hub-dashboard.vercel.app/venue/AR756/apresentacao");
+    expect(presentNavItems([item!], "/venue/venue-1", { Apresentação: icon }, () => null)).toEqual([]);
   });
 
   it("tira o link do evento do roteador interno e abre a url absoluta", () => {

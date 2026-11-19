@@ -5,6 +5,7 @@ import { FaFacebook, FaGlobe, FaInstagram, FaTiktok, FaWhatsapp } from "react-ic
 import { useVenueStore } from "@/store/venueStore";
 import { ClientPerDayProposalForm } from "@/components/proposal/forms/ClientPerDayProposalForm";
 import { ClientPerPersonProposalForm } from "@/components/proposal/forms/ClientPerPersonProposalForm";
+import { venueIdForPublicForm } from "@/lib/public-venue-presentation";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
 import type { Venue } from "@/types/venue";
 
@@ -173,7 +174,8 @@ export function ProposalForm() {
     setFailedId(null);
   }
 
-  const venue = selectedVenue?.id === id ? selectedVenue : null;
+  const resolvedVenueId = venueIdForPublicForm(id, selectedVenue);
+  const venue = resolvedVenueId && selectedVenue?.id === resolvedVenueId ? selectedVenue : null;
 
   useEffect(() => {
     if (!id || !fetchVenueById) return;
@@ -249,7 +251,7 @@ export function ProposalForm() {
     );
   }
 
-  if (!pageReady) {
+  if (!pageReady || !venue) {
     return <PublicBudgetFormSkeleton venue={venue} shaped={Boolean(venue)} />;
   }
 
@@ -296,10 +298,10 @@ export function ProposalForm() {
           ) : null}
         </div>
 
-        {venue?.hasOvernightStay ? (
-          <ClientPerDayProposalForm venueId={id} onBack={handleBack} cardStyle={cardStyle} buttonStyle={buttonStyle} />
+        {venue.hasOvernightStay ? (
+          <ClientPerDayProposalForm venueId={venue.id} onBack={handleBack} cardStyle={cardStyle} buttonStyle={buttonStyle} />
         ) : (
-          <ClientPerPersonProposalForm venueId={id} onBack={handleBack} cardStyle={cardStyle} buttonStyle={buttonStyle} />
+          <ClientPerPersonProposalForm venueId={venue.id} onBack={handleBack} cardStyle={cardStyle} buttonStyle={buttonStyle} />
         )}
       </main>
       {showFooter && venue && (

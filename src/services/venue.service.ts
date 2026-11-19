@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import type { VenuePresentation } from '@/lib/venue-presentation';
 import { 
   CreateVenueDTO, 
   VenueListResponse, 
@@ -70,7 +71,7 @@ export const venueService = {
   },
 
   getVenueById: async ({ venueId, userId }: { venueId: string, userId?: string }) => {
-    const response = await api.get<VenueByIdResponse>(`/venue/getById?venueId=${venueId}${userId ? `&userId=${userId}` : ''}`);
+    const response = await api.get<VenueByIdResponse>(`/venue/getById?venueId=${encodeURIComponent(venueId)}${userId ? `&userId=${userId}` : ''}`);
     return response.data;
   },
 
@@ -186,5 +187,10 @@ export const venueService = {
       params: { venueId, year },
     });
     return response.data;
+  },
+
+  getVenuePresentation: async (venueId: string) => {
+    const response = await api.get<{ data: VenuePresentation }>(`/venue/presentation/${encodeURIComponent(venueId)}`);
+    return response.data.data;
   },
 }; 

@@ -43,6 +43,12 @@ import {
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  firstInvalidSettingsTab,
+  SETTINGS_TABS,
+  type SettingsTab,
+} from "@/lib/venue-settings-tabs";
 import { useOrganizationStore } from "@/store/organizationStore";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
@@ -74,6 +80,7 @@ const venueSettingsSchema = z.object({
   name: z.string().min(1, "Nome do espaço é obrigatório"),
   email: z.string().email("Email inválido"),
   description: z.string().optional(),
+  slogan: z.string().optional(),
   url: z.string().url("URL inválida").optional().or(z.literal("")),
   street: z.string().min(1, "Rua é obrigatória"),
   streetNumber: z.string().min(1, "Número é obrigatório"),
@@ -157,16 +164,17 @@ export default function VenueSettings() {
   const { owners, fetchOrganizationOwners } = useOwnerStore();
 
   useEffect(() => {
-    if (currentOrganization.id) {
+    if (currentOrganization?.id) {
       fetchOrganizationOwners(currentOrganization.id);
     }
-  }, [fetchOrganizationOwners, currentOrganization.id]);
+  }, [fetchOrganizationOwners, currentOrganization?.id]);
 
   const [logoPreview, setLogoPreview] = useState<string | null>(
     selectedVenue?.logoUrl || null
   );
 
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<SettingsTab>("geral");
 
   const form = useForm<VenueSettingsFormValues>({
     resolver: zodResolver(venueSettingsSchema),
@@ -174,6 +182,7 @@ export default function VenueSettings() {
       name: "",
       email: "",
       description: "",
+      slogan: "",
       url: "",
       street: "",
       streetNumber: "",
@@ -210,6 +219,26 @@ export default function VenueSettings() {
     },
   });
 
+  const submitCount = form.formState.submitCount;
+
+  useEffect(() => {
+    if (submitCount === 0) return;
+    const tab = firstInvalidSettingsTab(form.formState.errors);
+    if (tab) setActiveTab(tab);
+  }, [submitCount, form]);
+
+  useEffect(() => {
+    if (submitCount === 0) return;
+    const tab = firstInvalidSettingsTab(form.formState.errors);
+    if (!tab || tab !== activeTab) return;
+    const frame = requestAnimationFrame(() => {
+      const invalid = document.querySelector<HTMLElement>('form [aria-invalid="true"]');
+      const message = document.querySelector<HTMLElement>('form [id$="-form-item-message"]');
+      (invalid ?? message)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [activeTab, submitCount, form]);
+
   const handleLogoChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     onChange: (value: File | null) => void
@@ -231,6 +260,7 @@ export default function VenueSettings() {
         name: selectedVenue.name || "",
         email: selectedVenue.email || "",
         description: selectedVenue.description || "",
+        slogan: selectedVenue.slogan || "",
         url: selectedVenue.url || "",
         street: selectedVenue.street || "",
         streetNumber: selectedVenue.streetNumber || "",
@@ -370,6 +400,11 @@ export default function VenueSettings() {
         complement: data.complement,
         facebookUrl: data.facebookUrl,
         description: data.description,
+        slogan: data.slogan?.trim()
+          ? data.slogan
+          : selectedVenue.slogan
+            ? data.slogan
+            : undefined,
         openingHour: data.openingHour,
         closingHour: data.closingHour,
         streetNumber: data.streetNumber,
@@ -544,11 +579,30 @@ export default function VenueSettings() {
       title="Configurações"
       subtitle="Gerencie as configurações do seu espaço"
     >
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as SettingsTab)} className="w-full">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <TabsList className="bg-white/80 shadow-sm rounded-lg flex gap-1 w-fit">
+            {SETTINGS_TABS.map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className={`px-4 py-2 w-full text-sm font-semibold transition-all duration-200 ${
+                  activeTab === tab.value
+                    ? "scale-105 bg-violet-100 text-violet-700 shadow border-b-4 border-violet-500"
+                    : "border-b-4 border-transparent"
+                }`}
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+            Voltar
+          </Button>
+        </div>
       <FormLayout
         form={form}
-        title="Informações Gerais"
         onSubmit={onSubmit}
-        onCancel={() => navigate(-1)}
         submitLabel="Salvar Alterações"
         isSubmitting={isLoading}
         isEditing={true}
@@ -556,7 +610,7 @@ export default function VenueSettings() {
         entityName={selectedVenue?.name || ""}
         entityType="Espaços"
       >
-        <div className="space-y-6">
+          <TabsContent value="geral" className="space-y-6 mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -625,6 +679,22 @@ export default function VenueSettings() {
           </div>
           <FormField
             control={form.control}
+            name="slogan"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Slogan</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="O oásis urbano"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="description"
             render={({ field }) => (
               <FormItem>
@@ -640,7 +710,9 @@ export default function VenueSettings() {
               </FormItem>
             )}
           />
+          </TabsContent>
 
+          <TabsContent value="endereco" className="space-y-6 mt-0">
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -742,7 +814,9 @@ export default function VenueSettings() {
               />
             </div>
           </div>
+          </TabsContent>
 
+          <TabsContent value="precos" className="mt-0">
           <div>
             <div className="space-y-6">
               {/* Grid de 2 colunas: Modelo de precificação e Preço */}
@@ -1108,7 +1182,11 @@ export default function VenueSettings() {
                   )}
                 />
               </div>
+            </div>
+          </div>
+          </TabsContent>
 
+          <TabsContent value="apresentacao" className="space-y-6 mt-0">
               {/* Grid de 2 colunas: URLs (2 por linha no desktop) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -1186,8 +1264,6 @@ export default function VenueSettings() {
                   )}
                 />
               </div>
-            </div>
-          </div>
 
           <FormField
             control={form.control}
@@ -1356,8 +1432,9 @@ export default function VenueSettings() {
               )}
             />
           </div>
-        </div>
+          </TabsContent>
       </FormLayout>
+      </Tabs>
     </DashboardLayout>
   );
 }

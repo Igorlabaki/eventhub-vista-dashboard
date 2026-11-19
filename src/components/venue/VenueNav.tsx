@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   ListChecks,
   Receipt,
+  Presentation,
   Settings,
   Sparkles,
   Images,
@@ -22,9 +23,10 @@ import { Venue } from "@/types";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { Permissions } from "@/types/permissions";
 import { SectionedNav } from "@/components/sidebar/SectionedNav";
+import { publicVenuePresentationShareUrl } from "@/lib/public-venue-presentation";
 import {
   flatNavItems,
-  itemHref,
+  internalItemHref,
   presentNavItems,
   venueSections,
   venueSettingsItem,
@@ -53,6 +55,7 @@ const venueIcons: Record<string, ElementType> = {
   Regras: ListChecks,
   Características: Sparkles,
   Fotos: Images,
+  Apresentação: Presentation,
   Configurações: Settings,
 };
 
@@ -84,9 +87,12 @@ export function VenueNav({
       return permissions.includes(permission);
     }), permissions.includes(Permissions.VIEW_VENUE_CONFIG) ? venueSettingsItem : null);
 
-    const current = allowed.find((item) => itemHref(base, item.path) === location.pathname);
-    if (!current && allowed[0]) {
-      navigate(itemHref(base, allowed[0].path));
+    const current = allowed.find((item) => internalItemHref(base, item) === location.pathname);
+    if (!current) {
+      const next = allowed
+        .map((item) => internalItemHref(base, item))
+        .find((href): href is string => typeof href === "string");
+      if (next) navigate(next);
     }
   }, [hold, location.pathname, permissions, venue.id, base, navigate]);
 
@@ -95,7 +101,9 @@ export function VenueNav({
       heading={venue.name}
       sections={sections.map((section) => ({
         ...section,
-        items: presentNavItems(section.items, base, venueIcons),
+        items: presentNavItems(section.items, base, venueIcons, (item) =>
+          item.opensExternalUrl ? publicVenuePresentationShareUrl(venue.name) : null,
+        ),
       }))}
       settings={settings ? presentNavItems([settings], base, venueIcons)[0] : null}
       isCollapsed={isCollapsed}

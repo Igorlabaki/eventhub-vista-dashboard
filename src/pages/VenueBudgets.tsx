@@ -20,6 +20,7 @@ import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { showSuccessToast } from "@/components/ui/success-toast";
+import { publicVenueBudgetFormShareUrl } from "@/lib/public-venue-presentation";
 import { formatWhatsapp } from "@/lib/whatsapp-mask";
 
 const monthNames = [
@@ -231,7 +232,7 @@ export default function VenueBudgets() {
             variant="outline"
             className="h-10 shrink-0 rounded-full border-primary/40 bg-white text-primary hover:bg-primary/5 hover:text-primary"
             onClick={async () => {
-              const link = `https://event-hub-dashboard.vercel.app/venue/${selectedVenue.id}/form`;
+              const link = publicVenueBudgetFormShareUrl(selectedVenue.name);
               await navigator.clipboard.writeText(link);
               showSuccessToast({
                 title: "Link copiado!",
