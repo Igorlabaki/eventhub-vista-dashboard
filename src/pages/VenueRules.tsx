@@ -35,9 +35,9 @@ export default function VenueRules() {
     };
 
     const copyLink = async () => {
-        if (!venue?.id) return;
+        if (!venue?.name) return;
         try {
-            await navigator.clipboard.writeText(publicVenueRulesShareUrl(venue.id));
+            await navigator.clipboard.writeText(publicVenueRulesShareUrl(venue.name));
             showSuccessToast({ title: "Link copiado", description: "O link das regras está na área de transferência." });
         } catch {
             toast({

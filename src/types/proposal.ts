@@ -48,6 +48,7 @@ export type History = {
 
 export interface Proposal {
   id: string;
+  publicCode?: string | null;
   completeCompanyName?: string;
   completeClientName: string;
   cpf?: string;

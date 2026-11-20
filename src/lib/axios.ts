@@ -23,12 +23,24 @@ export const PUBLIC_ROUTES = [
   '/venue/:id/form',
   '/venue/:id/rules/view',
   '/venue/:id/apresentacao',
+  '/espaco/:id/apresentacao',
+  '/espaco/:id/formulario',
+  '/espaco/:id/regras',
+  '/espaco/:id/parceiro',
+  '/espaco/:id/colaborador',
   '/proposal/:id/guest-list',
   '/proposal/:id/worker-list', 
   '/proposal/:id/schedule-list',
   '/proposal/:id/view',
   '/proposal/:id/person-contract',
-  '/proposal/:id/b2b-contract'
+  '/proposal/:id/b2b-contract',
+  '/espaco/:venueName/orcamento/:ref',
+  '/espaco/:venueName/orcamento/:ref/evento',
+  '/espaco/:venueName/orcamento/:ref/convidados',
+  '/espaco/:venueName/orcamento/:ref/colaboradores',
+  '/espaco/:venueName/orcamento/:ref/programacao',
+  '/espaco/:venueName/orcamento/:ref/indicacoes',
+  '/espaco/:venueName/orcamento/:ref/contrato',
 ];
 
 // Verifica se a rota atual é pública

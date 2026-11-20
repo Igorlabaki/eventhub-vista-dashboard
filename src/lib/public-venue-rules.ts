@@ -1,4 +1,4 @@
-export const PUBLIC_VENUE_RULES_PATTERN = "/venue/:id/rules/view";
+export const PUBLIC_VENUE_RULES_PATTERN = "/espaco/:id/regras";
 export const EMPTY_PUBLIC_VENUE_RULES = "Ainda não há regras deste espaço.";
 export const PUBLIC_VENUE_RULES_FAILURE = "Não foi possível carregar as regras.";
 export const PUBLIC_VENUE_RULES_LEAD =
@@ -13,8 +13,8 @@ export type PublicVenueRuleCard = {
   position: number;
 };
 
-export function publicVenueRulesPath(venueId: string) {
-  return `/venue/${venueId}/rules/view`;
+export function publicVenueRulesPath(name: string) {
+  return `/espaco/${encodeURIComponent(name)}/regras`;
 }
 
 export function publicVenueRulesShareUrl(venueId: string) {

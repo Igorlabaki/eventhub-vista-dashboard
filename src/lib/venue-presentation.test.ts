@@ -87,7 +87,9 @@ describe("apresentacao publica do espaco", () => {
 
   it("a rota publica entra nas duas allowlists e nao usa ProtectedRoute", () => {
     expect(axiosPublicRoutes).toContain("/venue/:id/apresentacao");
+    expect(axiosPublicRoutes).toContain("/espaco/:id/apresentacao");
     expect(bootstrapPublicRoutes).toContain("/venue/:id/apresentacao");
+    expect(bootstrapPublicRoutes).toContain("/espaco/:id/apresentacao");
     const app = source("src/App.tsx");
     const route = app.slice(app.indexOf('path="/venue/:id/apresentacao"'), app.indexOf('path="/venue/:id/apresentacao"') + 180);
     expect(route).toContain("<VenuePresentation");
@@ -180,7 +182,7 @@ describe("apresentacao publica do espaco", () => {
     expect(page).toContain("Serviços disponíveis");
     expect(page).toContain("Seu investimento");
     expect(page).toContain("Fazer orçamento");
-    expect(page).toContain("`/venue/${house.name}/form`");
+    expect(page).toContain("`/espaco/${house.name}/formulario`");
     expect(page.indexOf("Fazer orçamento")).toBeLessThan(page.indexOf("Conversar com nossa equipe"));
     expect(page).not.toContain("Alterar serviços");
     expect(page).not.toContain("Investimento total");

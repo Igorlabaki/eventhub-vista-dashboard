@@ -4,6 +4,7 @@ import {
   itemsWhenCollapsed,
   type CollapsedNavMode,
   type PresentedNavItem,
+  type SidebarDialog,
 } from "./sidebar-nav-model";
 
 export interface SectionedNavSection {
@@ -21,6 +22,7 @@ interface SectionedNavProps {
   collapsedMode: CollapsedNavMode;
   isActive: (href: string) => boolean;
   onNavigate: () => void;
+  onDialog?: (dialog: SidebarDialog) => void;
 }
 
 export function SectionedNav({
@@ -31,6 +33,7 @@ export function SectionedNav({
   collapsedMode,
   isActive,
   onNavigate,
+  onDialog,
 }: SectionedNavProps) {
   const collapsedItems = itemsWhenCollapsed(sections, collapsedMode);
 
@@ -57,9 +60,10 @@ export function SectionedNav({
               <NavItemLink
                 key={item.href}
                 item={item}
-                active={item.external ? false : isActive(item.href)}
+                active={item.external || item.dialog ? false : isActive(item.href)}
                 isCollapsed
                 onNavigate={onNavigate}
+                onDialog={onDialog}
               />
             ))
           : sections.map((section) => (
@@ -71,9 +75,10 @@ export function SectionedNav({
                   <NavItemLink
                     key={item.href}
                     item={item}
-                    active={item.external ? false : isActive(item.href)}
+                    active={item.external || item.dialog ? false : isActive(item.href)}
                     isCollapsed={false}
                     onNavigate={onNavigate}
+                    onDialog={onDialog}
                   />
                 ))}
               </div>
@@ -84,9 +89,10 @@ export function SectionedNav({
         <div className="mt-1 shrink-0 border-t pt-1" data-nav-settings="true">
           <NavItemLink
             item={settings}
-            active={isActive(settings.href)}
+            active={settings.external || settings.dialog ? false : isActive(settings.href)}
             isCollapsed={isCollapsed}
             onNavigate={onNavigate}
+            onDialog={onDialog}
           />
         </div>
       )}
@@ -99,16 +105,18 @@ function NavItemLink({
   active,
   isCollapsed,
   onNavigate,
+  onDialog,
 }: {
   item: PresentedNavItem;
   active: boolean;
   isCollapsed: boolean;
   onNavigate: () => void;
+  onDialog?: (dialog: SidebarDialog) => void;
 }) {
   const Icon = item.icon;
   const className = cn(
     "mt-1 flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-eventhub-primary",
-    !item.external && active ? "bg-eventhub-tertiary/30 text-eventhub-primary" : "text-gray-700",
+    !item.external && !item.dialog && active ? "bg-eventhub-tertiary/30 text-eventhub-primary" : "text-gray-700",
   );
   const content = (
     <>
@@ -116,6 +124,24 @@ function NavItemLink({
       {!isCollapsed && <span>{item.title}</span>}
     </>
   );
+
+  if (item.dialog) {
+    return (
+      <button
+        type="button"
+        title={item.title}
+        aria-haspopup="dialog"
+        aria-label={isCollapsed ? item.title : undefined}
+        className={cn(className, "w-full text-left")}
+        onClick={() => {
+          onDialog?.(item.dialog!);
+          onNavigate();
+        }}
+      >
+        {content}
+      </button>
+    );
+  }
 
   if (item.external) {
     return (

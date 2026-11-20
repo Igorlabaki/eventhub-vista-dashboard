@@ -15,9 +15,12 @@ import { ProposalListPager } from "@/components/proposal/ProposalListPager";
 import { useContactStore } from "@/store/contactStore";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { showSuccessToast } from "@/components/ui/success-toast";
+import { publicVenueCrewShareUrl, publicVenuePartnerShareUrl } from "@/lib/public-venue-presentation";
+import { useVenueStore } from "@/store/venueStore";
 
 export default function VenueContacts() {
   const { id: venueId } = useParams<{ id: string }>();
+  const { selectedVenue } = useVenueStore();
   const [activeTab, setActiveTab] = useState<ContactType>(ContactType.SUPPLIER);
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -153,8 +156,11 @@ export default function VenueContacts() {
                       variant="outline"
                       className="h-10 shrink-0 rounded-full"
                       onClick={async () => {
-                        const kind = activeTab === ContactType.SUPPLIER ? "partner-form" : "crew-form";
-                        const link = `https://event-hub-dashboard.vercel.app/venue/${venueId}/${kind}`;
+                        const houseName = selectedVenue?.id === venueId ? selectedVenue.name : "";
+                        if (!houseName) return;
+                        const link = activeTab === ContactType.SUPPLIER
+                          ? publicVenuePartnerShareUrl(houseName)
+                          : publicVenueCrewShareUrl(houseName);
                         await navigator.clipboard.writeText(link);
                         showSuccessToast({
                           title: "Link copiado!",

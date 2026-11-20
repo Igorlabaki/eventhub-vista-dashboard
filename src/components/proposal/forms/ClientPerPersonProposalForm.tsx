@@ -37,6 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
 import { formatWhatsapp } from "@/lib/whatsapp-mask";
 import { showSuccessToast } from "@/components/ui/success-toast";
+import { proposalClientPath } from "@/lib/proposal-public-url";
 import { AsyncActionButton } from "@/components/AsyncActionButton";
 import { useVenueStore } from "@/store/venueStore";
 
@@ -327,7 +328,12 @@ export function ClientPerPersonProposalForm({
 
       // Redirecionar para a página de visualização da proposta
       if (response?.data?.id) {
-        navigate(`/proposal/${response.data.id}/view`);
+        navigate(proposalClientPath({
+          proposalId: response.data.id,
+          venueName: selectedVenue?.name,
+          clientName: values.completeClientName,
+          publicCode: response.data.publicCode,
+        }));
       } else {
         onBack();
       }

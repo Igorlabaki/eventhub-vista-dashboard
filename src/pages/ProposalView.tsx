@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { proposalKeyMatches, usePublicProposalKey } from "@/lib/proposal-public-url";
 import { useProposalStore } from "@/store/proposalStore";
 import { ArrowRight, Calendar, Check, CircleCheck, Clock, GripVertical, HelpCircle, House, Info, MapPin, Users } from "lucide-react";
 import { FaFacebook, FaGlobe, FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa";
@@ -526,7 +526,7 @@ function PhotoChoiceButton({ disabled, onChoose }: { disabled: boolean; onChoose
 }
 
 export default function ProposalView() {
-  const { id } = useParams<{ id: string }>();
+  const id = usePublicProposalKey();
   const { currentProposal, isLoading, error, fetchProposalById, setCurrentProposal } =
     useProposalStore();
   const [presentation, setPresentation] = useState<ProposalPresentation | null>(
@@ -661,7 +661,7 @@ export default function ProposalView() {
     };
   }, [id, presentationLoading, presentation, readyForId]);
 
-  const proposalMatchesRoute = currentProposal?.id === id;
+  const proposalMatchesRoute = proposalKeyMatches(currentProposal, id);
   const dataSettled = !isLoading && !presentationLoading && proposalMatchesRoute;
   const pageReady = dataSettled && readyForId === id;
 
@@ -708,13 +708,13 @@ export default function ProposalView() {
   const dragEnabled = canReorderPhotos && !photoEditLocked;
 
   async function persistOrder(fromId: string, toId: string) {
-    if (!id || !dragEnabled) return;
+    if (!currentProposal?.id || !dragEnabled) return;
     const next = moveImageBefore(orderedImages, fromId, toId);
     if (sameImageOrder(next, orderedImages)) return;
     setOrderedImages(next);
     setSavingOrder(true);
     try {
-      await proposalService.reorderProposalImages(id, next.map((image) => image.id));
+      await proposalService.reorderProposalImages(currentProposal.id, next.map((image) => image.id));
       setOrderedImages(imageOrderAfterSave(orderedImages, next, true));
     } catch {
       setOrderedImages(imageOrderAfterSave(orderedImages, next, false));
@@ -725,7 +725,7 @@ export default function ProposalView() {
   }
 
   async function persistChoice(slotId: string, replacement: ProposalPresentation["catalog"][number]) {
-    if (!id || !canChoosePhotos || photoEditLocked) return;
+    if (!currentProposal?.id || !canChoosePhotos || photoEditLocked) return;
     if (replacement.id === slotId) {
       setChoiceSlotId(null);
       setChoiceError(null);
@@ -737,7 +737,7 @@ export default function ProposalView() {
     setSavingChoice(true);
     setChoiceError(null);
     try {
-      const response = await proposalService.chooseProposalImage(id, slotId, replacement.id);
+      const response = await proposalService.chooseProposalImage(currentProposal.id, slotId, replacement.id);
       setOrderedImages(response.data.images);
       setCatalog(response.data.catalog);
       setChoiceSlotId(null);

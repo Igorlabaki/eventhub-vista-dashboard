@@ -17,6 +17,7 @@ import { useProposalStore } from "@/store/proposalStore";
 import { useVenueStore } from "@/store/venueStore";
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { proposalClientUrl } from "@/lib/proposal-public-url";
 interface ScheduleListProps {
   schedules: Schedule[];
   onDeleteSchedule: (schedule: Schedule) => void;
@@ -47,10 +48,17 @@ export function ScheduleList({
   const { currentProposal } = useProposalStore();
   const { selectedVenue } = useVenueStore();
   const proposalId = currentProposal?.id;
-  const programacaoLink =
-    proposalId 
-      ? `https://event-hub-dashboard.vercel.app/proposal/${proposalId}/schedule-list`
-      : undefined;
+  const programacaoLink = proposalId
+    ? proposalClientUrl(
+        {
+          proposalId,
+          venueName: selectedVenue?.name,
+          clientName: currentProposal?.completeClientName,
+          publicCode: currentProposal?.publicCode,
+        },
+        "programacao",
+      )
+    : undefined;
   const whatsappMsg = encodeURIComponent(
     `Segue o link para cadastrar a programação do evento: ${programacaoLink}`
   );

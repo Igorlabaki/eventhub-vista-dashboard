@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { quotedServiceAmount, quotedServiceDetail } from "@/lib/service-price-label";
 import { proposalTypeWithCategoryLabel } from "@/lib/event-category";
+import { proposalClientUrl } from "@/lib/proposal-public-url";
+import { useVenueStore } from "@/store/venueStore";
 
 function ProposalDetailsSkeleton() {
   return (
@@ -76,6 +78,7 @@ function ProposalDetailsSkeleton() {
 
 export default function ProposalDetails() {
   const { id } = useParams();
+  const { selectedVenue } = useVenueStore();
   const queryClient = useQueryClient();
   const { fetchProposalById, currentProposal, isLoading, setCurrentProposal } =
     useProposalStore();
@@ -113,7 +116,12 @@ export default function ProposalDetails() {
   const handleShareProposal = async () => {
     if (!id) return;
 
-    const link = `https://event-hub-dashboard.vercel.app/proposal/${id}/view`;
+    const link = proposalClientUrl({
+      proposalId: id ?? "",
+      venueName: selectedVenue?.name,
+      clientName: currentProposal?.completeClientName,
+      publicCode: currentProposal?.publicCode,
+    });
           try {
         await navigator.clipboard.writeText(link);
         showSuccessToast({

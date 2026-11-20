@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { proposalKeyMatches, usePublicProposalKey } from "@/lib/proposal-public-url";
 import { PublicVenueListShell } from "@/components/proposal/PublicVenueListShell";
 import { PartnerPublicCard } from "@/components/proposal/PartnerPublicCard";
 import {
@@ -16,10 +16,10 @@ import { proposalService, PublicIndication } from "@/services/proposal.service";
 import { groupIndicationsByCategory } from "@/lib/partner-category";
 
 export default function ProposalIndicationsPage() {
-  const { id: proposalId } = useParams();
+  const proposalId = usePublicProposalKey();
   const fetchProposalById = useProposalStore((s) => s.fetchProposalById);
   const currentProposal = useProposalStore((s) => s.currentProposal);
-  const proposal = currentProposal?.id === proposalId ? currentProposal : null;
+  const proposal = proposalKeyMatches(currentProposal, proposalId) ? currentProposal : null;
   const [indications, setIndications] = useState<PublicIndication[]>([]);
   const [failed, setFailed] = useState(false);
   const [listReady, setListReady] = useState(false);

@@ -89,39 +89,49 @@ describe("eventCountdown", () => {
   });
 });
 
+const clientLink = {
+  proposalId: "abc",
+  venueName: "AR756",
+  clientName: "Maria Silva",
+  publicCode: "k7m2abcd",
+};
+
 describe("proposalEventLinksUrl", () => {
   it("abre a pagina publica na base de producao", () => {
     expect(proposalEventLinksUrl).toHaveLength(1);
-    expect(proposalEventLinksUrl("proposal-1")).toBe(
+    expect(proposalEventLinksUrl(clientLink)).toBe(
+      "https://event-hub-dashboard.vercel.app/espaco/AR756/orcamento/maria-silva-k7m2abcd/evento",
+    );
+    expect(proposalEventLinksUrl({ proposalId: "proposal-1" })).toBe(
       "https://event-hub-dashboard.vercel.app/proposal/proposal-1/links",
     );
-    expect(proposalEventLinksUrl("proposal-1")).not.toContain("localhost");
+    expect(proposalEventLinksUrl(clientLink)).not.toContain("localhost");
   });
 });
 
 describe("eventLinkDestinations", () => {
   it("aponta so para as cinco paginas publicas do orcamento", () => {
-    const hrefs = eventLinkDestinations("abc").map((item) => item.href);
+    const hrefs = eventLinkDestinations(clientLink).map((item) => item.href);
     expect(hrefs).toEqual([
-      "/proposal/abc/view",
-      "/proposal/abc/indications",
-      "/proposal/abc/guest-list",
-      "/proposal/abc/staff-list",
-      "/proposal/abc/schedule-list",
+      "/espaco/AR756/orcamento/maria-silva-k7m2abcd",
+      "/espaco/AR756/orcamento/maria-silva-k7m2abcd/indicacoes",
+      "/espaco/AR756/orcamento/maria-silva-k7m2abcd/convidados",
+      "/espaco/AR756/orcamento/maria-silva-k7m2abcd/colaboradores",
+      "/espaco/AR756/orcamento/maria-silva-k7m2abcd/programacao",
     ]);
     expect(hrefs.join(" ")).not.toMatch(/payment|contract|documents|edit|attendance|rules/);
   });
 
   it("acrescenta as regras do espaco quando o orcamento tem venue", () => {
-    const hrefs = eventLinkDestinations("abc", "venue-1").map((item) => item.href);
-    expect(eventLinkDestinations("abc", "venue-1").map((item) => item.label)).toContain("Regras do espaço");
+    const hrefs = eventLinkDestinations(clientLink, "venue-1").map((item) => item.href);
+    expect(eventLinkDestinations(clientLink, "venue-1").map((item) => item.label)).toContain("Regras do espaço");
     expect(hrefs).toEqual([
-      "/proposal/abc/view",
-      "/proposal/abc/indications",
-      "/proposal/abc/guest-list",
-      "/proposal/abc/staff-list",
-      "/proposal/abc/schedule-list",
-      "/venue/venue-1/rules/view",
+      "/espaco/AR756/orcamento/maria-silva-k7m2abcd",
+      "/espaco/AR756/orcamento/maria-silva-k7m2abcd/indicacoes",
+      "/espaco/AR756/orcamento/maria-silva-k7m2abcd/convidados",
+      "/espaco/AR756/orcamento/maria-silva-k7m2abcd/colaboradores",
+      "/espaco/AR756/orcamento/maria-silva-k7m2abcd/programacao",
+      "/espaco/AR756/regras",
     ]);
     expect(hrefs.join(" ")).not.toMatch(/payment|contract|documents|edit|attendance/);
   });

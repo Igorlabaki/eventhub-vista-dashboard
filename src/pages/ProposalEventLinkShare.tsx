@@ -4,11 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useToast } from "@/hooks/use-toast";
+import { proposalClientUrl } from "@/lib/proposal-public-url";
+import { useProposalStore } from "@/store/proposalStore";
+import { useVenueStore } from "@/store/venueStore";
 
 export default function ProposalEventLinkSharePage() {
   const { id } = useParams();
   const { toast } = useToast();
-  const link = id ? `${window.location.origin}/proposal/${id}/links` : "";
+  const { currentProposal } = useProposalStore();
+  const { selectedVenue } = useVenueStore();
+  const link = id
+    ? proposalClientUrl(
+        {
+          proposalId: id,
+          venueName: selectedVenue?.name,
+          clientName: currentProposal?.completeClientName,
+          publicCode: currentProposal?.publicCode,
+        },
+        "evento",
+        window.location.origin,
+      )
+    : "";
 
   const copyLink = async () => {
     try {

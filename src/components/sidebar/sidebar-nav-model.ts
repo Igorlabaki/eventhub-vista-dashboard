@@ -3,11 +3,14 @@ import { Permissions } from "@/types/permissions";
 
 export type CollapsedNavMode = "always-open" | "all";
 
+export type SidebarDialog = "contact" | "proposal";
+
 export interface SidebarNavItemModel {
   title: string;
   path: string;
   permission?: Permissions;
   opensExternalUrl?: boolean;
+  opensDialog?: SidebarDialog;
 }
 
 export interface SidebarNavSectionModel {
@@ -78,8 +81,8 @@ export const proposalSections: SidebarNavSectionModel[] = [
     title: "Falar com o cliente",
     alwaysOpen: false,
     items: [
-      { title: "Entrar em contato", path: "/send-message", permission: Permissions.SEND_PROPOSAL_TEXT },
-      { title: "Enviar Orçamento", path: "/send-proposal", permission: Permissions.SEND_PROPOSAL_INFO },
+      { title: "Entrar em contato", path: "", permission: Permissions.SEND_PROPOSAL_TEXT, opensDialog: "contact" },
+      { title: "Enviar Orçamento", path: "", permission: Permissions.SEND_PROPOSAL_INFO, opensDialog: "proposal" },
       { title: "Link do evento", path: "/event-link", permission: Permissions.SEND_PROPOSAL_INFO, opensExternalUrl: true },
       { title: "Indicar parceiros", path: "/send-suppliers", permission: Permissions.SEND_PROPOSAL_INFO },
     ],
@@ -146,7 +149,7 @@ export function itemHref(base: string, path: string): string {
 }
 
 export function internalItemHref(base: string, item: SidebarNavItemModel): string | null {
-  if (item.opensExternalUrl) return null;
+  if (item.opensExternalUrl || item.opensDialog) return null;
   return itemHref(base, item.path);
 }
 
@@ -155,6 +158,7 @@ export interface PresentedNavItem {
   href: string;
   icon: ElementType;
   external?: boolean;
+  dialog?: SidebarDialog;
 }
 
 export function presentNavItems(
@@ -167,6 +171,9 @@ export function presentNavItems(
     const icon = icons[item.title];
     if (!icon) {
       throw new Error(`Icone ausente para o item ${item.title}`);
+    }
+    if (item.opensDialog) {
+      return [{ title: item.title, href: item.opensDialog, icon, dialog: item.opensDialog }];
     }
     if (item.opensExternalUrl) {
       const href = externalHref?.(item) ?? null;

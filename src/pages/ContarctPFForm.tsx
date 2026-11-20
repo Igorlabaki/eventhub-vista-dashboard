@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { proposalKeyMatches, usePublicProposalKey } from "@/lib/proposal-public-url";
 import { PublicVenueListShell } from "@/components/proposal/PublicVenueListShell";
 import { publicColumnClass, publicLeadClass } from "@/components/proposal/public-list-pattern";
 import { usePublicListVenue } from "@/components/proposal/usePublicListVenue";
@@ -7,7 +7,7 @@ import PFContractPersonalInfoForm from "@/components/proposal/forms/PFContractPe
 import { useProposalStore } from "@/store/proposalStore";
 
 export function ContarctPFFormPage() {
-  const { id } = useParams<{ id: string }>();
+  const id = usePublicProposalKey();
   const fetchProposalById = useProposalStore((s) => s.fetchProposalById);
   const currentProposal = useProposalStore((s) => s.currentProposal);
   const [proposalReady, setProposalReady] = useState(false);
@@ -24,7 +24,7 @@ export function ContarctPFFormPage() {
     };
   }, [id, fetchProposalById]);
 
-  const proposal = currentProposal?.id === id ? currentProposal : null;
+  const proposal = proposalKeyMatches(currentProposal, id) ? currentProposal : null;
   const { venue, contentReady } = usePublicListVenue(proposal?.venueId, proposalReady);
 
   if (!id) {

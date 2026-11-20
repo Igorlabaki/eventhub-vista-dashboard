@@ -94,6 +94,38 @@ describe("SectionedNav", () => {
     expect(html).not.toContain("localhost");
   });
 
+  it("abre contato e orcamento como botao, sem trocar de pagina", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <SectionedNav
+          sections={[
+            {
+              id: "falar",
+              title: "Falar com o cliente",
+              alwaysOpen: true,
+              items: [
+                { title: "Entrar em contato", href: "contact", icon, dialog: "contact" },
+                { title: "Enviar Orçamento", href: "proposal", icon, dialog: "proposal" },
+                { title: "Visão Geral", href: "/proposal/1", icon },
+              ],
+            },
+          ]}
+          isCollapsed={false}
+          collapsedMode="always-open"
+          isActive={() => false}
+          onNavigate={() => undefined}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('aria-haspopup="dialog"');
+    expect(html).toContain(">Entrar em contato<");
+    expect(html).toContain(">Enviar Orçamento<");
+    expect(html).not.toContain("/send-message");
+    expect(html).not.toContain("/send-proposal");
+    expect(html).toContain('href="/proposal/1"');
+  });
+
   it("rola a lista com a barra do app e so reserva o espaco dela com a sidebar aberta", () => {
     const scrollClass = (html: string) =>
       html.match(/data-nav-scroll="true" class="([^"]+)"/)?.[1] ?? "";

@@ -35,6 +35,7 @@ import PFContractForm from "./forms/pf-contract-form";
 import PJContractForm from "./forms/pj-contract-form";
 import { Link } from "react-router-dom";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { proposalClientUrl } from "@/lib/proposal-public-url";
 
 export function ProposalContractForm() {
   const { toast } = useToast();
@@ -74,10 +75,15 @@ export function ProposalContractForm() {
     fetchVenueContracts,
   ]);
 
-  const link =
-    formType === "Pessoa Fisica"
-      ? `https://event-hub-dashboard.vercel.app/proposal/${currentProposal?.id}/person-contract`
-      : `https://event-hub-dashboard.vercel.app/proposal/${currentProposal?.id}/b2b-contract`;
+  const link = proposalClientUrl(
+    {
+      proposalId: currentProposal?.id ?? "",
+      venueName: selectedVenue?.name,
+      clientName: currentProposal?.completeClientName,
+      publicCode: currentProposal?.publicCode,
+    },
+    "contrato",
+  );
   const whatsappMsg = encodeURIComponent(
     formType === "Pessoa Fisica"
       ? `Segue o link para informacoes do contrato: ${link}`

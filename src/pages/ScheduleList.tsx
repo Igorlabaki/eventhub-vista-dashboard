@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { proposalKeyMatches, usePublicProposalKey } from "@/lib/proposal-public-url";
 import { useScheduleStore } from "@/store/scheduleStore";
 import { CreateScheduleDTO, Schedule } from "@/types/schedule";
 import { FiPlus, FiClock, FiUsers } from "react-icons/fi";
@@ -37,7 +37,7 @@ function extractHour(dateString: string) {
 }
 
 export function ScheduleListPage() {
-  const { id: proposalId } = useParams();
+  const proposalId = usePublicProposalKey();
   const [name, setName] = useState("");
   const [workerNumber, setWorkerNumber] = useState(0);
   const [startHour, setStartHour] = useState("");
@@ -56,7 +56,7 @@ export function ScheduleListPage() {
   const { toast } = useToast();
   const fetchProposalById = useProposalStore((s) => s.fetchProposalById);
   const currentProposal = useProposalStore((s) => s.currentProposal);
-  const proposal = currentProposal?.id === proposalId ? currentProposal : null;
+  const proposal = proposalKeyMatches(currentProposal, proposalId) ? currentProposal : null;
   const { venue, contentReady } = usePublicListVenue(proposal?.venueId, !isInitialLoading);
 
   // Definir limites de horário

@@ -1,4 +1,5 @@
 import { chosenServiceHours, SERVICE_HOURS_MESSAGE, serviceHourFieldError, stayEventHours } from "@/lib/event-duration";
+import { proposalClientPath } from "@/lib/proposal-public-url";
 import { useNavigate } from "react-router-dom";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -231,7 +232,12 @@ export function ClientPerDayProposalForm({
 
       // Redirecionar para a página de visualização da proposta
       if (response?.data?.id) {
-        navigate(`/proposal/${response.data.id}/view`);
+        navigate(proposalClientPath({
+          proposalId: response.data.id,
+          venueName: selectedVenue?.name,
+          clientName: values.completeClientName,
+          publicCode: response.data.publicCode,
+        }));
       } else {
         onBack();
       }

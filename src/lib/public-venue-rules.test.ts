@@ -25,14 +25,14 @@ describe("public venue rules", () => {
 
   it("copia o link na base de producao, sem origem da aba", () => {
     expect(publicVenueRulesShareUrl).toHaveLength(1);
-    expect(publicVenueRulesShareUrl("venue-1")).toBe(
-      "https://event-hub-dashboard.vercel.app/venue/venue-1/rules/view",
+    expect(publicVenueRulesShareUrl("AR756")).toBe(
+      "https://event-hub-dashboard.vercel.app/espaco/AR756/regras",
     );
-    expect(publicVenueRulesShareUrl("venue-1")).not.toContain("localhost");
+    expect(publicVenueRulesShareUrl("AR756")).not.toContain("localhost");
   });
 
   it("aponta o endereco publico e a frase de lista vazia", () => {
-    expect(publicVenueRulesPath("venue-1")).toBe("/venue/venue-1/rules/view");
+    expect(publicVenueRulesPath("AR756")).toBe("/espaco/AR756/regras");
     expect(EMPTY_PUBLIC_VENUE_RULES).toBe("Ainda não há regras deste espaço.");
     expect(PUBLIC_VENUE_RULES_LEAD).toBe(
       "Orientações importantes para segurança, conservação e bom uso do espaço durante o evento.",

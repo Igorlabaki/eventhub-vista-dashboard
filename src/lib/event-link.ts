@@ -1,4 +1,5 @@
 import { wallClockDateBr, wallClockDateIso, wallClockTime, wallClockToCalendarDate } from "@/lib/wall-clock-datetime";
+import { proposalClientPath, proposalClientUrl, type ProposalClientLink } from "@/lib/proposal-public-url";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -99,36 +100,36 @@ export function eventCountdown(
   return { kind: "started", phrase: "O evento já começou." };
 }
 
-export function proposalEventLinksUrl(proposalId: string) {
-  return `https://event-hub-dashboard.vercel.app/proposal/${proposalId}/links`;
+export function proposalEventLinksUrl(link: ProposalClientLink) {
+  return proposalClientUrl(link, "evento");
 }
 
-export function eventLinkDestinations(proposalId: string, venueId?: string | null): EventLinkDestination[] {
+export function eventLinkDestinations(link: ProposalClientLink, venueId?: string | null): EventLinkDestination[] {
   const links: EventLinkDestination[] = [
-    { label: "Orçamento", description: "Valores e condições", icon: "budget", href: `/proposal/${proposalId}/view` },
+    { label: "Orçamento", description: "Valores e condições", icon: "budget", href: proposalClientPath(link) },
     {
       label: "Parceiros indicados",
       description: "Fornecedores para seu evento",
       icon: "partners",
-      href: `/proposal/${proposalId}/indications`,
+      href: proposalClientPath(link, "indicacoes"),
     },
     {
       label: "Lista de convidados",
       description: "Gerencie os participantes",
       icon: "guests",
-      href: `/proposal/${proposalId}/guest-list`,
+      href: proposalClientPath(link, "convidados"),
     },
     {
       label: "Lista de colaboradores",
       description: "Equipe e fornecedores",
       icon: "staff",
-      href: `/proposal/${proposalId}/staff-list`,
+      href: proposalClientPath(link, "colaboradores"),
     },
     {
       label: "Programação",
       description: "Organize os horários",
       icon: "schedule",
-      href: `/proposal/${proposalId}/schedule-list`,
+      href: proposalClientPath(link, "programacao"),
     },
   ];
   if (!venueId) return links;
@@ -138,7 +139,9 @@ export function eventLinkDestinations(proposalId: string, venueId?: string | nul
       label: "Regras do espaço",
       description: "O que vale neste espaço",
       icon: "rules",
-      href: `/venue/${venueId}/rules/view`,
+      href: link.venueName
+        ? `/espaco/${encodeURIComponent(link.venueName)}/regras`
+        : `/venue/${venueId}/rules/view`,
     },
   ];
 }

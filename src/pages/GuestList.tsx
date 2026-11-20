@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { proposalKeyMatches, usePublicProposalKey } from "@/lib/proposal-public-url";
 import { usePersonStore } from "@/store/personStore";
 import { CreatePersonDTO, PersonType, Person } from "@/types/person";
 import { FiPlus } from "react-icons/fi";
@@ -25,7 +25,7 @@ import { usePersonSpreadsheetImport } from "@/components/proposal/useImportPerso
 import { remainingGuestSlots } from "@/lib/person-spreadsheet";
 
 export default function GuestListPage() {
-  const { id: proposalId } = useParams();
+  const proposalId = usePublicProposalKey();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [guestList, setGuestList] = useState<(CreatePersonDTO & { id?: string })[]>([]);
@@ -40,7 +40,7 @@ export default function GuestListPage() {
   const { toast } = useToast();
   const fetchProposalById = useProposalStore((s) => s.fetchProposalById);
   const currentProposal = useProposalStore((s) => s.currentProposal);
-  const proposal = currentProposal?.id === proposalId ? currentProposal : null;
+  const proposal = proposalKeyMatches(currentProposal, proposalId) ? currentProposal : null;
   const { venue, contentReady } = usePublicListVenue(proposal?.venueId, !isInitialLoading);
   const savedGuestCount = guestList.filter((guest) => guest.id).length;
   const { importing, importFile } = usePersonSpreadsheetImport({

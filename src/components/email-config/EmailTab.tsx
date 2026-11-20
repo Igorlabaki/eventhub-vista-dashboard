@@ -20,6 +20,7 @@ import { showSuccessToast } from "../ui/success-toast";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { Permissions } from "@/types/permissions";
 import { PhotoPicker, PickedVenuePhoto } from "@/components/venue-photo/PhotoPicker";
+import { proposalClientUrl } from "@/lib/proposal-public-url";
 interface EmailTabProps {
   proposal: Proposal | null;
   venueUrl?: string;
@@ -168,7 +169,12 @@ export function EmailTab({
           </div>
           {/* Botão Orçamento */}
           <a
-            href={`https://event-hub-dashboard.vercel.app/proposal/${proposal.id}/view`}
+            href={proposalClientUrl({
+              proposalId: proposal.id,
+              venueName,
+              clientName: proposal.completeClientName,
+              publicCode: proposal.publicCode,
+            })}
             target="_blank"
             className="inline-block bg-black text-white px-8 py-2 rounded-md font-semibold text-lg mb-8 hover:bg-gray-900 transition"
           >

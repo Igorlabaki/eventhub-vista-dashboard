@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { usePublicProposalKey } from "@/lib/proposal-public-url";
 import { ArrowUpRight, Calendar, CalendarDays, FileText, Handshake, IdCard, ScrollText, Users } from "lucide-react";
 import { PublicVenueListShell } from "@/components/proposal/PublicVenueListShell";
 import { publicColumnClass, publicDividerClass, publicEyebrowClass, publicLeadClass, publicTitleClass } from "@/components/proposal/public-list-pattern";
@@ -15,6 +16,8 @@ import { proposalService } from "@/services/proposal.service";
 
 type EventClock = {
   venueId?: string;
+  clientName?: string | null;
+  publicCode?: string | null;
   startDate: string | Date | null;
   endDate: string | Date | null;
 };
@@ -41,7 +44,7 @@ function useNow() {
 }
 
 export default function ProposalEventLinkPage() {
-  const { id: proposalId } = useParams();
+  const proposalId = usePublicProposalKey();
   const [summary, setSummary] = useState<EventLinkSummary | null>(null);
   const [clock, setClock] = useState<EventClock | null>(null);
   const [failed, setFailed] = useState(false);
@@ -49,7 +52,17 @@ export default function ProposalEventLinkPage() {
   const now = useNow();
   const { venue, contentReady } = usePublicListVenue(clock?.venueId, ready);
   const countdown = eventCountdown(clock?.startDate, clock?.endDate, now);
-  const links = proposalId ? eventLinkDestinations(proposalId, clock?.venueId) : [];
+  const links = proposalId
+    ? eventLinkDestinations(
+        {
+          proposalId,
+          venueName: venue?.name,
+          clientName: clock?.clientName,
+          publicCode: clock?.publicCode,
+        },
+        clock?.venueId,
+      )
+    : [];
 
   useEffect(() => {
     if (!proposalId) return;
@@ -70,6 +83,8 @@ export default function ProposalEventLinkPage() {
         setSummary(eventLinkSummary(proposal));
         setClock({
           venueId: proposal.venueId,
+          clientName: proposal.completeClientName,
+          publicCode: proposal.publicCode,
           startDate: proposal.startDate ?? null,
           endDate: proposal.endDate ?? null,
         });

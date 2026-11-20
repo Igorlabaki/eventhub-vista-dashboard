@@ -347,7 +347,7 @@ export default function VenuePresentation() {
               <p className="mt-4 text-xs">* Valores sujeitos a alteração até a confirmação da reserva.</p>
               <div className="mx-auto mt-6 flex w-fit flex-col items-stretch gap-3">
                 <Link
-                  to={`/venue/${house.name}/form`}
+                  to={`/espaco/${house.name}/formulario`}
                   className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-[15px] font-bold hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                   style={{ backgroundColor: cardText, color: cardStyle.backgroundColor }}
                 >

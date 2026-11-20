@@ -18,6 +18,8 @@ import { usePersonStore } from "@/store/personStore";
 import { FilterList } from "@/components/filterList";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
+import { useProposalStore } from "@/store/proposalStore";
+import { proposalClientUrl } from "@/lib/proposal-public-url";
 
 interface PersonListProps {
   persons: Person[];
@@ -53,6 +55,8 @@ export function PersonList({
   );
   const { updatePerson } = usePersonStore();
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
+  const { currentProposal } = useProposalStore();
+  const { selectedVenue } = useVenueStore();
   // Cálculo de presenças confirmadas
   const confirmedCount = persons.filter((p) => p.attendance).length;
   const totalCount = persons.length;
@@ -73,9 +77,15 @@ export function PersonList({
 
   // Link correto conforme o tipo
   const isGuest = type === PersonType.GUEST;
-  const link = isGuest
-    ? `https://event-hub-dashboard.vercel.app/proposal/${proposalId}/guest-list`
-    : `https://event-hub-dashboard.vercel.app/proposal/${proposalId}/staff-list`;
+  const link = proposalClientUrl(
+    {
+      proposalId,
+      venueName: selectedVenue?.name,
+      clientName: currentProposal?.id === proposalId ? currentProposal.completeClientName : undefined,
+      publicCode: currentProposal?.id === proposalId ? currentProposal.publicCode : undefined,
+    },
+    isGuest ? "convidados" : "colaboradores",
+  );
   const whatsappMsg = encodeURIComponent(
     isGuest
       ? `Segue o link para registrar os convidados do seu evento: ${link}`

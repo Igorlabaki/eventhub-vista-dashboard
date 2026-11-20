@@ -95,7 +95,7 @@ describe("sidebar por secoes", () => {
     expect(
       presentNavItems([item!], "/venue/venue-1", { Apresentação: icon }, () => href),
     ).toEqual([{ title: "Apresentação", href, icon, external: true }]);
-    expect(href).toBe("https://event-hub-dashboard.vercel.app/venue/AR756/apresentacao");
+    expect(href).toBe("https://event-hub-dashboard.vercel.app/espaco/AR756/apresentacao");
     expect(presentNavItems([item!], "/venue/venue-1", { Apresentação: icon }, () => null)).toEqual([]);
   });
 
@@ -114,6 +114,28 @@ describe("sidebar por secoes", () => {
     ).toEqual([{ title: "Link do evento", href, icon, external: true }]);
     expect(href).not.toContain("/event-link");
     expect(presentNavItems([item!], "/proposal/proposal-1", { "Link do evento": icon }, () => null)).toEqual([]);
+  });
+
+  it("abre contato e orcamento num modal, fora do roteador", () => {
+    const icon = () => null;
+    const items = proposalSections
+      .flatMap((section) => section.items)
+      .filter((item) => item.opensDialog);
+
+    expect(items.map((item) => [item.title, item.opensDialog, item.permission])).toEqual([
+      ["Entrar em contato", "contact", Permissions.SEND_PROPOSAL_TEXT],
+      ["Enviar Orçamento", "proposal", Permissions.SEND_PROPOSAL_INFO],
+    ]);
+    expect(items.every((item) => internalItemHref("/proposal/proposal-1", item) === null)).toBe(true);
+    expect(
+      presentNavItems(items, "/proposal/proposal-1", {
+        "Entrar em contato": icon,
+        "Enviar Orçamento": icon,
+      }),
+    ).toEqual([
+      { title: "Entrar em contato", href: "contact", icon, dialog: "contact" },
+      { title: "Enviar Orçamento", href: "proposal", icon, dialog: "proposal" },
+    ]);
   });
 
   it("escolhe a visao geral como primeiro destino quando ela esta permitida", () => {

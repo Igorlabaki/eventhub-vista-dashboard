@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -51,8 +51,6 @@ import VenueExpenses from "./pages/VenueExpenses";
 import VenueWebsiteFaq from "./pages/website/VenueWebsiteFaq";
 import VenueWebsiteImages from "./pages/website/VenueWebsiteImages";
 import OrganizationSettings from "./pages/OrganizationSettings";
-import SendMessagePage from "./pages/SendMessagePage";
-import SendProposalPage from "./pages/SendProposalPage";
 import ProposalContract from "./pages/ProposalContract";
 import OrganizationWebsiteTexts from "./pages/website/OrganizationWebsiteTexts";
 import OrganizationWebsiteVenues from "./pages/website/OrganizationWebsiteVenues";
@@ -70,6 +68,7 @@ import SendSuppliers from "./pages/SendSuppliers";
 import ProposalEventLinkPage from "./pages/ProposalEventLink";
 import ProposalEventLinkSharePage from "./pages/ProposalEventLinkShare";
 import ProposalIndicationsPage from "./pages/ProposalIndications";
+import { PublicContractPage } from "./pages/PublicContract";
 import PartnerForm from "./pages/PartnerForm";
 import CrewForm from "./pages/CrewForm";
 
@@ -80,6 +79,11 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 function AppInitializer() {
   useBootstrapUser();
   return null;
+}
+
+function ProposalOverviewRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/proposal/${id ?? ""}`} replace />;
 }
 
 const ProposalContact = () => <div>Entrar em contato</div>;
@@ -137,6 +141,13 @@ const App = () => {
                 <Route path="/venue/:id/notifications" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueNotifications /></ProtectedRoute>} />
                 <Route path="/venue/:id/website/images" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueWebsiteImages /></ProtectedRoute>} />
               {/* Proposal */}
+                <Route path="/espaco/:venueName/orcamento/:ref" element={<ProposalView />} />
+                <Route path="/espaco/:venueName/orcamento/:ref/evento" element={<ProposalEventLinkPage />} />
+                <Route path="/espaco/:venueName/orcamento/:ref/convidados" element={<GuestListPage />} />
+                <Route path="/espaco/:venueName/orcamento/:ref/indicacoes" element={<ProposalIndicationsPage />} />
+                <Route path="/espaco/:venueName/orcamento/:ref/colaboradores" element={<WorkerListPage />} />
+                <Route path="/espaco/:venueName/orcamento/:ref/programacao" element={<ScheduleListPage />} />
+                <Route path="/espaco/:venueName/orcamento/:ref/contrato" element={<PublicContractPage />} />
                 <Route path="/proposal/:id/view" element={<ProposalView  />} />
                 <Route path="/proposal/:id/links" element={<ProposalEventLinkPage />} />
                 <Route path="/proposal/:id/guest-list" element={<GuestListPage />} />
@@ -153,12 +164,17 @@ const App = () => {
                 <Route path="/proposal/:id/contract" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_DOCUMENTS"><ProposalContract /></ProtectedRoute>} />
                 <Route path="/proposal/:id/documents" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_DOCUMENTS"><ProposalDocuments /></ProtectedRoute>} />
                 <Route path="/proposal/:id/schedule" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_SCHEDULE"><ProposalSchedulePage /></ProtectedRoute>} />
-                <Route path="/proposal/:id/send-message" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_TEXT"><SendMessagePage /></ProtectedRoute>} />
+                <Route path="/proposal/:id/send-message" element={<ProposalOverviewRedirect />} />
                 <Route path="/proposal/:id/send-suppliers" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_INFO"><SendSuppliers /></ProtectedRoute>} />
-                <Route path="/proposal/:id/send-proposal" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_INFO"><SendProposalPage /></ProtectedRoute>} />
+                <Route path="/proposal/:id/send-proposal" element={<ProposalOverviewRedirect />} />
                 <Route path="/proposal/:id/event-link" element={<ProtectedRoute requiredPermission="SEND_PROPOSAL_INFO"><ProposalEventLinkSharePage /></ProtectedRoute>} />
                 <Route path="/proposal/:id/attendance-list" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_ATTENDANCE_LIST"><ProposalAttendanceListPage /></ProtectedRoute>} />
               {/* Public Form */}
+                <Route path="/espaco/:id/apresentacao" element={<VenuePresentation />} />
+                <Route path="/espaco/:id/formulario" element={<ProposalForm />} />
+                <Route path="/espaco/:id/regras" element={<PublicVenueRulesPage />} />
+                <Route path="/espaco/:id/parceiro" element={<PartnerForm />} />
+                <Route path="/espaco/:id/colaborador" element={<CrewForm />} />
                 <Route path="/venue/:id/form" element={<ProposalForm />} />
                 <Route path="/venue/:id/rules/view" element={<PublicVenueRulesPage />} />
                 <Route path="/venue/:id/apresentacao" element={<VenuePresentation />} />

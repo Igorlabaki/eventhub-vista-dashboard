@@ -20,6 +20,8 @@ import { proposalService } from "@/services/proposal.service";
 import { useContactStore } from "@/store/contactStore";
 import { useVenueStore } from "@/store/venueStore";
 import { ContactType } from "@/types/contact";
+import { proposalClientUrl } from "@/lib/proposal-public-url";
+import { useProposalStore } from "@/store/proposalStore";
 
 type SaveState = "idle" | "saving" | "saved";
 
@@ -27,6 +29,7 @@ export default function SendSuppliers() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { selectedVenue: venue } = useVenueStore();
+  const { currentProposal } = useProposalStore();
   const {
     contacts,
     isLoading,
@@ -47,7 +50,18 @@ export default function SendSuppliers() {
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [venueTotal, setVenueTotal] = useState<number | null>(null);
   const sync = useRef<ReturnType<typeof createIndicationSync> | null>(null);
-  const link = id ? `${window.location.origin}/proposal/${id}/indications` : "";
+  const link = id
+    ? proposalClientUrl(
+        {
+          proposalId: id,
+          venueName: venue?.name,
+          clientName: currentProposal?.completeClientName,
+          publicCode: currentProposal?.publicCode,
+        },
+        "indicacoes",
+        window.location.origin,
+      )
+    : "";
 
   useEffect(() => {
     if (!id) return;

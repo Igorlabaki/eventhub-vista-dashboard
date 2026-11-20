@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ElementType } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -16,7 +16,10 @@ import {
   Send,
   Users,
 } from "lucide-react";
+import { ContactMessageDialog } from "@/components/proposal/ContactMessageDialog";
+import { SendProposalDialog } from "@/components/proposal/SendProposalDialog";
 import { proposalEventLinksUrl } from "@/lib/event-link";
+import { useVenueStore } from "@/store/venueStore";
 import { Proposal } from "@/types/proposal";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { Permissions } from "@/types/permissions";
@@ -27,6 +30,7 @@ import {
   presentNavItems,
   proposalSections,
   visibleSections,
+  type SidebarDialog,
 } from "@/components/sidebar/sidebar-nav-model";
 
 interface ProposalNavProps {
@@ -63,6 +67,8 @@ export function ProposalNav({
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
   const permissions = currentUserVenuePermission?.permissions;
   const base = `/proposal/${proposal?.id}`;
+  const { selectedVenue } = useVenueStore();
+  const [clientDialog, setClientDialog] = useState<SidebarDialog | null>(null);
 
   const canSee = (permission?: Permissions) => {
     if (!permission) return true;
@@ -96,19 +102,41 @@ export function ProposalNav({
   }
 
   return (
+    <>
     <SectionedNav
       heading={proposal.completeClientName}
       sections={sections.map((section) => ({
         ...section,
         items: presentNavItems(section.items, base, proposalIcons, (item) =>
-          item.opensExternalUrl && proposal.id ? proposalEventLinksUrl(proposal.id) : null,
+          item.opensExternalUrl && proposal.id
+            ? proposalEventLinksUrl({
+                proposalId: proposal.id,
+                venueName: selectedVenue?.name,
+                clientName: proposal.completeClientName,
+                publicCode: proposal.publicCode,
+              })
+            : null,
         ),
       }))}
       isCollapsed={isCollapsed}
       collapsedMode="always-open"
       isActive={(href) => location.pathname === href}
       onNavigate={onNavItemClick}
+      onDialog={setClientDialog}
     />
+    <ContactMessageDialog
+      open={clientDialog === "contact"}
+      onOpenChange={(open) => {
+        if (!open) setClientDialog(null);
+      }}
+    />
+    <SendProposalDialog
+      open={clientDialog === "proposal"}
+      onOpenChange={(open) => {
+        if (!open) setClientDialog(null);
+      }}
+    />
+    </>
   );
 }
 
