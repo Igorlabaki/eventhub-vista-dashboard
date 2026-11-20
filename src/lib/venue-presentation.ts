@@ -41,7 +41,17 @@ export type VenueHouseCard = {
   placeLabel: string | null;
 };
 
+export type VenuePresentationCatalogImage = {
+  id: string;
+  imageUrl: string;
+  description: string | null;
+  position: number;
+  isShowOnProposal: boolean;
+};
+
 export type VenuePresentation = {
+  canReorder: boolean;
+  catalog: VenuePresentationCatalogImage[];
   name: string;
   description: string | null;
   slogan: string | null;

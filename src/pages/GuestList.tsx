@@ -175,7 +175,7 @@ export default function GuestListPage() {
 
   return (
     <>
-      <PublicVenueListShell venue={venue} contentReady={contentReady} variant="people">
+      <PublicVenueListShell venue={venue} contentReady={contentReady} variant="people" proposalId={proposal?.id}>
         {(surface) => (
           <div className={publicColumnClass}>
             <section className={publicCardClass} style={surface.cardStyle}>

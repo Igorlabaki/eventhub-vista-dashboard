@@ -32,7 +32,7 @@ export function ContarctPjFormPage() {
   }
 
   return (
-    <PublicVenueListShell venue={venue} contentReady={contentReady} variant="people">
+    <PublicVenueListShell venue={venue} contentReady={contentReady} variant="people" proposalId={proposal?.id}>
       {(surface) =>
         proposal ? (
           <PJContractPersonalInfoForm surface={surface} />

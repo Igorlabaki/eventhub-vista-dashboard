@@ -3,6 +3,7 @@ import { Calendar } from "lucide-react";
 import { FaFacebook, FaGlobe, FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
 import type { Venue } from "@/types/venue";
+import { ManageProposalButton } from "@/components/proposal/ManageProposalButton";
 
 const PUBLIC_LOADING_BACKGROUND = "#111315";
 const PUBLIC_LOADING_TEXT = "#f7f7f5";
@@ -171,11 +172,13 @@ export function PublicVenueListShell({
   venue,
   contentReady,
   variant,
+  proposalId,
   children,
 }: {
   venue: Venue | null;
   contentReady: boolean;
   variant: ListVariant;
+  proposalId?: string | null;
   children: (surface: PublicListSurface) => ReactNode;
 }) {
   const waitKey = venue?.id ?? (contentReady ? "sem-espaco" : null);
@@ -233,6 +236,15 @@ export function PublicVenueListShell({
       className={`flex min-h-screen flex-col ${PUBLIC_PAGE_FONT} text-[15px] font-normal leading-[1.6]`}
       style={{ backgroundColor: pageBackground, color: pageText }}
     >
+      {proposalId && venue?.id && venue.organizationId ? (
+        <ManageProposalButton
+          proposalId={proposalId}
+          venueId={venue.id}
+          organizationId={venue.organizationId}
+          backgroundColor={secondary || "#ffffff"}
+          color={textColor || "#181818"}
+        />
+      ) : null}
       <main className="flex flex-1 flex-col px-2 py-14 md:px-8">
         <div className="mb-10 flex w-full flex-col items-center justify-center gap-4 text-center">
           {venue?.logoUrl ? (

@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { proposalKeyMatches, usePublicProposalKey } from "@/lib/proposal-public-url";
 import { useProposalStore } from "@/store/proposalStore";
-import { ArrowRight, Calendar, Check, CircleCheck, Clock, GripVertical, HelpCircle, House, Info, MapPin, Users } from "lucide-react";
+import { ArrowRight, Calendar, Check, CircleCheck, Clock, HelpCircle, House, Info, MapPin, Users } from "lucide-react";
 import { FaFacebook, FaGlobe, FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa";
 import NotFound from "./NotFound";
 import { Proposal } from "@/types/proposal";
@@ -15,8 +15,7 @@ import {
   PublicProposalServicesUpdate,
   PublicServiceChoice,
 } from "@/services/proposal.service";
-import { imageOrderAfterSave, moveImageBefore, sameImageOrder } from "@/lib/reorder-proposal-images";
-import { replaceProposalImage } from "@/lib/choose-proposal-image";
+import { PhotoChoiceButton, PhotoGrip, usePublicPhotoEdit } from "@/components/proposal/public-photo-edit";
 import { resolveTourVideo } from "@/lib/tour-video";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
 import { PublicServiceDetailDialog } from "@/components/proposal/forms/PublicServiceDetail";
@@ -25,6 +24,7 @@ import { RecalculateProposalDialog } from "@/components/proposal/RecalculateProp
 import { UpdateProposalServicesDialog } from "@/components/proposal/UpdateProposalServicesDialog";
 import { discountBreakdown } from "@/lib/proposal-discount";
 import { ProposalTourVideo } from "@/components/proposal/ProposalTourVideo";
+import { ManageProposalButton } from "@/components/proposal/ManageProposalButton";
 import {
   Dialog,
   DialogContent,
@@ -505,26 +505,6 @@ function RevealBlock({ children }: { children: React.ReactNode }) {
   );
 }
 
-function PhotoChoiceButton({ disabled, onChoose }: { disabled: boolean; onChoose: () => void }) {
-  return (
-    <button
-      type="button"
-      aria-label="Trocar foto"
-      disabled={disabled}
-      draggable={false}
-      onMouseDown={(event) => event.stopPropagation()}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onChoose();
-      }}
-      className="absolute right-2 top-2 z-10 rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      Trocar foto
-    </button>
-  );
-}
-
 export default function ProposalView() {
   const id = usePublicProposalKey();
   const { currentProposal, isLoading, error, fetchProposalById, setCurrentProposal } =
@@ -534,13 +514,20 @@ export default function ProposalView() {
   );
   const [presentationLoading, setPresentationLoading] = useState(true);
   const [activePhoto, setActivePhoto] = useState<number | null>(null);
-  const [orderedImages, setOrderedImages] = useState<ProposalPresentation["images"]>([]);
-  const [savingOrder, setSavingOrder] = useState(false);
-  const [catalog, setCatalog] = useState<ProposalPresentation["catalog"]>([]);
-  const [choiceSlotId, setChoiceSlotId] = useState<string | null>(null);
-  const [savingChoice, setSavingChoice] = useState(false);
-  const [choiceError, setChoiceError] = useState<string | null>(null);
-  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const photos = usePublicPhotoEdit({
+    images: presentation?.images ?? [],
+    catalog: presentation?.catalog ?? [],
+    canReorder: Boolean(presentation?.canReorder),
+    onReorder: async (ids) => {
+      if (!currentProposal?.id) throw new Error("missing proposal");
+      await proposalService.reorderProposalImages(currentProposal.id, ids);
+    },
+    onChoose: async (slotId, replacementId) => {
+      if (!currentProposal?.id) throw new Error("missing proposal");
+      const response = await proposalService.chooseProposalImage(currentProposal.id, slotId, replacementId);
+      return response.data;
+    },
+  });
   const [coverSettled, setCoverSettled] = useState(false);
   const [recalculateOpen, setRecalculateOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
@@ -556,7 +543,6 @@ export default function ProposalView() {
   const [serviceChoicesFailed, setServiceChoicesFailed] = useState(false);
   const [readyForId, setReadyForId] = useState<string | null>(null);
   const [trackedId, setTrackedId] = useState(id);
-  const dragMoved = useRef(false);
 
   if (id !== trackedId) {
     setTrackedId(id);
@@ -617,11 +603,6 @@ export default function ProposalView() {
       active = false;
     };
   }, [id]);
-
-  useEffect(() => {
-    setOrderedImages(presentation?.images ?? []);
-    setCatalog(presentation?.catalog ?? []);
-  }, [presentation]);
 
   useEffect(() => {
     document.title = presentation?.name
@@ -700,82 +681,8 @@ export default function ProposalView() {
   const amenityDetail = amenityIndex === null ? null : detailedAmenities[amenityIndex] ?? null;
   const canStepAmenities = detailedAmenities.length > 1;
   const tourVideo = resolveTourVideo(house?.tourVideoUrl);
-  const cover = orderedImages[0];
-  const gallery = orderedImages.slice(1);
-  const canReorderPhotos = Boolean(house?.canReorder) && orderedImages.length > 1;
-  const canChoosePhotos = Boolean(house?.canReorder) && catalog.length > 1;
-  const photoEditLocked = savingOrder || savingChoice;
-  const dragEnabled = canReorderPhotos && !photoEditLocked;
-
-  async function persistOrder(fromId: string, toId: string) {
-    if (!currentProposal?.id || !dragEnabled) return;
-    const next = moveImageBefore(orderedImages, fromId, toId);
-    if (sameImageOrder(next, orderedImages)) return;
-    setOrderedImages(next);
-    setSavingOrder(true);
-    try {
-      await proposalService.reorderProposalImages(currentProposal.id, next.map((image) => image.id));
-      setOrderedImages(imageOrderAfterSave(orderedImages, next, true));
-    } catch {
-      setOrderedImages(imageOrderAfterSave(orderedImages, next, false));
-    } finally {
-      setSavingOrder(false);
-      setDraggedId(null);
-    }
-  }
-
-  async function persistChoice(slotId: string, replacement: ProposalPresentation["catalog"][number]) {
-    if (!currentProposal?.id || !canChoosePhotos || photoEditLocked) return;
-    if (replacement.id === slotId) {
-      setChoiceSlotId(null);
-      setChoiceError(null);
-      return;
-    }
-    const previous = orderedImages;
-    const next = replaceProposalImage(orderedImages, slotId, replacement);
-    setOrderedImages(next);
-    setSavingChoice(true);
-    setChoiceError(null);
-    try {
-      const response = await proposalService.chooseProposalImage(currentProposal.id, slotId, replacement.id);
-      setOrderedImages(response.data.images);
-      setCatalog(response.data.catalog);
-      setChoiceSlotId(null);
-    } catch {
-      setOrderedImages(imageOrderAfterSave(previous, next, false));
-      setChoiceError("Não foi possível trocar a foto. A foto anterior voltou.");
-    } finally {
-      setSavingChoice(false);
-    }
-  }
-
-  function dragBindings(imageId: string) {
-    return {
-      draggable: true as const,
-      onDragStart: (event: React.DragEvent) => {
-        dragMoved.current = true;
-        event.dataTransfer.setData("text/plain", imageId);
-        event.dataTransfer.effectAllowed = "move";
-        setDraggedId(imageId);
-      },
-      onDragOver: (event: React.DragEvent) => {
-        event.preventDefault();
-      },
-      onDrop: (event: React.DragEvent) => {
-        event.preventDefault();
-        const fromId = event.dataTransfer.getData("text/plain") || draggedId;
-        if (fromId) {
-          void persistOrder(fromId, imageId);
-        }
-      },
-      onDragEnd: () => {
-        setDraggedId(null);
-        window.setTimeout(() => {
-          dragMoved.current = false;
-        }, 0);
-      },
-    };
-  }
+  const cover = photos.orderedImages[0];
+  const gallery = photos.orderedImages.slice(1);
   const primary = house?.proposalPrimaryColor || undefined;
   const secondary = house?.proposalSecondaryColor || undefined;
   const textColor = house?.proposalTextColor || undefined;
@@ -834,19 +741,12 @@ export default function ProposalView() {
 
   const coverBlock = cover ? (
     <div
-      className={`group relative w-full overflow-hidden rounded-2xl ${tourVideo ? "" : "mb-6"} ${dragEnabled ? "cursor-grab" : ""} ${draggedId === cover.id ? "opacity-60" : ""}`}
-      {...(dragEnabled ? dragBindings(cover.id) : {})}
+      className={`group relative w-full overflow-hidden rounded-2xl ${tourVideo ? "" : "mb-6"} ${photos.dragEnabled ? "cursor-grab" : ""} ${photos.draggedId === cover.id ? "opacity-60" : ""}`}
+      {...photos.dragProps(cover.id)}
     >
-      {canReorderPhotos && (
-        <span
-          aria-label="Arrastar foto"
-          className="absolute left-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white"
-        >
-          <GripVertical className="h-4 w-4" />
-        </span>
-      )}
-      {canChoosePhotos && (
-        <PhotoChoiceButton disabled={photoEditLocked} onChoose={() => setChoiceSlotId(cover.id)} />
+      {photos.showGrip && <PhotoGrip />}
+      {photos.showChoice && (
+        <PhotoChoiceButton disabled={photos.disabled} onChoose={() => photos.openChoice(cover.id)} />
       )}
       <img
         src={cover.imageUrl}
@@ -867,27 +767,17 @@ export default function ProposalView() {
             return (
               <div
                 key={image.id}
-                className={`group relative overflow-hidden rounded-xl${spansFullRow ? " col-span-2" : ""} ${dragEnabled ? "cursor-grab" : ""} ${draggedId === image.id ? "opacity-60" : ""}`}
-                {...(dragEnabled ? dragBindings(image.id) : {})}
+                className={`group relative overflow-hidden rounded-xl${spansFullRow ? " col-span-2" : ""} ${photos.dragEnabled ? "cursor-grab" : ""} ${photos.draggedId === image.id ? "opacity-60" : ""}`}
+                {...photos.dragProps(image.id)}
               >
-                {canReorderPhotos && (
-                  <span
-                    aria-label="Arrastar foto"
-                    className="absolute left-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white"
-                  >
-                    <GripVertical className="h-4 w-4" />
-                  </span>
-                )}
-                {canChoosePhotos && (
-                  <PhotoChoiceButton disabled={photoEditLocked} onChoose={() => setChoiceSlotId(image.id)} />
+                {photos.showGrip && <PhotoGrip />}
+                {photos.showChoice && (
+                  <PhotoChoiceButton disabled={photos.disabled} onChoose={() => photos.openChoice(image.id)} />
                 )}
                 <button
                   type="button"
                   onClick={() => {
-                    if (dragMoved.current) {
-                      dragMoved.current = false;
-                      return;
-                    }
+                    if (photos.ignoreClick()) return;
                     setActivePhoto(index);
                   }}
                   aria-label={`Ampliar ${photoLabel}`}
@@ -912,6 +802,12 @@ export default function ProposalView() {
       className="flex min-h-screen flex-col font-['Manrope',sans-serif] text-[15px] font-normal leading-[1.6]"
       style={{ color: pageText, backgroundColor: pageBackground }}
     >
+      <ManageProposalButton
+        proposalId={currentProposal.id}
+        venueId={currentProposal.venueId}
+        backgroundColor={secondary || "#ffffff"}
+        color={cardText}
+      />
       <main className="flex flex-1 flex-col items-center justify-start px-3 py-10">
         <div className="flex w-full max-w-3xl flex-col gap-5">
           <header className="flex flex-col items-center text-center">
@@ -1446,58 +1342,7 @@ export default function ProposalView() {
           )}
         </DialogContent>
       </Dialog>
-      <Dialog
-        open={choiceSlotId !== null}
-        onOpenChange={(open) => {
-          if (!open && !savingChoice) {
-            setChoiceSlotId(null);
-            setChoiceError(null);
-          }
-        }}
-      >
-        <DialogContent className="max-h-[85vh] overflow-y-auto">
-          <DialogTitle>Escolher foto</DialogTitle>
-          <DialogDescription>
-            Escolha uma foto deste espaço para este lugar.
-          </DialogDescription>
-          {choiceError && (
-            <p role="alert" className="text-sm text-red-600">
-              {choiceError}
-            </p>
-          )}
-          <div className="grid grid-cols-2 gap-2">
-            {catalog.map((image) => {
-              const selected = image.id === choiceSlotId;
-              const onLink = orderedImages.some((visible) => visible.id === image.id);
-              return (
-                <button
-                  key={image.id}
-                  type="button"
-                  disabled={photoEditLocked}
-                  aria-pressed={selected}
-                  onClick={() => {
-                    if (choiceSlotId) {
-                      void persistChoice(choiceSlotId, image);
-                    }
-                  }}
-                  className={`relative overflow-hidden rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 ${selected ? "ring-2 ring-black" : ""}`}
-                >
-                  <img
-                    src={image.imageUrl}
-                    alt={image.description || "Foto do espaço"}
-                    className="h-28 w-full object-cover"
-                  />
-                  {onLink && (
-                    <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
-                      No link
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {photos.dialog}
     </div>
   );
 }

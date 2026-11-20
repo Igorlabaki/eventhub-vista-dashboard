@@ -32,7 +32,7 @@ export function ContarctPFFormPage() {
   }
 
   return (
-    <PublicVenueListShell venue={venue} contentReady={contentReady} variant="people">
+    <PublicVenueListShell venue={venue} contentReady={contentReady} variant="people" proposalId={proposal?.id}>
       {(surface) =>
         proposal ? (
           <PFContractPersonalInfoForm surface={surface} />

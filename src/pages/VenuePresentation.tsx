@@ -15,6 +15,7 @@ import {
 } from "@/lib/venue-presentation";
 import { formatCurrency } from "@/lib/utils";
 import { venueService } from "@/services/venue.service";
+import { PhotoChoiceButton, PhotoGrip, usePublicPhotoEdit } from "@/components/proposal/public-photo-edit";
 
 const sectionTitleClass = "text-[20px] font-bold tracking-[-0.035em]";
 const sectionLeadClass = "mt-1 text-[15px] font-normal leading-[1.6] opacity-70";
@@ -49,11 +50,24 @@ export default function VenuePresentation() {
     };
   }, [id]);
 
+  const photos = usePublicPhotoEdit({
+    images: house?.images ?? [],
+    catalog: house?.catalog ?? [],
+    canReorder: Boolean(house?.canReorder),
+    onReorder: async (ids) => {
+      if (!id) throw new Error("missing venue");
+      await venueService.reorderVenueImages(id, ids);
+    },
+    onChoose: async (slotId, replacementId) => {
+      if (!id) throw new Error("missing venue");
+      return venueService.chooseVenueImage(id, slotId, replacementId);
+    },
+  });
   const tourVideo = house ? resolveTourVideo(house.tourVideoUrl) : null;
   const view = house
     ? venuePresentationView({
         hasVideo: Boolean(tourVideo),
-        images: house.images,
+        images: photos.orderedImages,
         amenityCount: house.amenities.length,
         serviceCount: house.services.length,
         amount: house.pricing.amount,
@@ -134,8 +148,18 @@ export default function VenuePresentation() {
     house.url ? { href: house.url, label: "Site", icon: FaGlobe } : null,
   ].filter((item) => item !== null);
 
-  const photoFrame = (image: { imageUrl: string; description: string | null }, className: string) => (
-    <img src={image.imageUrl} alt={image.description || house.name} className={className} />
+  const photoFrame = (image: { id: string; imageUrl: string; description: string | null }, className: string, rounded: string) => (
+    <div
+      key={image.id}
+      className={`group relative overflow-hidden ${rounded} ${photos.dragEnabled ? "cursor-grab" : ""} ${photos.draggedId === image.id ? "opacity-60" : ""}`}
+      {...photos.dragProps(image.id)}
+    >
+      {photos.showGrip && <PhotoGrip />}
+      {photos.showChoice && (
+        <PhotoChoiceButton disabled={photos.disabled} onChoose={() => photos.openChoice(image.id)} />
+      )}
+      <img src={image.imageUrl} alt={image.description || house.name} className={className} />
+    </div>
   );
 
   return (
@@ -164,9 +188,7 @@ export default function VenuePresentation() {
             {tourVideo ? (
               <ProposalTourVideo video={tourVideo} className="mb-6 aspect-video w-full overflow-hidden rounded-2xl" />
             ) : view.heroPhoto ? (
-              <div className="mb-6 w-full overflow-hidden rounded-2xl">
-                {photoFrame(view.heroPhoto, "h-72 w-full object-cover")}
-              </div>
+              photoFrame(view.heroPhoto, "h-72 w-full object-cover", "mb-6 w-full rounded-2xl")
             ) : null}
           </header>
 
@@ -223,11 +245,7 @@ export default function VenuePresentation() {
             )}
           </section>
 
-          {view.soloPhoto ? (
-            <div className="w-full overflow-hidden rounded-2xl">
-              {photoFrame(view.soloPhoto, "h-72 w-full object-cover")}
-            </div>
-          ) : null}
+          {view.soloPhoto ? photoFrame(view.soloPhoto, "h-72 w-full object-cover", "w-full rounded-2xl") : null}
 
           {house.amenities.length > 0 && (
             <section className="rounded-xl px-5 py-6 shadow-lg" style={cardStyle}>
@@ -314,10 +332,10 @@ export default function VenuePresentation() {
               <div className="grid grid-cols-2 gap-3">
                 {view.grid.map((image, index) => {
                   const spansFullRow = view.grid.length % 2 === 1 && index === view.grid.length - 1;
-                  return (
-                    <div key={image.id} className={`overflow-hidden rounded-xl${spansFullRow ? " col-span-2" : ""}`}>
-                      {photoFrame(image, "h-40 w-full object-cover")}
-                    </div>
+                  return photoFrame(
+                    image,
+                    "h-40 w-full object-cover",
+                    `rounded-xl${spansFullRow ? " col-span-2" : ""}`,
                   );
                 })}
               </div>
@@ -421,6 +439,7 @@ export default function VenuePresentation() {
           )}
         </footer>
       )}
+      {photos.dialog}
       <PublicServiceDetailDialog
         open={amenityDetail !== null}
         onOpenChange={(open) => {

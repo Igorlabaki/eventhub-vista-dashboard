@@ -193,4 +193,16 @@ export const venueService = {
     const response = await api.get<{ data: VenuePresentation }>(`/venue/presentation/${encodeURIComponent(venueId)}`);
     return response.data.data;
   },
+
+  reorderVenueImages: async (venueId: string, imageIds: string[]) => {
+    await api.put(`/venue/presentation/${encodeURIComponent(venueId)}/image-order`, { imageIds });
+  },
+
+  chooseVenueImage: async (venueId: string, slotId: string, replacementId: string) => {
+    const response = await api.put<{ data: { images: VenuePresentation["images"]; catalog: VenuePresentation["catalog"] } }>(
+      `/venue/presentation/${encodeURIComponent(venueId)}/image-choice`,
+      { slotId, replacementId },
+    );
+    return response.data.data;
+  },
 }; 

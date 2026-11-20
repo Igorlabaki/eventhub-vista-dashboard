@@ -54,7 +54,7 @@ export default function ProposalIndicationsPage() {
   const groups = failed ? [] : groupIndicationsByCategory(indications);
 
   return (
-    <PublicVenueListShell venue={venue} contentReady={contentReady} variant="people">
+    <PublicVenueListShell venue={venue} contentReady={contentReady} variant="people" proposalId={proposal?.id}>
       {(surface) => (
         <div className={`${publicColumnClass} lg:max-w-6xl`}>
           <section className={publicCardClass} style={surface.cardStyle}>

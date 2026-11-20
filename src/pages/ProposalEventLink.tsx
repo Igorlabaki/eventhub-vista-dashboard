@@ -47,6 +47,7 @@ export default function ProposalEventLinkPage() {
   const proposalId = usePublicProposalKey();
   const [summary, setSummary] = useState<EventLinkSummary | null>(null);
   const [clock, setClock] = useState<EventClock | null>(null);
+  const [panelProposalId, setPanelProposalId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
   const now = useNow();
@@ -69,6 +70,7 @@ export default function ProposalEventLinkPage() {
     let active = true;
     setReady(false);
     setFailed(false);
+    setPanelProposalId(null);
     proposalService
       .getProposalById(proposalId)
       .then((response) => {
@@ -78,9 +80,11 @@ export default function ProposalEventLinkPage() {
           setFailed(true);
           setSummary(null);
           setClock(null);
+          setPanelProposalId(null);
           return;
         }
         setSummary(eventLinkSummary(proposal));
+        setPanelProposalId(proposal.id);
         setClock({
           venueId: proposal.venueId,
           clientName: proposal.completeClientName,
@@ -94,6 +98,7 @@ export default function ProposalEventLinkPage() {
         setFailed(true);
         setSummary(null);
         setClock(null);
+        setPanelProposalId(null);
       })
       .finally(() => {
         if (active) setReady(true);
@@ -110,7 +115,7 @@ export default function ProposalEventLinkPage() {
   ].filter((fact) => fact !== null);
 
   return (
-    <PublicVenueListShell venue={venue} contentReady={contentReady} variant="schedule">
+    <PublicVenueListShell venue={venue} contentReady={contentReady} variant="schedule" proposalId={panelProposalId}>
       {(surface) => (
         <div className={publicColumnClass}>
           <section className={`${cardClass} px-5 py-5`} style={surface.cardStyle}>

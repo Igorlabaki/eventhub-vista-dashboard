@@ -213,7 +213,7 @@ export function ScheduleListPage() {
 
   return (
     <>
-      <PublicVenueListShell venue={venue} contentReady={contentReady} variant="schedule">
+      <PublicVenueListShell venue={venue} contentReady={contentReady} variant="schedule" proposalId={proposal?.id}>
         {(surface) => {
           const fieldClass = (invalid?: boolean) =>
             `${surface.inputClassName}${invalid ? " border-red-500" : ""}`;
