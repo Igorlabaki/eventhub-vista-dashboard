@@ -22,6 +22,7 @@ import {
 import { usePublicListVenue } from "@/components/proposal/usePublicListVenue";
 import { ImportPersonSpreadsheetButton } from "@/components/proposal/ImportPersonSpreadsheetButton";
 import { usePersonSpreadsheetImport } from "@/components/proposal/useImportPersonSpreadsheet";
+import { PublicPersonListScroll } from "@/components/proposal/PublicPersonListScroll";
 
 export default function WorkerListPage() {
   const proposalId = usePublicProposalKey();
@@ -228,7 +229,7 @@ export default function WorkerListPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <div className="mt-4 max-h-[400px] overflow-y-auto">
+              <PublicPersonListScroll>
                 {filteredWorkers.length === 0 ? (
                   search.trim() ? <p className={publicLeadClass}>Nenhum colaborador com esse nome.</p> : null
                 ) : (
@@ -251,7 +252,7 @@ export default function WorkerListPage() {
                     </div>
                   ))
                 )}
-              </div>
+              </PublicPersonListScroll>
               <div className="mt-5 flex justify-end border-t border-current/15 pt-5">
                 <button className={publicActionClass} onClick={handleSaveList} disabled={saveLocked} type="button">
                   {loading ? "Salvando lista" : "Salvar lista"}

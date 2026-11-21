@@ -21,7 +21,7 @@ import {
 import { Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useVenueStore } from "@/store/venueStore";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useUserStore } from "@/store/userStore";
 import { useOwnerStore } from "@/store/ownerStore";
 import { Venue } from "@/types/venue";
@@ -49,6 +49,11 @@ import {
   SETTINGS_TABS,
   type SettingsTab,
 } from "@/lib/venue-settings-tabs";
+import { VenueLinkEditor } from "@/components/venue/VenueLinkEditor";
+import { cepDigits, normalizeUf } from "@/lib/cep-lookup";
+import { venueLinkSaveError, withoutVenueLinkColumns, type EditorVenueLink } from "@/lib/venue-link";
+import { venueService } from "@/services/venue.service";
+import { AddressFields } from "@/components/address/AddressFields";
 import { useOrganizationStore } from "@/store/organizationStore";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import AccessDenied from "@/components/accessDenied";
@@ -81,7 +86,7 @@ const venueSettingsSchema = z.object({
   email: z.string().email("Email inválido"),
   description: z.string().optional(),
   slogan: z.string().optional(),
-  url: z.string().url("URL inválida").optional().or(z.literal("")),
+  links: z.string().optional(),
   street: z.string().min(1, "Rua é obrigatória"),
   streetNumber: z.string().min(1, "Número é obrigatório"),
   complement: z.string().optional(),
@@ -109,21 +114,6 @@ const venueSettingsSchema = z.object({
   pricePerPersonDay: z.string().optional(),
   pricePerPersonHour: z.string().optional(),
   maxGuest: z.string().min(1, "Capacidade máxima é obrigatória"),
-  tiktokUrl: z
-    .string()
-    .url("URL do TikTok inválida")
-    .optional()
-    .or(z.literal("")),
-  instagramUrl: z
-    .string()
-    .url("URL do Instagram inválida")
-    .optional()
-    .or(z.literal("")),
-  facebookUrl: z
-    .string()
-    .url("URL do Facebook inválida")
-    .optional()
-    .or(z.literal("")),
   tourVideoUrl: z.string().refine((value) => value === "" || isTourVideoUrl(value), {
     message: "Use um link do YouTube ou um arquivo de video (mp4, webm, ogg ou mov).",
   }),
@@ -147,6 +137,7 @@ const venueSettingsSchema = z.object({
       "Use uma cor no formato #RRGGBB"
     ),
   logoFile: z.instanceof(File).optional(),
+  faviconFile: z.instanceof(File).optional(),
   owners: z
     .array(z.string())
     .min(1, "Pelo menos um proprietário deve ser selecionado"),
@@ -172,9 +163,17 @@ export default function VenueSettings() {
   const [logoPreview, setLogoPreview] = useState<string | null>(
     selectedVenue?.logoUrl || null
   );
+  const [faviconPreview, setFaviconPreview] = useState<string | null>(
+    selectedVenue?.faviconUrl || null
+  );
 
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<SettingsTab>("geral");
+  const [linkRows, setLinkRows] = useState<EditorVenueLink[] | null>(null);
+  const [searchParams] = useSearchParams();
+  const aba = searchParams.get("aba");
+  const [activeTab, setActiveTab] = useState<SettingsTab>(
+    aba === "endereco" || aba === "precos" || aba === "redes" || aba === "apresentacao" || aba === "geral" ? aba : "geral",
+  );
 
   const form = useForm<VenueSettingsFormValues>({
     resolver: zodResolver(venueSettingsSchema),
@@ -183,7 +182,7 @@ export default function VenueSettings() {
       email: "",
       description: "",
       slogan: "",
-      url: "",
+      links: "",
       street: "",
       streetNumber: "",
       minimumNights: "",
@@ -206,15 +205,13 @@ export default function VenueSettings() {
       pricePerPersonDay: "",
       pricePerPersonHour: "",
       maxGuest: "",
-      tiktokUrl: "",
-      instagramUrl: "",
-      facebookUrl: "",
       tourVideoUrl: "",
       logoUrl: "",
       proposalPrimaryColor: "",
       proposalSecondaryColor: "",
       proposalTextColor: "",
       logoFile: undefined,
+      faviconFile: undefined,
       owners: [],
     },
   });
@@ -254,6 +251,33 @@ export default function VenueSettings() {
     }
   };
 
+  const handleFaviconChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onChange: (value: File | null) => void
+  ) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      setFaviconPreview(URL.createObjectURL(file));
+      onChange(file);
+    } else {
+      setFaviconPreview(selectedVenue?.faviconUrl || null);
+      onChange(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedVenue?.id) return;
+    let active = true;
+    venueService.getVenueLinkEditor(selectedVenue.id).then((data) => {
+      if (active) setLinkRows(data.links);
+    }).catch(() => {
+      if (active) setLinkRows(null);
+    });
+    return () => {
+      active = false;
+    };
+  }, [selectedVenue?.id]);
+
   useEffect(() => {
     if (selectedVenue) {
       form.reset({
@@ -261,7 +285,7 @@ export default function VenueSettings() {
         email: selectedVenue.email || "",
         description: selectedVenue.description || "",
         slogan: selectedVenue.slogan || "",
-        url: selectedVenue.url || "",
+        links: "",
         street: selectedVenue.street || "",
         streetNumber: selectedVenue.streetNumber || "",
         complement: selectedVenue.complement || "",
@@ -297,17 +321,16 @@ export default function VenueSettings() {
           ? formatCurrency((selectedVenue.pricePerPersonHour * 100).toString())
           : "",
         maxGuest: selectedVenue.maxGuest?.toString() || "",
-        tiktokUrl: selectedVenue.tiktokUrl || "",
-        instagramUrl: selectedVenue.instagramUrl || "",
-        facebookUrl: selectedVenue.facebookUrl || "",
         tourVideoUrl: selectedVenue.tourVideoUrl || "",
         logoUrl: selectedVenue.logoUrl || "",
         proposalPrimaryColor: selectedVenue.proposalPrimaryColor || "",
         proposalSecondaryColor: selectedVenue.proposalSecondaryColor || "",
         proposalTextColor: selectedVenue.proposalTextColor || "",
         owners: selectedVenue.ownerVenue.map((owner) => owner.ownerId) || [],
+        faviconFile: undefined,
       });
       setLogoPreview(selectedVenue.logoUrl || null);
+      setFaviconPreview(selectedVenue.faviconUrl || null);
     }
   }, [selectedVenue, form]);
 
@@ -380,13 +403,22 @@ export default function VenueSettings() {
       : undefined;
 
     try {
-      const response = await updateVenue({
-        url: data.url,
-        cep: data.cep,
+      const linkError = linkRows ? venueLinkSaveError(linkRows) : null;
+      if (linkError) {
+        form.setError("links", { type: "manual", message: linkError });
+        setActiveTab("redes");
+        toast({ title: "Confira os links", description: linkError, variant: "destructive" });
+        return;
+      }
+      if (linkRows && selectedVenue.id) {
+        await venueService.saveVenueLinks(selectedVenue.id, linkRows);
+      }
+      const response = await updateVenue(withoutVenueLinkColumns({
+        cep: cepDigits(data.cep),
         city: data.city,
         userId: user.id,
         name: data.name,
-        state: data.state,
+        state: normalizeUf(data.state),
         email: data.email,
         street: data.street,
         owners: data.owners,
@@ -394,11 +426,10 @@ export default function VenueSettings() {
         checkIn: data.checkIn,
         checkOut: data.checkOut,
         logoFile: data.logoFile,
+        faviconFile: data.faviconFile,
         maxGuest: data.maxGuest,
-        tiktokUrl: data.tiktokUrl,
         venueId: selectedVenue.id,
         complement: data.complement,
-        facebookUrl: data.facebookUrl,
         description: data.description,
         slogan: data.slogan?.trim()
           ? data.slogan
@@ -410,7 +441,6 @@ export default function VenueSettings() {
         streetNumber: data.streetNumber,
         neighborhood: data.neighborhood,
         pricingModel: data.pricingModel,
-        instagramUrl: data.instagramUrl,
         tourVideoUrl: data.tourVideoUrl,
         proposalPrimaryColor: data.proposalPrimaryColor,
         proposalSecondaryColor: data.proposalSecondaryColor,
@@ -424,7 +454,7 @@ export default function VenueSettings() {
         standardEventDuration: data.standardEventDuration,
         pricePerPersonDay: pricePerPersonDay || undefined,
         pricePerPersonHour: pricePerPersonHour || undefined,
-      });
+      }));
 
       const { title, message } = handleBackendSuccess(
         response,
@@ -609,6 +639,8 @@ export default function VenueSettings() {
         onDelete={handleDelete}
         entityName={selectedVenue?.name || ""}
         entityType="Espaços"
+        plain={activeTab === "redes"}
+        hideActions={activeTab === "redes"}
       >
           <TabsContent value="geral" className="space-y-6 mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -713,107 +745,18 @@ export default function VenueSettings() {
           </TabsContent>
 
           <TabsContent value="endereco" className="space-y-6 mt-0">
-          <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="street"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Rua/Avenida</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="streetNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <FormField
-                control={form.control}
-                name="complement"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Complemento</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="neighborhood"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bairro</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-1 md:grid-3 gap-4 mt-4">
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cidade</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="state"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estado</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="cep"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CEP</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
+            <AddressFields
+              variant="panel"
+              names={{
+                cep: "cep",
+                street: "street",
+                streetNumber: "streetNumber",
+                complement: "complement",
+                neighborhood: "neighborhood",
+                city: "city",
+                state: "state",
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="precos" className="mt-0">
@@ -1186,85 +1129,50 @@ export default function VenueSettings() {
           </div>
           </TabsContent>
 
-          <TabsContent value="apresentacao" className="space-y-6 mt-0">
-              {/* Grid de 2 colunas: URLs (2 por linha no desktop) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>URL do Espaço</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="url"
-                          placeholder="https://exemplo.com"
-                          className="w-full"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="instagramUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>URL do Instagram</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="url"
-                          placeholder="https://instagram.com/seu-perfil"
-                          className="w-full"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="facebookUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>URL do Facebook</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="url"
-                          placeholder="https://facebook.com/seu-perfil"
-                          className="w-full"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="tiktokUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>URL do TikTok</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="url"
-                          placeholder="https://tiktok.com/@seu-perfil"
-                          className="w-full"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+          <TabsContent value="redes" className="space-y-6 mt-0">
+            {linkRows ? (
+              <VenueLinkEditor
+                rows={linkRows}
+                onChange={(next) => {
+                  const previous = linkRows;
+                  setLinkRows(next);
+                  if (!selectedVenue?.id) return;
+                  const linkError = venueLinkSaveError(next);
+                  if (linkError) {
+                    setLinkRows(previous);
+                    form.setError("links", { type: "manual", message: linkError });
+                    toast({ title: "Confira os links", description: linkError, variant: "destructive" });
+                    return;
+                  }
+                  form.clearErrors("links");
+                  void venueService.saveVenueLinks(selectedVenue.id, next).catch((error) => {
+                    setLinkRows(previous);
+                    const parsed = handleBackendError(error, "Não foi possível salvar as redes.");
+                    toast({ title: parsed.title, description: parsed.message, variant: "destructive" });
+                  });
+                }}
+                name={form.watch("name")}
+                source={{
+                  whatsappNumber: form.watch("whatsappNumber"),
+                  email: form.watch("email"),
+                  tourVideoUrl: form.watch("tourVideoUrl"),
+                  street: form.watch("street"),
+                  streetNumber: form.watch("streetNumber"),
+                  neighborhood: form.watch("neighborhood"),
+                  city: form.watch("city"),
+                  state: form.watch("state"),
+                  organizationUrl: selectedVenue?.organization?.url ?? null,
+                }}
+              />
+            ) : (
+              <p className="text-sm text-gray-500">Carregando os links do espaço.</p>
+            )}
+            {form.formState.errors.links?.message && (
+              <p className="text-sm text-red-600">{form.formState.errors.links.message}</p>
+            )}
+          </TabsContent>
 
+          <TabsContent value="apresentacao" className="space-y-6 mt-0">
           <FormField
             control={form.control}
             name="tourVideoUrl"
@@ -1287,7 +1195,7 @@ export default function VenueSettings() {
             )}
           />
 
-          <div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="w-full">
               <FormField
                 control={form.control}
@@ -1312,6 +1220,39 @@ export default function VenueSettings() {
                           className="max-h-40 rounded border shadow"
                           style={{ cursor: "pointer" }}
                           onClick={() => window.open(logoPreview, "_blank")}
+                        />
+                      </div>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="w-full">
+              <FormField
+                control={form.control}
+                name="faviconFile"
+                render={({ field: { value, onChange, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Icone da aba</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        className="w-full"
+                        onChange={(e) => handleFaviconChange(e, onChange)}
+                        {...field}
+                      />
+                    </FormControl>
+                    <p className="text-sm text-gray-500">
+                      O icone fica melhor quadrado e pequeno.
+                    </p>
+                    {faviconPreview && (
+                      <div className="mt-2">
+                        <img
+                          src={faviconPreview}
+                          alt="Icone da aba"
+                          className="h-10 w-10 rounded border object-contain shadow"
                         />
                       </div>
                     )}

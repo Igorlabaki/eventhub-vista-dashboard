@@ -7,6 +7,7 @@ import { Camera, Instagram, Facebook, Edit, EyeOff } from "lucide-react";
 import { FaTiktok, FaInstagram, FaFacebook } from "react-icons/fa";
 import { Text } from "@/types/text";
 import { useUserOrganizationPermissionStore } from "@/store/userOrganizationPermissionStore";
+import { venueSocialIcons } from "@/lib/venue-social-icons";
 
 interface VenuesListProps {
   venues: ItemListVenueResponse[];
@@ -138,27 +139,21 @@ export function VenuesList({
                     {venue.name}
                   </h3>
                   <div className="flex gap-2">
-                    <a
-                      href={`${venue.instagramUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <FaInstagram className="w-4 h-4" />
-                    </a>
-                    <a
-                      href={`${venue.facebookUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <FaFacebook className="w-4 h-4" />
-                    </a>
-                    <a
-                      href={`${venue.tiktokUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <FaTiktok className="w-4 h-4" />
-                    </a>
+                    {venueSocialIcons(venue.links, {
+                      INSTAGRAM: FaInstagram,
+                      FACEBOOK: FaFacebook,
+                      TIKTOK: FaTiktok,
+                    }).map((link) => (
+                      <a
+                        key={link.kind}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={link.label}
+                      >
+                        <link.icon className="w-4 h-4" />
+                      </a>
+                    ))}
                   </div>
                 </div>
                 <h3 className="mt-2 mb-4 space-y-1 text-gray-500 font-semibold text-sm">

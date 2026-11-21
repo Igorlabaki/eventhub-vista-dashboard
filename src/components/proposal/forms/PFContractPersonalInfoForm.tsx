@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { requiredProposalEmail } from "./required-proposal-email";
 import type { PublicListSurface } from "@/components/proposal/PublicVenueListShell";
 import { ContractPublicField } from "./ContractPublicField";
+import { AddressFields } from "@/components/address/AddressFields";
+import { cepDigits, normalizeUf } from "@/lib/cep-lookup";
 import { PublicContractFormCard, type ContractSaveNotice } from "./PublicContractFormCard";
 
 const LEAD = "Informe os dados de quem assina este contrato.";
@@ -64,9 +66,9 @@ export default function PFContractPersonalInfoForm({ surface }: { surface: Publi
           street: values.street,
           streetNumber: values.streetNumber,
           neighborhood: values.neighborhood,
-          cep: values.cep,
+          cep: cepDigits(values.cep),
           city: values.city,
-          state: values.state,
+          state: normalizeUf(values.state),
           adressComplement: values.adressComplement,
         },
       };
@@ -135,13 +137,19 @@ export default function PFContractPersonalInfoForm({ surface }: { surface: Publi
       <ContractPublicField control={form.control} name="email" label="E-mail" inputClassName={inputClassName} type="email" placeholder="email@cliente.com" />
       <ContractPublicField control={form.control} name="cpf" label="CPF" inputClassName={inputClassName} mask="999.999.999-99" placeholder="Digite o CPF" />
       <ContractPublicField control={form.control} name="rg" label="RG" inputClassName={inputClassName} mask="99.999.999-9" placeholder="Digite o RG" />
-      <ContractPublicField control={form.control} name="street" label="Logradouro" inputClassName={inputClassName} />
-      <ContractPublicField control={form.control} name="streetNumber" label="Número" inputClassName={inputClassName} />
-      <ContractPublicField control={form.control} name="adressComplement" label="Complemento" inputClassName={inputClassName} />
-      <ContractPublicField control={form.control} name="neighborhood" label="Bairro" inputClassName={inputClassName} />
-      <ContractPublicField control={form.control} name="cep" label="CEP" inputClassName={inputClassName} mask="99999-999" placeholder="Digite o CEP" />
-      <ContractPublicField control={form.control} name="city" label="Cidade" inputClassName={inputClassName} />
-      <ContractPublicField control={form.control} name="state" label="Estado" inputClassName={inputClassName} maxLength={2} />
+      <AddressFields
+        variant="public"
+        inputClassName={inputClassName}
+        names={{
+          cep: "cep",
+          street: "street",
+          streetNumber: "streetNumber",
+          complement: "adressComplement",
+          neighborhood: "neighborhood",
+          city: "city",
+          state: "state",
+        }}
+      />
     </PublicContractFormCard>
   );
 }

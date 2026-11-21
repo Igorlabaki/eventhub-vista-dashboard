@@ -11,11 +11,13 @@ export interface Venue {
   slogan?: string | null;
   email?: string | null;
   url?: string | null;
+  links?: { kind: string; label: string; href: string }[];
   tiktokUrl?: string | null;
   instagramUrl?: string | null;
   facebookUrl?: string | null;
   tourVideoUrl?: string | null;
   logoUrl?: string | null;
+  faviconUrl?: string | null;
   proposalPrimaryColor?: string | null;
   proposalSecondaryColor?: string | null;
   proposalTextColor?: string | null;
@@ -88,6 +90,7 @@ export interface CreateVenueDTO {
   facebookUrl?: string;
   logoUrl?: string;
   logoFile?: File;
+  faviconFile?: File;
   checkIn?: string;
   maxGuest: string;
   checkOut?: string;
@@ -135,6 +138,7 @@ export interface UpdateVenueDTO {
   proposalTextColor?: string;
   standardEventDuration?: string;
   logoFile?: File;
+  faviconFile?: File;
   maxGuest?: string;
   checkOut?: string;
   streetNumber?: string;
@@ -168,6 +172,7 @@ export type ItemListVenueResponse = {
   id: string;
   name: string;
   logoUrl?: string | null;
+  faviconUrl?: string | null;
   proposalPrimaryColor?: string | null;
   proposalSecondaryColor?: string | null;
   proposalTextColor?: string | null;
@@ -183,6 +188,7 @@ export type ItemListVenueResponse = {
   instagramUrl?: string;
   facebookUrl?: string;
   url?: string;
+  links?: { kind: string; label: string; href: string }[];
   texts: Text[];
   isShowOnOrganization: boolean;
 };

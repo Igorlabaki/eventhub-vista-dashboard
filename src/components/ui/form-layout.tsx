@@ -21,6 +21,8 @@ interface FormLayoutProps<T extends FieldValues = FieldValues> {
   isDeleting?: boolean;
   form: UseFormReturn<T>;
   customSubmitButton?: React.ReactNode;
+  plain?: boolean;
+  hideActions?: boolean;
 }
 
 export function FormLayout<T extends FieldValues = FieldValues>({
@@ -38,6 +40,8 @@ export function FormLayout<T extends FieldValues = FieldValues>({
   isDeleting = false,
   form,
   customSubmitButton,
+  plain = false,
+  hideActions = false,
 }: FormLayoutProps<T>) {
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
@@ -48,7 +52,7 @@ export function FormLayout<T extends FieldValues = FieldValues>({
   };
 
   return (
-    <div className={`bg-white rounded-lg border shadow-sm p-6 animate-slide-in ${className}`}>
+    <div className={`${plain ? "" : "bg-white rounded-lg border shadow-sm p-6 "}animate-slide-in ${className}`}>
       {(title || onCancel) && (
         <div className="flex justify-between items-center mb-6">
           {title ? (
@@ -70,28 +74,30 @@ export function FormLayout<T extends FieldValues = FieldValues>({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {children}
-          <div className="flex justify-end space-x-2">
-            {isEditing && onDelete && (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleDeleteClick}
-                disabled={isSubmitting || isDeleting}
-              >
-                Deletar
-              </Button>
-            )}
-            {customSubmitButton || (
-              <AsyncActionButton
-                onClick={form.handleSubmit(onSubmit)}
-                label={submitLabel || (isEditing ? "Atualizar" : "Criar")}
-                disabled={isSubmitting}
-              />
-            )}
-          </div>
+          {!hideActions && (
+            <div className="flex justify-end space-x-2">
+              {isEditing && onDelete && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDeleteClick}
+                  disabled={isSubmitting || isDeleting}
+                >
+                  Deletar
+                </Button>
+              )}
+              {customSubmitButton || (
+                <AsyncActionButton
+                  onClick={form.handleSubmit(onSubmit)}
+                  label={submitLabel || (isEditing ? "Atualizar" : "Criar")}
+                  disabled={isSubmitting}
+                />
+              )}
+            </div>
+          )}
         </form>
       </Form>
-      {isEditing && onDelete && (
+      {!hideActions && isEditing && onDelete && (
         <ConfirmDeleteDialog
           open={showDeleteDialog}
           onOpenChange={setShowDeleteDialog}

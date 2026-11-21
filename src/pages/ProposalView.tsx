@@ -17,7 +17,9 @@ import {
 } from "@/services/proposal.service";
 import { PhotoChoiceButton, PhotoGrip, usePublicPhotoEdit } from "@/components/proposal/public-photo-edit";
 import { resolveTourVideo } from "@/lib/tour-video";
+import { venueSocialIcons } from "@/lib/venue-social-icons";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
+import { applyVenueTabIcon } from "@/lib/venue-tab-icon";
 import { PublicServiceDetailDialog } from "@/components/proposal/forms/PublicServiceDetail";
 import { hasAmenityDetail, stepIndex } from "@/lib/amenity-video";
 import { RecalculateProposalDialog } from "@/components/proposal/RecalculateProposalDialog";
@@ -241,9 +243,13 @@ function Bone({ className, tone }: { className: string; tone: string }) {
 
 function presentationShowsFooter(house: ProposalPresentation | null) {
   if (!house) return false;
-  const hasSocial = Boolean(
-    house.whatsappNumber || house.facebookUrl || house.tiktokUrl || house.instagramUrl || house.url
-  );
+  const hasSocial = venueSocialIcons(house.links, {
+    WHATSAPP: true,
+    FACEBOOK: true,
+    TIKTOK: true,
+    INSTAGRAM: true,
+    SITE: true,
+  }).length > 0;
   return Boolean(house.logoUrl || hasSocial);
 }
 
@@ -608,10 +614,12 @@ export default function ProposalView() {
     document.title = presentation?.name
       ? venueTabTitle(presentation.name, presentation.slogan)
       : EVENTHUB_TAB_TITLE;
+    const releaseIcon = applyVenueTabIcon(presentation?.faviconUrl);
     return () => {
       document.title = EVENTHUB_TAB_TITLE;
+      releaseIcon();
     };
-  }, [presentation?.name, presentation?.slogan]);
+  }, [presentation?.name, presentation?.slogan, presentation?.faviconUrl]);
 
   useEffect(() => {
     if (!id || presentationLoading || readyForId === id) return;
@@ -704,25 +712,13 @@ export default function ProposalView() {
     backgroundColor: secondary || "#ffffff",
     color: cardText,
   };
-  const footerSocials = [
-    whatsapp
-      ? {
-          href: `https://wa.me/${whatsapp.replace(/\D/g, "")}`,
-          label: "WhatsApp",
-          icon: FaWhatsapp,
-        }
-      : null,
-    house?.facebookUrl
-      ? { href: house.facebookUrl, label: "Facebook", icon: FaFacebook }
-      : null,
-    house?.tiktokUrl
-      ? { href: house.tiktokUrl, label: "TikTok", icon: FaTiktok }
-      : null,
-    house?.instagramUrl
-      ? { href: house.instagramUrl, label: "Instagram", icon: FaInstagram }
-      : null,
-    house?.url ? { href: house.url, label: "Site", icon: FaGlobe } : null,
-  ].filter((item) => item !== null);
+  const footerSocials = venueSocialIcons(house?.links, {
+    WHATSAPP: FaWhatsapp,
+    FACEBOOK: FaFacebook,
+    TIKTOK: FaTiktok,
+    INSTAGRAM: FaInstagram,
+    SITE: FaGlobe,
+  });
   const showSpaceFooter = Boolean(
     house && (house.logoUrl || footerSocials.length > 0)
   );

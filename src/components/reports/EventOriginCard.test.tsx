@@ -19,7 +19,7 @@ const data: EventOriginData = {
 };
 
 describe("De onde vem os eventos", () => {
-  it("lista cidade, estado e bairro na ordem recebida", () => {
+  it("mostra cidade, estado e bairro em donut, na ordem recebida", () => {
     const html = renderToStaticMarkup(
       <EventOriginView year={2026} data={data} isLoading={false} error={null} onRetry={() => undefined} />,
     );
@@ -27,14 +27,54 @@ describe("De onde vem os eventos", () => {
     expect(html).toContain("De onde vem os eventos");
     expect(html).toContain("3 eventos aprovados em 2026");
     expect(html).toContain("lg:grid-cols-3");
+    expect(html).toContain('aria-label="Cidades: 3"');
+    expect(html).toContain('aria-label="Estados: 3"');
+    expect(html).toContain('aria-label="Bairros: 3"');
     expect(html.indexOf("Sao Paulo")).toBeLessThan(html.indexOf("Campinas"));
     expect(html.indexOf("Centro")).toBeLessThan(html.indexOf("Cambuí"));
     expect(html).toContain(">2<");
+    expect(html).toContain("67%");
+    expect(html).toContain("33%");
+    expect(html).toContain("100%");
     expect(html).not.toContain("street");
     expect(html).not.toContain("cep");
+    expect(html).not.toContain("zona");
   });
 
-  it("ano sem evento mostra o vazio e esconde as listas", () => {
+  it("o donut de bairros fica só com os 5 maiores", () => {
+    const html = renderToStaticMarkup(
+      <EventOriginView
+        year={2026}
+        data={{
+          ...data,
+          events: 32,
+          neighborhoods: [
+            { label: "Moema", count: 10 },
+            { label: "Bras", count: 8 },
+            { label: "Cambuci", count: 6 },
+            { label: "Saúde", count: 4 },
+            { label: "Centro", count: 2 },
+            { label: "Gonzaga", count: 1 },
+            { label: "Pinheiros", count: 1 },
+          ],
+        }}
+        isLoading={false}
+        error={null}
+        onRetry={() => undefined}
+      />,
+    );
+
+    expect(html).toContain('aria-label="Bairros: 30"');
+    expect(html).toContain("Moema");
+    expect(html).toContain("Centro");
+    expect(html.indexOf("Moema")).toBeLessThan(html.indexOf("Bras"));
+    expect(html.indexOf("Saúde")).toBeLessThan(html.indexOf("Centro"));
+    expect(html).not.toContain("Gonzaga");
+    expect(html).not.toContain("Pinheiros");
+    expect(html).toContain("Sao Paulo");
+  });
+
+  it("ano sem evento mostra o vazio e esconde os donuts", () => {
     const html = renderToStaticMarkup(
       <EventOriginView
         year={2026}

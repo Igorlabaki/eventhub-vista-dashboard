@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { venueIdForPublicForm } from "@/lib/public-venue-presentation";
 import { useVenueStore } from "@/store/venueStore";
 
 export function usePublicListVenue(venueId: string | undefined, listReady: boolean) {
@@ -18,7 +19,8 @@ export function usePublicListVenue(venueId: string | undefined, listReady: boole
     };
   }, [venueId, fetchVenueById]);
 
-  const venue = selectedVenue?.id === venueId ? selectedVenue : null;
+  const resolvedVenueId = venueIdForPublicForm(venueId, selectedVenue);
+  const venue = resolvedVenueId && selectedVenue?.id === resolvedVenueId ? selectedVenue : null;
   const contentReady = listReady && (!venueId || settledVenueId === venueId);
   return { venue, contentReady };
 }

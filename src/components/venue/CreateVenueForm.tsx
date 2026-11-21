@@ -26,12 +26,13 @@ import { FormLayout } from "@/components/ui/form-layout";
 import { handleBackendError, handleBackendSuccess } from "@/lib/error-handler";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useState, useEffect } from "react";
-import InputMask from "react-input-mask";
 import { NumericFormat } from "react-number-format";
 import { useUserStore } from "@/store/userStore";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { ownerDisplayName } from "@/lib/owner-document";
+import { cepDigits } from "@/lib/cep-lookup";
+import { AddressFields } from "@/components/address/AddressFields";
 
 // Função para gerar opções de horário em intervalos de 30 minutos
 const generateTimeOptions = () => {
@@ -111,6 +112,7 @@ const createVenueSchema = z.object({
         .optional()
         .or(z.literal("")),
       logoFile: z.instanceof(File).optional(),
+      faviconFile: z.instanceof(File).optional(),
     })
     .refine(
       (data) => {
@@ -167,6 +169,7 @@ export function CreateVenueForm({
 }: CreateVenueFormProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
   const { createVenue, deleteVenue } = useVenueStore();
   const { owners, fetchOrganizationOwners } = useOwnerStore();
   const { toast } = useToast();
@@ -206,6 +209,7 @@ export function CreateVenueForm({
         instagramUrl: "",
         facebookUrl: "",
         logoFile: undefined,
+        faviconFile: undefined,
       },
     },
   });
@@ -228,12 +232,26 @@ export function CreateVenueForm({
     }
   };
 
+  const handleFaviconChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onChange: (value: File | null) => void
+  ) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      setFaviconPreview(URL.createObjectURL(file));
+      onChange(file);
+    } else {
+      setFaviconPreview(null);
+      onChange(null);
+    }
+  };
+
   const onSubmit = async (data: CreateVenueFormValues) => {
     try {
       const venueData: CreateVenueDTO = {
         userId: user?.id || "",
         organizationId: data.organizationId,
-        cep: data.data.cep.replace(/\D/g, ""),
+        cep: cepDigits(data.data.cep),
         email: data.data.email,
         name: data.data.name,
         city: data.data.city,
@@ -267,6 +285,7 @@ export function CreateVenueForm({
         instagramUrl: data.data.instagramUrl || undefined,
         facebookUrl: data.data.facebookUrl || undefined,
         logoFile: data.data.logoFile,
+        faviconFile: data.data.faviconFile,
       };
 
       const response = await createVenue(venueData);
@@ -431,137 +450,20 @@ export function CreateVenueForm({
           )}
         />
 
-        {/* Endereço */}
         <div className="space-y-4">
           <h3 className="font-semibold text-md">Endereço</h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="data.street"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rua/Avenida*</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome da rua" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="data.streetNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Número*</FormLabel>
-                  <FormControl>
-                    <InputMask
-                      mask="999999"
-                      placeholder="123"
-                      value={field.value}
-                      onChange={field.onChange}
-                    >
-                      {(inputProps) => <Input {...inputProps} />}
-                    </InputMask>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="data.complement"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Complemento</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Apto, sala, etc" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="data.neighborhood"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bairro*</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome do bairro" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="data.city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cidade*</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome da cidade" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="data.state"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estado*</FormLabel>
-                  <FormControl>
-                    <InputMask
-                      mask="aa"
-                      placeholder="UF"
-                      value={field.value}
-                      onChange={(e) =>
-                        field.onChange(e.target.value.toUpperCase())
-                      }
-                    >
-                      {(inputProps) => <Input {...inputProps} />}
-                    </InputMask>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="data.cep"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>CEP*</FormLabel>
-                  <FormControl>
-                    <InputMask
-                      mask="99999-999"
-                      placeholder="00000-000"
-                      value={field.value}
-                      onChange={field.onChange}
-                    >
-                      {(inputProps) => <Input {...inputProps} />}
-                    </InputMask>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <AddressFields
+            variant="panel"
+            names={{
+              cep: "data.cep",
+              street: "data.street",
+              streetNumber: "data.streetNumber",
+              complement: "data.complement",
+              neighborhood: "data.neighborhood",
+              city: "data.city",
+              state: "data.state",
+            }}
+          />
         </div>
         <div className="w-full">
           <FormField
@@ -1044,6 +946,38 @@ export function CreateVenueForm({
                       className="max-h-40 rounded border shadow"
                       style={{ cursor: "pointer" }}
                       onClick={() => window.open(logoPreview, "_blank")}
+                    />
+                  </div>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+            />
+        </div>
+        <div className="w-full">
+          <FormField
+            control={form.control}
+            name="data.faviconFile"
+            render={({ field: { value, onChange, ...field } }) => (
+              <FormItem>
+                <FormLabel>Icone da aba</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFaviconChange(e, onChange)}
+                    {...field}
+                  />
+                </FormControl>
+                <p className="text-sm text-gray-500">
+                  O icone fica melhor quadrado e pequeno.
+                </p>
+                {faviconPreview && (
+                  <div className="mt-2">
+                    <img
+                      src={faviconPreview}
+                      alt="Icone da aba"
+                      className="h-10 w-10 rounded border object-contain shadow"
                     />
                   </div>
                 )}

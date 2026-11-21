@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import type { EditorVenueLink, VenueLinkRow } from '@/lib/venue-link';
 import type { VenuePresentation } from '@/lib/venue-presentation';
 import { 
   CreateVenueDTO, 
@@ -37,13 +38,43 @@ export type UpdateVenueWithFileDTO = Omit<UpdateVenueDTO, 'imageUrl'> & {
   file?: File;
 };
 
+export type PublicVenueLink = {
+  kind: string;
+  label: string;
+  href: string;
+  subtitle?: string;
+};
+
+export type PublicVenueLinks = {
+  name: string;
+  logoUrl: string | null;
+  slogan: string | null;
+  proposalPrimaryColor: string | null;
+  proposalSecondaryColor: string | null;
+  proposalTextColor: string | null;
+  mapLabel?: string | null;
+  mapQuery?: string | null;
+  tourVideoUrl?: string | null;
+  canReorder: boolean;
+  usedKinds?: string[];
+  links: PublicVenueLink[];
+};
+
+export function appendVenueImageFiles(
+  formData: FormData,
+  data: { logoFile?: File; faviconFile?: File },
+) {
+  if (data.logoFile) formData.append("file", data.logoFile, data.logoFile.name);
+  if (data.faviconFile) formData.append("favicon", data.faviconFile, data.faviconFile.name);
+}
+
 export const venueService = {
   createVenue: async (data: CreateVenueWithFileDTO) => {
     const formData = new FormData();
     
     // Adiciona todos os campos do DTO ao FormData
     Object.entries(data).forEach(([key, value]) => {
-      if (key !== 'logoFile' && value !== undefined) {
+      if (key !== 'logoFile' && key !== 'faviconFile' && value !== undefined) {
         if (key === 'owners' && Array.isArray(value)) {
           // Para o array owners, converte para JSON string
           formData.append(key, JSON.stringify(value));
@@ -54,9 +85,7 @@ export const venueService = {
     });
   
     // Adiciona o arquivo se existir
-    if (data.logoFile) {
-      formData.append('file', data.logoFile, data.logoFile.name);
-    }
+    appendVenueImageFiles(formData, data);
 
     const response = await api.post<VenueCreateResponse>('/venue/create', formData, {
       headers: {
@@ -81,7 +110,7 @@ export const venueService = {
     
     // Adiciona todos os campos do DTO ao FormData
     Object.entries(data).forEach(([key, value]) => {
-      if (key !== 'logoFile' && value !== undefined) {
+      if (key !== 'logoFile' && key !== 'faviconFile' && value !== undefined) {
         if (key === 'owners' && Array.isArray(value)) {
           // Para o array owners, converte para JSON string
           formData.append(key, JSON.stringify(value));
@@ -92,9 +121,7 @@ export const venueService = {
     });
 
     // Adiciona o arquivo se existir
-    if (data.logoFile) {
-      formData.append('file', data.logoFile, data.logoFile.name);
-    }
+    appendVenueImageFiles(formData, data);
 
     const response = await api.put<VenueUpdateResponse>('/venue/update', formData, {
       headers: {
@@ -195,6 +222,48 @@ export const venueService = {
       params: { venueId, year },
     });
     return response.data;
+  },
+
+  getVenueLinks: async (venueId: string) => {
+    const response = await api.get<{ data: PublicVenueLinks }>(`/venue/links/${encodeURIComponent(venueId)}`);
+    return response.data.data;
+  },
+
+  getVenueLinkEditor: async (venueId: string) => {
+    const response = await api.get<{ data: { links: EditorVenueLink[] } }>(`/venue/links/${encodeURIComponent(venueId)}/editor`);
+    return response.data.data;
+  },
+
+  saveVenueLinks: async (venueId: string, links: VenueLinkRow[]) => {
+    await api.put(`/venue/links/${encodeURIComponent(venueId)}`, {
+      links: links.map(({ kind, url, visible, position }) => ({ kind, url, visible, position })),
+    });
+  },
+
+  orderVenueLinks: async (venueId: string, kinds: string[]) => {
+    const response = await api.put<{ data: PublicVenueLinks }>(`/venue/links/${encodeURIComponent(venueId)}/order`, { kinds });
+    return response.data.data;
+  },
+
+  hideVenueLink: async (venueId: string, kind: string) => {
+    const response = await api.put<{ data: PublicVenueLinks }>(`/venue/links/${encodeURIComponent(venueId)}/hide`, { kind });
+    return response.data.data;
+  },
+
+  setVenueLinkVisible: async (venueId: string, body: { kind: string; visible: boolean }) => {
+    await api.put(`/venue/links/${encodeURIComponent(venueId)}/visible`, {
+      kind: body.kind,
+      visible: body.visible,
+    });
+  },
+
+  createVenueLink: async (venueId: string, body: { kind: string; url?: string | null; visible?: boolean }) => {
+    const response = await api.put<{ data: PublicVenueLinks }>(`/venue/links/${encodeURIComponent(venueId)}/create`, {
+      kind: body.kind,
+      url: body.url ?? undefined,
+      visible: body.visible,
+    });
+    return response.data.data;
   },
 
   getVenuePresentation: async (venueId: string) => {

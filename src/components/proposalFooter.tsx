@@ -7,14 +7,11 @@ import {
   FaGlobe,
 } from "react-icons/fa";
 import { Calendar } from "lucide-react";
+import { venueSocialIcons } from "@/lib/venue-social-icons";
 
 interface ProposalFooterVenue {
   name?: string | null;
-  whatsappNumber?: string | null;
-  facebookUrl?: string | null;
-  tiktokUrl?: string | null;
-  instagramUrl?: string | null;
-  url?: string | null;
+  links?: { kind: string; label: string; href: string }[];
 }
 
 interface ProposalFooterProps {
@@ -44,79 +41,27 @@ export function ProposalFooter({ selectedVenue }: ProposalFooterProps) {
           Siga nas redes sociais:
         </span>
         <div className="flex gap-8 justify-center md:justify-start">
-          {selectedVenue?.whatsappNumber && (
+          {venueSocialIcons(selectedVenue?.links, {
+            WHATSAPP: FaWhatsapp,
+            FACEBOOK: FaFacebook,
+            TIKTOK: FaTiktok,
+            INSTAGRAM: FaInstagram,
+            SITE: FaGlobe,
+          }).map((link) => (
             <a
-              href={`https://wa.me/${selectedVenue.whatsappNumber.replace(
-                /\D/g,
-                ""
-              )}`}
+              key={link.kind}
+              href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              title="WhatsApp"
+              title={link.label}
             >
-              <FaWhatsapp
+              <link.icon
                 size={26}
                 color="#fff"
                 className="hover:scale-110 transition-transform"
               />
             </a>
-          )}
-          {selectedVenue?.facebookUrl && (
-            <a
-              href={selectedVenue.facebookUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Facebook"
-            >
-              <FaFacebook
-                size={26}
-                color="#fff"
-                className="hover:scale-110 transition-transform"
-              />
-            </a>
-          )}
-          {selectedVenue?.tiktokUrl && (
-            <a
-              href={selectedVenue.tiktokUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="TikTok"
-            >
-              <FaTiktok
-                size={26}
-                color="#fff"
-                className="hover:scale-110 transition-transform"
-              />
-            </a>
-          )}
-          {selectedVenue?.instagramUrl && (
-            <a
-              href={selectedVenue.instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Instagram"
-            >
-              <FaInstagram
-                size={26}
-                color="#fff"
-                className="hover:scale-110 transition-transform"
-              />
-            </a>
-          )}
-          {selectedVenue?.url && (
-            <a
-              href={selectedVenue.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Site"
-            >
-              <FaGlobe
-                size={26}
-                color="#fff"
-                className="hover:scale-110 transition-transform"
-              />
-            </a>
-          )}
+          ))}
         </div>
       </div>
     </footer>

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import React from "react";
 import { useEmailConfigStore } from "@/store/emailConfigStore";
 import { useVenueStore } from "@/store/venueStore";
+import { venueSocialIcons } from "@/lib/venue-social-icons";
 import { AnimatedFormSwitcher } from "@/components/ui/animated-form-switcher";
 import { FaTiktok, FaInstagram, FaFacebook } from "react-icons/fa";
 import { FormLayout } from "@/components/ui/form-layout";
@@ -184,33 +185,21 @@ export function EmailTab({
           <div className="flex flex-col items-center gap-2">
             <span className="font-medium text-sm mb-1">SIGA-NOS</span>
             <div className="flex gap-4 justify-center items-center">
-              {selectedVenue?.tiktokUrl && (
+              {venueSocialIcons(selectedVenue?.links, {
+                TIKTOK: FaTiktok,
+                INSTAGRAM: FaInstagram,
+                FACEBOOK: FaFacebook,
+              }).map((link) => (
                 <a
-                  href={selectedVenue.tiktokUrl}
+                  key={link.kind}
+                  href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={link.label}
                 >
-                  <FaTiktok size={28} color="#000" />
+                  <link.icon size={28} color={link.kind === "INSTAGRAM" ? "#E4405F" : link.kind === "FACEBOOK" ? "#1877F3" : "#000"} />
                 </a>
-              )}
-              {selectedVenue?.instagramUrl && (
-                <a
-                  href={selectedVenue.instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FaInstagram size={28} color="#E4405F" />
-                </a>
-              )}
-              {selectedVenue?.facebookUrl && (
-                <a
-                  href={selectedVenue.facebookUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FaFacebook size={28} color="#1877F3" />
-                </a>
-              )}
+              ))}
             </div>
           </div>
         </div>

@@ -24,6 +24,8 @@ export const PUBLIC_ROUTES = [
   '/venue/:id/rules/view',
   '/venue/:id/apresentacao',
   '/espaco/:id/apresentacao',
+  '/espaco/:id/links',
+  '/venue/:id/links',
   '/espaco/:id/formulario',
   '/espaco/:id/regras',
   '/espaco/:id/parceiro',

@@ -38,6 +38,7 @@ import { performanceTitle } from "@/components/venue/VenuePerformanceSeries";
 import { useVenueStore } from "@/store/venueStore";
 import { useGoalStore } from "@/store/goalStore";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
+import { applyVenueTabIcon } from "@/lib/venue-tab-icon";
 
 function VenueNotFound() {
   return (
@@ -97,8 +98,10 @@ export default function VenueDashboard() {
     document.title = currentVenue?.name
       ? venueTabTitle(currentVenue.name, currentVenue.slogan)
       : EVENTHUB_TAB_TITLE;
+    const releaseIcon = applyVenueTabIcon(currentVenue?.faviconUrl);
     return () => {
       document.title = EVENTHUB_TAB_TITLE;
+      releaseIcon();
     };
   }, [venue, venueId]);
 

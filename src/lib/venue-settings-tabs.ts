@@ -4,6 +4,7 @@ export const SETTINGS_TABS = [
   { value: "geral", label: "GERAL" },
   { value: "endereco", label: "ENDEREÇO" },
   { value: "precos", label: "PREÇOS" },
+  { value: "redes", label: "REDES" },
   { value: "apresentacao", label: "APRESENTAÇÃO" },
 ] as const;
 
@@ -36,13 +37,11 @@ const SETTINGS_FIELD_TAB: Record<string, SettingsTab> = {
   openingHour: "precos",
   closingHour: "precos",
   standardEventDuration: "precos",
-  url: "apresentacao",
-  instagramUrl: "apresentacao",
-  facebookUrl: "apresentacao",
-  tiktokUrl: "apresentacao",
+  links: "redes",
   tourVideoUrl: "apresentacao",
   logoUrl: "apresentacao",
   logoFile: "apresentacao",
+  faviconFile: "apresentacao",
   proposalPrimaryColor: "apresentacao",
   proposalSecondaryColor: "apresentacao",
   proposalTextColor: "apresentacao",

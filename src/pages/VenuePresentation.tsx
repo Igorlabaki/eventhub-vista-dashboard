@@ -7,7 +7,9 @@ import { PublicServiceDetailDialog } from "@/components/proposal/forms/PublicSer
 import { HouseSocialLinks, type HouseSocialLink } from "@/components/venue/HouseSocialLinks";
 import { hasAmenityDetail, stepIndex } from "@/lib/amenity-video";
 import { resolveTourVideo } from "@/lib/tour-video";
+import { venueSocialIcons, venueSocialLinks } from "@/lib/venue-social-icons";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
+import { applyVenueTabIcon } from "@/lib/venue-tab-icon";
 import {
   venuePresentationView,
   type VenuePresentation,
@@ -94,10 +96,12 @@ export default function VenuePresentation() {
 
   useEffect(() => {
     document.title = house?.name && view ? venueTabTitle(house.name, view.slogan) : EVENTHUB_TAB_TITLE;
+    const releaseIcon = applyVenueTabIcon(house?.faviconUrl);
     return () => {
       document.title = EVENTHUB_TAB_TITLE;
+      releaseIcon();
     };
-  }, [house?.name, view?.slogan]);
+  }, [house?.name, house?.faviconUrl, view?.slogan]);
 
   if (loading || !house || !view) {
     return (
@@ -133,20 +137,17 @@ export default function VenuePresentation() {
   const mapEmbedSrc = view.mapQuery
     ? `https://maps.google.com/maps?q=${encodeURIComponent(view.mapQuery)}&hl=pt-BR&z=15&output=embed`
     : undefined;
-  const houseSocials: HouseSocialLink[] = [
-    whatsapp ? { href: `https://wa.me/${whatsapp}`, label: "WhatsApp" } : null,
-    house.instagramUrl ? { href: house.instagramUrl, label: "Instagram" } : null,
-    house.facebookUrl ? { href: house.facebookUrl, label: "Facebook" } : null,
-    house.tiktokUrl ? { href: house.tiktokUrl, label: "TikTok" } : null,
-    house.url ? { href: house.url, label: "Site" } : null,
-  ].filter((item): item is HouseSocialLink => item !== null);
-  const footerSocials = [
-    whatsapp ? { href: `https://wa.me/${whatsapp}`, label: "WhatsApp", icon: FaWhatsapp } : null,
-    house.facebookUrl ? { href: house.facebookUrl, label: "Facebook", icon: FaFacebook } : null,
-    house.tiktokUrl ? { href: house.tiktokUrl, label: "TikTok", icon: FaTiktok } : null,
-    house.instagramUrl ? { href: house.instagramUrl, label: "Instagram", icon: FaInstagram } : null,
-    house.url ? { href: house.url, label: "Site", icon: FaGlobe } : null,
-  ].filter((item) => item !== null);
+  const houseSocials: HouseSocialLink[] = venueSocialLinks(house.links).map((link) => ({
+    href: link.href,
+    label: link.label as HouseSocialLink["label"],
+  }));
+  const footerSocials = venueSocialIcons(house.links, {
+    WHATSAPP: FaWhatsapp,
+    FACEBOOK: FaFacebook,
+    TIKTOK: FaTiktok,
+    INSTAGRAM: FaInstagram,
+    SITE: FaGlobe,
+  });
 
   const photoFrame = (image: { id: string; imageUrl: string; description: string | null }, className: string, rounded: string) => (
     <div

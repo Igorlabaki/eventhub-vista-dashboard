@@ -56,10 +56,12 @@ export type VenuePresentation = {
   description: string | null;
   slogan: string | null;
   logoUrl: string | null;
+  faviconUrl: string | null;
   proposalPrimaryColor: string | null;
   proposalSecondaryColor: string | null;
   proposalTextColor: string | null;
   url: string | null;
+  links?: { kind: string; label: string; href: string }[];
   instagramUrl: string | null;
   facebookUrl: string | null;
   tiktokUrl: string | null;

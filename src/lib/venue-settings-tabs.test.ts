@@ -25,6 +25,10 @@ describe("aba do primeiro campo invalido nas configuracoes", () => {
     ).toBe("apresentacao");
   });
 
+  it("abre redes quando o link colado falha", () => {
+    expect(firstInvalidSettingsTab({ links: { type: "manual", message: "Esse link não é do Instagram." } })).toBe("redes");
+  });
+
   it("nao troca de aba quando nao ha erro", () => {
     expect(firstInvalidSettingsTab({})).toBeNull();
   });

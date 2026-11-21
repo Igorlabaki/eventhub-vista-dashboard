@@ -80,6 +80,7 @@ export interface ProposalPresentation {
   description: string | null;
   slogan: string | null;
   logoUrl: string | null;
+  faviconUrl: string | null;
   city: string;
   state: string;
   neighborhood: string;
@@ -93,6 +94,7 @@ export interface ProposalPresentation {
   openingHour: string | null;
   closingHour: string | null;
   url: string | null;
+  links?: { kind: string; label: string; href: string }[];
   instagramUrl: string | null;
   facebookUrl: string | null;
   tiktokUrl: string | null;

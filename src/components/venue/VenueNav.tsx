@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   ListChecks,
   Receipt,
+  Link2,
   Presentation,
   Settings,
   Sparkles,
@@ -61,6 +62,7 @@ const venueIcons: Record<string, ElementType> = {
   Características: Sparkles,
   Fotos: Images,
   Apresentação: Presentation,
+  "Link tree": Link2,
   Configurações: Settings,
 };
 
@@ -114,7 +116,9 @@ export function VenueNav({
         ...section,
         items: withNotificationBadge(
           presentNavItems(section.items, base, venueIcons, (item) =>
-            item.opensExternalUrl ? publicVenuePresentationShareUrl(venue.name) : null,
+            item.opensExternalUrl && item.title === "Apresentação"
+              ? publicVenuePresentationShareUrl(venue.name)
+              : null,
           ),
           unread,
         ),

@@ -206,6 +206,26 @@
       scrollbar-color: color-mix(in srgb, var(--house-scroll, currentColor) 40%, transparent) transparent;
     }
   }
+
+  /* Lista publica: o giro fica na lista e some nas bordas quando ainda ha nomes fora da vista. */
+  .person-list-scroll {
+    overscroll-behavior-y: contain;
+  }
+
+  .person-list-scroll[data-overflow="bottom"] {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent);
+  }
+
+  .person-list-scroll[data-overflow="top"] {
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28px);
+    mask-image: linear-gradient(to bottom, transparent, #000 28px);
+  }
+
+  .person-list-scroll[data-overflow="both"] {
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 36px), transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 36px), transparent);
+  }
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {

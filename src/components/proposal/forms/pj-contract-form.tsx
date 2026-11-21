@@ -17,6 +17,8 @@ import { showSuccessToast } from "@/components/ui/success-toast";
 import { useForm } from "react-hook-form";
 import { Select } from "@/components/ui/select";
 import InputMask from "react-input-mask";
+import { AddressFields } from "@/components/address/AddressFields";
+import { cepDigits, normalizeUf } from "@/lib/cep-lookup";
 import { generateContractPdf } from "./ContractPdfGenerator";
 import { requiredProposalEmail } from "./required-proposal-email";
 import { ownerDisplayName } from "@/lib/owner-document";
@@ -48,9 +50,9 @@ export default function PJContractForm() {
           street: values.street,
           streetNumber: values.streetNumber,
           neighborhood: values.neighborhood,
-          cep: values.cep,
+          cep: cepDigits(values.cep),
           city: values.city,
-          state: values.state,
+          state: normalizeUf(values.state),
           adressComplement: values.adressComplement,
         },
       };
@@ -302,103 +304,17 @@ export default function PJContractForm() {
           </FormItem>
         )}
       />
-      <FormField
-        control={form.control}
-        name="street"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Logradouro</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="streetNumber"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Número</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="adressComplement"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Complemento</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="neighborhood"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Bairro</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="cep"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>CEP</FormLabel>
-            <FormControl>
-              <InputMask
-                mask="99999-999"
-                placeholder="Digite o CEP"
-                value={field.value}
-                onChange={field.onChange}
-              >
-                {(inputProps) => <Input {...inputProps} />}
-              </InputMask>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="city"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Cidade</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="state"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Estado</FormLabel>
-            <FormControl>
-              <Input {...field} maxLength={2} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+      <AddressFields
+        variant="panel"
+        names={{
+          cep: "cep",
+          street: "street",
+          streetNumber: "streetNumber",
+          complement: "adressComplement",
+          neighborhood: "neighborhood",
+          city: "city",
+          state: "state",
+        }}
       />
       <FormField
         control={form.control}

@@ -58,7 +58,8 @@ export const useVenueStore = create<VenueState>((set) => ({
     try {
       set({ isLoading: true, error: null });
       const response = await venueService.getVenueById({ venueId, userId });
-      set({ selectedVenue: response.data, isLoading: false });
+      const links = await venueService.getVenueLinks(venueId).then((data) => data.links).catch(() => []);
+      set({ selectedVenue: { ...response.data, links }, isLoading: false });
     } catch (err: unknown) {
       const error = err as ApiError;
       set({ 

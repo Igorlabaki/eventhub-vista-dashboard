@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { publicVenuePresentationShareUrl } from "@/lib/public-venue-presentation";
 import { Permissions } from "@/types/permissions";
@@ -41,6 +42,7 @@ describe("sidebar por secoes", () => {
       "Características",
       "Fotos",
       "Apresentação",
+      "Link tree",
     ]);
     expect(venueSections.flatMap((section) => section.items).some((item) => item.title === "Configurações")).toBe(false);
     expect(itemHref("/venue/ar756", venueSettingsItem.path)).toBe("/venue/ar756/settings");
@@ -97,6 +99,22 @@ describe("sidebar por secoes", () => {
     ).toEqual([{ title: "Apresentação", href, icon, external: true }]);
     expect(href).toBe("https://event-hub-dashboard.vercel.app/espaco/AR756/apresentacao");
     expect(presentNavItems([item!], "/venue/venue-1", { Apresentação: icon }, () => null)).toEqual([]);
+  });
+
+  it("abre o link tree dentro do painel, sem url externa", () => {
+    const item = venueSections
+      .flatMap((section) => section.items)
+      .find((entry) => entry.title === "Link tree");
+    const icon = () => null;
+    const app = readFileSync("src/App.tsx", "utf8");
+
+    expect(item?.permission).toBe(Permissions.VIEW_VENUE_SITES);
+    expect(item?.opensExternalUrl).toBeUndefined();
+    expect(internalItemHref("/venue/venue-1", item!)).toBe("/venue/venue-1/link-tree");
+    expect(
+      presentNavItems([item!], "/venue/venue-1", { "Link tree": icon }, () => "https://event-hub-dashboard.vercel.app/espaco/AR756/links"),
+    ).toEqual([{ title: "Link tree", href: "/venue/venue-1/link-tree", icon }]);
+    expect(app).toContain('path="/venue/:id/link-tree" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueLinkTree /></ProtectedRoute>}');
   });
 
   it("tira o link do evento do roteador interno e abre a url absoluta", () => {

@@ -1,3 +1,4 @@
+import { readFileSync } from "fs";
 import { describe, expect, it } from "vitest";
 import { PUBLIC_ROUTES as axiosPublicRoutes } from "@/lib/axios";
 import { PUBLIC_ROUTES as bootstrapPublicRoutes } from "@/hooks/useBootstrapUser";
@@ -43,5 +44,11 @@ describe("public venue rules", () => {
     expect(PUBLIC_VENUE_RULES_NOTICE).not.toMatch(/proibido|permitido|orientação/i);
     expect(axiosPublicRoutes).toContain(PUBLIC_VENUE_RULES_PATTERN);
     expect(bootstrapPublicRoutes).toContain(PUBLIC_VENUE_RULES_PATTERN);
+  });
+
+  it("reconhece a casa quando a url traz o nome e o cadastro tem outro id", () => {
+    const hook = readFileSync("src/components/proposal/usePublicListVenue.ts", "utf8");
+    expect(hook).toContain("venueIdForPublicForm");
+    expect(hook).not.toContain("selectedVenue?.id === venueId");
   });
 });

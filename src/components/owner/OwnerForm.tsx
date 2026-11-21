@@ -40,6 +40,8 @@ import { useOwnerStore } from "@/store/ownerStore";
 import InputMask from 'react-input-mask';
 import { AsyncActionButton } from "@/components/AsyncActionButton";
 import { FormLayout } from "@/components/ui/form-layout";
+import { AddressFields } from "@/components/address/AddressFields";
+import { cepDigits, normalizeUf } from "@/lib/cep-lookup";
 
 const NO_COMPANY_SIZE = "NONE";
 
@@ -153,8 +155,8 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
           complement: data.complement || undefined,
           neighborhood: data.neighborhood,
           city: data.city,
-          state: data.state,
-          cep: data.cep,
+          state: normalizeUf(data.state),
+          cep: cepDigits(data.cep),
           bankName: data.bankName,
           bankAgency: data.bankAgency,
           bankAccountNumber: data.bankAccountNumber,
@@ -179,8 +181,8 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
           complement: data.complement || undefined,
           neighborhood: data.neighborhood,
           city: data.city,
-          state: data.state,
-          cep: data.cep,
+          state: normalizeUf(data.state),
+          cep: cepDigits(data.cep),
           bankName: data.bankName,
           bankAgency: data.bankAgency,
           bankAccountNumber: data.bankAccountNumber,
@@ -408,116 +410,17 @@ export function OwnerForm({ owner, organizationId, onCancel }: OwnerFormProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="street"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Rua</FormLabel>
-              <FormControl>
-                <Input placeholder="Digite a rua" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="streetNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Número</FormLabel>
-              <FormControl>
-                <Input placeholder="Digite o número" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="complement"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Complemento</FormLabel>
-              <FormControl>
-                <Input placeholder="Digite o complemento" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="neighborhood"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bairro</FormLabel>
-              <FormControl>
-                <Input placeholder="Digite o bairro" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="city"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Cidade</FormLabel>
-              <FormControl>
-                <Input placeholder="Digite a cidade" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="state"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Estado</FormLabel>
-              <FormControl>
-                <InputMask
-                  mask="aa"
-                  placeholder="Digite o estado"
-                  value={field.value}
-                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                >
-                  {(inputProps) => <Input {...inputProps} />}
-                </InputMask>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="cep"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>CEP</FormLabel>
-              <FormControl>
-                <InputMask
-                  mask="99999-999"
-                  placeholder="Digite o CEP"
-                  value={field.value}
-                  onChange={field.onChange}
-                >
-                  {(inputProps) => <Input {...inputProps} />}
-                </InputMask>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <AddressFields
+          variant="panel"
+          names={{
+            cep: "cep",
+            street: "street",
+            streetNumber: "streetNumber",
+            complement: "complement",
+            neighborhood: "neighborhood",
+            city: "city",
+            state: "state",
+          }}
         />
 
         <FormField

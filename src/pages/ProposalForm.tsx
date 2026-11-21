@@ -7,6 +7,8 @@ import { ClientPerDayProposalForm } from "@/components/proposal/forms/ClientPerD
 import { ClientPerPersonProposalForm } from "@/components/proposal/forms/ClientPerPersonProposalForm";
 import { venueIdForPublicForm } from "@/lib/public-venue-presentation";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
+import { applyVenueTabIcon } from "@/lib/venue-tab-icon";
+import { venueSocialIcons } from "@/lib/venue-social-icons";
 import type { Venue } from "@/types/venue";
 
 const PUBLIC_LOADING_BACKGROUND = "#111315";
@@ -60,20 +62,13 @@ function Bone({ className, tone }: { className: string; tone: string }) {
 }
 
 function venueSocials(venue: Venue | null) {
-  if (!venue) return [];
-  return [
-    venue.whatsappNumber
-      ? {
-          href: `https://wa.me/${venue.whatsappNumber.replace(/\D/g, "")}`,
-          label: "WhatsApp",
-          icon: FaWhatsapp,
-        }
-      : null,
-    venue.facebookUrl ? { href: venue.facebookUrl, label: "Facebook", icon: FaFacebook } : null,
-    venue.tiktokUrl ? { href: venue.tiktokUrl, label: "TikTok", icon: FaTiktok } : null,
-    venue.instagramUrl ? { href: venue.instagramUrl, label: "Instagram", icon: FaInstagram } : null,
-    venue.url ? { href: venue.url, label: "Site", icon: FaGlobe } : null,
-  ].filter((item) => item !== null);
+  return venueSocialIcons(venue?.links, {
+    WHATSAPP: FaWhatsapp,
+    FACEBOOK: FaFacebook,
+    TIKTOK: FaTiktok,
+    INSTAGRAM: FaInstagram,
+    SITE: FaGlobe,
+  });
 }
 
 function venueShowsFooter(venue: Venue | null) {
@@ -191,10 +186,12 @@ export function ProposalForm() {
 
   useEffect(() => {
     document.title = venue?.name ? venueTabTitle(venue.name, venue.slogan) : EVENTHUB_TAB_TITLE;
+    const releaseIcon = applyVenueTabIcon(venue?.faviconUrl);
     return () => {
       document.title = EVENTHUB_TAB_TITLE;
+      releaseIcon();
     };
-  }, [venue?.name, venue?.slogan]);
+  }, [venue?.name, venue?.slogan, venue?.faviconUrl]);
 
   useEffect(() => {
     if (!id || !venue || isLoading || readyForId === id) return;

@@ -62,6 +62,18 @@ function SocialGlyph({ label, onDark, size }: { label: HouseSocialLink["label"];
   return <FaGlobe size={size} color={onDark ? "#FFFFFF" : "#111111"} aria-hidden="true" />;
 }
 
+export function HouseBrandIcon({
+  label,
+  surfaceColor,
+  size = 18,
+}: {
+  label: HouseSocialLink["label"];
+  surfaceColor: string;
+  size?: number;
+}) {
+  return <SocialGlyph label={label} onDark={surfaceIsDark(surfaceColor)} size={size} />;
+}
+
 export function HouseSocialLinks({ links, surfaceColor }: { links: HouseSocialLink[]; surfaceColor: string }) {
   if (links.length === 0) return null;
   const onDark = surfaceIsDark(surfaceColor);

@@ -35,6 +35,8 @@ import { GoogleCalendarRedirectHandler } from "@/components/GoogleCalendarRedire
 import VenueServices from "./pages/VenueServices";
 import VenueRules from "./pages/VenueRules";
 import PublicVenueRulesPage from "./pages/PublicVenueRules";
+import VenueLinks from "./pages/VenueLinks";
+import VenueLinkTree from "./pages/VenueLinkTree";
 import VenuePresentation from "./pages/VenuePresentation";
 import VenueAmenities from "./pages/VenueAmenities";
 import VenuePhotos from "./pages/VenuePhotos";
@@ -127,6 +129,7 @@ const App = () => {
                 <Route path="/venue/:id/budgets" element={<ProtectedRoute requiredPermission="VIEW_VENUE_PROPOSALS"><VenueBudgets /></ProtectedRoute>} />
                 <Route path="/venue/:id/reports" element={<ProtectedRoute requiredPermission="VIEW_VENUE_ANALYSIS"><VenueReports /></ProtectedRoute>} />
                 <Route path="/venue/:id/website" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueWebsite /></ProtectedRoute>} />
+                <Route path="/venue/:id/link-tree" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SITES"><VenueLinkTree /></ProtectedRoute>} />
                 <Route path="/venue/:id/expenses" element={<ProtectedRoute requiredPermission="VIEW_VENUE_EXPENSES"><VenueExpenses /></ProtectedRoute>} />
                 <Route path="/venue/:id/new-budget" element={<ProtectedRoute requiredPermission="VIEW_VENUE_NEW_BUDGET"><NewBudget /></ProtectedRoute>} />
                 <Route path="/venue/:id/services" element={<ProtectedRoute requiredPermission="VIEW_VENUE_SERVICES"><VenueServices /></ProtectedRoute>} />
@@ -171,6 +174,7 @@ const App = () => {
                 <Route path="/proposal/:id/attendance-list" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_ATTENDANCE_LIST"><ProposalAttendanceListPage /></ProtectedRoute>} />
               {/* Public Form */}
                 <Route path="/espaco/:id/apresentacao" element={<VenuePresentation />} />
+                <Route path="/espaco/:id/links" element={<VenueLinks />} />
                 <Route path="/espaco/:id/formulario" element={<ProposalForm />} />
                 <Route path="/espaco/:id/regras" element={<PublicVenueRulesPage />} />
                 <Route path="/espaco/:id/parceiro" element={<PartnerForm />} />
@@ -178,6 +182,7 @@ const App = () => {
                 <Route path="/venue/:id/form" element={<ProposalForm />} />
                 <Route path="/venue/:id/rules/view" element={<PublicVenueRulesPage />} />
                 <Route path="/venue/:id/apresentacao" element={<VenuePresentation />} />
+                <Route path="/venue/:id/links" element={<VenueLinks />} />
                 <Route path="/venue/:id/partner-form" element={<PartnerForm />} />
                 <Route path="/venue/:id/crew-form" element={<CrewForm />} />
                 <Route path="/proposal/:id/b2b-contract" element={<ContarctPjFormPage />} />
