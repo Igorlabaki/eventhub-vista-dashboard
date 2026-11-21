@@ -5,6 +5,7 @@ import { ReportsChartCard } from "./ReportsChartCard";
 import { OccupancyCard } from "./OccupancyCard";
 import { ServiceAdherenceCard } from "./ServiceAdherenceCard";
 import { EventProfileCard } from "./EventProfileCard";
+import { EventOriginCard } from "./EventOriginCard";
 import { alignMonths, averageMonths, ReportInput } from "./report-metrics";
 import { useAnalysisYear } from "./useAnalysisYear";
 
@@ -73,6 +74,7 @@ export function EventsReport({ selectedYear }: EventsReportProps) {
         <ServiceAdherenceCard venueId={venueId} year={year} />
         <EventProfileCard venueId={venueId} year={year} />
       </div>
+      <EventOriginCard venueId={venueId} year={year} />
     </div>
   );
 }

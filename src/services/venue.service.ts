@@ -25,6 +25,7 @@ import {
   LeadTimeData,
   ServiceAdherenceData,
   EventProfileData,
+  EventOriginData,
   AdsReportData,
 } from '@/types/venue';
 
@@ -177,6 +178,13 @@ export const venueService = {
 
   getReportEventProfile: async ({ venueId, year }: ReportBlockParams) => {
     const response = await api.get<ReportBlockResponse<EventProfileData>>('/venue/reports/event-profile', {
+      params: { venueId, year },
+    });
+    return response.data;
+  },
+
+  getReportEventOrigin: async ({ venueId, year }: ReportBlockParams) => {
+    const response = await api.get<ReportBlockResponse<EventOriginData>>('/venue/reports/event-origin', {
       params: { venueId, year },
     });
     return response.data;

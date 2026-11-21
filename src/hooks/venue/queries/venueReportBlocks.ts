@@ -54,3 +54,12 @@ export const useReportEventProfile = (venueId: string | undefined, year: number)
     enabled: !!venueId,
     ...blockQuery,
   });
+
+export const useReportEventOrigin = (venueId: string | undefined, year: number) =>
+  useQuery({
+    queryKey: ['venueReportBlock', 'event-origin', venueId, year],
+    queryFn: () => venueService.getReportEventOrigin({ venueId: venueId!, year }),
+    select: (response) => response.data,
+    enabled: !!venueId,
+    ...blockQuery,
+  });

@@ -457,6 +457,19 @@ export interface ServiceAdherenceData {
 
 export type GuestBucketKey = "0-50" | "51-100" | "101-150" | "151+";
 
+export interface EventOriginPlace {
+  label: string;
+  count: number;
+}
+
+export interface EventOriginData {
+  year: number;
+  events: number;
+  cities: EventOriginPlace[];
+  states: EventOriginPlace[];
+  neighborhoods: EventOriginPlace[];
+}
+
 export interface EventProfileData {
   year: number;
   events: number;
