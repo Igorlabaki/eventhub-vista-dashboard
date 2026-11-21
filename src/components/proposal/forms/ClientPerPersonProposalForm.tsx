@@ -161,7 +161,6 @@ export function ClientPerPersonProposalForm({
       startHour: z.string().min(1, "Horário de início é obrigatório"),
       endHour: z.string().min(1, "Horário de término é obrigatório"),
       guestNumber: z.string().min(1, "Número de convidados é obrigatório"),
-      email: z.string().email("E-mail inválido"),
       whatsapp: z.string()
         .min(10, "WhatsApp é obrigatório")
         .refine((val) => {
@@ -229,7 +228,6 @@ export function ClientPerPersonProposalForm({
       startHour: "",
       endHour: "",
       guestNumber: "",
-      email: "",
       whatsapp: "",
       description: "",
       knowsVenue: false,
@@ -306,7 +304,7 @@ export function ClientPerPersonProposalForm({
         guestNumber: values.guestNumber,
         description: values.description,
         knowsVenue: values.knowsVenue,
-        email: values.email,
+        email: null,
         serviceIds: selectedServiceIds,
         serviceHours,
         totalAmountInput: "0",
@@ -353,7 +351,7 @@ export function ClientPerPersonProposalForm({
 
   async function goNext() {
     const fields = step === 0
-      ? ["completeClientName", "completeCompanyName", "email", "whatsapp"] as const
+      ? ["completeClientName", "completeCompanyName", "whatsapp"] as const
       : ["date", "startHour", "endHour", "guestNumber", "eventCategory", "description"] as const;
     const valid = await form.trigger([...fields]);
     if (valid) setStep((current) => current + 1);
@@ -409,24 +407,6 @@ export function ClientPerPersonProposalForm({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>E-mail</FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="email@cliente.com"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
           <FormField
             control={form.control}
             name="whatsapp"
@@ -797,7 +777,7 @@ export function ClientPerPersonProposalForm({
                 const isValid = await form.trigger();
                 if (!isValid) {
                   const errors = form.formState.errors;
-                  if (errors.completeClientName || errors.completeCompanyName || errors.email || errors.whatsapp) {
+                  if (errors.completeClientName || errors.completeCompanyName || errors.whatsapp) {
                     setStep(0);
                   } else if (errors.date || errors.startHour || errors.endHour || errors.guestNumber || errors.description) {
                     setStep(1);

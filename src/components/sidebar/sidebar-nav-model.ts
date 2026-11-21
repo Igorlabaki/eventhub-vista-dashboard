@@ -159,6 +159,8 @@ export interface PresentedNavItem {
   icon: ElementType;
   external?: boolean;
   dialog?: SidebarDialog;
+  /** Total de notificacoes nao lidas. So o item Notificacoes da sidebar do espaco usa. */
+  badge?: number;
 }
 
 export function presentNavItems(

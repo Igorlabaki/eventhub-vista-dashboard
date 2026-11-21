@@ -50,7 +50,6 @@ const baseFormSchema = z.object({
   startDay: z.string().min(1, "Data de check-in é obrigatória"),
   endDay: z.string().min(1, "Data de check-out é obrigatória"),
   guestNumber: z.string().min(1, "Número de hóspedes é obrigatório"),
-  email: z.string().email("E-mail inválido"),
   whatsapp: z.string()
     .min(10, "WhatsApp é obrigatório")
     .refine((val) => {
@@ -127,7 +126,6 @@ export function ClientPerDayProposalForm({
       startDay: "",
       endDay: "",
       guestNumber: "",
-      email: "",
       whatsapp: "",
       description: "",
       knowsVenue: false,
@@ -206,7 +204,7 @@ export function ClientPerDayProposalForm({
         startHour: selectedVenue?.checkIn || "14:00", // Usa o horário fixo do venue
         endHour: selectedVenue?.checkOut || "12:00", // Usa o horário fixo do venue
         guestNumber: values.guestNumber,
-        email: values.email,
+        email: null,
         whatsapp: values.whatsapp,
         description: values.description,
         knowsVenue: values.knowsVenue,
@@ -257,7 +255,7 @@ export function ClientPerDayProposalForm({
 
   async function goNext() {
     const fields = step === 0
-      ? ["completeClientName", "email", "whatsapp"] as const
+      ? ["completeClientName", "whatsapp"] as const
       : ["startDay", "endDay", "guestNumber", "eventCategory", "description"] as const;
     const valid = await form.trigger([...fields]);
     if (valid) setStep((current) => current + 1);
@@ -305,23 +303,6 @@ export function ClientPerDayProposalForm({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>E-mail</FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="email@cliente.com"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
         <FormField
           control={form.control}
@@ -643,7 +624,7 @@ export function ClientPerDayProposalForm({
                 const isValid = await form.trigger();
                 if (!isValid) {
                   const errors = form.formState.errors;
-                  if (errors.completeClientName || errors.email || errors.whatsapp) {
+                  if (errors.completeClientName || errors.whatsapp) {
                     setStep(0);
                   } else if (errors.startDay || errors.endDay || errors.guestNumber || errors.description) {
                     setStep(1);

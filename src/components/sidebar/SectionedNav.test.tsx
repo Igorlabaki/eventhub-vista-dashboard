@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
-import { LayoutDashboard } from "lucide-react";
+import { Bell, LayoutDashboard } from "lucide-react";
 import { describe, expect, it } from "vitest";
 import { SectionedNav } from "./SectionedNav";
 
@@ -139,6 +139,63 @@ describe("SectionedNav", () => {
     const collapsed = scrollClass(markup("/venue/1", true));
     expect(collapsed).toContain("scrollbar-eventhub");
     expect(collapsed).not.toContain("[scrollbar-gutter:stable]");
+  });
+
+  it("mostra a bolinha vermelha so no item com nao lidas e some com zero", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <SectionedNav
+          sections={[
+            {
+              id: "dia-a-dia",
+              title: "Dia a dia",
+              alwaysOpen: true,
+              items: [
+                { title: "Visão Geral", href: "/venue/1", icon },
+                { title: "Notificações", href: "/venue/1/notifications", icon: Bell, badge: 4 },
+              ],
+            },
+          ]}
+          isCollapsed={false}
+          collapsedMode="always-open"
+          isActive={() => false}
+          onNavigate={() => undefined}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('data-nav-badge="true"');
+    expect(html).toContain(">4<");
+    expect(html).toContain("bg-red-600");
+    expect(html).toContain('aria-label="Notificações, 4 não lidas"');
+    expect(html.match(/data-nav-badge="true"/g)).toHaveLength(1);
+    expect(html).not.toContain("Visão Geral,");
+  });
+
+  it("abrevia a bolinha e a coloca no icone quando a sidebar esta recolhida", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <SectionedNav
+          sections={[
+            {
+              id: "dia-a-dia",
+              title: "Dia a dia",
+              alwaysOpen: true,
+              items: [{ title: "Notificações", href: "/venue/1/notifications", icon: Bell, badge: 120 }],
+            },
+          ]}
+          isCollapsed
+          collapsedMode="always-open"
+          isActive={() => false}
+          onNavigate={() => undefined}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain(">99+<");
+    expect(html).toContain("absolute");
+    expect(html).toContain('aria-label="Notificações, mais de 99 não lidas"');
+    expect(html).not.toContain(">Notificações<");
   });
 
   it("no modo recolhido mostra o dia a dia e configuracoes, sem os outros grupos", () => {

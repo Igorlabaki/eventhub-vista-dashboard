@@ -2,11 +2,11 @@ import { notificationService } from "@/services/notification.service";
 import { NotificationListQuery } from "@/types/notification";
 import { useQuery } from "@tanstack/react-query";
 
-export const useGetNotificationsList = (venueId: string, query: NotificationListQuery) => {
+export const useGetNotificationsList = (venueId: string, query: NotificationListQuery, enabled = true) => {
   return useQuery({
     queryKey: ["notifications", venueId, query],
     queryFn: () => notificationService.getAllNotifications(venueId, query),
-    enabled: !!venueId,
+    enabled: !!venueId && enabled,
     staleTime: 1000 * 60 * 5,
   });
 };

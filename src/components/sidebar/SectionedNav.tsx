@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { notificationBadgeLabel } from "./notification-nav-badge";
 import {
   itemsWhenCollapsed,
   type CollapsedNavMode,
@@ -114,14 +115,36 @@ function NavItemLink({
   onDialog?: (dialog: SidebarDialog) => void;
 }) {
   const Icon = item.icon;
+  const badge = item.badge && item.badge > 0 ? item.badge : 0;
+  const badgeText = badge > 0 ? notificationBadgeLabel(badge) : "";
+  const accessibleName = badge
+    ? `${item.title}, ${badge > 99 ? "mais de 99" : badge} não lidas`
+    : isCollapsed
+      ? item.title
+      : undefined;
   const className = cn(
-    "mt-1 flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-eventhub-primary",
+    "mt-1 flex w-full items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-eventhub-tertiary/20 hover:text-eventhub-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-eventhub-primary",
     !item.external && !item.dialog && active ? "bg-eventhub-tertiary/30 text-eventhub-primary" : "text-gray-700",
+  );
+  const badgeMark = badge > 0 && (
+    <span
+      data-nav-badge="true"
+      className={cn(
+        "flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-semibold leading-none text-white",
+        isCollapsed ? "absolute -right-2 -top-2" : "ml-auto",
+      )}
+    >
+      {badgeText}
+    </span>
   );
   const content = (
     <>
-      <Icon className="mr-2 h-5 w-5 shrink-0" />
-      {!isCollapsed && <span>{item.title}</span>}
+      <span className="relative mr-2 inline-flex shrink-0">
+        <Icon className="h-5 w-5" />
+        {isCollapsed && badgeMark}
+      </span>
+      {!isCollapsed && <span className="min-w-0 truncate">{item.title}</span>}
+      {!isCollapsed && badgeMark}
     </>
   );
 
@@ -129,9 +152,9 @@ function NavItemLink({
     return (
       <button
         type="button"
-        title={item.title}
+        title={badge ? `${item.title} (${badgeText})` : item.title}
         aria-haspopup="dialog"
-        aria-label={isCollapsed ? item.title : undefined}
+        aria-label={accessibleName}
         className={cn(className, "w-full text-left")}
         onClick={() => {
           onDialog?.(item.dialog!);
@@ -149,8 +172,8 @@ function NavItemLink({
         href={item.href}
         target="_blank"
         rel="noopener noreferrer"
-        title={item.title}
-        aria-label={isCollapsed ? item.title : undefined}
+        title={badge ? `${item.title} (${badgeText})` : item.title}
+        aria-label={accessibleName}
         className={className}
         onClick={onNavigate}
       >
@@ -162,9 +185,9 @@ function NavItemLink({
   return (
     <Link
       to={item.href}
-      title={item.title}
+      title={badge ? `${item.title} (${badgeText})` : item.title}
       aria-current={active ? "page" : undefined}
-      aria-label={isCollapsed ? item.title : undefined}
+      aria-label={accessibleName}
       className={className}
       onClick={onNavigate}
     >

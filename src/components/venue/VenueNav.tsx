@@ -23,6 +23,11 @@ import { Venue } from "@/types";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { Permissions } from "@/types/permissions";
 import { SectionedNav } from "@/components/sidebar/SectionedNav";
+import {
+  venueUnreadNotificationsQuery,
+  withNotificationBadge,
+} from "@/components/sidebar/notification-nav-badge";
+import { useGetNotificationsList } from "@/hooks/notification/queries/list";
 import { publicVenuePresentationShareUrl } from "@/lib/public-venue-presentation";
 import {
   flatNavItems,
@@ -75,6 +80,12 @@ export function VenueNav({
     if (!permission || !permissions) return false;
     return permissions.includes(permission);
   };
+  const unreadQuery = useGetNotificationsList(
+    venue.id,
+    venueUnreadNotificationsQuery,
+    canSee(Permissions.VIEW_VENUE_NOTIFICATIONS),
+  );
+  const unread = unreadQuery.data?.data.summary?.unread ?? 0;
 
   const sections = visibleSections(venueSections, canSee);
   const settings = canSee(venueSettingsItem.permission) ? venueSettingsItem : null;
@@ -101,8 +112,11 @@ export function VenueNav({
       heading={venue.name}
       sections={sections.map((section) => ({
         ...section,
-        items: presentNavItems(section.items, base, venueIcons, (item) =>
-          item.opensExternalUrl ? publicVenuePresentationShareUrl(venue.name) : null,
+        items: withNotificationBadge(
+          presentNavItems(section.items, base, venueIcons, (item) =>
+            item.opensExternalUrl ? publicVenuePresentationShareUrl(venue.name) : null,
+          ),
+          unread,
         ),
       }))}
       settings={settings ? presentNavItems([settings], base, venueIcons)[0] : null}

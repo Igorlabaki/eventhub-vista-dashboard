@@ -659,7 +659,6 @@ export default function ProposalView() {
   if (!currentProposal) return <NotFound />;
 
   const {
-    email,
     guestNumber,
     startDate,
     endDate,
@@ -1225,11 +1224,6 @@ export default function ProposalView() {
                 Alterar orçamento
               </button>
             </div>
-            {email && (
-              <div className="text-xs text-center mt-2">
-                * Este orçamento foi encaminhado para o seu email: <b>{email}</b>
-              </div>
-            )}
           </section>
           </RevealBlock>
 
