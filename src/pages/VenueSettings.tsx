@@ -53,7 +53,8 @@ import { VenueLinkEditor } from "@/components/venue/VenueLinkEditor";
 import { cepDigits, normalizeUf } from "@/lib/cep-lookup";
 import { venueLinkSaveError, withoutVenueLinkColumns, type EditorVenueLink } from "@/lib/venue-link";
 import { VenueDomainBlock } from "@/components/venue/VenueDomainBlock";
-import { applyVenueDomainSave, emptyVenueDomain, type VenueDomainUi } from "@/lib/venue-domain";
+import { applyVenueDomainRemove, applyVenueDomainSave, emptyVenueDomain, type VenueDomainUi } from "@/lib/venue-domain";
+import { notifyVenueShareHostChanged } from "@/lib/use-venue-share-host";
 import { venueService } from "@/services/venue.service";
 import { AddressFields } from "@/components/address/AddressFields";
 import { useOrganizationStore } from "@/store/organizationStore";
@@ -181,6 +182,7 @@ export default function VenueSettings() {
     hostname: "",
     error: null,
     saved: false,
+    removed: false,
   });
 
   useEffect(() => {
@@ -193,6 +195,7 @@ export default function VenueSettings() {
         hostname: data.hostname ?? "",
         error: null,
         saved: false,
+        removed: false,
       });
     }).catch(() => undefined);
     return () => {
@@ -204,9 +207,21 @@ export default function VenueSettings() {
     if (!selectedVenue?.id) return;
     void venueService.saveVenueDomain(selectedVenue.id, domainUi.hostname).then((data) => {
       setDomainUi((current) => applyVenueDomainSave(current, { ok: true, data }));
+      notifyVenueShareHostChanged();
     }).catch((error: { response?: { status?: number } }) => {
       const status = error.response?.status ?? 0;
       setDomainUi((current) => applyVenueDomainSave(current, { ok: false, status }));
+    });
+  };
+
+  const removeDomain = () => {
+    if (!selectedVenue?.id) return;
+    void venueService.deleteVenueDomain(selectedVenue.id).then((data) => {
+      setDomainUi((current) => applyVenueDomainRemove(current, { ok: true, data }));
+      notifyVenueShareHostChanged();
+    }).catch((error: { response?: { status?: number } }) => {
+      const status = error.response?.status ?? 0;
+      setDomainUi((current) => applyVenueDomainRemove(current, { ok: false, status }));
     });
   };
 
@@ -783,8 +798,10 @@ export default function VenueSettings() {
             domain={domainUi.domain}
             error={domainUi.error}
             saved={domainUi.saved}
-            onHostnameChange={(hostname) => setDomainUi((current) => ({ ...current, hostname }))}
+            removed={domainUi.removed}
+            onHostnameChange={(hostname) => setDomainUi((current) => ({ ...current, hostname, removed: false }))}
             onSave={saveDomain}
+            onRemove={removeDomain}
           />
           </TabsContent>
 

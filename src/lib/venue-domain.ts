@@ -15,6 +15,7 @@ export type VenueDomainUi = {
   hostname: string;
   error: string | null;
   saved: boolean;
+  removed: boolean;
 };
 
 export function venueDomainErrorMessage(status: number) {
@@ -29,12 +30,35 @@ export function applyVenueDomainSave(
   outcome: { ok: true; data: VenueDomainView } | { ok: false; status: number },
 ): VenueDomainUi {
   if (!outcome.ok) {
-    return { ...current, error: venueDomainErrorMessage(outcome.status), saved: false };
+    return { ...current, error: venueDomainErrorMessage(outcome.status), saved: false, removed: false };
   }
   return {
     domain: outcome.data,
     hostname: outcome.data.hostname ?? current.hostname,
     error: null,
     saved: true,
+    removed: false,
+  };
+}
+
+export function venueDomainRemoveErrorMessage(status: number) {
+  if (status === 403) return "Sem permissão para retirar o domínio.";
+  return "Não foi possível retirar o domínio.";
+}
+
+export function applyVenueDomainRemove(
+  current: VenueDomainUi,
+  outcome: { ok: true; data: VenueDomainView } | { ok: false; status: number },
+): VenueDomainUi {
+  if (!outcome.ok) {
+    return { ...current, error: venueDomainRemoveErrorMessage(outcome.status), saved: false, removed: false };
+  }
+  const stillAttached = outcome.data.status === "PENDING" || outcome.data.status === "ACTIVE";
+  return {
+    domain: stillAttached ? outcome.data : emptyVenueDomain,
+    hostname: stillAttached ? (outcome.data.hostname ?? "") : "",
+    error: null,
+    saved: false,
+    removed: !stillAttached,
   };
 }

@@ -282,6 +282,11 @@ export const venueService = {
     return response.data.data;
   },
 
+  deleteVenueDomain: async (venueId: string) => {
+    const response = await api.delete<{ data: VenueDomainView }>(`/venue/domain/${encodeURIComponent(venueId)}`);
+    return response.data.data;
+  },
+
   getVenuePresentation: async (venueId: string) => {
     const response = await api.get<{ data: VenuePresentation }>(`/venue/presentation/${encodeURIComponent(venueId)}`);
     return response.data.data;

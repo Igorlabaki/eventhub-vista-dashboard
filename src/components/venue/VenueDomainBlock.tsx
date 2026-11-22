@@ -21,8 +21,10 @@ type VenueDomainBlockProps = {
   domain: VenueDomainView;
   error: string | null;
   saved: boolean;
+  removed: boolean;
   onHostnameChange: (value: string) => void;
   onSave: () => void;
+  onRemove: () => void;
 };
 
 export function venueDomainRedirects(venueName: string, shareHost: string) {
@@ -44,8 +46,10 @@ export function VenueDomainBlock({
   domain,
   error,
   saved,
+  removed,
   onHostnameChange,
   onSave,
+  onRemove,
 }: VenueDomainBlockProps) {
   const shareHost = shareHostOf(domain);
   const redirects = shareHost && venueName ? venueDomainRedirects(venueName, shareHost) : [];
@@ -62,9 +66,16 @@ export function VenueDomainBlock({
           onChange={(event) => onHostnameChange(event.target.value)}
         />
       </div>
-      <Button type="button" variant="outline" size="sm" onClick={onSave}>
-        Salvar domínio
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={onSave}>
+          Salvar domínio
+        </Button>
+        {shareHost && (
+          <Button type="button" variant="outline" size="sm" onClick={onRemove}>
+            Retirar domínio
+          </Button>
+        )}
+      </div>
       {redirects.length > 0 && (
         <div className="space-y-2 text-sm text-gray-600">
           <p>Crie estes redirects no provedor do domínio. A home do site continua onde está.</p>
@@ -79,6 +90,9 @@ export function VenueDomainBlock({
       )}
       {saved && shareHost && (
         <p className="text-sm text-gray-600">Hostname salvo. Os links públicos passam a usar esse domínio.</p>
+      )}
+      {removed && !shareHost && (
+        <p className="text-sm text-gray-600">Domínio retirado. Os links públicos voltaram às URLs padrão.</p>
       )}
       {error && (
         <p role="alert" className="text-sm text-red-600">

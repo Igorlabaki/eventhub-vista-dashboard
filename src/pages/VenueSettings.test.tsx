@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 import { VenueDomainBlock } from "@/components/venue/VenueDomainBlock";
 import VenueSettings from "@/pages/VenueSettings";
 import { cepDigits } from "@/lib/cep-lookup";
-import { applyVenueDomainSave, emptyVenueDomain, type VenueDomainUi } from "@/lib/venue-domain";
+import { applyVenueDomainRemove, applyVenueDomainSave, emptyVenueDomain, type VenueDomainUi } from "@/lib/venue-domain";
+import { publicVenueLinksShareUrl } from "@/lib/public-venue-links";
 import { useOrganizationStore } from "@/store/organizationStore";
 import { useVenueStore } from "@/store/venueStore";
 
@@ -143,8 +144,10 @@ function domainMarkup(state: VenueDomainUi) {
       domain={state.domain}
       error={state.error}
       saved={state.saved}
+      removed={state.removed}
       onHostnameChange={() => undefined}
       onSave={() => undefined}
+      onRemove={() => undefined}
     />,
   );
 }
@@ -155,6 +158,7 @@ describe("bloco Dominio na aba geral", () => {
     hostname: "",
     error: null,
     saved: false,
+    removed: false,
   };
 
   it("mostra Dominio vazio e nao oferece www.ar756.com", () => {
@@ -209,6 +213,37 @@ describe("bloco Dominio na aba geral", () => {
   it("mostra o erro de hostname invalido", () => {
     const next = applyVenueDomainSave({ ...empty, hostname: "localhost" }, { ok: false, status: 400 });
     expect(domainMarkup(next)).toContain("Hostname invalido.");
+  });
+
+  it("retirar o dominio limpa o hostname e volta o link para a url padrao", () => {
+    const saved = applyVenueDomainSave(empty, {
+      ok: true,
+      data: { hostname: "www.casa.com", status: "PENDING", verification: null },
+    });
+    expect(domainMarkup(saved)).toContain("Retirar domínio");
+    const cleared = applyVenueDomainRemove(saved, { ok: true, data: emptyVenueDomain });
+    expect(cleared.hostname).toBe("");
+    expect(cleared.domain).toEqual(emptyVenueDomain);
+    const html = domainMarkup(cleared);
+    expect(html).toContain("Os links públicos voltaram às URLs padrão.");
+    expect(html).toContain('value=""');
+    expect(html).not.toContain("https://www.casa.com/links");
+    expect(html).not.toContain("Retirar domínio");
+    expect(publicVenueLinksShareUrl("Casa", null)).toBe(
+      "https://event-hub-dashboard.vercel.app/espaco/Casa/links",
+    );
+  });
+
+  it("403 ao retirar mantem o dominio salvo", () => {
+    const saved = applyVenueDomainSave(empty, {
+      ok: true,
+      data: { hostname: "www.casa.com", status: "ACTIVE", verification: null },
+    });
+    const next = applyVenueDomainRemove(saved, { ok: false, status: 403 });
+    expect(next.hostname).toBe("www.casa.com");
+    expect(next.removed).toBe(false);
+    expect(domainMarkup(next)).toContain("Sem permissão para retirar o domínio.");
+    expect(domainMarkup(next)).toContain("https://www.casa.com/links");
   });
 
   it("403 nao troca o estado vazio por sucesso", () => {

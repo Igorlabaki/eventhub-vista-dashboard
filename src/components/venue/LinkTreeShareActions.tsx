@@ -3,6 +3,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { publicVenueLinksShareUrl, shareHostOf } from "@/lib/public-venue-links";
+import { subscribeVenueShareHost } from "@/lib/use-venue-share-host";
 import { venueService } from "@/services/venue.service";
 
 export function LinkTreeQr({ url }: { url: string }) {
@@ -16,6 +17,9 @@ export function LinkTreeQr({ url }: { url: string }) {
 export function LinkTreeShareActions({ venueName, activeHost }: { venueName: string; activeHost?: string | null }) {
     const [qrOpen, setQrOpen] = useState(false);
     const [loadedHost, setLoadedHost] = useState<string | null>(activeHost ?? null);
+    const [revision, setRevision] = useState(0);
+
+    useEffect(() => subscribeVenueShareHost(() => setRevision((current) => current + 1)), []);
 
     useEffect(() => {
         if (activeHost !== undefined) {
@@ -34,7 +38,7 @@ export function LinkTreeShareActions({ venueName, activeHost }: { venueName: str
         return () => {
             active = false;
         };
-    }, [venueName, activeHost]);
+    }, [venueName, activeHost, revision]);
 
     const publicUrl = venueName.trim() ? publicVenueLinksShareUrl(venueName.trim(), loadedHost) : "";
     if (!publicUrl) return null;
