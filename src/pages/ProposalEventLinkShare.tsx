@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useToast } from "@/hooks/use-toast";
 import { proposalClientUrl } from "@/lib/proposal-public-url";
+import { useVenueShareHost } from "@/lib/use-venue-share-host";
 import { useProposalStore } from "@/store/proposalStore";
 import { useVenueStore } from "@/store/venueStore";
 
@@ -13,6 +14,7 @@ export default function ProposalEventLinkSharePage() {
   const { toast } = useToast();
   const { currentProposal } = useProposalStore();
   const { selectedVenue } = useVenueStore();
+  const shareHost = useVenueShareHost(selectedVenue?.name);
   const link = id
     ? proposalClientUrl(
         {
@@ -23,6 +25,7 @@ export default function ProposalEventLinkSharePage() {
         },
         "evento",
         window.location.origin,
+        shareHost,
       )
     : "";
 

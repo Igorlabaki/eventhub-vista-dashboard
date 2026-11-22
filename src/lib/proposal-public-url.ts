@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { publicShareUrl } from "@/lib/public-venue-links";
 
 export const PROPOSAL_PUBLIC_HOST = "https://event-hub-dashboard.vercel.app";
 
@@ -60,8 +61,15 @@ export function proposalClientUrl(
   link: ProposalClientLink,
   suffix?: ProposalClientSuffix,
   host = PROPOSAL_PUBLIC_HOST,
+  hostname?: string | null,
 ): string {
-  return `${host}${proposalClientPath(link, suffix)}`;
+  const path = proposalClientPath(link, suffix);
+  const code = link.publicCode?.trim() ?? "";
+  const venueName = link.venueName?.trim() ?? "";
+  if (!code || !venueName) return `${host}${path}`;
+  const prefix = `/espaco/${encodeURIComponent(venueName)}`;
+  const short = path.startsWith(prefix) ? path.slice(prefix.length) : path;
+  return publicShareUrl(path, short, hostname);
 }
 
 export function publicContractKind(proposal: { cnpj?: string | null }): "pf" | "pj" {

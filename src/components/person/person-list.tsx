@@ -20,6 +20,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { useProposalStore } from "@/store/proposalStore";
 import { proposalClientUrl } from "@/lib/proposal-public-url";
+import { useVenueShareHost } from "@/lib/use-venue-share-host";
 
 interface PersonListProps {
   persons: Person[];
@@ -57,6 +58,7 @@ export function PersonList({
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
   const { currentProposal } = useProposalStore();
   const { selectedVenue } = useVenueStore();
+  const shareHost = useVenueShareHost(selectedVenue?.name);
   // Cálculo de presenças confirmadas
   const confirmedCount = persons.filter((p) => p.attendance).length;
   const totalCount = persons.length;
@@ -85,6 +87,8 @@ export function PersonList({
       publicCode: currentProposal?.id === proposalId ? currentProposal.publicCode : undefined,
     },
     isGuest ? "convidados" : "colaboradores",
+    undefined,
+    shareHost,
   );
   const whatsappMsg = encodeURIComponent(
     isGuest

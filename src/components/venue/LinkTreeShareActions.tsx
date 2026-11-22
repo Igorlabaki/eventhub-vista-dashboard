@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { publicVenueLinksShareUrl } from "@/lib/public-venue-links";
+import { publicVenueLinksShareUrl, shareHostOf } from "@/lib/public-venue-links";
 import { venueService } from "@/services/venue.service";
 
 export function LinkTreeQr({ url }: { url: string }) {
@@ -27,7 +27,7 @@ export function LinkTreeShareActions({ venueName, activeHost }: { venueName: str
         let active = true;
         venueService.getVenueDomain(name).then((data) => {
             if (!active) return;
-            setLoadedHost(data.status === "ACTIVE" && data.hostname ? data.hostname : null);
+            setLoadedHost(shareHostOf(data));
         }).catch(() => {
             if (active) setLoadedHost(null);
         });

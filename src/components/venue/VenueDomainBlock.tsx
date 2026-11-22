@@ -1,10 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { shareHostOf } from "@/lib/public-venue-links";
 import type { VenueDomainView } from "@/lib/venue-domain";
+
+const DEFAULT_PUBLIC_HOST = "https://event-hub-dashboard.vercel.app";
+
+const HOUSE_PATHS = [
+  "/links",
+  "/apresentacao",
+  "/formulario",
+  "/regras",
+  "/parceiro",
+  "/colaborador",
+] as const;
 
 type VenueDomainBlockProps = {
   hostname: string;
+  venueName: string;
   domain: VenueDomainView;
   error: string | null;
   saved: boolean;
@@ -12,14 +25,31 @@ type VenueDomainBlockProps = {
   onSave: () => void;
 };
 
+export function venueDomainRedirects(venueName: string, shareHost: string) {
+  const key = encodeURIComponent(venueName);
+  const rows = HOUSE_PATHS.map((path) => ({
+    from: `https://${shareHost}${path}`,
+    to: `${DEFAULT_PUBLIC_HOST}/espaco/${key}${path}`,
+  }));
+  rows.push({
+    from: `https://${shareHost}/orcamento/{codigo}`,
+    to: `${DEFAULT_PUBLIC_HOST}/espaco/${key}/orcamento/{codigo}`,
+  });
+  return rows;
+}
+
 export function VenueDomainBlock({
   hostname,
+  venueName,
   domain,
   error,
   saved,
   onHostnameChange,
   onSave,
 }: VenueDomainBlockProps) {
+  const shareHost = shareHostOf(domain);
+  const redirects = shareHost && venueName ? venueDomainRedirects(venueName, shareHost) : [];
+
   return (
     <section data-venue-domain className="space-y-3 rounded-lg border p-4">
       <h3 className="text-sm font-medium">Domínio</h3>
@@ -35,20 +65,20 @@ export function VenueDomainBlock({
       <Button type="button" variant="outline" size="sm" onClick={onSave}>
         Salvar domínio
       </Button>
-      {domain.status === "PENDING" && (
-        <div className="space-y-1 text-sm text-gray-600">
-          <p>Pendente</p>
-          {domain.verification && (
-            <p>
-              Desafio DNS {domain.verification.type} {domain.verification.name} {domain.verification.value}
-            </p>
-          )}
-          <p>Os links públicos continuam no endereço padrão até o domínio ficar ativo.</p>
+      {redirects.length > 0 && (
+        <div className="space-y-2 text-sm text-gray-600">
+          <p>Crie estes redirects no provedor do domínio. A home do site continua onde está.</p>
+          <ul className="space-y-1">
+            {redirects.map((row) => (
+              <li key={row.from}>
+                {row.from} → {row.to}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
-      {domain.status === "ACTIVE" && <p className="text-sm text-gray-600">Ativo</p>}
-      {saved && domain.status === "PENDING" && (
-        <p className="text-sm text-gray-600">Domínio pendente de verificação.</p>
+      {saved && shareHost && (
+        <p className="text-sm text-gray-600">Hostname salvo. Os links públicos passam a usar esse domínio.</p>
       )}
       {error && (
         <p role="alert" className="text-sm text-red-600">

@@ -779,6 +779,7 @@ export default function VenueSettings() {
           />
           <VenueDomainBlock
             hostname={domainUi.hostname}
+            venueName={selectedVenue?.name ?? ""}
             domain={domainUi.domain}
             error={domainUi.error}
             saved={domainUi.saved}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { EmailTab } from "@/components/email-config/EmailTab";
 import { SendProposalHeader } from "@/components/email-config/SendProposalHeader";
@@ -13,6 +13,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { proposalClientUrl } from "@/lib/proposal-public-url";
+import { useVenueShareHost } from "@/lib/use-venue-share-host";
 import { canSendWhatsApp, openWhatsAppChat } from "@/lib/whatsapp-link";
 import { useProposalStore } from "@/store/proposalStore";
 import { useUserStore } from "@/store/userStore";
@@ -33,13 +34,14 @@ export function proposalShareMessage(input: {
   proposalId?: string | null;
   venueName?: string | null;
   publicCode?: string | null;
+  hostname?: string | null;
 }) {
   const link = proposalClientUrl({
     proposalId: input.proposalId ?? "",
     venueName: input.venueName,
     clientName: input.clientName,
     publicCode: input.publicCode,
-  });
+  }, undefined, undefined, input.hostname);
 
   return `Olá ${input.clientName ?? ""},\n\nVimos que você fez um orçamento conosco para seu evento e estamos 
       muito felizes em saber que a nossa casa de eventos te chamou a atenção. ✨\n\nAqui está o link para o seu 
@@ -60,17 +62,23 @@ export function SendProposalFields({
   const { currentProposal } = useProposalStore();
   const { selectedVenue: venue } = useVenueStore();
   const { user } = useUserStore();
+  const shareHost = useVenueShareHost(venue?.name);
+  const generated = proposalShareMessage({
+    clientName: currentProposal?.completeClientName,
+    proposalId: currentProposal?.id,
+    venueName: venue?.name,
+    publicCode: currentProposal?.publicCode,
+    hostname: shareHost,
+  });
   const form = useForm<FormValues>({
     defaultValues: {
-      message: proposalShareMessage({
-        clientName: currentProposal?.completeClientName,
-        proposalId: currentProposal?.id,
-        venueName: venue?.name,
-        publicCode: currentProposal?.publicCode,
-      }),
+      message: generated,
       file: null,
     },
   });
+  useEffect(() => {
+    if (!form.formState.isDirty) form.setValue("message", generated);
+  }, [form, generated]);
   const message = form.watch("message");
   const phone = currentProposal?.whatsapp;
 

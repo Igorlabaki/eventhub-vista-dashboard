@@ -1,3 +1,5 @@
+import { publicShareUrl } from "@/lib/public-venue-links";
+
 export const PUBLIC_VENUE_RULES_PATTERN = "/espaco/:id/regras";
 export const EMPTY_PUBLIC_VENUE_RULES = "Ainda não há regras deste espaço.";
 export const PUBLIC_VENUE_RULES_FAILURE = "Não foi possível carregar as regras.";
@@ -17,8 +19,8 @@ export function publicVenueRulesPath(name: string) {
   return `/espaco/${encodeURIComponent(name)}/regras`;
 }
 
-export function publicVenueRulesShareUrl(venueId: string) {
-  return `https://event-hub-dashboard.vercel.app${publicVenueRulesPath(venueId)}`;
+export function publicVenueRulesShareUrl(venueId: string, hostname: string | null = null) {
+  return publicShareUrl(publicVenueRulesPath(venueId), "/regras", hostname);
 }
 
 export function publicRuleCards(rules: PublicVenueRuleCard[]) {

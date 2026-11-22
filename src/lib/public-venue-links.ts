@@ -10,8 +10,18 @@ export function shouldResolvePublicLinksHost(hostname: string) {
     return true;
 }
 
+export function publicShareUrl(defaultPath: string, shortPath: string, hostname?: string | null) {
+    const host = hostname?.trim().toLowerCase().replace(/\.$/, "") ?? "";
+    if (host && shouldResolvePublicLinksHost(host)) return `https://${host}${shortPath}`;
+    return `${DEFAULT_PUBLIC_HOST}${defaultPath}`;
+}
+
+export function shareHostOf(domain: { hostname?: string | null; status?: string | null } | null | undefined) {
+    if (!domain?.hostname) return null;
+    if (domain.status !== "PENDING" && domain.status !== "ACTIVE") return null;
+    return domain.hostname;
+}
+
 export function publicVenueLinksShareUrl(name: string, activeHost?: string | null) {
-    const host = activeHost?.trim().toLowerCase().replace(/\.$/, "") ?? "";
-    if (host && shouldResolvePublicLinksHost(host)) return `https://${host}/links`;
-    return `${DEFAULT_PUBLIC_HOST}/espaco/${encodeURIComponent(name)}/links`;
+    return publicShareUrl(`/espaco/${encodeURIComponent(name)}/links`, "/links", activeHost);
 }

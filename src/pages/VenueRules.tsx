@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { useToast } from "@/hooks/use-toast";
 import { publicVenueRulesShareUrl } from "@/lib/public-venue-rules";
+import { useVenueShareHost } from "@/lib/use-venue-share-host";
 import { VenueRuleSection } from "@/components/venue-rule/venue-rule-section";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { useVenueRuleStore } from "@/store/venueRuleStore";
@@ -13,6 +14,7 @@ import { VenueRule } from "@/types/venue-rule";
 
 export default function VenueRules() {
     const { selectedVenue: venue } = useVenueStore();
+    const shareHost = useVenueShareHost(venue?.name);
     const [isCreating, setIsCreating] = useState(false);
     const [createSession, setCreateSession] = useState(0);
     const [selectedRule, setSelectedRule] = useState<VenueRule | null | undefined>(undefined);
@@ -37,7 +39,7 @@ export default function VenueRules() {
     const copyLink = async () => {
         if (!venue?.name) return;
         try {
-            await navigator.clipboard.writeText(publicVenueRulesShareUrl(venue.name));
+            await navigator.clipboard.writeText(publicVenueRulesShareUrl(venue.name, shareHost));
             showSuccessToast({ title: "Link copiado", description: "O link das regras está na área de transferência." });
         } catch {
             toast({

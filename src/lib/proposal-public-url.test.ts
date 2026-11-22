@@ -22,6 +22,15 @@ describe("proposal client url", () => {
       "https://event-hub-dashboard.vercel.app/espaco/AR756/orcamento/maria-silva-k7m2abcd",
     );
     expect(link.publicCode).toHaveLength(8);
+    expect(proposalClientUrl(link, undefined, undefined, "www.casa.com")).toBe(
+      "https://www.casa.com/orcamento/maria-silva-k7m2abcd",
+    );
+    expect(proposalClientUrl(link, "convidados", undefined, "www.casa.com")).toBe(
+      "https://www.casa.com/orcamento/maria-silva-k7m2abcd/convidados",
+    );
+    expect(proposalClientUrl({ ...link, publicCode: "" }, undefined, undefined, "www.casa.com")).toBe(
+      "https://event-hub-dashboard.vercel.app/proposal/7a6974ae-d08f-4b9b-97a4-ccf3998aa7e7/view",
+    );
   });
 
   it("omits the label when the name is empty", () => {

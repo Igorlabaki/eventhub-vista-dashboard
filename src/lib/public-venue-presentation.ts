@@ -1,3 +1,5 @@
+import { publicShareUrl } from "@/lib/public-venue-links";
+
 export const PUBLIC_VENUE_PRESENTATION_PATTERN = "/espaco/:id/apresentacao";
 
 function publicVenueKey(name: string) {
@@ -8,24 +10,24 @@ export function publicVenuePresentationPath(name: string) {
   return `/espaco/${publicVenueKey(name)}/apresentacao`;
 }
 
-export function publicVenuePresentationShareUrl(name: string) {
-  return `https://event-hub-dashboard.vercel.app${publicVenuePresentationPath(name)}`;
+export function publicVenuePresentationShareUrl(name: string, hostname: string | null = null) {
+  return publicShareUrl(publicVenuePresentationPath(name), "/apresentacao", hostname);
 }
 
 export function publicVenueBudgetFormPath(name: string) {
   return `/espaco/${publicVenueKey(name)}/formulario`;
 }
 
-export function publicVenueBudgetFormShareUrl(name: string) {
-  return `https://event-hub-dashboard.vercel.app${publicVenueBudgetFormPath(name)}`;
+export function publicVenueBudgetFormShareUrl(name: string, hostname: string | null = null) {
+  return publicShareUrl(publicVenueBudgetFormPath(name), "/formulario", hostname);
 }
 
-export function publicVenuePartnerShareUrl(name: string) {
-  return `https://event-hub-dashboard.vercel.app/espaco/${publicVenueKey(name)}/parceiro`;
+export function publicVenuePartnerShareUrl(name: string, hostname: string | null = null) {
+  return publicShareUrl(`/espaco/${publicVenueKey(name)}/parceiro`, "/parceiro", hostname);
 }
 
-export function publicVenueCrewShareUrl(name: string) {
-  return `https://event-hub-dashboard.vercel.app/espaco/${publicVenueKey(name)}/colaborador`;
+export function publicVenueCrewShareUrl(name: string, hostname: string | null = null) {
+  return publicShareUrl(`/espaco/${publicVenueKey(name)}/colaborador`, "/colaborador", hostname);
 }
 
 export function venueIdForPublicForm(

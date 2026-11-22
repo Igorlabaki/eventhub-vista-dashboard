@@ -21,6 +21,7 @@ import { useContactStore } from "@/store/contactStore";
 import { useVenueStore } from "@/store/venueStore";
 import { ContactType } from "@/types/contact";
 import { proposalClientUrl } from "@/lib/proposal-public-url";
+import { useVenueShareHost } from "@/lib/use-venue-share-host";
 import { useProposalStore } from "@/store/proposalStore";
 
 type SaveState = "idle" | "saving" | "saved";
@@ -29,6 +30,7 @@ export default function SendSuppliers() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { selectedVenue: venue } = useVenueStore();
+  const shareHost = useVenueShareHost(venue?.name);
   const { currentProposal } = useProposalStore();
   const {
     contacts,
@@ -60,6 +62,7 @@ export default function SendSuppliers() {
         },
         "indicacoes",
         window.location.origin,
+        shareHost,
       )
     : "";
 

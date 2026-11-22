@@ -30,6 +30,7 @@ import {
 } from "@/components/sidebar/notification-nav-badge";
 import { useGetNotificationsList } from "@/hooks/notification/queries/list";
 import { publicVenuePresentationShareUrl } from "@/lib/public-venue-presentation";
+import { useVenueShareHost } from "@/lib/use-venue-share-host";
 import {
   flatNavItems,
   internalItemHref,
@@ -77,6 +78,7 @@ export function VenueNav({
   const { currentUserVenuePermission } = useUserVenuePermissionStore();
   const permissions = currentUserVenuePermission?.permissions;
   const base = `/venue/${venue.id}`;
+  const shareHost = useVenueShareHost(venue.name);
 
   const canSee = (permission?: Permissions) => {
     if (!permission || !permissions) return false;
@@ -117,7 +119,7 @@ export function VenueNav({
         items: withNotificationBadge(
           presentNavItems(section.items, base, venueIcons, (item) =>
             item.opensExternalUrl && item.title === "Apresentação"
-              ? publicVenuePresentationShareUrl(venue.name)
+              ? publicVenuePresentationShareUrl(venue.name, shareHost)
               : null,
           ),
           unread,

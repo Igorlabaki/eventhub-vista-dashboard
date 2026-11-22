@@ -18,6 +18,7 @@ import { useVenueStore } from "@/store/venueStore";
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { proposalClientUrl } from "@/lib/proposal-public-url";
+import { useVenueShareHost } from "@/lib/use-venue-share-host";
 interface ScheduleListProps {
   schedules: Schedule[];
   onDeleteSchedule: (schedule: Schedule) => void;
@@ -47,6 +48,7 @@ export function ScheduleList({
   // Link para programação
   const { currentProposal } = useProposalStore();
   const { selectedVenue } = useVenueStore();
+  const shareHost = useVenueShareHost(selectedVenue?.name);
   const proposalId = currentProposal?.id;
   const programacaoLink = proposalId
     ? proposalClientUrl(
@@ -57,6 +59,8 @@ export function ScheduleList({
           publicCode: currentProposal?.publicCode,
         },
         "programacao",
+        undefined,
+        shareHost,
       )
     : undefined;
   const whatsappMsg = encodeURIComponent(

@@ -30,6 +30,7 @@ describe("public venue rules", () => {
       "https://event-hub-dashboard.vercel.app/espaco/AR756/regras",
     );
     expect(publicVenueRulesShareUrl("AR756")).not.toContain("localhost");
+    expect(publicVenueRulesShareUrl("AR756", "www.casa.com")).toBe("https://www.casa.com/regras");
   });
 
   it("aponta o endereco publico e a frase de lista vazia", () => {

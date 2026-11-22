@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   PUBLIC_VENUE_PRESENTATION_PATTERN,
   publicVenueBudgetFormShareUrl,
+  publicVenueCrewShareUrl,
+  publicVenuePartnerShareUrl,
   publicVenuePresentationPath,
   publicVenuePresentationShareUrl,
   venueIdForPublicForm,
@@ -31,6 +33,10 @@ describe("public venue presentation", () => {
     expect(publicVenueBudgetFormShareUrl("Casa Norte")).toBe(
       "https://event-hub-dashboard.vercel.app/espaco/Casa%20Norte/formulario",
     );
+    expect(publicVenuePresentationShareUrl("AR756", "www.casa.com")).toBe("https://www.casa.com/apresentacao");
+    expect(publicVenueBudgetFormShareUrl("AR756", "www.casa.com")).toBe("https://www.casa.com/formulario");
+    expect(publicVenuePartnerShareUrl("AR756", "www.casa.com")).toBe("https://www.casa.com/parceiro");
+    expect(publicVenueCrewShareUrl("AR756", "www.casa.com")).toBe("https://www.casa.com/colaborador");
   });
 
   it("mantem os cinco caminhos novos no nome e os enderecos velhos registrados", () => {

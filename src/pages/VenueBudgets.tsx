@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { showSuccessToast } from "@/components/ui/success-toast";
 import { publicVenueBudgetFormShareUrl } from "@/lib/public-venue-presentation";
+import { useVenueShareHost } from "@/lib/use-venue-share-host";
 import { formatWhatsapp } from "@/lib/whatsapp-mask";
 
 const monthNames = [
@@ -46,6 +47,7 @@ export default function VenueBudgets() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { selectedVenue, fetchVenueById } = useVenueStore();
+  const shareHost = useVenueShareHost(selectedVenue?.name);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDay, setSelectedDay] = useState<number | "">("");
@@ -232,7 +234,7 @@ export default function VenueBudgets() {
             variant="outline"
             className="h-10 shrink-0 rounded-full border-primary/40 bg-white text-primary hover:bg-primary/5 hover:text-primary"
             onClick={async () => {
-              const link = publicVenueBudgetFormShareUrl(selectedVenue.name);
+              const link = publicVenueBudgetFormShareUrl(selectedVenue.name, shareHost);
               await navigator.clipboard.writeText(link);
               showSuccessToast({
                 title: "Link copiado!",

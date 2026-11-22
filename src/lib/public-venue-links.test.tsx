@@ -13,6 +13,7 @@ import {
     PUBLIC_VENUE_LINKS_HOST_PATH,
     PUBLIC_VENUE_LINKS_PATTERN,
     publicVenueLinksShareUrl,
+    shareHostOf,
     shouldResolvePublicLinksHost,
 } from "./public-venue-links";
 
@@ -52,6 +53,11 @@ describe("link tree publico", () => {
         expect(venueLinkHref("Casa", { kind: "RULES", url: null, visible: true, position: 0 }, {})).toBe(
             "https://event-hub-dashboard.vercel.app/espaco/Casa/regras",
         );
+        expect(venueLinkHref("Casa", { kind: "PRESENTATION", url: null, visible: true, position: 0 }, {}, "www.casa.com")).toBe(
+            "https://www.casa.com/apresentacao",
+        );
+        expect(shareHostOf({ hostname: "www.casa.com", status: "PENDING" })).toBe("www.casa.com");
+        expect(shareHostOf({ hostname: "www.casa.com", status: "REMOVED" })).toBeNull();
     });
 
     it("no host padrao, /links nao resolve uma casa", () => {

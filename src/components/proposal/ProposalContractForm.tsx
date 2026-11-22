@@ -36,6 +36,7 @@ import PJContractForm from "./forms/pj-contract-form";
 import { Link } from "react-router-dom";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { proposalClientUrl } from "@/lib/proposal-public-url";
+import { useVenueShareHost } from "@/lib/use-venue-share-host";
 
 export function ProposalContractForm() {
   const { toast } = useToast();
@@ -44,6 +45,7 @@ export function ProposalContractForm() {
   );
   const { currentProposal, updateProposalPersonalInfo } = useProposalStore();
   const { selectedVenue } = useVenueStore();
+  const shareHost = useVenueShareHost(selectedVenue?.name);
   const {
     ownersByVenueId,
     fetchOwnersByVenueId,
@@ -83,6 +85,8 @@ export function ProposalContractForm() {
       publicCode: currentProposal?.publicCode,
     },
     "contrato",
+    undefined,
+    shareHost,
   );
   const whatsappMsg = encodeURIComponent(
     formType === "Pessoa Fisica"

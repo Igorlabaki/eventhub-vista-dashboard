@@ -139,6 +139,7 @@ function domainMarkup(state: VenueDomainUi) {
   return renderToStaticMarkup(
     <VenueDomainBlock
       hostname={state.hostname}
+      venueName="Casa"
       domain={state.domain}
       error={state.error}
       saved={state.saved}
@@ -188,7 +189,7 @@ describe("bloco Dominio na aba geral", () => {
     expect(html).not.toContain("data-venue-domain");
   });
 
-  it("salvar www.casa.com mostra pendente e o desafio, sem o link tree nesse host", () => {
+  it("salvar www.casa.com lista o redirect de /links e nao mostra desafio DNS", () => {
     const next = applyVenueDomainSave(empty, {
       ok: true,
       data: {
@@ -198,13 +199,11 @@ describe("bloco Dominio na aba geral", () => {
       },
     });
     const html = domainMarkup(next);
-    expect(html).toContain("Pendente");
-    expect(html).toContain("Desafio DNS");
-    expect(html).toContain("_vercel.www.casa.com");
-    expect(html).toContain("challenge-token");
-    expect(html).toContain("endereço padrão");
-    expect(html.toLowerCase()).not.toContain("link tree");
-    expect(html).not.toContain("www.casa.com/links");
+    expect(html).toContain("https://www.casa.com/links");
+    expect(html).toContain("https://event-hub-dashboard.vercel.app/espaco/Casa/links");
+    expect(html).toContain("https://www.casa.com/orcamento/{codigo}");
+    expect(html).not.toContain("Desafio DNS");
+    expect(html).not.toContain("cname.vercel-dns.com");
   });
 
   it("mostra o erro de hostname invalido", () => {
