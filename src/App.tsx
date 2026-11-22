@@ -36,6 +36,7 @@ import VenueServices from "./pages/VenueServices";
 import VenueRules from "./pages/VenueRules";
 import PublicVenueRulesPage from "./pages/PublicVenueRules";
 import VenueLinks from "./pages/VenueLinks";
+import { HostVenueLinks } from "./pages/HostVenueLinks";
 import VenueLinkTree from "./pages/VenueLinkTree";
 import VenuePresentation from "./pages/VenuePresentation";
 import VenueAmenities from "./pages/VenueAmenities";
@@ -174,6 +175,7 @@ const App = () => {
                 <Route path="/proposal/:id/attendance-list" element={<ProtectedRoute requiredPermission="VIEW_PROPOSAL_ATTENDANCE_LIST"><ProposalAttendanceListPage /></ProtectedRoute>} />
               {/* Public Form */}
                 <Route path="/espaco/:id/apresentacao" element={<VenuePresentation />} />
+                <Route path="/links" element={<HostVenueLinks />} />
                 <Route path="/espaco/:id/links" element={<VenueLinks />} />
                 <Route path="/espaco/:id/formulario" element={<ProposalForm />} />
                 <Route path="/espaco/:id/regras" element={<PublicVenueRulesPage />} />

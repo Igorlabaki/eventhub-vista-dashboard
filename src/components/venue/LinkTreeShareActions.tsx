@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { publicVenueLinksShareUrl } from "@/lib/public-venue-links";
+import { venueService } from "@/services/venue.service";
 
 export function LinkTreeQr({ url }: { url: string }) {
     return (
@@ -12,9 +13,30 @@ export function LinkTreeQr({ url }: { url: string }) {
     );
 }
 
-export function LinkTreeShareActions({ venueName }: { venueName: string }) {
+export function LinkTreeShareActions({ venueName, activeHost }: { venueName: string; activeHost?: string | null }) {
     const [qrOpen, setQrOpen] = useState(false);
-    const publicUrl = venueName.trim() ? publicVenueLinksShareUrl(venueName.trim()) : "";
+    const [loadedHost, setLoadedHost] = useState<string | null>(activeHost ?? null);
+
+    useEffect(() => {
+        if (activeHost !== undefined) {
+            setLoadedHost(activeHost);
+            return;
+        }
+        const name = venueName.trim();
+        if (!name) return;
+        let active = true;
+        venueService.getVenueDomain(name).then((data) => {
+            if (!active) return;
+            setLoadedHost(data.status === "ACTIVE" && data.hostname ? data.hostname : null);
+        }).catch(() => {
+            if (active) setLoadedHost(null);
+        });
+        return () => {
+            active = false;
+        };
+    }, [venueName, activeHost]);
+
+    const publicUrl = venueName.trim() ? publicVenueLinksShareUrl(venueName.trim(), loadedHost) : "";
     if (!publicUrl) return null;
 
     return (

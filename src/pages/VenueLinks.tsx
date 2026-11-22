@@ -366,8 +366,9 @@ export function VenueLinksView({
     );
 }
 
-export default function VenueLinks() {
-    const { id } = useParams();
+export default function VenueLinks({ venueKey }: { venueKey?: string } = {}) {
+    const { id: paramId } = useParams();
+    const id = venueKey || paramId;
     const [house, setHouse] = useState<PublicVenueLinks | null>(null);
     const [links, setLinks] = useState<PublicVenueLink[]>([]);
     const [loading, setLoading] = useState(true);

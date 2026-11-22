@@ -26,6 +26,7 @@ export const PUBLIC_ROUTES = [
   '/espaco/:id/apresentacao',
   '/espaco/:id/links',
   '/venue/:id/links',
+  '/links',
   '/espaco/:id/formulario',
   '/espaco/:id/regras',
   '/espaco/:id/parceiro',

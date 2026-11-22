@@ -2,8 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
+import { VenueDomainBlock } from "@/components/venue/VenueDomainBlock";
 import VenueSettings from "@/pages/VenueSettings";
 import { cepDigits } from "@/lib/cep-lookup";
+import { applyVenueDomainSave, emptyVenueDomain, type VenueDomainUi } from "@/lib/venue-domain";
 import { useOrganizationStore } from "@/store/organizationStore";
 import { useVenueStore } from "@/store/venueStore";
 
@@ -130,5 +132,93 @@ describe("Configuracoes do espaco em abas", () => {
     expect(html.indexOf(">CEP<")).toBeLessThan(html.indexOf(">Logradouro<"));
     expect(html).toContain("Complemento");
     expect(cepDigits("01000-000")).toBe("01000000");
+  });
+});
+
+function domainMarkup(state: VenueDomainUi) {
+  return renderToStaticMarkup(
+    <VenueDomainBlock
+      hostname={state.hostname}
+      domain={state.domain}
+      error={state.error}
+      saved={state.saved}
+      onHostnameChange={() => undefined}
+      onSave={() => undefined}
+    />,
+  );
+}
+
+describe("bloco Dominio na aba geral", () => {
+  const empty: VenueDomainUi = {
+    domain: emptyVenueDomain,
+    hostname: "",
+    error: null,
+    saved: false,
+  };
+
+  it("mostra Dominio vazio e nao oferece www.ar756.com", () => {
+    const html = renderSettings();
+    expect(html).toContain('data-venue-domain');
+    expect(html).toContain("Domínio");
+    expect(html).not.toContain("www.ar756.com");
+    expect(html).not.toContain("Pendente");
+  });
+
+  it("a aba Redes nao traz o bloco", () => {
+    useOrganizationStore.setState({
+      currentOrganization: { id: "org-1", name: "Goncalos Hub" } as never,
+    });
+    useVenueStore.setState({
+      selectedVenue: {
+        id: "venue-1",
+        name: "AR756",
+        organizationId: "org-1",
+      } as never,
+    });
+    const queryClient = new QueryClient();
+    const html = renderToStaticMarkup(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/venue/venue-1/settings?aba=redes"]}>
+          <Routes>
+            <Route path="/venue/:id/settings" element={<VenueSettings />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(html).not.toContain("data-venue-domain");
+  });
+
+  it("salvar www.casa.com mostra pendente e o desafio, sem o link tree nesse host", () => {
+    const next = applyVenueDomainSave(empty, {
+      ok: true,
+      data: {
+        hostname: "www.casa.com",
+        status: "PENDING",
+        verification: { type: "TXT", name: "_vercel.www.casa.com", value: "challenge-token" },
+      },
+    });
+    const html = domainMarkup(next);
+    expect(html).toContain("Pendente");
+    expect(html).toContain("Desafio DNS");
+    expect(html).toContain("_vercel.www.casa.com");
+    expect(html).toContain("challenge-token");
+    expect(html).toContain("endereço padrão");
+    expect(html.toLowerCase()).not.toContain("link tree");
+    expect(html).not.toContain("www.casa.com/links");
+  });
+
+  it("mostra o erro de hostname invalido", () => {
+    const next = applyVenueDomainSave({ ...empty, hostname: "localhost" }, { ok: false, status: 400 });
+    expect(domainMarkup(next)).toContain("Hostname invalido.");
+  });
+
+  it("403 nao troca o estado vazio por sucesso", () => {
+    const next = applyVenueDomainSave(empty, { ok: false, status: 403 });
+    expect(next.saved).toBe(false);
+    expect(next.domain).toEqual(emptyVenueDomain);
+    const html = domainMarkup(next);
+    expect(html).toContain("Sem permissão para salvar o domínio.");
+    expect(html).not.toContain("Pendente");
+    expect(html).not.toContain("Domínio pendente de verificação.");
   });
 });

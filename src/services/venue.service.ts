@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import type { VenueDomainView } from '@/lib/venue-domain';
 import type { EditorVenueLink, VenueLinkRow } from '@/lib/venue-link';
 import type { VenuePresentation } from '@/lib/venue-presentation';
 import { 
@@ -263,6 +264,21 @@ export const venueService = {
       url: body.url ?? undefined,
       visible: body.visible,
     });
+    return response.data.data;
+  },
+
+  resolveVenueDomain: async (host: string) => {
+    const response = await api.get<{ venueId: string; name: string }>("/venue/domain/resolve", { params: { host } });
+    return response.data;
+  },
+
+  getVenueDomain: async (venueId: string) => {
+    const response = await api.get<{ data: VenueDomainView }>(`/venue/domain/${encodeURIComponent(venueId)}`);
+    return response.data.data;
+  },
+
+  saveVenueDomain: async (venueId: string, hostname: string) => {
+    const response = await api.put<{ data: VenueDomainView }>(`/venue/domain/${encodeURIComponent(venueId)}`, { hostname });
     return response.data.data;
   },
 

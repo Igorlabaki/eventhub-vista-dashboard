@@ -52,6 +52,8 @@ import {
 import { VenueLinkEditor } from "@/components/venue/VenueLinkEditor";
 import { cepDigits, normalizeUf } from "@/lib/cep-lookup";
 import { venueLinkSaveError, withoutVenueLinkColumns, type EditorVenueLink } from "@/lib/venue-link";
+import { VenueDomainBlock } from "@/components/venue/VenueDomainBlock";
+import { applyVenueDomainSave, emptyVenueDomain, type VenueDomainUi } from "@/lib/venue-domain";
 import { venueService } from "@/services/venue.service";
 import { AddressFields } from "@/components/address/AddressFields";
 import { useOrganizationStore } from "@/store/organizationStore";
@@ -174,6 +176,39 @@ export default function VenueSettings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>(
     aba === "endereco" || aba === "precos" || aba === "redes" || aba === "apresentacao" || aba === "geral" ? aba : "geral",
   );
+  const [domainUi, setDomainUi] = useState<VenueDomainUi>({
+    domain: emptyVenueDomain,
+    hostname: "",
+    error: null,
+    saved: false,
+  });
+
+  useEffect(() => {
+    if (!selectedVenue?.id) return;
+    let active = true;
+    venueService.getVenueDomain(selectedVenue.id).then((data) => {
+      if (!active) return;
+      setDomainUi({
+        domain: data,
+        hostname: data.hostname ?? "",
+        error: null,
+        saved: false,
+      });
+    }).catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [selectedVenue?.id]);
+
+  const saveDomain = () => {
+    if (!selectedVenue?.id) return;
+    void venueService.saveVenueDomain(selectedVenue.id, domainUi.hostname).then((data) => {
+      setDomainUi((current) => applyVenueDomainSave(current, { ok: true, data }));
+    }).catch((error: { response?: { status?: number } }) => {
+      const status = error.response?.status ?? 0;
+      setDomainUi((current) => applyVenueDomainSave(current, { ok: false, status }));
+    });
+  };
 
   const form = useForm<VenueSettingsFormValues>({
     resolver: zodResolver(venueSettingsSchema),
@@ -741,6 +776,14 @@ export default function VenueSettings() {
                 <FormMessage />
               </FormItem>
             )}
+          />
+          <VenueDomainBlock
+            hostname={domainUi.hostname}
+            domain={domainUi.domain}
+            error={domainUi.error}
+            saved={domainUi.saved}
+            onHostnameChange={(hostname) => setDomainUi((current) => ({ ...current, hostname }))}
+            onSave={saveDomain}
           />
           </TabsContent>
 
