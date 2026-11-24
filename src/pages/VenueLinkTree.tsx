@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { handleBackendError } from "@/lib/error-handler";
 import { VENUE_LINK_LABEL, type VenueLinkKind } from "@/lib/venue-link";
-import { venueService, type PublicVenueLinks } from "@/services/venue.service";
+import { saoPauloMonthKey } from "@/lib/public-surface";
+import { venueService, type PublicVenueLinks, type VenueLinkStats } from "@/services/venue.service";
 import { useUserVenuePermissionStore } from "@/store/userVenuePermissionStore";
 import { Permissions } from "@/types/permissions";
 
@@ -132,6 +133,39 @@ export function queueVenueLinkVisible(
 }
 
 type SaveState = "idle" | "saving" | "saved";
+type StatsState = "loading" | "ready" | "error";
+
+export function formatFormRate(rate: number | null) {
+    if (rate === null) return "";
+    return new Intl.NumberFormat("pt-BR", { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rate);
+}
+
+export function formatDataSince(day: string | null) {
+    if (!day) return "";
+    const [, month, date] = day.split("-");
+    if (!month || !date) return "";
+    return `Dados desde ${date}/${month}`;
+}
+
+export function linkMetricText(kind: string, stats: VenueLinkStats) {
+    const clicks = stats.clicksByKind[kind] ?? 0;
+    if (kind !== "BUDGET_FORM") return `${clicks} cliques`;
+    return `${clicks} cliques · ${stats.formOpens} aberturas do formulário · ${stats.proposalsCreated} orçamentos feitos`;
+}
+
+function MonthKpi({ label, value, detail }: { label: string; value: string | null; detail?: string }) {
+    return (
+        <div className="rounded-2xl border bg-white px-5 py-4">
+            <p className="text-sm text-muted-foreground">{label}</p>
+            {value === null ? (
+                <p className="mt-2 h-8 animate-pulse rounded-md bg-gray-100" aria-label={`Carregando ${label}`} />
+            ) : (
+                <p className="mt-1 min-h-8 text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
+            )}
+            {detail ? <p className="text-sm text-muted-foreground">{detail}</p> : null}
+        </div>
+    );
+}
 
 export function VenueLinkTreeView({
     rows,
@@ -142,6 +176,8 @@ export function VenueLinkTreeView({
     onReorder,
     saveState,
     venueName = "",
+    stats = null,
+    statsState = "ready",
 }: {
     rows: PanelLink[];
     query: string;
@@ -151,6 +187,8 @@ export function VenueLinkTreeView({
     onReorder?: (rows: PanelLink[]) => void;
     saveState: SaveState;
     venueName?: string;
+    stats?: VenueLinkStats | null;
+    statsState?: StatsState;
 }) {
     const [visibility, setVisibility] = useState<LinkTreeVisibility>("");
     const canDrag = linkTreeCanDrag(canEdit, query, visibility);
@@ -194,6 +232,32 @@ export function VenueLinkTreeView({
                     <LinkTreeShareActions venueName={venueName} />
                 </div>
             </div>
+
+            {statsState !== "ready" || stats ? (
+                <section aria-label="Métricas do mês" className="mb-4">
+                    {statsState === "error" ? (
+                        <p className="text-sm text-muted-foreground">As métricas do mês não carregaram.</p>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                                <MonthKpi label="Aberturas" value={statsState === "ready" && stats ? String(stats.linksOpens) : null} />
+                                <MonthKpi label="Pessoas" value={statsState === "ready" && stats ? String(stats.linksPeople) : null} />
+                                <MonthKpi label="Orçamentos pelo site" value={statsState === "ready" && stats ? String(stats.proposalsCreated) : null} />
+                                <MonthKpi
+                                    label="Taxa do formulário"
+                                    value={statsState === "ready" && stats ? formatFormRate(stats.formRate) : null}
+                                    detail={statsState === "ready" && stats && stats.formRate !== null
+                                        ? `${stats.proposalsCreated} envios em ${stats.formOpens} aberturas do formulário`
+                                        : undefined}
+                                />
+                            </div>
+                            {statsState === "ready" && stats && formatDataSince(stats.dataSince) ? (
+                                <p className="mt-2 text-sm text-muted-foreground">{formatDataSince(stats.dataSince)}</p>
+                            ) : null}
+                        </>
+                    )}
+                </section>
+            ) : null}
 
             <div className="grid gap-4 md:grid-cols-3">
                 {cards.map((card) => (
@@ -306,7 +370,12 @@ export function VenueLinkTreeView({
                                         className="border-emerald-600 data-[state=checked]:bg-emerald-600 data-[state=checked]:text-white"
                                     />
                                 </TableCell>
-                                <TableCell className="font-medium text-gray-900">{row.label}</TableCell>
+                                <TableCell className="font-medium text-gray-900">
+                                    <span>{row.label}</span>
+                                    {statsState === "ready" && stats ? (
+                                        <span className="mt-1 block text-sm font-normal text-muted-foreground">{linkMetricText(row.kind, stats)}</span>
+                                    ) : null}
+                                </TableCell>
                             </TableRow>
                             );
                         })}
@@ -327,6 +396,8 @@ export default function VenueLinkTree() {
     const [query, setQuery] = useState("");
     const [failed, setFailed] = useState(false);
     const [saveState, setSaveState] = useState<SaveState>("idle");
+    const [stats, setStats] = useState<VenueLinkStats | null>(null);
+    const [statsState, setStatsState] = useState<StatsState>("loading");
     const pending = useRef(new Map<string, boolean>());
 
     useEffect(() => {
@@ -343,6 +414,28 @@ export default function VenueLinkTree() {
             .catch(() => {
                 if (active) setFailed(true);
             });
+        return () => {
+            active = false;
+        };
+    }, [id]);
+
+    useEffect(() => {
+        if (!id) return;
+        let active = true;
+        setStats(null);
+        setStatsState("loading");
+        venueService.getVenueLinkStats(id, saoPauloMonthKey(new Date())).then(
+            (data) => {
+                if (!active) return;
+                setStats(data);
+                setStatsState("ready");
+            },
+            () => {
+                if (!active) return;
+                setStats(null);
+                setStatsState("error");
+            },
+        );
         return () => {
             active = false;
         };
@@ -407,6 +500,8 @@ export default function VenueLinkTree() {
                     onReorder={onReorder}
                     saveState={saveState}
                     venueName={venueName}
+                    stats={stats}
+                    statsState={statsState}
                 />
             ) : (
                 <p className="text-sm text-muted-foreground">Carregando links...</p>

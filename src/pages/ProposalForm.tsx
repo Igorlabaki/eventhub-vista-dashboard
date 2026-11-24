@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Calendar } from "lucide-react";
 import { FaFacebook, FaGlobe, FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa";
 import { useVenueStore } from "@/store/venueStore";
 import { ClientPerDayProposalForm } from "@/components/proposal/forms/ClientPerDayProposalForm";
 import { ClientPerPersonProposalForm } from "@/components/proposal/forms/ClientPerPersonProposalForm";
+import { browserPublicSurfaceTransport, dispatchPublicSurfaceBeacon } from "@/lib/public-surface";
 import { venueIdForPublicForm } from "@/lib/public-venue-presentation";
 import { EVENTHUB_TAB_TITLE, venueTabTitle } from "@/lib/venue-tab-title";
 import { applyVenueTabIcon } from "@/lib/venue-tab-icon";
@@ -162,6 +163,7 @@ export function ProposalForm() {
   const [readyForId, setReadyForId] = useState<string | null>(null);
   const [failedId, setFailedId] = useState<string | null>(null);
   const [trackedId, setTrackedId] = useState(id);
+  const sentBeacon = useRef(new Set<string>());
 
   if (id !== trackedId) {
     setTrackedId(id);
@@ -209,6 +211,12 @@ export function ProposalForm() {
       window.clearTimeout(timeout);
     };
   }, [id, venue, isLoading, readyForId]);
+
+  useEffect(() => {
+    const loading = isLoading || isLoading === undefined;
+    if (!id || !venue || loading || readyForId !== id || !resolvedVenueId) return;
+    dispatchPublicSurfaceBeacon("FORM", resolvedVenueId, browserPublicSurfaceTransport(sentBeacon.current));
+  }, [id, venue, isLoading, readyForId, resolvedVenueId]);
 
   if (!id) {
     return <div>Erro: ID do venue não encontrado</div>;

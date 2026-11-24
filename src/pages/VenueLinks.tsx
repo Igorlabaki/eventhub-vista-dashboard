@@ -11,6 +11,7 @@ import { ProposalTourVideo } from "@/components/proposal/ProposalTourVideo";
 import { resolveTourVideo } from "@/lib/tour-video";
 import { venueService, type PublicVenueLink, type PublicVenueLinks } from "@/services/venue.service";
 import { VenueLinkCreateForm } from "@/components/venue/VenueLinkEditor";
+import { browserPublicSurfaceTransport, countedCardHref, dispatchPublicSurfaceBeacon } from "@/lib/public-surface";
 import { VENUE_LINK_KINDS, type VenueLinkKind } from "@/lib/venue-link";
 
 export function venueLinkChrome(_canReorder: boolean, _count: number) {
@@ -123,6 +124,7 @@ export function VenueLinksView({
     onDraftUrl,
     onCancelCreate,
     onConfirmCreate,
+    cardHref,
 }: {
     house: PublicVenueLinks;
     saving?: boolean;
@@ -140,6 +142,7 @@ export function VenueLinksView({
     onDraftUrl?: (url: string) => void;
     onCancelCreate?: () => void;
     onConfirmCreate?: () => void;
+    cardHref?: (kind: string) => string;
 }) {
     const pageText = house.proposalTextColor || "#f7f7f5";
     const pageBackground = house.proposalPrimaryColor || "#111315";
@@ -223,8 +226,8 @@ export function VenueLinksView({
                                 }}
                             >
                                 <a
-                                    href={link.href}
-                                    target={link.href.startsWith("mailto:") ? undefined : "_blank"}
+                                    href={cardHref ? cardHref(link.kind) : link.href}
+                                    target={link.kind === "EMAIL" ? undefined : "_blank"}
                                     rel="noopener noreferrer"
                                     className={cardClass}
                                     style={cardStyle}
@@ -379,6 +382,7 @@ export default function VenueLinks({ venueKey }: { venueKey?: string } = {}) {
     const [createError, setCreateError] = useState("");
     const [draftKind, setDraftKind] = useState<VenueLinkKind | "">("");
     const [draftUrl, setDraftUrl] = useState("");
+    const sentBeacon = useRef(new Set<string>());
 
     useEffect(() => {
         if (!id) return;
@@ -411,7 +415,12 @@ export default function VenueLinks({ venueKey }: { venueKey?: string } = {}) {
         };
     }, [house?.name, house?.slogan]);
 
-    if (loading || !house) {
+    useEffect(() => {
+        if (loading || !house || !id) return;
+        dispatchPublicSurfaceBeacon("LINKS", id, browserPublicSurfaceTransport(sentBeacon.current));
+    }, [loading, house, id]);
+
+    if (loading || !house || !id) {
         return (
             <div className="min-h-screen bg-[#111315]" aria-busy={loading}>
                 {!loading && (
@@ -468,6 +477,7 @@ export default function VenueLinks({ venueKey }: { venueKey?: string } = {}) {
 
     return (
         <VenueLinksView
+            cardHref={(kind) => countedCardHref(String(import.meta.env.VITE_API_URL || ""), id, kind)}
             house={{ ...house, links, usedKinds }}
             saving={saving}
             confirmingLabel={confirming?.label ?? null}

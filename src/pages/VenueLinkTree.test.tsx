@@ -279,4 +279,63 @@ describe("tela interna do link tree", () => {
         expect(source).toContain("createVenueLink(id, save.create)");
         expect(source).toContain("Permissions.EDIT_VENUE_SITE");
     });
+
+    it("mostra o mes, a taxa e os cliques sem tratar falha como zero", () => {
+        const view = (stats: object | null, statsState: "loading" | "ready" | "error") => renderToStaticMarkup(
+            <VenueLinkTreeView
+                rows={rows()}
+                query=""
+                onQuery={() => undefined}
+                canEdit
+                onToggle={() => undefined}
+                saveState="idle"
+                stats={stats as never}
+                statsState={statsState}
+            />,
+        );
+        const ready = view({
+            month: "2026-11",
+            dataSince: "2026-11-15",
+            linksOpens: 200,
+            linksPeople: 120,
+            clicksByKind: { BUDGET_FORM: 40, INSTAGRAM: 3 },
+            formOpens: 35,
+            proposalsCreated: 8,
+            formRate: 8 / 35,
+        }, "ready");
+        expect(ready).toContain("22,9%");
+        expect(ready).toContain("8 envios em 35 aberturas do formulário");
+        expect(ready).toContain(">120<");
+        expect(ready).toContain("Dados desde 15/11");
+        expect(ready).toContain("40 cliques · 35 aberturas do formulário · 8 orçamentos feitos");
+        expect(ready).toContain("3 cliques");
+        expect(ready).toContain('aria-label="Tirar Instagram do link tree"');
+        expect(ready).toContain("grid-cols-1");
+        expect(ready).toContain("xl:grid-cols-4");
+
+        const blank = view({
+            month: "2026-11",
+            dataSince: null,
+            linksOpens: 0,
+            linksPeople: 0,
+            clicksByKind: {},
+            formOpens: 0,
+            proposalsCreated: 8,
+            formRate: null,
+        }, "ready");
+        const rateCard = blank.slice(blank.indexOf("Taxa do formulário"), blank.indexOf("</section>"));
+        expect(rateCard).not.toContain("%");
+        expect(blank).not.toContain("8 envios");
+        expect(blank).toContain("0 cliques");
+
+        const failed = view(null, "error");
+        expect(failed).toContain("As métricas do mês não carregaram.");
+        expect(failed).not.toContain("0 cliques");
+        expect(failed).toContain('aria-label="Tirar Instagram do link tree"');
+
+        const loading = view(null, "loading");
+        expect(loading).toContain('aria-label="Carregando Aberturas"');
+        expect(loading).not.toContain("0 cliques");
+        expect(loading).toContain('aria-label="Tirar Instagram do link tree"');
+    });
 });

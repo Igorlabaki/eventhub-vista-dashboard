@@ -61,6 +61,17 @@ export type PublicVenueLinks = {
   links: PublicVenueLink[];
 };
 
+export type VenueLinkStats = {
+  month: string;
+  dataSince: string | null;
+  linksOpens: number;
+  linksPeople: number;
+  clicksByKind: Record<string, number>;
+  formOpens: number;
+  proposalsCreated: number;
+  formRate: number | null;
+};
+
 export function appendVenueImageFiles(
   formData: FormData,
   data: { logoFile?: File; faviconFile?: File },
@@ -227,6 +238,13 @@ export const venueService = {
 
   getVenueLinks: async (venueId: string) => {
     const response = await api.get<{ data: PublicVenueLinks }>(`/venue/links/${encodeURIComponent(venueId)}`);
+    return response.data.data;
+  },
+
+  getVenueLinkStats: async (venueId: string, month: string) => {
+    const response = await api.get<{ data: VenueLinkStats }>(`/venue/links/${encodeURIComponent(venueId)}/stats`, {
+      params: { month },
+    });
     return response.data.data;
   },
 
